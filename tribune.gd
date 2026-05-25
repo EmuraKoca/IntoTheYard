@@ -30,17 +30,20 @@ func draw_tribune() -> void:
 
 func _add_data_display() -> void:
 	# ── Holografik Veri Ekranı (tribünün alt kısmı) ──────────
+	# z_index = 5 → BG_Tribune (z_index 3) üzerinde görünür
 	var screen_bg = ColorRect.new()
 	screen_bg.position = Vector2(507, 900)
 	screen_bg.size     = Vector2(332, 72)
 	screen_bg.color    = Color(0.0, 0.05, 0.04, 0.95)
+	screen_bg.z_index  = 5
 	add_child(screen_bg)
 
 	# Üst neon yeşil çizgi
 	var screen_top = ColorRect.new()
 	screen_top.position = Vector2(507, 900)
-	screen_top.size     = Vector2(332, 1)
+	screen_top.size     = Vector2(332, 2)
 	screen_top.color    = Color(0.0, 1.0, 0.55, 0.85)
+	screen_top.z_index  = 5
 	add_child(screen_top)
 
 	# "DATA HARVESTED" başlığı
@@ -50,6 +53,7 @@ func _add_data_display() -> void:
 	title_lbl.add_theme_font_override("font", _font_bold)
 	title_lbl.add_theme_font_size_override("font_size", 9)
 	title_lbl.add_theme_color_override("font_color", Color(0.0, 0.85, 0.5, 0.7))
+	title_lbl.z_index  = 5
 	add_child(title_lbl)
 
 	# Veri değeri
@@ -59,6 +63,7 @@ func _add_data_display() -> void:
 	_data_label.add_theme_font_override("font", _font_bold)
 	_data_label.add_theme_font_size_override("font_size", 22)
 	_data_label.add_theme_color_override("font_color", Color(0.0, 1.0, 0.55, 1.0))
+	_data_label.z_index  = 5
 	add_child(_data_label)
 
 func update_data(amount: int) -> void:
