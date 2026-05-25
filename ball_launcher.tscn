@@ -1,0 +1,16 @@
+[gd_scene format=3 uid="uid://c0ekt0dittt0j"]
+
+[ext_resource type="Script" uid="uid://8hu2shysqxx0" path="res://ball_launcher.gd" id="1_ey2j0"]
+
+[node name="BallLauncher" type="Node2D" unique_id=1024392235 groups=["launcher"]]
+script = ExtResource("1_ey2j0")
+
+[node name="Timer" type="Timer" parent="." unique_id=1162453999]
+wait_time = 5.0
+autostart = true
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=784951576]
+offset_left = -25.0
+offset_top = -25.0
+offset_right = 25.0
+offset_bottom = 25.0

@@ -1,0 +1,1062 @@
+extends CharacterBody2D
+
+var speed = 600.0
+var damage = 0
+var can_split = false
+var can_electric = false
+var has_split = false
+var is_dead = false
+var moving = false
+var move_direction = Vector2.ZERO
+var base_scale = 1.0
+var target_scale = 1.0
+var can_pierce = false
+var hit_zombies = []
+var catch_cooldown = 0.0
+var is_active = false
+var max_damage = 5
+var crit_multiplier = 2.0
+var crit_chance = 0.0
+var can_cryo = false
+var slow_amount = 0.25
+var can_glitch = false
+var can_water = false
+var is_mimic = false
+var mimic_done = false
+var mimic_color_time = 0.0
+var has_fused = false
+var is_fused = false
+var fusion_type = ""
+var ball_scene = preload("res://ball.tscn")
+var can_fire = false
+var mimic_hits = 0
+var max_mimic_hits = 5
+var mimic_ring_time = 0.0
+var hit_type = ""
+var can_leech = false
+var trail: Line2D = null
+var trail_positions: Array = []
+var trail_max_length: int = 24
+
+func _ready() -> void:
+	z_index = 2
+	$CollisionShape2D.disabled = false
+	_setup_trail()
+	_update_modulate()
+
+func launch(direction: Vector2, spd: float = 600.0) -> void:
+	move_direction = direction.normalized()
+	speed = spd
+	moving = true
+	catch_cooldown = 0.5
+
+func launch_with_speed(direction: Vector2, spd: float) -> void:
+	move_direction = direction.normalized()
+	speed = spd
+	moving = true
+	catch_cooldown = 0.5
+	$CollisionShape2D.disabled = false
+
+func caught() -> void:
+	moving = false
+	$CollisionShape2D.disabled = true
+	trail_positions.clear()
+	if is_instance_valid(trail):
+		trail.points = PackedVector2Array()
+		trail.visible = false
+	
+func _copy_ball(other: Node2D) -> void:
+	can_split = other.can_split
+	can_electric = other.can_electric
+	can_pierce = other.can_pierce
+	can_cryo = other.can_cryo
+	can_glitch = other.can_glitch
+	can_water = other.can_water
+	can_fire = other.can_fire
+	can_leech = other.can_leech
+	# max_damage kopyalanmıyor!
+	slow_amount = other.slow_amount
+	is_mimic = false
+	mimic_done = true
+	_update_modulate()
+	_update_trail_color()
+	queue_redraw()
+
+func _process(_delta: float) -> void:
+	var cyclone_player = get_tree().get_first_node_in_group("player")
+	if cyclone_player and cyclone_player.character_type == "cyclone" and not moving:
+		if cyclone_player.global_position.distance_to(global_position) < 80:
+			queue_redraw()
+		else:
+			queue_redraw()
+
+func _physics_process(delta: float) -> void:
+	_update_trail(delta)
+	if not moving:
+		return
+	global_position += move_direction * speed * delta
+	# Zamanla yavaşla
+	speed -= 15 * delta
+	if speed <= 0:
+		speed = 0
+		moving = false
+		scale = Vector2(0.3, 0.3)
+		z_index = 1
+		$CollisionShape2D.disabled = true
+		return
+	# Derinlik hissi - topa vurunca büyü, uzaklaşınca küçül
+	if catch_cooldown > 0:
+		catch_cooldown -= delta
+	
+	var player = get_tree().get_first_node_in_group("player")
+	if player and catch_cooldown <= 0:
+		var dist = global_position.distance_to(player.global_position)
+		if dist < 60:
+			if player.character_type == "vector":
+				player.catch_ball(self)
+			else:
+				move_direction = move_direction.bounce(
+					(global_position - player.global_position).normalized()
+				)
+		target_scale = clamp(1.5 - dist / 800.0, 0.5, 1.5)
+		base_scale = lerp(base_scale, target_scale, 0.1)
+		scale = Vector2(base_scale, base_scale)
+	speed -= 5.0 * delta
+	if speed <= 130:
+		var scale_factor = max(speed / 130.0, 0.3)
+		scale = Vector2(scale_factor, scale_factor)
+		speed = speed * 0.98
+	if speed <= 10:
+		moving = false
+		scale = Vector2(0.3, 0.3)
+		z_index = 1
+		$CollisionShape2D.disabled = true
+		return
+	# Duvar sınırları
+	if global_position.x <= 870:
+		global_position.x = 870
+		move_direction.x = abs(move_direction.x)
+	if global_position.x >= 1620:
+		global_position.x = 1620
+		move_direction.x = -abs(move_direction.x)
+	if global_position.y <= 260:
+		global_position.y = 260
+		move_direction.y = abs(move_direction.y)
+	if global_position.y >= 1070:
+		queue_free()
+		return
+	if global_position.y >= 1040:
+		global_position.y = 1040
+		move_direction.y = -abs(move_direction.y)
+		speed = speed * 0.15
+	# Player'a yakınken mıknatıs etkisi
+	#var magnet_player = get_tree().get_first_node_in_group("player")
+	#if magnet_player:
+		#var dist = global_position.distance_to(magnet_player.global_position)
+		#if dist < 300:
+			#var to_player = (magnet_player.global_position - global_position).normalized()
+			#move_direction = move_direction.lerp(to_player, 0.02)
+			#move_direction = move_direction.normalized()
+	# Mimic Ball - yakındaki güçlendirilmiş topa yaklaşınca kopyala
+	if mimic_done and not is_mimic:
+		mimic_ring_time += get_process_delta_time()
+		queue_redraw()
+	if is_mimic and not mimic_done:
+		var balls = get_tree().get_nodes_in_group("balls")
+		for other_ball in balls:
+			if other_ball == self:
+				continue
+			var has_power = other_ball.can_split or other_ball.can_electric or other_ball.can_pierce or other_ball.can_cryo or other_ball.can_glitch or other_ball.can_fire or other_ball.can_water
+			if has_power and other_ball.moving and not other_ball.is_fused:
+				var dist = global_position.distance_to(other_ball.global_position)
+				if dist < 200:
+					_copy_ball(other_ball)
+					mimic_done = true
+					break
+	var collision = move_and_collide(Vector2.ZERO)
+	if collision:
+		var collider = collision.get_collider()
+		if collider.is_in_group("zombies"):
+			_hit_zombie(collider)
+		elif collider.is_in_group("player"):
+			if not collider.is_dashing:
+				move_direction = move_direction.bounce(collision.get_normal())
+				move_direction = move_direction.normalized()
+
+	# Phantom için tüm zombileri kontrol et
+	if is_fused and fusion_type == "phantom":
+		var zombies = get_tree().get_nodes_in_group("zombies")
+		for z in zombies:
+			if z not in hit_zombies:
+				var dist = global_position.distance_to(z.global_position)
+				if dist < 40:
+					_hit_zombie(z)
+	if is_mimic:
+		mimic_color_time += get_process_delta_time()
+		queue_redraw()
+		
+# Cyclone işareti için sürekli redraw
+	var cyclone_player = get_tree().get_first_node_in_group("player")
+	if cyclone_player and cyclone_player.character_type == "cyclone" and not moving:
+		if cyclone_player.global_position.distance_to(global_position) < 80:
+			queue_redraw()
+		
+func _try_fusion(other: Node2D) -> void:
+	var self_type = _get_type()
+	var other_type = other._get_type()
+	var fusion = _get_fusion_type(self_type, other_type)
+	
+	if fusion == "":
+		return
+	
+	has_fused = true
+	other.has_fused = true
+	moving = false
+	other.moving = false
+	
+	# Orta nokta
+	var mid = (global_position + other.global_position) / 2.0
+	
+	# Animasyon
+	var tween = create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(self, "global_position", mid, 1.0).set_trans(Tween.TRANS_SINE)
+	tween.tween_property(other, "global_position", mid, 1.0).set_trans(Tween.TRANS_SINE)
+	
+	await get_tree().create_timer(1.0).timeout
+	
+	# Fusion topu oluştur
+	var new_ball = ball_scene.instantiate()
+	new_ball.global_position = mid
+	_apply_fusion(new_ball, fusion)
+	get_parent().add_child(new_ball)
+	new_ball.launch(move_direction)
+	
+	other.queue_free()
+	queue_free()
+
+func _get_type() -> String:
+	if can_leech:
+		return "leech"
+	if can_split: return "split"
+	if can_electric: return "electric"
+	if can_pierce: return "pierce"
+	if can_cryo: return "cryo"
+	if can_glitch: return "glitch"
+	if can_fire: return "fire"
+	if can_water: return "water"
+	return "normal"
+
+func _get_fusion_type(a: String, b: String) -> String:
+	var pair = [a, b]
+	pair.sort()
+	var key = pair[0] + "_" + pair[1]
+	var fusions = {
+		"cryo_split": "frozen_split",
+		"glitch_split": "glitched_split",
+		"electric_split": "electric_split",
+		"pierce_split": "piercing_split",
+		"cryo_electric": "cryostatic",
+		"electric_glitch": "overclock",
+		"electric_pierce": "railgun",
+		"cryo_pierce": "glacier_spike",
+		"glitch_pierce": "phantom",
+		"cryo_glitch": "deep_freeze",
+		"fire_water": "steam_pressure",
+		"cryo_fire": "thermal_shock",
+		"electric_fire": "plasma_discharge",
+		"fire_pierce": "thermite",
+		"fire_split": "firework",
+		"fire_glitch": "meltdown",
+		"split_water": "wet_split",
+		"electric_water": "conductive",
+		"pierce_water": "hydro_jet",
+		"glitch_water": "blue_screen",
+		"cryo_water": "absolute_zero",
+		}
+	return fusions.get(key, "")
+
+func _apply_fusion(ball: Node2D, fusion: String) -> void:
+	ball.is_fused = true
+	ball.has_fused = true
+	ball.fusion_type = fusion
+	match fusion:
+		"wet_split":
+			ball.can_split = true
+			ball.can_water = true
+			ball.max_damage = 8
+		"conductive":
+			ball.can_electric = true
+			ball.can_water = true
+			ball.max_damage = 10
+		"hydro_jet":
+			ball.can_pierce = true
+			ball.can_water = true
+			ball.max_damage = 12
+		"blue_screen":
+			ball.can_glitch = true
+			ball.can_water = true
+			ball.max_damage = 9
+		"absolute_zero":
+			ball.can_cryo = true
+			ball.can_water = true
+			ball.max_damage = 11
+		"frozen_split":
+			ball.can_split = true
+			ball.can_cryo = true
+			ball.max_damage = 8
+		"glitched_split":
+			ball.can_split = true
+			ball.can_glitch = true
+			ball.max_damage = 8
+		"electric_split":
+			ball.can_split = true
+			ball.can_electric = true
+			ball.max_damage = 10
+		"piercing_split":
+			ball.can_split = true
+			ball.can_pierce = true
+			ball.max_damage = 10
+		"cryostatic":
+			ball.can_electric = true
+			ball.can_cryo = true
+			ball.max_damage = 11
+		"overclock":
+			ball.can_electric = true
+			ball.can_glitch = true
+			ball.max_damage = 11
+		"railgun":
+			ball.can_electric = true
+			ball.can_pierce = true
+			ball.max_damage = 12
+		"glacier_spike":
+			ball.can_pierce = true
+			ball.can_cryo = true
+			ball.max_damage = 12
+		"phantom":
+			ball.can_pierce = true
+			ball.can_glitch = true
+			ball.max_damage = 12
+		"deep_freeze":
+			ball.can_cryo = true
+			ball.can_glitch = true
+			ball.max_damage = 10
+		"steam_pressure":
+			ball.can_fire = true
+			ball.can_water = true
+			ball.max_damage = 8
+		"thermal_shock":
+			ball.can_fire = true
+			ball.can_cryo = true
+			ball.max_damage = 14
+		"plasma_discharge":
+			ball.can_fire = true
+			ball.can_electric = true
+			ball.max_damage = 13
+		"thermite":
+			ball.can_fire = true
+			ball.can_pierce = true
+			ball.max_damage = 13
+		"firework":
+			ball.can_fire = true
+			ball.can_split = true
+			ball.max_damage = 10
+		"meltdown":
+			ball.can_fire = true
+			ball.can_glitch = true
+			ball.max_damage = 12
+	ball.queue_redraw()
+func _draw() -> void:
+	var cyclone_player = get_tree().get_first_node_in_group("player")
+	if cyclone_player and cyclone_player.character_type == "cyclone" and not moving and cyclone_player.held_ball != self:
+		# Sadece en yakın top işaretlensin
+		var closest = null
+		var closest_dist = INF
+		var all_balls = get_tree().get_nodes_in_group("balls")
+		for b in all_balls:
+			if not b.moving and cyclone_player.held_ball != b:
+				var d = cyclone_player.global_position.distance_to(b.global_position)
+				if d < closest_dist:
+					closest_dist = d
+					closest = b
+		if closest == self and closest_dist < 80:
+			draw_arc(Vector2.ZERO, 18, 0, TAU, 32, Color(0.0, 1.0, 0.4), 2)
+	# Mimic RGB halka
+	if mimic_done and not is_mimic:
+		var r = (sin(mimic_ring_time * 2.0) + 1.0) / 2.0
+		var g = (sin(mimic_ring_time * 2.0 + 2.094) + 1.0) / 2.0
+		var b = (sin(mimic_ring_time * 2.0 + 4.189) + 1.0) / 2.0
+		draw_arc(Vector2.ZERO, 14, 0, TAU, 32, Color(r, g, b), 2.0)
+	if is_fused:
+		match fusion_type:
+			"wet_split":
+				draw_circle(Vector2.ZERO, 10, Color(0.0, 0.5, 1.0))
+				for i in range(8):
+					var angle = i * TAU / 8
+					var start = Vector2(cos(angle), sin(angle)) * 10
+					var end = Vector2(cos(angle), sin(angle)) * 16
+					draw_line(start, end, Color(0.3, 0.7, 1.0), 2)
+			"conductive":
+				draw_circle(Vector2.ZERO, 10, Color(0.0, 0.5, 1.0))
+				draw_arc(Vector2.ZERO, 13, 0, TAU, 32, Color(0.2, 0.5, 1.0), 2)
+				draw_line(Vector2(-8, -5), Vector2(8, 5), Color(1.0, 1.0, 0.0, 0.8), 2)
+			"hydro_jet":
+				var points = PackedVector2Array([
+					Vector2(-15, 0), Vector2(0, -8),
+					Vector2(15, 0), Vector2(0, 8)
+				])
+				draw_colored_polygon(points, Color(0.0, 0.5, 1.0))
+				draw_arc(Vector2.ZERO, 13, 0, TAU, 32, Color(0.3, 0.7, 1.0), 2)
+			"blue_screen":
+				draw_circle(Vector2.ZERO, 10, Color(0.0, 0.3, 0.8))
+				draw_line(Vector2(-8, -5), Vector2(8, 5), Color(0.8, 0.0, 0.8, 0.8), 2)
+				draw_line(Vector2(-8, 5), Vector2(8, -5), Color(0.8, 0.0, 0.8, 0.8), 2)
+			"absolute_zero":
+				draw_circle(Vector2.ZERO, 12, Color(0.8, 1.0, 1.0))
+				var pts = PackedVector2Array([
+					Vector2(0, -14), Vector2(8, -7),
+					Vector2(8, 7), Vector2(0, 14),
+					Vector2(-8, 7), Vector2(-8, -7)
+				])
+				draw_colored_polygon(pts, Color(0.5, 0.8, 1.0, 0.5))
+			"steam_pressure":
+				draw_circle(Vector2.ZERO, 12, Color(0.8, 0.8, 1.0))
+				draw_arc(Vector2.ZERO, 15, 0, TAU, 32, Color(1.0, 0.3, 0.0), 2)
+			"thermal_shock":
+				draw_circle(Vector2.ZERO, 12, Color(1.0, 0.3, 0.0))
+				var pts = PackedVector2Array([
+					Vector2(0, -12), Vector2(7, -6),
+					Vector2(7, 6), Vector2(0, 12),
+					Vector2(-7, 6), Vector2(-7, -6)
+				])
+				draw_colored_polygon(pts, Color(0.5, 0.8, 1.0, 0.5))
+			"plasma_discharge":
+				draw_circle(Vector2.ZERO, 12, Color(1.0, 0.5, 0.0))
+				draw_arc(Vector2.ZERO, 15, 0, TAU, 32, Color(1.0, 1.0, 0.0), 2)
+			"thermite":
+				var points = PackedVector2Array([
+					Vector2(-15, 0), Vector2(0, -8),
+					Vector2(15, 0), Vector2(0, 8)
+				])
+				draw_colored_polygon(points, Color(1.0, 0.3, 0.0))
+				draw_arc(Vector2.ZERO, 13, 0, TAU, 32, Color(1.0, 0.8, 0.0), 2)
+			"firework":
+				draw_circle(Vector2.ZERO, 10, Color(1.0, 0.3, 0.0))
+				for i in range(8):
+					var angle = i * TAU / 8
+					var start = Vector2(cos(angle), sin(angle)) * 10
+					var end = Vector2(cos(angle), sin(angle)) * 16
+					draw_line(start, end, Color(1.0, 0.6, 0.0), 2)
+			"firework_piece":
+				draw_circle(Vector2.ZERO, 6, Color(1.0, 0.4, 0.0))
+				draw_arc(Vector2.ZERO, 8, 0, TAU, 32, Color(1.0, 0.8, 0.0), 1.5)
+			"meltdown":
+				draw_circle(Vector2.ZERO, 10, Color(1.0, 0.3, 0.0))
+				draw_line(Vector2(-8, -5), Vector2(8, 5), Color(0.8, 0.0, 0.8, 0.8), 2)
+				draw_line(Vector2(-8, 5), Vector2(8, -5), Color(0.8, 0.0, 0.8, 0.8), 2)
+			"frozen_split":
+				# Mavi dikenli
+				draw_circle(Vector2.ZERO, 10, Color(0.5, 0.8, 1.0))
+				for i in range(8):
+					var angle = i * TAU / 8
+					var start = Vector2(cos(angle), sin(angle)) * 10
+					var end = Vector2(cos(angle), sin(angle)) * 16
+					draw_line(start, end, Color(0.8, 1.0, 1.0), 2)
+			"glitched_split":
+				# Mor dikenli
+				draw_circle(Vector2.ZERO, 10, Color(0.8, 0.0, 0.8))
+				for i in range(8):
+					var angle = i * TAU / 8
+					var start = Vector2(cos(angle), sin(angle)) * 10
+					var end = Vector2(cos(angle), sin(angle)) * 16
+					draw_line(start, end, Color(1.0, 0.5, 1.0), 2)
+			"electric_split":
+				# Sarı dikenli
+				draw_circle(Vector2.ZERO, 10, Color(1.0, 1.0, 0.0))
+				for i in range(8):
+					var angle = i * TAU / 8
+					var start = Vector2(cos(angle), sin(angle)) * 10
+					var end = Vector2(cos(angle), sin(angle)) * 16
+					draw_line(start, end, Color(1.0, 0.8, 0.0), 2)
+			"piercing_split":
+				# Turuncu oval dikenli
+				var points = PackedVector2Array([
+					Vector2(-15, 0), Vector2(0, -8),
+					Vector2(15, 0), Vector2(0, 8)
+				])
+				draw_colored_polygon(points, Color(1.0, 0.6, 0.0))
+				for i in range(8):
+					var angle = i * TAU / 8
+					var start = Vector2(cos(angle), sin(angle)) * 10
+					var end = Vector2(cos(angle), sin(angle)) * 16
+					draw_line(start, end, Color(1.0, 0.4, 0.0), 2)
+			"cryostatic":
+				# Mavi elektrik kristali
+				var pts = PackedVector2Array([
+					Vector2(0, -12), Vector2(7, -6),
+					Vector2(7, 6), Vector2(0, 12),
+					Vector2(-7, 6), Vector2(-7, -6)
+				])
+				draw_colored_polygon(pts, Color(0.3, 0.6, 1.0))
+				draw_arc(Vector2.ZERO, 13, 0, TAU, 32, Color(0.5, 0.8, 1.0), 2)
+			"overclock":
+				# Mor elektrik
+				draw_circle(Vector2.ZERO, 10, Color(0.8, 0.0, 0.8))
+				draw_arc(Vector2.ZERO, 13, 0, TAU, 32, Color(1.0, 0.5, 1.0), 2)
+				draw_line(Vector2(-8, -5), Vector2(8, 5), Color(0.2, 0.5, 1.0, 0.8), 2)
+				draw_line(Vector2(-8, 5), Vector2(8, -5), Color(0.2, 0.5, 1.0, 0.8), 2)
+			"railgun":
+				# Sarı oval elektrik
+				var points = PackedVector2Array([
+					Vector2(-15, 0), Vector2(0, -8),
+					Vector2(15, 0), Vector2(0, 8)
+				])
+				draw_colored_polygon(points, Color(1.0, 1.0, 0.0))
+				draw_arc(Vector2.ZERO, 13, 0, TAU, 32, Color(0.2, 0.5, 1.0), 2)
+			"glacier_spike":
+				# Mavi oval kristal
+				var pts = PackedVector2Array([
+					Vector2(-15, 0), Vector2(0, -8),
+					Vector2(15, 0), Vector2(0, 8)
+				])
+				draw_colored_polygon(pts, Color(0.3, 0.8, 1.0))
+				var crystal_pts = PackedVector2Array([
+					Vector2(0, -12), Vector2(5, -6),
+					Vector2(5, 6), Vector2(0, 12),
+					Vector2(-5, 6), Vector2(-5, -6)
+				])
+				draw_colored_polygon(crystal_pts, Color(0.6, 0.9, 1.0, 0.5))
+			"phantom":
+				# Yarı saydam mor oval
+				var points = PackedVector2Array([
+					Vector2(-15, 0), Vector2(0, -8),
+					Vector2(15, 0), Vector2(0, 8)
+				])
+				draw_colored_polygon(points, Color(0.6, 0.0, 0.8, 0.7))
+				draw_line(Vector2(-8, -5), Vector2(8, 5), Color(1.0, 0.5, 1.0, 0.5), 2)
+				draw_line(Vector2(-8, 5), Vector2(8, -5), Color(1.0, 0.5, 1.0, 0.5), 2)
+			"deep_freeze":
+				# Mor kristal
+				var pts = PackedVector2Array([
+					Vector2(0, -12), Vector2(7, -6),
+					Vector2(7, 6), Vector2(0, 12),
+					Vector2(-7, 6), Vector2(-7, -6)
+				])
+				draw_colored_polygon(pts, Color(0.6, 0.0, 0.8))
+				draw_line(Vector2(0, -12), Vector2(0, 12), Color(0.5, 0.8, 1.0, 0.8), 1.5)
+				draw_line(Vector2(-7, -6), Vector2(7, 6), Color(0.5, 0.8, 1.0, 0.8), 1.5)
+				draw_line(Vector2(7, -6), Vector2(-7, 6), Color(0.5, 0.8, 1.0, 0.8), 1.5)
+		draw_circle(Vector2(5, 8), 5, Color(0, 0, 0, 0.25))
+		return
+	var shadow_offset = Vector2(5, 8)
+	draw_circle(shadow_offset, 8 * scale.x, Color(0, 0, 0, 0.35))
+	
+	if can_electric:
+		draw_circle(Vector2.ZERO, 10, Color(0.2, 0.5, 1.0))
+		draw_arc(Vector2.ZERO, 13, 0, TAU, 32, Color(0.5, 0.8, 1.0), 2)
+	elif can_pierce:
+		var points = PackedVector2Array([
+			Vector2(-15, 0), Vector2(0, -8),
+			Vector2(15, 0), Vector2(0, 8)
+		])
+		draw_colored_polygon(points, Color(1.0, 0.8, 0.0))
+		var shadow_points = PackedVector2Array([
+			Vector2(-12, 6), Vector2(0, 10),
+			Vector2(12, 6), Vector2(0, 2)
+		])
+		draw_colored_polygon(shadow_points, Color(0, 0, 0, 0.25))
+	elif can_water:
+		draw_circle(Vector2.ZERO, 12, Color(0.0, 0.5, 1.0, 0.8))
+		draw_circle(Vector2.ZERO, 8, Color(0.3, 0.7, 1.0, 0.6))
+		draw_circle(Vector2(3, -3), 3, Color(0.8, 0.9, 1.0, 0.5))
+		draw_circle(Vector2(5, 8), 5, Color(0, 0, 0, 0.25))
+	elif can_split:
+		draw_circle(Vector2.ZERO, 10, Color(1.0, 0.2, 0.2))
+		for i in range(8):
+			var angle = i * TAU / 8
+			var start = Vector2(cos(angle), sin(angle)) * 10
+			var end = Vector2(cos(angle), sin(angle)) * 16
+			draw_line(start, end, Color(1.0, 0.4, 0.0), 2)
+	elif can_fire:
+		draw_circle(Vector2.ZERO, 10, Color(1.0, 0.3, 0.0))
+		draw_arc(Vector2.ZERO, 13, 0, TAU, 32, Color(1.0, 0.6, 0.0), 2)
+		draw_circle(Vector2(5, 8), 5, Color(0, 0, 0, 0.25))
+	elif can_leech:
+		draw_circle(Vector2.ZERO, 8, Color(0.0, 0.8, 0.0, 0.9))
+		draw_arc(Vector2.ZERO, 10, 0, TAU, 32, Color(0.0, 1.0, 0.0), 2)
+		for i in range(6):
+			var angle = i * TAU / 6
+			var start = Vector2(cos(angle), sin(angle)) * 10
+			var end = Vector2(cos(angle), sin(angle)) * 15
+			draw_line(start, end, Color(0.0, 1.0, 0.2), 2)
+		draw_circle(Vector2.ZERO, 3, Color(0.5, 1.0, 0.5))
+	elif can_cryo:
+		var points = PackedVector2Array([
+			Vector2(0, -12),
+			Vector2(7, -6),
+			Vector2(7, 6),
+			Vector2(0, 12),
+			Vector2(-7, 6),
+			Vector2(-7, -6)
+		])
+		draw_colored_polygon(points, Color(0.5, 0.8, 1.0))
+		draw_line(Vector2(0, -12), Vector2(0, 12), Color(0.8, 1.0, 1.0, 0.8), 1.5)
+		draw_line(Vector2(-7, -6), Vector2(7, 6), Color(0.8, 1.0, 1.0, 0.8), 1.5)
+		draw_line(Vector2(7, -6), Vector2(-7, 6), Color(0.8, 1.0, 1.0, 0.8), 1.5)
+		draw_circle(Vector2(5, 8), 5, Color(0, 0, 0, 0.25))
+	elif can_glitch:
+		draw_circle(Vector2.ZERO, 10, Color(0.8, 0.0, 0.8))
+		draw_arc(Vector2.ZERO, 13, 0, TAU, 32, Color(1.0, 0.0, 1.0), 2)
+		draw_line(Vector2(-8, -5), Vector2(8, 5), Color(1.0, 0.5, 1.0, 0.8), 2)
+		draw_line(Vector2(-8, 5), Vector2(8, -5), Color(1.0, 0.5, 1.0, 0.8), 2)
+	else:
+		if is_mimic:
+			var r = (sin(mimic_color_time * 2.0) + 1.0) / 2.0
+			var g = (sin(mimic_color_time * 2.0 + 2.094) + 1.0) / 2.0
+			var b = (sin(mimic_color_time * 2.0 + 4.189) + 1.0) / 2.0
+			draw_circle(Vector2.ZERO, 10, Color(r, g, b))
+			draw_circle(Vector2(5, 8), 5, Color(0, 0, 0, 0.25))
+		else:
+			draw_circle(Vector2.ZERO, 10, Color(1.0, 1.0, 1.0))
+		
+func _hit_zombie(zombie: Node2D) -> void:
+	var fusion_zone = get_tree().get_first_node_in_group("fusion_zone")
+	if fusion_zone:
+		fusion_zone.add_energy_from_hit(hit_type)
+	if not is_instance_valid(zombie):
+		return
+	if zombie in hit_zombies:
+		return
+	hit_zombies.append(zombie)
+	# Mimic 5 çarpmada eski haline döner
+	if mimic_done and not is_mimic:
+		mimic_hits += 1
+		if mimic_hits >= max_mimic_hits:
+			can_split = false
+			can_electric = false
+			can_pierce = false
+			can_cryo = false
+			can_glitch = false
+			can_water = false
+			can_fire = false
+			mimic_done = false
+			mimic_hits = 0
+			queue_redraw()
+	# Hıza göre hasar hesapla
+	var base_damage = max_damage
+	if can_split and not has_split:
+		base_damage = 7
+	elif can_electric:
+		base_damage = 9
+	elif can_pierce:
+		base_damage = 10
+	elif can_cryo:
+		base_damage = 4
+	elif can_glitch:
+		base_damage = 4
+	elif can_water:
+		base_damage = 3
+	elif can_fire:
+		base_damage = 6
+	elif can_leech:
+		base_damage = 2
+	var total_damage = base_damage
+
+# Crit kontrolü
+	var is_crit = randf() < crit_chance
+	if is_crit:
+		total_damage = int(total_damage * crit_multiplier)
+
+	zombie.take_damage(total_damage)
+	# Leila - top sektirme
+	var game_player = get_tree().get_first_node_in_group("player")
+	if game_player and game_player.character_type == "leila":
+		if speed > 200:
+			speed = min(speed + 150, 900.0)
+		# Durum etkisi etkileşimleri
+	# Electrified etkileşimleri
+	if zombie.is_electrified:
+		if can_pierce:
+			# Railgun'a dönüş
+			can_pierce = false
+			can_electric = true
+			has_fused = true
+			is_fused = true
+			fusion_type = "railgun"
+			speed = 900.0
+			max_damage = 15
+			queue_redraw()
+			await get_tree().create_timer(15.0).timeout
+			if is_instance_valid(self):
+				can_electric = false
+				fusion_type = ""
+				is_fused = false
+				speed = 600.0
+				max_damage = 10
+				queue_redraw()
+		elif can_cryo:
+			# 3 saniye sonra Burst hasar
+			zombie.is_electrified = false
+			zombie.modulate = Color(1, 1, 1)
+			await get_tree().create_timer(3.0).timeout
+			if is_instance_valid(zombie):
+				zombie.take_damage(20)
+		elif can_glitch:
+			# Aşırı yüklenme - düşene kadar etrafına saldırsın
+			zombie.is_electrified = false
+			zombie.modulate = Color(1, 1, 1)
+			zombie.apply_glitch()
+		elif can_water:
+			# Chain Reaction - yakındaki ıslak düşmanlara elektrik
+			zombie.is_electrified = false
+			zombie.modulate = Color(1, 1, 1)
+			zombie.take_damage(10)
+			var enemies = get_tree().get_nodes_in_group("zombies")
+			for enemy in enemies:
+				if enemy != zombie and is_instance_valid(enemy):
+					var dist = zombie.global_position.distance_to(enemy.global_position)
+					if dist < 200 and enemy.is_wet:
+						enemy.take_damage(10)
+						enemy.is_electrified = false
+		elif can_fire:
+			# Plazma bombası - AoE patlama
+			zombie.is_electrified = false
+			zombie.modulate = Color(1, 1, 1)
+			var enemies = get_tree().get_nodes_in_group("zombies")
+			for enemy in enemies:
+				if is_instance_valid(enemy):
+					var dist = zombie.global_position.distance_to(enemy.global_position)
+					if dist < 150:
+						enemy.take_damage(15)
+	if not is_instance_valid(zombie):
+		return
+	if can_water and zombie.is_burning:
+		# Burn + Water = Steam
+		zombie.apply_wet()
+		zombie.take_damage(8)
+		zombie.is_burning = false
+	elif can_electric and zombie.is_wet:
+		# Wet + Electric = Shock
+		zombie.take_damage(6)
+		# Zincir hasar - yakındaki düşmanlara da çarpar
+		var enemies = get_tree().get_nodes_in_group("zombies")
+		for enemy in enemies:
+			if enemy != zombie and is_instance_valid(enemy):
+				var dist = zombie.global_position.distance_to(enemy.global_position)
+				if dist < 150:
+					enemy.take_damage(4)
+	elif can_cryo and zombie.is_wet:
+		# Wet + Cryo = Anında Frozen
+		zombie.apply_frozen()
+	elif can_cryo and zombie.is_burning:
+		# Burn + Cryo = Thermal Shock
+		zombie.take_damage(12)
+		zombie.is_burning = false
+	# Can çalma topu 
+	if can_leech:
+		var game = get_tree().get_first_node_in_group("game")
+		if game:
+			game.player_hp = min(game.player_hp + 2, game.player_max_hp)
+			game.update_ui()
+	# Hydro Jet - vakum koridoru, yakındaki topları hızlandırır
+	if is_fused and fusion_type == "hydro_jet" and is_instance_valid(zombie):
+		zombie.apply_wet()
+		var balls = get_tree().get_nodes_in_group("balls")
+		for b in balls:
+			if b != self and b.moving:
+				var dist = global_position.distance_to(b.global_position)
+				if dist < 150:
+					b.speed = min(b.speed + 100, 800)
+	# Cryostatic - yolda elektrik sızdırır
+	if is_fused and fusion_type == "cryostatic" and is_instance_valid(zombie):
+		zombie.apply_slow(slow_amount)
+		var zombies = get_tree().get_nodes_in_group("zombies")
+		for z in zombies:
+			if z != zombie:
+				var dist = global_position.distance_to(z.global_position)
+				if dist < 100:
+					z.take_damage(total_damage / 2)
+	# Wet Split parçası - tek vurumluk, ıslatır
+	if is_fused and fusion_type == "wet_split_piece" and is_instance_valid(zombie):
+		zombie.apply_wet()
+		queue_free()
+		return
+	# Deep Freeze Error - animasyonu dondur, etraftaki topları yavaşlat
+	if is_fused and fusion_type == "deep_freeze" and is_instance_valid(zombie):
+		zombie.apply_frozen()
+		zombie.apply_glitch()
+	# Phantom - içinden geç ve glitch uygula
+	if is_fused and fusion_type == "phantom" and is_instance_valid(zombie):
+		zombie.apply_glitch()
+	# Hydro Jet - vakum koridoru, yakındaki topları hızlandırır
+	if is_fused and fusion_type == "hydro_jet" and is_instance_valid(zombie):
+		zombie.apply_wet()
+		var balls = get_tree().get_nodes_in_group("balls")
+		for b in balls:
+			if b != self and b.moving:
+				var dist = global_position.distance_to(b.global_position)
+				if dist < 150:
+					b.speed = min(b.speed + 100, 800)
+	# Overclock - birbirine saldırtır
+	if is_fused and fusion_type == "overclock" and is_instance_valid(zombie):
+		zombie.apply_glitch()
+		var zombies = get_tree().get_nodes_in_group("zombies")
+		for z in zombies:
+			if z != zombie:
+				var dist = global_position.distance_to(z.global_position)
+				if dist < 200:
+					z.apply_glitch()
+	# Railgun - elektrik hattı
+	if is_fused and fusion_type == "railgun" and is_instance_valid(zombie):
+		var zombies = get_tree().get_nodes_in_group("zombies")
+		for z in zombies:
+			if z != zombie:
+				var dist = global_position.distance_to(z.global_position)
+				if dist < 150:
+					z.take_damage(total_damage / 2)
+	# Glacier Spike - buz çekirdeği
+	if is_fused and fusion_type == "glacier_spike" and is_instance_valid(zombie):
+		var target_zombie = zombie
+		get_tree().create_timer(2.0).timeout.connect(func():
+			if is_instance_valid(target_zombie):
+				target_zombie.apply_slow(0.5)
+				target_zombie.take_damage(total_damage)
+		)
+	# Blue Screen - wet + glitch
+	if is_fused and fusion_type == "blue_screen" and is_instance_valid(zombie):
+		zombie.apply_wet()
+		zombie.apply_glitch()
+	# Conductive - zincir elektrik
+	if is_fused and fusion_type == "conductive" and is_instance_valid(zombie):
+		zombie.apply_wet()
+		var zombies = get_tree().get_nodes_in_group("zombies")
+		for z in zombies:
+			if z != zombie and global_position.distance_to(z.global_position) < 200:
+				if z.is_wet:
+					z.take_damage(total_damage)
+	# Absolute Zero - anında dondur
+	if is_fused and fusion_type == "absolute_zero" and is_instance_valid(zombie):
+		zombie.apply_frozen()
+	# Firework parçası - tek vurumluk patlama
+	if is_fused and fusion_type == "firework_piece" and is_instance_valid(zombie):
+		zombie.apply_burn()
+		queue_free()
+		return
+	# Meltdown - glitch + burn
+	if is_fused and fusion_type == "meltdown" and is_instance_valid(zombie):
+		zombie.apply_burn()
+		zombie.apply_glitch()
+	# Thermite - içten yanma
+	if 	is_fused and fusion_type == "thermite" and is_instance_valid(zombie):
+		zombie.apply_burn()
+	# Steam Pressure - Knockback
+	if is_fused and fusion_type == "steam_pressure" and is_instance_valid(zombie):
+		var push_dir = (zombie.global_position - global_position).normalized()
+		zombie.global_position += push_dir * 200
+		zombie.apply_wet()
+	# Thermal Shock - Burst hasar
+	if is_fused and fusion_type == "thermal_shock" and is_instance_valid(zombie):
+		if zombie.is_frozen or zombie.is_slowed:
+			zombie.take_damage(total_damage * 2)
+	# Plasma Discharge - Alan hasarı
+	if is_fused and fusion_type == "plasma_discharge" and is_instance_valid(zombie):
+		var zombies = get_tree().get_nodes_in_group("zombies")
+		for z in zombies:
+			if global_position.distance_to(z.global_position) < 120:
+				z.take_damage(total_damage)
+	if can_fire and is_instance_valid(zombie):
+		zombie.apply_burn()
+	if can_water and is_instance_valid(zombie):
+		zombie.apply_wet()
+		#queue_free()
+		#return
+	if can_glitch and is_instance_valid(zombie):
+		zombie.apply_glitch()
+	if can_electric and is_instance_valid(zombie):
+		zombie.apply_electrified()
+	if can_cryo and is_instance_valid(zombie):
+		if zombie.is_wet:
+			zombie.apply_frozen()
+		else:
+			zombie.apply_slow(slow_amount)
+	
+	if can_split and not has_split:
+		has_split = true
+		can_split = false
+		queue_redraw()
+		_split()
+		if is_fused and fusion_type == "firework":
+			queue_free()
+			return
+
+	
+	if is_fused and fusion_type == "phantom":
+		hit_zombies.erase(zombie)
+	elif can_pierce:
+		if is_instance_valid(zombie) and zombie.health > 0:
+			move_direction = move_direction.bounce(Vector2(0, 1))
+		hit_zombies.erase(zombie)
+	else:
+		var bounce_normal = (global_position - zombie.global_position).normalized()
+		move_direction = move_direction.bounce(bounce_normal)
+		await get_tree().create_timer(0.5).timeout
+		if zombie in hit_zombies:
+			hit_zombies.erase(zombie)
+
+func _split() -> void:
+	var ball_scene_local = load("res://ball.tscn")
+	var directions = [
+		move_direction.rotated(deg_to_rad(30)),
+		move_direction.rotated(deg_to_rad(-30))
+	]
+	for dir in directions:
+		var new_ball = ball_scene_local.instantiate()
+		new_ball.has_split = true
+		new_ball.can_split = false
+		new_ball.can_electric = false
+		new_ball.can_pierce = false
+		new_ball.can_cryo = false
+		new_ball.can_glitch = false
+		new_ball.can_water = false
+		new_ball.is_mimic = false
+		
+		if is_fused and fusion_type == "firework":
+			new_ball.can_fire = true
+			new_ball.is_fused = true
+			new_ball.has_fused = true
+			new_ball.fusion_type = "firework_piece"
+			new_ball.max_damage = 4
+		elif is_fused and fusion_type == "wet_split":
+			new_ball.can_water = true
+			new_ball.is_fused = true
+			new_ball.has_fused = true
+			new_ball.fusion_type = "wet_split_piece"
+			new_ball.max_damage = 3
+		else:
+			new_ball.can_fire = false
+			new_ball.is_fused = false
+			new_ball.has_fused = true
+			new_ball.max_damage = 5
+			
+		get_parent().add_child(new_ball)
+		new_ball.global_position = global_position
+		new_ball.launch(dir)
+
+func _electric_blast() -> void:
+	var zombies = get_tree().get_nodes_in_group("zombies")
+	for z in zombies:
+		if z in hit_zombies:
+			continue
+		if global_position.distance_to(z.global_position) < 150:
+			z.take_damage(5)
+
+# ─────────────────────────────────────────────
+# SİBERPUNK TRAIL (İZ) SİSTEMİ
+# ─────────────────────────────────────────────
+
+func _setup_trail() -> void:
+	trail = Line2D.new()
+	# top_level=true: parent transform'u devralmaz, dünya koordinatlarında çizilir
+	trail.top_level = true
+	trail.z_index = 1
+	trail.width = 10.0
+	trail.begin_cap_mode = Line2D.LINE_CAP_ROUND
+	trail.end_cap_mode   = Line2D.LINE_CAP_ROUND
+	trail.joint_mode     = Line2D.LINE_JOINT_ROUND
+
+	# Genişlik eğrisi: kuyruktan (0 → ince) başa (1 → kalın)
+	var wc := Curve.new()
+	wc.add_point(Vector2(0.0, 0.04))
+	wc.add_point(Vector2(0.55, 0.28))
+	wc.add_point(Vector2(1.0, 1.0))
+	trail.width_curve = wc
+
+	# Renk gradyanı: kuyruk şeffaf → baş HDR parlak
+	var grad := Gradient.new()
+	grad.set_color(0, Color(0.0, 0.0, 0.0, 0.0))
+	grad.set_color(1, _get_trail_color())
+	trail.gradient = grad
+
+	trail.visible = false
+	add_child(trail)
+
+func _get_trail_color() -> Color:
+	# HDR değerleri (>1.0) → WorldEnvironment Glow ile bloom tetikler
+	if is_fused:
+		return Color(2.5, 2.0, 4.5, 0.9)
+	elif can_electric:
+		return Color(0.4, 1.8, 4.5, 0.9)
+	elif can_pierce:
+		return Color(4.5, 3.5, 0.2, 0.9)
+	elif can_split:
+		return Color(4.5, 0.4, 0.3, 0.9)
+	elif can_cryo:
+		return Color(0.4, 2.5, 4.5, 0.9)
+	elif can_glitch:
+		return Color(3.5, 0.2, 4.0, 0.9)
+	elif can_water:
+		return Color(0.2, 1.5, 4.5, 0.9)
+	elif can_fire:
+		return Color(4.5, 2.0, 0.2, 0.9)
+	elif can_leech:
+		return Color(0.2, 4.0, 0.5, 0.9)
+	elif is_mimic:
+		# RGB kayma efekti (her frame farklı renk)
+		var t := Time.get_ticks_msec() / 500.0
+		return Color(
+			(sin(t)          + 1.5) * 1.5,
+			(sin(t + 2.094)  + 1.5) * 1.5,
+			(sin(t + 4.189)  + 1.5) * 1.5,
+			0.9
+		)
+	return Color(2.0, 2.0, 2.5, 0.9)  # Normal top: soğuk beyaz HDR
+
+func _update_modulate() -> void:
+	# CanvasItem.modulate > 1.0 → HDR → Glow bloom'u tetikler
+	if is_fused:
+		modulate = Color(2.0, 1.8, 4.0)
+	elif can_electric:
+		modulate = Color(0.5, 1.5, 4.0)
+	elif can_pierce:
+		modulate = Color(4.0, 3.0, 0.2)
+	elif can_split:
+		modulate = Color(4.0, 0.5, 0.3)
+	elif can_cryo:
+		modulate = Color(0.5, 2.0, 4.0)
+	elif can_glitch:
+		modulate = Color(3.0, 0.2, 3.5)
+	elif can_water:
+		modulate = Color(0.2, 1.5, 4.0)
+	elif can_fire:
+		modulate = Color(4.0, 2.0, 0.2)
+	elif can_leech:
+		modulate = Color(0.2, 3.5, 0.5)
+	else:
+		modulate = Color(1.8, 1.8, 2.2)
+
+func _update_trail_color() -> void:
+	if is_instance_valid(trail) and trail.gradient != null:
+		trail.gradient.set_color(1, _get_trail_color())
+
+func _update_trail(_delta: float) -> void:
+	if not is_instance_valid(trail):
+		return
+
+	# Mimic & kopyalanmış toplar için gradyan rengini dinamik güncelle
+	if is_mimic or mimic_done:
+		_update_trail_color()
+
+	if moving:
+		trail_positions.append(global_position)
+		if trail_positions.size() > trail_max_length:
+			trail_positions.pop_front()
+		trail.points = PackedVector2Array(trail_positions)
+		if not trail.visible:
+			trail.visible = true
+	else:
+		# Top durduğunda iz yavaşça solar (her frame bir nokta düşer)
+		if trail_positions.size() > 0:
+			trail_positions.pop_front()
+			trail.points = PackedVector2Array(trail_positions)
+			if trail_positions.is_empty():
+				trail.visible = false

@@ -1,0 +1,235 @@
+[gd_scene format=3 uid="uid://in5hhk02q7t8"]
+
+[ext_resource type="Script" uid="uid://745y30w6no5i" path="res://main_menu.gd" id="1_06t4h"]
+[ext_resource type="FontFile" uid="uid://bdbf1qeb2yg1s" path="res://assets/orbitronfont/Orbitron-Bold.ttf" id="font_bold"]
+[ext_resource type="FontFile" uid="uid://xo24eqnt6ct1" path="res://assets/orbitronfont/Orbitron-Regular.ttf" id="font_regular"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1"]
+content_margin_left = 14.0
+content_margin_top = 10.0
+content_margin_right = 14.0
+content_margin_bottom = 10.0
+bg_color = Color(0.02, 0.03, 0.1, 0.92)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0, 0.95, 1, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+shadow_color = Color(0, 0.95, 1, 0.4)
+shadow_size = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3"]
+content_margin_left = 14.0
+content_margin_top = 10.0
+content_margin_right = 14.0
+content_margin_bottom = 10.0
+bg_color = Color(0, 0.12, 0.16, 0.97)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0, 0.75, 0.82, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2"]
+content_margin_left = 14.0
+content_margin_top = 10.0
+content_margin_right = 14.0
+content_margin_bottom = 10.0
+bg_color = Color(0, 0.22, 0.28, 0.97)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0, 1, 1, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+shadow_color = Color(0, 1, 1, 0.65)
+shadow_size = 18
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_4"]
+content_margin_left = 14.0
+content_margin_top = 10.0
+content_margin_right = 14.0
+content_margin_bottom = 10.0
+bg_color = Color(0.04, 0.04, 0.08, 0.75)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.28, 0.28, 0.36, 0.65)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5"]
+content_margin_left = 14.0
+content_margin_top = 10.0
+content_margin_right = 14.0
+content_margin_bottom = 10.0
+bg_color = Color(0.08, 0.02, 0.05, 0.92)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.18, 0.58, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+shadow_color = Color(1, 0.18, 0.58, 0.4)
+shadow_size = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7"]
+content_margin_left = 14.0
+content_margin_top = 10.0
+content_margin_right = 14.0
+content_margin_bottom = 10.0
+bg_color = Color(0.15, 0.02, 0.06, 0.97)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.15, 0.45, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6"]
+content_margin_left = 14.0
+content_margin_top = 10.0
+content_margin_right = 14.0
+content_margin_bottom = 10.0
+bg_color = Color(0.25, 0.04, 0.1, 0.97)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.25, 0.65, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+shadow_color = Color(1, 0.25, 0.65, 0.65)
+shadow_size = 18
+
+[node name="MainMenu" type="Node2D" unique_id=870671348]
+script = ExtResource("1_06t4h")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=1566448092]
+offset_right = 1920.0
+offset_bottom = 1080.0
+mouse_filter = 2
+color = Color(0.008, 0.008, 0.022, 1)
+
+[node name="AccentLeft" type="ColorRect" parent="." unique_id=101010101]
+offset_right = 4.0
+offset_bottom = 1080.0
+mouse_filter = 2
+color = Color(0, 0.72, 0.82, 0.35)
+
+[node name="AccentRight" type="ColorRect" parent="." unique_id=202020202]
+offset_left = 1916.0
+offset_right = 1920.0
+offset_bottom = 1080.0
+mouse_filter = 2
+color = Color(0, 0.72, 0.82, 0.35)
+
+[node name="LineTop" type="ColorRect" parent="." unique_id=303030303]
+offset_left = 120.0
+offset_top = 158.0
+offset_right = 1800.0
+offset_bottom = 160.0
+mouse_filter = 2
+color = Color(0, 0.72, 0.82, 0.28)
+
+[node name="LabelTitle" type="Label" parent="." unique_id=977290289]
+offset_top = 170.0
+offset_right = 1920.0
+offset_bottom = 295.0
+theme_override_colors/font_color = Color(0, 0.95, 1, 1)
+theme_override_fonts/font = ExtResource("font_bold")
+theme_override_font_sizes/font_size = 88
+text = "İNTO THE YARD"
+horizontal_alignment = 1
+
+[node name="LabelSubtitle" type="Label" parent="." unique_id=404040404]
+offset_top = 308.0
+offset_right = 1920.0
+offset_bottom = 342.0
+theme_override_colors/font_color = Color(1, 0.18, 0.58, 0.82)
+theme_override_fonts/font = ExtResource("font_regular")
+theme_override_font_sizes/font_size = 17
+text = "[ ITY CORP. — SECURE TERMINAL v2.1 ]"
+horizontal_alignment = 1
+
+[node name="LineBottom" type="ColorRect" parent="." unique_id=505050505]
+offset_left = 560.0
+offset_top = 360.0
+offset_right = 1360.0
+offset_bottom = 362.0
+mouse_filter = 2
+color = Color(0, 0.72, 0.82, 0.4)
+
+[node name="BtnNewGame" type="Button" parent="." unique_id=1635055789]
+offset_left = 755.0
+offset_top = 445.0
+offset_right = 1165.0
+offset_bottom = 515.0
+theme_override_colors/font_color = Color(0, 0.95, 1, 1)
+theme_override_fonts/font = ExtResource("font_bold")
+theme_override_font_sizes/font_size = 22
+theme_override_styles/normal = SubResource("StyleBoxFlat_1")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_3")
+theme_override_styles/hover = SubResource("StyleBoxFlat_2")
+theme_override_styles/focus = SubResource("StyleBoxFlat_1")
+text = "▶  NEW GAME"
+
+[node name="BtnLoadGame" type="Button" parent="." unique_id=1566071146]
+offset_left = 755.0
+offset_top = 543.0
+offset_right = 1165.0
+offset_bottom = 613.0
+theme_override_colors/font_color = Color(0.4, 0.4, 0.5, 0.65)
+theme_override_fonts/font = ExtResource("font_bold")
+theme_override_font_sizes/font_size = 22
+theme_override_styles/normal = SubResource("StyleBoxFlat_4")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_4")
+theme_override_styles/hover = SubResource("StyleBoxFlat_4")
+theme_override_styles/focus = SubResource("StyleBoxFlat_4")
+text = "//  LOAD GAME  [  SOON ]"
+
+[node name="BtnQuit" type="Button" parent="." unique_id=2071815634]
+offset_left = 755.0
+offset_top = 641.0
+offset_right = 1165.0
+offset_bottom = 711.0
+theme_override_colors/font_color = Color(1, 0.18, 0.58, 1)
+theme_override_fonts/font = ExtResource("font_bold")
+theme_override_font_sizes/font_size = 22
+theme_override_styles/normal = SubResource("StyleBoxFlat_5")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_7")
+theme_override_styles/hover = SubResource("StyleBoxFlat_6")
+theme_override_styles/focus = SubResource("StyleBoxFlat_5")
+text = "■  QUIT"
+
+[node name="LabelVersion" type="Label" parent="." unique_id=606060606]
+offset_left = 28.0
+offset_top = 1044.0
+offset_right = 400.0
+offset_bottom = 1068.0
+theme_override_colors/font_color = Color(0, 0.68, 0.78, 0.38)
+theme_override_fonts/font = ExtResource("font_regular")
+theme_override_font_sizes/font_size = 14
+text = "v0.0.6.6  //  ALPHA BUILD  //  ITY CORP. 2099"

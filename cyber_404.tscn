@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://dsxg56o2qaysk"]
+
+[ext_resource type="Script" uid="uid://dr63nxp7gxir7" path="res://cyber_404.gd" id="1_2s2ma"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_3ketf"]
+size = Vector2(100, 80)
+
+[node name="Cyber404" type="CharacterBody2D" unique_id=502544825]
+script = ExtResource("1_2s2ma")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1122698052]
+shape = SubResource("RectangleShape2D_3ketf")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=251852818]
+offset_left = -50.0
+offset_top = -40.0
+offset_right = 50.0
+offset_bottom = 40.0
+color = Color(0.2, 0.26666668, 0.33333334, 1)

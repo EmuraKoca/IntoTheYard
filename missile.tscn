@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://dv8bl6ettt0a1"]
+
+[ext_resource type="Script" uid="uid://ky2vmvu5fki1" path="res://missile.gd" id="1_cdnlh"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_8j23c"]
+radius = 8.0
+
+[node name="Missile" type="Area2D" unique_id=1597541676]
+script = ExtResource("1_cdnlh")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1641800604]
+shape = SubResource("CircleShape2D_8j23c")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=552788611]
+offset_left = -6.0
+offset_top = -6.0
+offset_right = 6.0
+offset_bottom = 6.0
+color = Color(1, 0.4, 0, 1)

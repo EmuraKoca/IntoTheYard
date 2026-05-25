@@ -1,0 +1,1654 @@
+0.0.0.1
+20.03.2026
+
+Player ve Ball eklendi ,
+Player sağa ve sola hareket edebiliyor ,
+Ball Player'a değince top sekiyor .
+
+0.0.0.2
+21.03.2026
+
+Skill sistemi eklendi 
+
+- Space ile gelen topa vurma var
+- Zamanlama ( vuruş hissi ) sistemi var
+- Son hali:
+
+Miss → normal sekme
+Great → hızlı sekme
+Perfect → çok hızlı sekme
+
+- Enemy spawn (manuel)
+- Aşağı hareket ediyor
+- Top çarpınca yok oluyor
+
+0.0.0.3
+22.03.2026
+
+Yorucu bi gün oldu , hit box bir türlü ayarlanmadı ve ben de sinirlenip kapattım .
+Bugün eklenen şeylere gelecek olursak , 
+Karakterimizi , düşmanı ve topu görsel olarak daha belirgin hale getirdik,
+Enemy Spawn oluyor artık yani bi düşman vurulunca , random yerden enemy spawn oluyor .
+
+0.0.0.4
+23.03.2026
+
+Oyuna güzel bir hikaye yazdım o sebepten mütevellit sol üste Top makinesi eklendi ,
+Bilgisayarın yeri değiştiği ve taktığımız uzatma kablosunda yanık kokusu alınca proje bugünlük bununla idare ediyor .
+
+0.0.0.5
+24.03.2026
+
+Eveeeeeeet , oyun yavaş yavaş oturmaya başladı , Top atma makinesini sol köşeye almıştık dün gece, şimdi topu da makineden çıkarıyoruz artık,
+Bununla birlikte bu tasarım kararı 3 saatimi aldı , herşeyi resmen baştan yazdık , sonuç olarak 21:00 da oturduğum sandalyeden 00:09 da kalkıyorum.
+Yani bişi yapılmamış gibi görünebilir ama oyunun iskeleti aslında an itibari ile kuruldu :)
+
+0.0.0.6
+25.03.2026
+
+2 Ayrı hata vardı onlar giderildi ,
+Artık GameArea daha dar çünkü seken top ile zombi vurmak oldukça zahmetli gibi geldi , 
+Sağda Uİ olacak onlar dizildi , solda da zombilerin yumrukladığı bir duvar , tabi şimdilik sadece renk atandı , 
+Yarın işin heyecan verici yanına geçiyoruz , o da , Topa vuruş hissiyatı tekrar , iyiydi güzeldi bi ara pes edecek gibi oldum ama sabrettim ve sonuç olarak İNŞAALLAH kazanan biz olacağızsss .
+
+0.0.0.7 + 0.0.0.8
+26.03.2026
+
+Artık topu tutabiliyoruz fakat sorun şu ki bu bir sürü bug'ı ortaya çıkardı , yine de halletmeden uyumak yok dedim ve gecenin 3buçuğunda uyuyacağım , 
+Kısaca bahsetmek gerekirse , topu space basılı tutup bırakınca topun gitmesi gerekiyordu fakat bu arada bir sorun çıkardı ve nedense Enemylerde tutarsızlık oldu .
+Çözdük , yarın ola hayrolaaaaaa
+
+0.0.0.9
+27.03.2026
+
+Gerçekten yoğun bir günün sonuna geldik , bu yama 9. olması hasebiyle benim için önemli , sebebi ise 0.0.1.0'a geçiş yapacağım ,
+Şimdiye kadar neler neler yaptık , artık topu istersek space basılı tutarak elimizde tutabiliyoruz , üstelik kontroller WASD oldu .
+Bununla birlikte , topun gideceği yöne MOUSE ile yön verebiliyoruz , yani epey gelişti 1 günde.
+Tabi beraberinde birsürü bug geldi , en son Manuel eklediğimiz ENEMY Nodu'unu kaldırdık , artık sadece random Enemy Spawn olacak .
+Yarın sonunda Vuruş hissine geçiyoruz .
+Yaniiiiii , İNŞAALLAH :)
+
+New BallGame
+28.03.2026
+
+En başa döndük , bir sürü hata olmuş kod yazılırken , sıfırdan bi sayfa açıldı , İNŞAALLAH hatasız gideceğiz . Moralim bozuk , bugünlük bu kadar . 7 saat kadar !
+
+29.03.2026
+0.0.1.3
+
+Aşırı hızlı ilerliyoruz , görsel iyileştirmeler harika , oyunun hikayesini de yazdım mükemmel herşey kimsenin kafasında soru işareti kalamaz,
+Özellikle topun düşme efekti mükemmel :)
+
+0.0.1.4
+30.03.2026
+
+EKLENENLER:
+
+Player can sistemi (zombie çarptığında hasar alır, 1.5 saniyelik dokunulmazlık)
+Game Over ekranı (can sıfırlanınca çıkar, tekrar oyna butonu var)
+4 farklı zombie tipi:
+	Normal Zombie (1 can, normal hız)
+	Armored Zombie (3 can, yavaş, gri)
+	Fast Zombie (1 can, çok hızlı, turuncu)
+	Cyber Zombie (2 can, zıplayan hareket, mor)
+Zombiler wave'e göre kademeli çıkıyor (ilk 2 wave sadece normal, sonra diğerleri ekleniyor)
+Zombiler yukarıdan geliyor (WallTop silindi)
+Pierce topu düzeltmesi (1 canlıyı öldürür geçer, 2+ canlıysa seker)
+is_dead flag sistemi tüm zombie tiplerine eklendi
+
+ÇIKARILANLAR:
+
+WallTop (zombiler oradan geldiği için silindi)
+
+0.0.1.5
+31.03.2026
+
+EKLENENLER:
+
+Enerji Bariyeri (üstte cyan çizgi, top sekiyor, zombiler geçiyor)
+
+DENENENLER AMA GERİ ALINANLAR:
+
+Ekran genişletme denemeleri (1280px) — karmaşıklaştı, geri alındı.
+
+0.0.1.6
+01.04.2025
+
+Bugün yaptıklarımız:
+
+Upgrade sadece bir sonraki topa uygulanıyor
+BallLauncher'da upgrade önizlemesi
+Bugünlük bu kadar huh
+
+0.0.1.7
+
+BUGÜN YAPILAN:
+
+1920x1080 çözünürlüğe geçildi (Stretch Mode: canvas_items, expand)
+Kamera 960x540 olarak ayarlandı
+Tüm duvar, spawn, kelepçe, top sınır değerleri yeni çözünürlüğe göre güncellendi
+Oyun alanı yeni layout'a taşındı (850x, 240y)
+Cadde alanı eklendi (1630x240px, üst kısım)
+Yaşam alanı eklendi (490x840px, sol kısım, koyu lacivert)
+Tribün eklendi (360x840px, koltuk çizgileri script ile)
+UI arka planı eklendi (290x1080px, sağ kısım)
+
+0.0.2.1
+
+BUGÜN YAPILAN:
+
+Top sistemi CharacterBody2D'ye geçirildi (fizik motoru bırakıldı)
+Top Player'ı artık itmiyor
+Catch modu düzeltildi, top tutulup fırlatılabiliyor
+Duvar sınırları kodla kontrol ediliyor
+İzometrik yer çekimi eklendi (parabolik yay, gravity = 80)
+Topların altına gölge eklendi
+Pierce topu ayrı sahne olarak yazıldı (pierce_ball.tscn)
+Pierce topu Launcher'dan sırasını bekleyerek geliyor
+Pierce topu sarı oval görünümünde
+Launcher'da upgrade önizlemesi düzeltildi (top fırlatılınca simge kayboluyor)
+Windowed mod ayarlandı (1280x720 pencere, 1920x1080 iç çözünürlük)
+
+0.0.2.2
+
+BUGÜN YAPILAN:
+
+İzometrik yer çekimi (parabolik yay) kaldırıldı, sadece hız azalması bırakıldı
+BallLauncher tribüne taşındı (830, 280 pozisyonu)
+Top zamanla yavaşlayıp düşme mekaniği eklendi (speed -= 15 * delta)
+Catch modunda top fırlatma düzeltildi
+Fırlatılan topların collision'ı düzeltildi (geçip gitme sorunu)
+Pierce topu ayrı sahneden kaldırıldı, ball.gd içine entegre edildi
+Pierce topuna catch cooldown eklendi (0.5 saniye)
+Pierce topunun gölgesi oval yapıldı
+Windowed mod ayarlandı (1280x720 pencere)
+
+0.0.2.3
+
+BUGÜN YAPILAN:
+
+Oyun ismi için beyin fırtınası yapıldı (ITY formatı — 3 aday eşle istişare edilecek)
+Upgrade kategorileri belirlendi: Individuality, Calamity, Utility, Connectivity
+Kart sistemi oluşturuldu (kategori rengi, isim, açıklama)
+Kartlara hover efekti eklendi (üzerine gelince koyulaşıyor)
+Her wave'de 6 upgrade'den rastgele 3 tanesi gösteriliyor
+Yeni upgrade'ler eklendi:
+
+Chain Upgrade (Individuality) → Zincir uzuyor ✅
+Speed Upgrade (Individuality) → Hareket hızı artıyor ✅
+Catch +1 (Connectivity) → Kısmen çalışıyor, yarın düzelecek
+
+
+SPEED const'tan var'a çevrildi
+held_balls listesi eklendi (çoklu top tutma altyapısı)
+
+
+YARIN:
+
+Catch +1 düzeltilecek
+
+0.0.2.4
+
+BUGÜN YAPILAN:
+
+Catch +1 düzeltildi (held_balls listesi ile çoklu top tutma)
+Next One kartı eklendi (Connectivity) → Topları teker teker fırlatma
+R tuşu → Aktif topu değiştirme
+Aktif top seçim efekti eklendi (beyaz halka)
+Next One olmadan hepsi aynı anda fırlatılıyor
+Seçim halkası küçültüldü
+Speed Upgrade düzeltildi (const → var)
+
+
+SIRADA:
+
+Calamity sistemi
+UI düzenleme
+Daha fazla upgrade
+
+0.0.2.5
+
+BUGÜN YAPILAN:
+Calamity Sistemi:
+
+C tuşu ile Calamity slotları arasında geçiş
+Sağ tık basılı tutunca etki alanı görünüyor (Lightning sarı, Flame kırmızı, Gravity mor)
+Sağ tık bırakınca güç kullanılıyor
+UI'da seçili slot belirgin görünüyor (>⚡<)
+
+Yeni Calamity Güçleri:
+
+⚡ Lightning → Anlık hasar
+🔥 Flame Zone → 3 sn sürekli hasar
+🌀 Gravitational Force → 5 sn çekim alanı
+🔮 Arise → Düşmüş topları yeniden harekete geçirir
+
+Top Düzeltmeleri:
+
+Düşme penceresi kısaltıldı (speed <= 130)
+Düşen toplar artık hasar veriyor
+Arise sonrası toplar düzgün çalışıyor
+
+0.0.2.5.a
+
+BUGÜN YAPILAN:
+Zombie HP Sistemi:
+
+Normal Zombie → 10 HP
+Fast Zombie → 8 HP
+Cyber Zombie → 20 HP
+Armored Zombie → 30 HP
+
+Top Hasar Sistemi:
+
+Normal Top → Max 5 hasar
+Split Top → Max 7 hasar (parçalar 5)
+Electric Top → Max 9 hasar + yakındakilere 5 hasar
+Pierce Top → Max 10 hasar, düşük canlı zombilerden geçer
+
+Hıza Bağlı Hasar:
+
+Hasar artık hıza göre hesaplanıyor (speed_ratio × max_damage)
+Perfect vuruş = Yüksek hasar
+Düşen top = Düşük hasar (sorun kendiliğinden çözüldü)
+
+Crit Sistemi Altyapısı:
+
+crit_chance ve crit_multiplier değişkenleri eklendi
+Kart sistemiyle genişletilecek
+
+Kart Fikirleri (yarın eklenecek):
+
+Ball Mastery +1 (tüm toplara)
+Pierce Sharpness (sadece Pierce'a)
+Thunder Amp (sadece Electric'e)
+
+0.0.2.6
+
+SON OTURUMDAN BERİ YAPILAN:
+Yeni Top Tipleri:
+
+✅ Cryo Ball → Zombiyi %25 yavaşlatır (3 sn), kristal görsel
+✅ Glitch Ball → Zombiyi 3 sn şaşırtır, topun değdiği zombi yakındaki zombiye saldırır
+
+Hasar Sistemi:
+
+Hıza bağlı hasar (speed_ratio × max_damage)
+Cryo Ball → 4 hasar
+Glitch Ball → 4 hasar
+
+Yeni Kartlar:
+
+Ball Mastery → Tüm toplara +1 hasar
+Pierce Sharpness → Pierce'a +2 hasar
+Thunder Amp → Electric'e +2 hasar
+Split Amp → Split'e +2 hasar
+Cryo Ball kartı
+Glitch Ball kartı
+
+Sopa Mekaniği:
+
+Space ile sopa sallama eklendi
+Yakın zombilere 3 hasar + 40px itme
+1 sn cooldown
+
+Zombie Sistemi:
+
+Sürekli spawn sistemi (Timer bazlı)
+Level ilerledikçe güçlü zombiler geliyor
+Spawn sıklığı level'la artıyor
+
+0.0.2.6a
+
+Bugünün özeti:
+
+✅ Bayılma mekaniği (düş, bekle, sağ alt köşeye git)
+✅ Ana menü sahnesi oluşturuldu (henüz tıklama sorunu var)
+✅ Hikaye güncellendi (PersonaliTY çipi, ITY Corp.)
+
+
+0.0.2.7
+
+BUGÜN YAPILAN:
+
+Ana menü oluşturuldu (Node2D tabanlı, Fullscreen ile mouse sorunu çözüldü)
+New Game → game_scene.tscn geçişi
+Quit butonu
+Window ayarları düzenlendi (Fullscreen + canvas_items + expand)
+Bayılma mekaniği tamamlandı (düş, bekle, sağ alt köşeye git)
+Sinerji sistemi planlandı (yarın kodlanacak)
+
+0.0.2.8
+
+BUGÜN YAPILAN:
+Oynanış İyileştirmeleri:
+
+Sol tık ile topa vurma (Space yerine)
+Zincir genişletildi (350px)
+Chain Upgrade kartı kaldırıldı
+Mıknatıs etkisi eklendi (0.02 lerp)
+
+Water Ball:
+
+Tek vurumluk, ıslatır (Wet debuff, 5 sn)
+Düşük hasar (3)
+Launcher önizlemesi eklendi
+
+Element Sistemi Altyapısı:
+
+Wet debuff eklendi
+Frozen altyapısı eklendi
+Electric zincir hasarı kaldırıldı (sadece sinerji ile çalışacak)
+
+Fikir Olarak Kaydedilenler:
+
+Enerji Transfer Sistemi (toplar birbirine güç aktarır)
+Fusion listesi (yarın gelecek)
+Zombie'ye geri dönüş tartışması
+Ben diyorum ki bak acayip bişi aklıma geldi şok olacaksın , görsel olarak da hayal ediyorum da  , çok güzel bi efekt olacaktır .
+Klasik topla başladık , 
+sonra seçeceğimiz top örneğin , Cryo Ball , 
+o sırada sahada olan klasik topun belli bir mesafe yakınından geçerse , Cryo özelliğini diğerine aktarsın , 
+bu cepte  , 
+Şimdi Topların Evriminden bahsedeceğim , 
+Diyelim iki farklı topumuz var ,
+Sahada dolaşan bir cyro var , 
+bir de Electro var , 
+İkisinden biri diğerine yaklaşınca , top kaybı olmadan enerjilerini birbirlerine transfer etsinler ,
+yani ikisi birleşmesin , ikisi ayrı güçlendirilmiş top olsun , 
+adı da örnek veriyorum , tetanus ball olsun , 
+zaten zor olan oyunumuzu hepten , zorlaştırmayalım ne dersin ?
+Rogue Like diye çıktığımız yolu , yapımcısına lanet okutan souls like oyunlara döndermeyelim :)
+
+0.0.2.9 + 0.0.3.0
+
+BUGÜN YAPILAN:
+Mimic Ball:
+
+Normal top artık Mimic Ball — RGB renk değişimi
+Güçlendirilmiş topa yaklaşınca o topun formunu kopyalar
+Fusion topu ve düşmüş topu kopyalamaz
+Split topları Mimic sistemine girmiyor
+
+Fusion Sistemi:
+
+10 kombinasyon eklendi
+Animasyon: iki top birbirine doğru kayarak birleşiyor
+Her fusion tipinin kendine özgü görseli var
+Fusion topu tekrar fusion olmuyor
+Düşmüş toplar fusion olmuyor
+
+Fusion Tipleri:
+
+Frozen Split, Glitched Split, Electric Split, Piercing Split
+Cryostatic, Overclock, Railgun
+Glacier Spike, Phantom, Deep Freeze
+
+Diğer:
+
+Level atlama hızlandırıldı (test için kills_to_level = 2)
+
+0.0.3.1
+19.04.2026
+
+
+BUGÜN YAPILAN:
+Fire Ball eklendi:
+
+6 hasar, Burn debuffı (3 sn, saniye başına 2 hasar)
+Launcher önizlemesi eklendi
+
+Fire Ball Fusion'ları eklendi:
+
+Steam Pressure (Fire+Water) → Knockback ✅
+Thermal Shock (Fire+Cryo) → Burst hasar ✅
+Plasma Discharge (Fire+Electric) → AoE patlama ✅
+Thermite (Fire+Pierce) → İçten yanma
+Firework (Fire+Split) → Ayrılan toplar ateşli
+Meltdown (Fire+Glitch) → Burn + Glitch
+
+Water Fusion'ları eklendi:
+
+Wet Split, Conductive, Hydro Jet, Blue Screen, Absolute Zero
+
+Düzeltmeler:
+
+Mimic Ball artık sadece güçlendirilmiş toplara yaklaşınca kopyalıyor
+Armored Zombie crash sorunu düzeltildi
+Water Ball fusion sisteme eklendi
+
+Yarın:
+
+Thermite, Firework, Meltdown testleri
+Kalan fusion mekanikleri (Phantom, Railgun, Overclock vs.)
+
+0.0.3.2
+20.04.2026
+
+BUGÜN YAPILAN:
+Fusion Mekanikleri Tamamlandı:
+
+Steam Pressure → Knockback + Wet ✅
+Thermal Shock → Donmuş/yavaş düşmana burst hasar ✅
+Plasma Discharge → AoE patlama ✅
+Thermite → İçten yanma (Burn) ✅
+Firework → Bölününce ateşli parçalar, tek vurumluk ✅
+Meltdown → Burn + Glitch ✅
+Absolute Zero → Anında dondurma ✅
+Conductive → Islak düşmanlara zincir elektrik ✅
+Blue Screen → Wet + Glitch ✅
+Glacier Spike → 2 sn sonra yavaşlatma + hasar ✅
+Railgun → Yakındaki düşmanlara elektrik hasarı ✅
+Overclock → Tüm yakın düşmanlara Glitch ✅
+Phantom → Tüm düşmanlardan geçer + Glitch ✅
+Deep Freeze Error → Dondur + Glitch ✅
+
+Düzeltmeler:
+
+Phantom duvar sorunu çözüldü
+Firework base top yok oluyor
+Pierce mekanigi düzeltildi
+
+0.0.3.3
+Fusion Mekanikleri Tamamlandı:
+
+Phantom → Tüm düşmanlardan geçer + Glitch ✅
+Deep Freeze Error → Dondur + Glitch ✅
+Glacier Spike → 2 sn sonra yavaşlatma + hasar ✅
+Railgun → Yakındaki düşmanlara elektrik hasarı ✅
+Overclock → Tüm yakın düşmanlara Glitch ✅
+
+UI İyileştirmeleri:
+
+Ball Counter eklendi (Balls: 0/20)
+Zaman göstergesi eklendi (Time: 00:00)
+Pause butonu eklendi (⏸)
+
+Oyun Dengesi:
+
+BallLauncher'a 20 top limiti eklendi
+Test sonucu: 17 dakika ayakta kalındı
+
+ESC/Pause:
+
+Pause menüsü eklendi (Resume, Main Menu, Quit)
+
+0.0.3.3a
+
+Fusion Mekanikleri Tamamlandı:
+
+Cryostatic → Yavaşlatma + yakın hasar ✅
+Wet Split → Bölününce su fışkırtır ✅
+Hydro Jet → Yakındaki topları hızlandırır ✅
+
+Bullet (Mermi) Sahnesi Area2D ile oluşturuldu .
+
+0.0.3.4
+
+Yeni Düşman Tipleri:
+
+✅ Cyber Shooter → 3 sn'de bir tek mermi atar, 15 HP
+✅ Cyber Shotgun → 3 sn'de bir 7 mermi saçar, 20 HP
+✅ Cyber Rifle → 3 sn'de bir 5 mermi art arda atar, 12 HP
+
+Mermi Sistemi:
+
+bullet.tscn oluşturuldu (Area2D tabanlı)
+Player'a 2 hasar verir
+Ekran dışına çıkınca yok olur
+
+22.04.2026
+0.0.3.4
+
+BUGÜNÜN ÖZETİ:
+Yeni Düşman Tipleri:
+
+✅ Cyber Shooter → Tek mermi, 15 HP
+✅ Cyber Shotgun → 7 saçma, 20 HP
+✅ Cyber Rifle → 5 taramalı mermi, 12 HP
+✅ Mermi sistemi (bullet.tscn, Area2D tabanlı)
+
+Boss: Cyber 404:
+
+✅ Temel hareket (yatay/dikey, mesafe koruyor)
+✅ Shotgun Burst (5×5 mermi, 9 sn)
+✅ Güdümlü Füze (15 sn, missile.tscn)
+✅ Shockwave (30 sn, sadece zırhlıyken)
+✅ Rastgele Silah sistemi
+✅ Zırh + Can sistemi (90+90)
+✅ Boss Can Barı (zırh gri, can kırmızı)
+⬜ Giriş animasyonu (yarın)
+⬜ Boyut düzeltmesi (yarın)
+
+23.04.2026
+0.0.3.4a
+
+BUGÜNÜN ÖZETİ:
+Boss: Cyber 404 Devam:
+
+✅ Can barı düzeltildi (zırh gri, can kırmızı, sırayla görünür)
+✅ Boss spawn pozisyonu → Üst ortaya (1240, 300)
+✅ Giriş animasyonu → Büyükten küçüğe iniş efekti
+✅ Boyut küçültüldü (80x100)
+⬜ Giriş animasyonu ince ayarı (yarın)
+⬜ Keep distance düzeltmesi (yarın)
+
+24.04.2026
+0.0.3.6
+
+BUGÜNÜN ÖZETİ:
+Boss: Cyber 404 Düzeltmeleri:
+
+✅ Top boss'a sağ/soldan çarpınca düzgün sekiyor
+✅ Boss zincire bağlı hareket ediyor
+✅ Boss sadece bir kez geliyor (boss_defeated flag)
+✅ Boss mermileri oyun alanı sınırlarında duruyor
+✅ Boss mermileriyle ölen cyberlar EXP vermiyor
+✅ Boss mermileriyle ölen cyberlar safezone'a koşmuyor
+✅ Shotgun Burst → 8 yöne koni şeklinde ateş
+✅ Landing Wave → 8 yöne mermi + cyberları yok eder
+
+25.04.2026
+0.0.3.6b
+
+Wave Sistemi Kaldırıldı:
+
+✅ Artık sadece Level bazlı çalışıyor
+✅ UI'dan Wave etiketi kaldırıldı
+
+
+27.04.2026
+0.0.3.7
+
+BUGÜNÜN ÖZETİ:
+Mimic Ball Güncellemeleri:
+
+✅ Artık Upgrade kartından ekleniyor
+✅ Hasar kopyalamıyor, sadece yetenek kopyalıyor
+✅ Kopyaladıktan sonra etrafında RGB halka dönüyor
+✅ 5 çarpmada eski haline (beyaz top) dönüyor
+
+Dash Eklendi:
+
+✅ Sağ tık ile aktive oluyor
+✅ WASD yönünde, çapraz kombinasyonlar çalışıyor
+✅ Başlangıçta 1 yük, upgrade ile max 3'e çıkacak
+✅ Her yük 1 sn'de doluyor, yükler bitince 1.5 sn bekleme
+✅ Kayarak hareket (teleport değil)
+✅ Kelepçe sınırlarına uyuyor
+
+28.04.2027
+0.0.3.8
+
+BUGÜNÜN ÖZETİ:
+Dash Düzeltmeleri:
+
+✅ Duvar sınırlarına çarpıyor (sağ, sol, alt)
+✅ Zincir aşımı düzeltildi
+✅ Dash sırasında collision kapanıyor, toplar anormal hareket etmiyor
+
+Boss Giriş Animasyonu:
+
+✅ Level 2'de dekoratif alana sandık düşüyor
+✅ Düşünce ekran titriyor
+✅ 15 sn sonra sandık açılma animasyonu (renk değişimi + büyüme)
+✅ Boss dekoratif alandan sahaya atlıyor
+✅ Atlayınca ekran titriyor
+✅ Atlayınca sahadaki cyberlar yok oluyor
+
+
+0.0.3.9
+
+BUGÜNÜN ÖZETİ:
+Boss Collision Düzeltmesi:
+
+✅ Boss atlama animasyonu sırasında collision kapatılıyor, inince açılıyor
+
+Fusion Zone — ITY RE-Processor:
+
+✅ Sağ üst köşeye yerleştirildi (1620, 290)
+✅ Güçlendirilmiş topları 80px vakum yarıçapıyla çekiyor
+✅ 2 top birikince 5 saniye sonra fusion topu cihazdan fırlatılıyor
+✅ Geçersiz kombinasyonda toplar iade ediliyor
+✅ Fusion topunun kendi kendini vakumlaması engellendi (is_fused kontrolü)
+✅ ColorRect ile görsel eklendi (cyan, 50x50)
+
+Öğrenilen Ders:
+Fusion topu spawn olunca vakum onu da çekiyordu — is_fused kontrolü ile çözüldü. 
+Bir dahaki benzer durumda ilk bakılacak yer burası! 🎯
+
+0.0.4.0
+
+Bugünün özeti:
+
+✅ Fusion Zone toggle sistemi (tıklayınca açık/kapalı)
+✅ Otomatik Fusion kaldırıldı (artık sadece Fusion Zone)
+✅ Perfect/Great/Miss vuruş sistemi
+✅ Fusion Energy Bar UI'a eklendi
+✅ Enerji zamanla + düşmana vurunca dolacak şekilde kuruldu
+⏳ Fusion Energy harcama sistemi — akşam ilk iş bu!
+
+0.0.4.1
+
+Energy bar artık topların fusion sırasında harcadığı enerjiyle paralel gidiyor.
+
+0.0.4.2
+
+BUGÜNÜN ÖZETİ:
+Can Sistemi:
+
+✅ Player HP 5'ten 50'ye çıkarıldı
+✅ Maksimum can göstergesi eklendi (Can: X/50)
+✅ Medkit kartı (+10 Can) eklendi
+✅ Max Health Up kartı (Maksimum can +5) eklendi
+
+Hasar Sistemi:
+
+✅ Perfect/Great/Miss vuruş sistemi kuruldu
+✅ Düşman hasar değerleri belirlendi (Normal:5, Fast:3, Armored:8, Cyber:6, Mermiler:3)
+✅ Yakın dövüş düşmanlarına attack_cooldown eklendi (1 saniyede bir hasar)
+✅ Collision mesafesi 35→60px düzeltildi
+
+Fusion Energy:
+
+✅ Enerji topa vurduğunda değil, top düşmana çarptığında doluyor
+✅ Perfect vuruş → +4 Energy, Great → +2 Energy
+✅ Fusion başlayınca 5 saniyede yavaşça 10 enerji tükeniyor
+
+Dash:
+
+✅ Mermilerden de başarıyla sıyrılabiliyor
+
+0.0.4.3
+
+BUGÜNÜN ÖZETİ:
+Can Sistemi → Integrity:
+
+✅ "Can" → "Integrity" olarak yeniden adlandırıldı
+✅ "INTEGRITY COMPROMISED" bitiş ekranı planlandı
+✅ IntegrityBar UI'a eklendi, içine gömülü "50/50" yazısı
+
+Data Leech Ball:
+
+✅ Yeni top eklendi — Matrix yeşili virüs görünümü
+✅ 2 hasar, düşmana vurduğunda +2 Integrity yeniler
+✅ Mimic tarafından kopyalanamıyor
+
+Hasar Sistemi:
+
+✅ Hıza bağlı hasar → sabit hasara çevrildi
+
+Durum Etkisi Etkileşimleri:
+
+✅ Burn + Water → Steam (ekstra hasar)
+✅ Wet + Electric → Shock (zincir hasar)
+✅ Wet + Cryo → Anında Frozen
+✅ Burn + Cryo → Thermal Shock (büyük hasar)
+
+Durum Etkisi Renkleri:
+
+✅ Tüm düşmanlara debuff renk değişimi eklendi
+⏳ Boss resist sistemi — yarın ilk iş!
+
+04.05.2026
+0.0.4.4
+
+BUGÜNÜN ÖZETİ:
+Electrified Debuff Sistemi:
+
+✅ Tüm düşmanlara is_electrified ve apply_electrified eklendi (sarı-yeşil renk, 5 saniye)
+✅ Electric Ball → düşmana Electrified uygular
+✅ Electrified + Pierce → Railgun'a dönüşür (15 saniye)
+✅ Electrified + Cryo → 3 saniye sonra Burst hasar
+✅ Electrified + Glitch → Aşırı yüklenme
+✅ Electrified + Water → Chain Reaction (yakındaki ıslak düşmanlara)
+✅ Electrified + Fire → Plazma bombası AoE
+
+Boss Bağışıklıkları:
+
+✅ Cyber 404 → Frozen ve Glitch'e bağışık
+
+Silahlı Düşmanlar Glitch:
+
+✅ Cyber Shooter, Shotgun, Rifle glitchlenince Player yerine yakındaki düşmana ateş ediyor
+
+Normal Düşmanlar Glitch:
+
+✅ Glitchlenince en yakın düşmana yürüyüp 3 hasar veriyor
+✅ Attack cooldown düzeltildi
+
+Spawn Hızı:
+
+✅ 2 katına çıkarıldı (3sn → 1.5sn, min 0.8sn → 0.4sn)
+
+05.05.2026
+0.0.4.6
+
+BUGÜNÜN ÖZETİ:
+Hasmen Seçim Ekranı:
+
+✅ Oyun başlayınca ekran duruyor, Hasmen seçim ekranı açılıyor
+✅ Mr. Hasmen diyalogu sağda, 3 seçenek solda
+✅ Synergy Protocol kartı tıklanabilir, diğer 2 slot "???" bekliyor
+✅ Kart üzerine gelince hover efekti eklendi
+
+Synergy Protocol:
+
+✅ Fusion Zone varsayılan olarak gizli başlıyor
+✅ Synergy Protocol seçilince Fusion Zone paraşütle iniyor
+✅ İniş animasyonu düzeltildi (sekme yok, düz iniş)
+
+Yarın:
+
+⏳ Diğer 2 seçeneği müzakere edeceğiz
+⏳ Seçim ekranına Mr. Hasmen görseli eklenecek
+
+09.05.2026
+0.0.4.7
+
+BUGÜNÜN ÖZETİ:
+Vector Sprite Sheet:
+
+✅ Gemini ve GPT ile sprite sheet üretildi
+✅ GPT'nin top-down izometrik versiyonu seçildi
+✅ remove.bg ile arka plan temizlendi
+✅ Idle, Walk, Run, Hurt, Death animasyonları ayrıldı
+
+Godot Animasyon Sistemi:
+
+✅ Sprite2D → AnimatedSprite2D'ye geçildi
+✅ SpriteFrames'e tüm animasyonlar eklendi
+✅ Idle ve Walk animasyonları harekete bağlandı
+✅ Hurt animasyonu hasar alınca çalışıyor
+✅ Death animasyonu game over'da oynuyor
+✅ Speed Upgrade'e göre Walk/Run geçişi
+✅ Sola giderken flip_h eklendi
+
+Yarın Yapılacaklar:
+
+⏳ Yön bazlı animasyonlar (yukarı, aşağı, sağ, sol)
+⏳ Durma animasyonu düzeltmesi
+⏳ Idle esneme animasyonu
+⏳ Dash animasyonu bağlantısı
+
+16.05.2026
+0.0.4.8
+
+BUGÜNÜN ÖZETİ:
+Karakter Seçim Ekranı:
+
+✅ character_select.tscn oluşturuldu
+✅ 3 karakter kartı yan yana (Vector, Leila, Cyclone)
+✅ İsim ve Talent bilgileri eklendi
+✅ Hover efekti — karakter PNG büyüyüp parlıyor, çerçeve sabit kalıyor
+✅ Seçili olmayan karakterler siyah beyaz tonda
+✅ Başlangıçta hiçbiri seçili değil
+✅ Back → Main Menu, Confirm → Oyun sahnesine geçiş
+✅ GameData AutoLoad oluşturuldu
+✅ Main Menu → New Game → Character Select bağlantısı kuruldu
+
+Gece Yapılacaklar:
+
+⏳ Info Panel — seçili karakterin pasif ve açıklaması solda görünsün
+⏳ Karakter pasiflerini oyuna bağlamak (Leila, Cyclone)
+⏳ Hasmen seçim ekranını karakter seçiminden sonra açmak
+
+0.0.4.9
+17.05.2026
+
+BUGÜNÜN ÖZETİ:
+Karakter Seçim Ekranı:
+
+✅ Info Panel pozisyonu düzeltildi
+✅ Z Index sorunu çözüldü
+✅ Karakter bilgileri soldaki panelde görünüyor
+
+Vector:
+
+✅ Otomatik yakalama sistemi (80px yakınında top gelince)
+✅ 0.5sn sonra mouse yönüne otomatik fırlatma
+✅ Sol tık ile yakın dövüş
+✅ Tekrar yakalanma sorunu çözüldü
+
+Leila:
+
+✅ Tek tık → normal vuruş
+✅ Basılı tut → raket modu, 0.5sn sonra otomatik fırlatma
+✅ Top düşmana çarpınca hızlanma
+
+Cyclone:
+
+✅ Tek tık → normal vuruş
+✅ Yerdeki top yakınında yeşil işaret (kısmen)
+✅ Basılı tut → top canlanıp fırlatılıyor
+⏳ Yeşil işaret sorunu yarın düzeltilecek
+
+0.0.4.9a
+Ara Yama özeti 
+
+✅ Yeşil işaret sorunu düzeltildi .
+
+19.05.2026
+0.0.5.0
+
+BUGÜNÜN ÖZETİ:
+Zemin Görselleri:
+
+✅ Oyun alanı zemini Godot'a aktarıldı
+✅ Tribün zemini aktarıldı
+✅ Cadde zemini aktarıldı
+✅ Yaşam alanı zemini aktarıldı
+✅ Z Index sorunu çözüldü, tüm görseller doğru sırada
+
+Karakter Sistemi:
+
+✅ Cyclone yeşil işaret — sadece en yakın top işaretleniyor
+✅ Cyclone _find_ground_ball en yakın topu döndürüyor
+
+Görsel İlerleme:
+
+✅ Oyun artık gerçek bir oyun gibi görünüyor! 🎉
+✅ Eşi beğendi 😄
+
+Yapılacaklar:
+
+⏳ BallLauncher görseli
+⏳ ITY RE-Processor görseli
+⏳ Tribün pembe detayları düzeltilecek
+⏳ Yaşam alanı geliştirilecek
+
+19.05.2026
+0.0.5.1
+
+BUGÜNÜN ÖZETİ:
+Shader Efekti:
+
+✅ ShaderOverlay eklendi — Vignette efekti (kenarlar kararıyor)
+✅ Color Grading — cyberpunk cyan/mor tonu
+
+Zemin Görselleri:
+
+✅ Oyun alanı, Tribün, Cadde, Yaşam alanı görselleri Godot'a aktarıldı
+✅ Z Index sorunu çözüldü
+
+BallLauncher Görseli:
+
+✅ BallLauncherSprite eklendi ve pozisyona yerleştirildi
+✅ Z Index ayarlandı, upgrade önizleme görünüyor
+
+ITY RE-Processor Görseli:
+
+✅ ProcessorSprite eklendi
+✅ Synergy Protocol seçilince yukarıdan iniş animasyonu
+✅ FusionZone'daki eski ColorRect kaldırıldı
+✅ Loading sırasında elektrik efekti eklendi
+✅ Z Index ayarlandı
+
+Karakter Sprite Çalışması:
+
+⏳ Scenario'da Images bölümünden üretim deneniyor
+
+22.05.2026
+0.0.5.2
+
+fusion_zone.gd 
+— _physics_process'in en başına queue_redraw() eklendi. 
+Elektrik animasyonu artık her frame güncelleniyor.
+ball.gd — 
+_get_type() fonksiyonundaki duplicate can_leech satırı temizlendi.
+game_scene.gd — Calamity ateşleme sağ tıktan E tuşuna taşındı. 
+Basılı tutunca nişan göstergesi, bırakınca ateşleme.
+
+23.05.2026
+0.0.5.3
+
+Artık düşman cyberlar CYBER404 haricinde %15(upgrade kartı ile yükseltilebilir.) ihtimalle Ally moduna geçiyor .
+Ally olan düşmanlar %30 ihtimalle konuşuyor çeşitli replikler söylüyorlar ,
+Ally olan düşmanlar , oyun alanının soluna koşup orada ki cyber düşmanlara saldıracak .
+
+0.0.5.4
+
+Bugünkü güncellemeler özeti:
+Ally Sistemi — Tüm düşman dosyaları (zombie.gd, fast_zombie.gd, cyber_zombie.gd, armored_zombie.gd, cyber_shooter.gd, cyber_rifle.gd, cyber_shotgun.gd)
+
+_collapse() güncellendi — %60 şansla ally, %40 kaçma (test için, gerçekte %15)
+_escape() eklendi — %30 şansla İngilizce kaçma diyalogu, sağa koşup silinir
+_become_ally() eklendi — %30 şansla İngilizce ally diyalogu, sola koşar, HP %25 ile başlar, yeşil renk alır
+_ally_behavior() eklendi — 200px range'e düşman girince saldırır, yoksa durur
+die() güncellendi — ally ise skor saymadan yavaşça kaybolup silinir
+_physics_process güncellendi — düşmanlar en yakın hedefi önceliklendirir (player veya ally)
+
+game_scene.gd
+
+show_dialog() fonksiyonu eklendi — diyalogları ekranda gösterir
+Spawn alanı genişletildi — randf_range(50, 1600) tüm üst ekrandan gelirler
+
+0.0.5.5
+
+Ally sistemi tam çalışıyor — düşman düşüyor, karar veriyor,
+diyalog söylüyor, tribün kapısından geçip yaşam alanına ulaşıyor.
+Tribün duvarı eklendi — artık kimse içinden geçemiyor,
+sadece kapıdan geçiş var.
+Spawn alanı genişledi — düşmanlar tüm üst ekrandan geliyor.
+
+24.05.2026
+0.0.5.6
+
+BUGÜNÜN ÖZETİ:
+Siberpunk Görsel Sistemi — Glow (Parlama) Altyapısı:
+
+✅ game_scene.tscn dosyasına WorldEnvironment düğümü eklendi
+✅ Environment sub_resource tanımlandı (id: Environment_glow01)
+✅ background_mode = Canvas (2D oyunlar için doğru mod)
+✅ glow_enabled = true — parlama efekti aktif edildi
+✅ glow_blend_mode = Additive — ışık üst üste binerek parlar (neon efekti)
+✅ glow_high_quality = true — yüksek kaliteli render
+✅ glow_intensity = 1.5, glow_strength = 1.2, glow_bloom = 0.3
+✅ glow_hdr_threshold = 0.7, glow_hdr_scale = 2.0
+
+Topların HDR (Yüksek Parlaklık) Renkleri — ball.gd:
+
+✅ _update_modulate() fonksiyonu eklendi
+✅ Her top tipine özgü HDR renk değerleri atandı (değerler 1.0'ın üzerinde → glow tetikler)
+   — Electric: (0.5, 1.5, 4.0) → mavi-mor neon
+   — Pierce: (4.0, 3.0, 0.2) → altın neon
+   — Split: (4.0, 0.5, 0.3) → kırmızı neon
+   — Cryo: (0.5, 2.0, 4.0) → buz mavisi neon
+   — Glitch: (3.0, 0.2, 3.5) → mor neon
+   — Water: (0.2, 1.5, 4.0) → okyanus mavisi neon
+   — Fire: (4.0, 2.0, 0.2) → turuncu alev neon
+   — Leech: (0.2, 3.5, 0.5) → Matrix yeşili neon
+   — Fused: (2.0, 1.8, 4.0) → kozmik mor neon
+   — Varsayılan: (1.8, 1.8, 2.2) → beyaz-gümüş neon
+
+Siberpunk Iz (Trail) Efekti — ball.gd:
+
+✅ 3 yeni değişken eklendi: trail (Line2D), trail_positions (Array), trail_max_length = 24
+✅ _setup_trail() — top oluşturulduğunda Line2D iz nesnesi hazırlanıyor
+   — top_level = true: dünya koordinatlarında çiziliyor (ebeveynden bağımsız)
+   — width_curve: kuyruğu ince (%4), başı kalın (%100) konik şekil
+   — gradient: kuyruk şeffaf, baş HDR parlak renk
+   — begin/end/joint: yuvarlak kaplar ve birleşimler
+✅ _get_trail_color() — her top tipine özgü HDR iz rengi döndürüyor
+   — Mimic ball: sine wave ile sürekli değişen RGB renk (canlı gökkuşağı)
+✅ _update_trail_color() — tip değişiminde trail gradient anlık güncelleniyor
+✅ _update_trail() — her physics frame'de çalışıyor:
+   — Top hareket ederken: pozisyon iz dizisine ekleniyor, Line2D güncelleniyor
+   — Top durduğunda: iz kuyruğundan yavaşça siliniyor (doğal kaybolma efekti)
+✅ caught() fonksiyonu güncellendi — top tutulunca iz anında temizleniyor
+✅ _copy_ball() fonksiyonu güncellendi — tip değişiminde modulate ve trail güncelleniyor
+✅ _ready() güncellendi — sahneye girilir girilmez _setup_trail() ve _update_modulate() çağrılıyor
+
+24.05.2026
+0.0.5.7
+
+BUGÜNÜN ÖZETİ:
+Top Fırlatıcı (BallLauncher) Görsel Efektleri — ball_launcher.gd:
+
+Şarj Olma Mekaniği (Son 1 Saniye):
+
+✅ _process() ile $Timer.time_left izleniyor — son 1 saniye şarj penceresi olarak algılanıyor
+✅ HDR modulate rampası: makine tüm gövdesiyle yavaşça parlar, renk 1.0'dan top tipinin neon rengine lerp ile tırmanır
+✅ Yatay titreşim: sin() ile sarsıntı, şarj arttıkça genlik büyür (0 → ±3.5 px)
+✅ Namlu ucunda şarj topu: _draw() içinde MUZZLE_OFFSET'te 3 katmanlı çember çizilir
+   — Dış difüz halka (büyür, soluk)
+   — Orta enerji küresi (charge_progress ile büyür ve yoğunlaşır)
+   — Parlak sıcak merkez (en yüksek HDR değerde)
+
+Fırlatma Anı Efektleri:
+
+✅ _trigger_recoil(): Tween ile 3 aşamalı geri-ileri sarsıntı
+   — Rest → Geri (rekoil, yukarı 9px) → Öne fırlama (6px) → Yerleşme
+   — Önceki tween varsa önce kill() edilir
+✅ _trigger_flash(): Muzzle Flash başlatır
+   — _last_launch_type ile top tipi next_ball_upgrade temizlenmeden kaydedilir
+   — Flash rengi top tipine göre eşleştirilir
+   — _draw() içinde: dış halo + ana patlama diski + sıcak merkez + 8 kıvılcım ışını
+   — Her frame genişler (95px/s) ve solar (5α/s), ~0.2 saniyede biter
+
+Renk Eşleştirme (şarj + flash — ball.gd ile senkronize HDR değerler):
+
+   — Electric → (0.4, 1.8, 4.5) mavi-mor      Pierce → (4.5, 3.5, 0.2) altın
+   — Split    → (4.5, 0.4, 0.3) kırmızı        Cryo   → (0.4, 2.5, 4.5) buz
+   — Glitch   → (3.5, 0.2, 4.0) mor             Water  → (0.2, 1.5, 4.5) okyanus
+   — Fire     → (4.5, 2.0, 0.2) turuncu alev   Leech  → (0.2, 4.0, 0.5) matrix yeşil
+   — Mimic    → (3.0, 2.5, 4.0) kozmik mor     Normal → (2.0, 2.0, 3.5) beyaz-gümüş
+
+✅ Harici görsel asset kullanılmadı — tüm efektler Godot'un draw_circle / draw_line / Tween ile oluşturuldu
+✅ WorldEnvironment'taki Glow sistemi sayesinde HDR değerler (>1.0) otomatik bloom üretiyor
+
+Hata Düzeltmesi — ball_launcher.gd:
+
+✅ 34. satırdaki "Cannot infer the type of tl" hatası giderildi
+   — var tl := $Timer.time_left   →   var tl: float = $Timer.time_left
+   — Sorun: := operatörü tipi sağ taraftan çıkarsama yapar; $Timer derleme zamanında
+     Node olarak görüldüğünden .time_left özelliği tanınmıyor ve tip çıkarsama başarısız oluyordu
+   — Çözüm: float tipi açıkça belirtilerek Godot 4 statik tip standardına uygun hale getirildi
+
+✅ Şarj ve muzzle flash efektleri ekranda görünmüyordu — z_index katman sorunu giderildi
+   — Sorun: BallLauncher'ın _draw() çıktısı z=0'da çiziliyordu; ColorRect child olduğu için
+     aynı z seviyesinde parent'tan sonra render edilip efektlerin üstünü kapatıyordu
+   — Çözüm: _ready() içine eklendi:
+       · z_index = 10, z_as_relative = false  → _draw() çıktısı mutlak z=10'da, en üstte
+       · $ColorRect.z_index = 9, z_as_relative = false  → makine gövdesi z=9'da, FX'in altında
+       · visible = true ve $ColorRect.visible = true  → görünürlük kod içinde garanti altına alındı
+   — Sonuç: Şarj topu ve muzzle flash artık makine gövdesinin ve tüm oyun elementlerinin (z=2) üstünde görünür
+
+✅ Beyaz geçici kare (ColorRect) kaldırıldı — gerçek sprite hedeflendi
+   — Tespit: game_scene incelendi; BallLauncher instance'ı visible=false olarak sahnede duruyor,
+     asıl görsel BallLauncherSprite adlı kardeş Sprite2D düğümü (pos: 830,280 — aynı konum)
+   — ColorRect artık $ColorRect.visible = false ile gizlendi, sahneden silinmedi
+   — _sprite değişkeni eklendi: get_parent().get_node_or_null("BallLauncherSprite") as Sprite2D
+   — _sprite_rest_pos değişkeni eklendi: _ready()'de sprite'ın orijinal pozisyonu kaydedildi
+   — Şarj titreşimi ve HDR modulate artık $ColorRect yerine doğrudan _sprite üzerinde çalışıyor
+   — Recoil tween hedefi $ColorRect.position → _sprite.position olarak güncellendi
+   — Fırlatma sonrası _sprite.modulate ve _sprite.position rest'e sıfırlanıyor
+   — BallLauncher node'u visible=true + z_index=10 olarak tutuldu; _draw() muzzle flash için aktif
+
+24.05.2026
+0.0.5.8 — TEMİZLİK
+
+BUGÜNÜN ÖZETİ:
+Tüm .gd dosyaları (21 script) baştan sona taranarak Godot 4 standartlarına uygun hale getirildi.
+Oyun mekaniğine, BallLauncher efektlerine ve script mantığına dokunulmadı.
+
+Silinen Gereksiz Kodlar:
+
+✅ ball.gd — print("Firework parçası çarptı! ...") test çıktısı kaldırıldı
+✅ ball.gd — _get_type() içindeki erişilemeyen ikinci "if can_leech: return leech" satırı silindi
+✅ main_menu.gd — print("Load Game henüz eklenmedi") → pass ile değiştirildi
+✅ game_scene.gd — upgrade_split, upgrade_electric, upgrade_pierce, calamity_active, selected_calamity
+   sınıf değişkenleri ve _on_upgrade_selected() içindeki atama satırları kaldırıldı (hiç okunmayan değişkenler)
+
+Düzeltilen Warning'ler (Kullanılmayan Parametreler):
+
+✅ cyber_404.gd — _shotgun_burst(player) → _shotgun_burst(_player)
+   (fonksiyon yönlere bakar, player argümanını kullanmaz)
+✅ game_scene.gd — _on_card_selected(index, canvas, bg) → _on_card_selected(index, _canvas, bg)
+   (canvas parametresi fonksiyon içinde kullanılmıyor)
+✅ cyber_shooter/rifle/shotgun.gd — Shoot timer kontrolü düzenlendi; ateş artık her frame değil,
+   yalnızca shoot_interval dolduğunda tetikleniyor (gerçek davranışla kod yapısı hizalandı)
+
+Eklenen Dönüş Tipi Annotasyonları (-> void / -> String vb.):
+
+✅ zombie.gd          — 14 fonksiyona -> void eklendi
+✅ fast_zombie.gd     — 14 fonksiyona -> void eklendi
+✅ armored_zombie.gd  — 14 fonksiyona -> void eklendi
+✅ cyber_zombie.gd    — 14 fonksiyona -> void eklendi
+✅ cyber_shooter.gd   — _shoot(player) → _shoot(target: Node2D) + tüm fonksiyonlara -> void
+✅ cyber_rifle.gd     — _shoot(player) → _shoot(target: Node2D) + tüm fonksiyonlara -> void
+✅ cyber_shotgun.gd   — _shoot(player) → _shoot(target: Node2D) + tüm fonksiyonlara -> void
+✅ cyber_404.gd       — _launch_missile / _random_weapon tipli parametreler + tüm fonksiyonlara -> void
+✅ bullet.gd          — tüm fonksiyonlara -> void, delta ve body parametreleri tiplendirildi
+✅ missile.gd         — tüm fonksiyonlara -> void, parametreler tiplendirildi
+✅ ball.gd            — _ready, launch, launch_with_speed, caught, _copy_ball, _process,
+                        _physics_process, _try_fusion, _apply_fusion, _draw, _hit_zombie,
+                        _split, _electric_blast fonksiyonlarına -> void eklendi
+✅ ball_launcher.gd   — _ready, _on_timer_timeout, _launch_ball, _draw fonksiyonlarına -> void eklendi
+✅ player.gd          — _cyclone_process, _find_ground_ball (-> Node2D), _cyclone_throw,
+                        _leila_process, _leila_throw, _ready, _input, _dash, _physics_process,
+                        _vector_process, _bat_swing, _swing, catch_ball, _throw_ball,
+                        take_damage, _draw fonksiyonlarına -> void / dönüş tipi eklendi
+✅ game_scene.gd      — 30+ fonksiyona -> void ve parametre tipleri eklendi
+✅ fusion_zone.gd     — tüm 10 fonksiyona -> void eklendi
+✅ character_select.gd— tüm 8 fonksiyona -> void eklendi
+✅ calamity_circle.gd — _draw() -> void eklendi
+✅ death_zone.gd      — _ready ve _on_body_entered -> void eklendi
+✅ tribune.gd         — draw_tribune ve _ready -> void eklendi
+✅ main_menu.gd       — tüm 4 fonksiyona -> void eklendi
+
+Sonuç:
+Godot editöründe Output / Debugger panelinde çıkan sarı warning'lerin tamamı giderildi.
+Tüm kod tabanı temiz, okunabilir ve Godot 4 statik tip standardına uygun hale getirildi.
+
+──────────────────────────────────────────────────────────────────────────────
+
+24.05.2026
+0.0.5.9 — ARAYÜZ EFEKTLERİ
+
+BUGÜNÜN ÖZETİ:
+Level-up / yükseltme kart seçim ekranına sıfırdan görsel geçiş efektleri eklendi.
+Hiçbir harici asset kullanılmadı; tüm efektler Godot'nun shader ve tween sistemiyle üretildi.
+
+Yeni Dosyalar:
+
+✅ blur_bg.gdshader — Oyun sahnesini bulanıklaştıran arka plan shader'ı
+   — hint_screen_texture ile CanvasLayer çizilmeden önceki ekranı yakalar
+   — textureLod(lod = 3.0) + filter_linear_mipmap → GPU mipmapı üzerinden
+     verimli tek örnekli blur (≈ 8px efektif yarıçap)
+   — Hafif renk soluklaştırma (%22 desatürasyon) ve siber-punk cyan tonu eklendi
+
+✅ glitch_overlay.gdshader — Kart UI'ı üstüne uygulanan geçiş arızası shader'ı
+   — hint_screen_texture ile tüm render edilmiş UI'ı (blur + panel + kartlar) yakalar
+   — Özellikler:
+       · RGB kanal ayrışması (Chromatic Aberration): kırmızı/mavi kanallar ±0.008 kayar
+       · Yatay tarama-blok kayması: 25 yatay bant bağımsız, zaman-tabanlı tetikleyiciyle
+         rastgele yatay yer değiştirir
+       · Anlık parlak yatay çizgiler: cyan renk, düşük olasılıklı flash efekti
+       · Dikey blok titremesi: ara sıra tek satır dikey eksende sapar
+   — glitch_strength uniform'u: GDScript Tween ile 1.0 → 0.0'a çekilir, shader
+     strength ≤ 0.004 olduğunda discard ile fragmenti pas geçer
+
+Değiştirilen Dosyalar:
+
+✅ game_scene.gd — show_upgrade_menu() fonksiyonu güncellendi
+
+   Blur Arka Plan:
+   — CanvasLayer'ın ilk çocuğu olarak blur_bg_rect eklendi
+   — Dark panel opaklığı 0.85 → 0.72'ye düşürüldü (blur zaten görsel ayrım sağlıyor)
+
+   Başlık Animasyonu:
+   — "LEVEL UP!" başlığı artık modulate.a = 0.0'dan başlar
+   — 0.38s, TRANS_QUAD / EASE_OUT Tween ile opaklığa çıkar
+
+   Kart Giriş Animasyonu (Stagger Slide-in):
+   — Her kartın tüm görsel elemanları (bg, cat_strip, cat_label, name_label,
+     desc_label, click_area) başlangıçta y + 160 piksel aşağıda konumlanır
+   — Görsel elemanlar modulate.a = 0.0'dan başlar (click_area alpha'sız kalır)
+   — TRANS_BACK / EASE_OUT ile 0.40s'de hedef pozisyona yükselir
+   — 3 kart için sıralı gecikme: 0s / 0.13s / 0.26s
+   — click_area da konumla birlikte kayar → fare algılama kartla senkronize
+
+   Glitch Overlay:
+   — For döngüsü bittikten sonra, CanvasLayer'ın en üst çocuğu olarak glitch_rect eklenir
+   — Shader tüm render edilmiş UI'ı yakalar ve glitch uygular
+   — 0.7s Tween ile glitch_strength 1.0 → 0.0'a çekilir, ardından node silinir
+
+   Pause Uyumluluğu:
+   — Tüm yeni Tween'lere .set_pause_mode(Tween.TWEEN_PAUSE_PROCESS) eklendi
+   — show_upgrade_menu() açılmadan önce get_tree().paused = true çağrılıyor;
+     bu ayar olmadan tween'ler pause sırasında donup animasyonlar çalışmazdı
+
+──────────────────────────────────────────────────────────────────────────────
+
+24.05.2026
+0.0.6.0 — ITY PROCESSOR EFEKTLERİ
+
+BUGÜNÜN ÖZETİ:
+Fusion cihazının (ITY Processor) tüm görsel efektleri sıfırdan kod ile yazıldı.
+Hiçbir harici asset kullanılmadı; her şey Godot'nun _draw(), Line2D, Tween ve
+shader sistemiyle üretildi. Tüm efektler ProcessorSprite düğümüne otomatik
+olarak bağlanır — sprite konumu kodla tespit edilir, elle girilmez.
+
+Değiştirilen Dosya:
+
+✅ fusion_zone.gd — 6 cerrahi edit, ~130 satır yeni kod
+
+   Otomatik Sprite Tespiti (_ready):
+   — get_parent().get_node_or_null("ProcessorSprite") ile Sprite2D bulunur
+   — to_local(sprite.global_position) ile FusionZone lokal uzayına çevrilir
+   — Sprite konumu veya FusionZone pozisyonu değişse otomatik uyum sağlar
+
+   Boşta Plazma Girdabı (_draw_plasma_vortex):
+   — Yalnızca cihaz aktif, yükleme yok ve işlem yokken çalışır
+   — Dış halka: neon pembe (HDR Color(2.2, 0.1, 1.8)), %65 yay, saat yönünde
+   — İç halka: HDR siyan (Color(0.1, 1.9, 2.3)), ters yönde 1.5× hızla
+   — Çekirdek: iç içe 2 daire, HDR mor/pembe
+   — 5 kıvılcım noktası: sinüs dalgasıyla pulsing yarıçap, dönen yörüngede
+   — _idle_angle: _physics_process içinde delta × 1.8 rad/s ile birikerek döner
+   — HDR değerleri (>1.0) WorldEnvironment Glow ile otomatik parlama tetikler
+
+   Elektrik Arkları (_update_arcs + _make_lightning):
+   — Her physics frame, vakum yarıçapının 1.6 katı içindeki güçlü topları tarar
+   — Her top için ProcessorSprite'tan topa uzanan Line2D child düğümü oluşturur
+   — _make_lightning(a, b): 9 segment, dik eksende ±15px rastlantısal zigzag
+   — Her frame randf_range() yeniden çağrılır → doğal titreyen yıldırım efekti
+   — Renk sin(t × 22) ile titreyerek flickering yaratır (HDR mor renk paleti)
+   — Top absorpsiyon başlayınca (moving = false) yay otomatik temizlenir
+   — Cihaz pasif / yükleme / işleme durumunda tüm yaylar kapatılır
+
+   Spiral Absorpsiyon (_absorb_ball + _spiral_to):
+   — Eski: düz çizgisel tween (0.3s) yerine spiral tween_method (0.45s)
+   — _spiral_to.bind(ball, target, dist) ile Callable oluşturulur
+   — p = 0 → 1: 1.6 × TAU dönüş (≈576°) spiral yolu, ease(p, 2.0) ile ivmelenir
+   — Yarıçap: dist × 0.75 → 0 (merkeze çekilir), ölçek: 1.0 → 0.05
+   — Top hem döner hem küçülür, tam merkezde sıfır boyuta ulaşır
+   — is_instance_valid(ball) koruması: top beklenmedik silinmede crash olmaz
+   — Bekleme süresi 0.35s → 0.50s (spiral süresine hizalandı)
+
+   Fusion Flash (_trigger_fusion_flash + _draw_fusion_flash):
+   — Fusion tamamlanır tamamlanmaz _physics_process içinden tetiklenir
+   — ProcessorSprite.z_index geçici olarak 10'a alınır (tüm sahnenin üstü)
+   — 0.04s'de HDR beyaza (Color(3.0, 1.5, 3.5)) anında atlar
+   — TRANS_EXPO / EASE_OUT ile 0.55s'de modulate normale döner
+   — z_index tween_callback ile eski değere geri alınır
+   — _flash_intensity = 1.0 → _physics_process'te delta × 2.5 ile söner
+   — _draw_fusion_flash(): sprite merkezinden genişleyen 3 iç içe HDR halka
+
+0.0.6.1 — LEİLA KARAKTER SPRİTESHEET SİSTEMİ
+24.05.2026
+
+BUGÜNÜN ÖZETİ:
+Leila karakterinin tüm spritesheetleri oyun motoru içine dinamik olarak
+entegre edildi. SpriteFrames kaynağı tamamen kodla (_ready içinde) oluşturulur;
+editörde tek kare bile elle kesilmez. Vector ve Cyclone'un animasyon sistemi
+sıfırdan yeniden yazılan _play_anim() yardımcı fonksiyonu sayesinde değişmez.
+
+Eklenen Sprite Dosyaları (assets/characters/leila/):
+  leila_Idle.png   — 384×384 px, 48×64/kare, 8 sütun × 6 satır
+  leila_walk.png   — aynı ızgara, yürüyüş animasyonları
+  leila_dash.png   — aynı ızgara, dash animasyonları
+  leila_death.png  — aynı ızgara, ölüm animasyonları
+
+Satır düzeni (4 sheet için aynı):
+  Satır 0 → Aşağı   Satır 1 → Sol   Satır 2 → Sol-Yukarı
+  Satır 3 → Yukarı  Satır 4 → Sağ-Yukarı   Satır 5 → Sağ
+
+Değiştirilen Dosya:
+
+✅ player.gd — 5 edit, ~90 satır yeni kod
+
+   _setup_leila_frames() — çalışma zamanında SpriteFrames oluşturur:
+   — SpriteFrames.new() ile boş kaynak yaratılır, "default" animasyonu silinir
+   — 4 sheet × 6 yön = 24 animasyon adı otomatik oluşturulur
+     (idle_down, walk_upper_right, death_left, dash_up, vb.)
+   — Her animasyon için 8 AtlasTexture kırpma bölgesi: Rect2(col×48, row×64, 48, 64)
+   — Tamamlanınca $AnimatedSprite2D.sprite_frames = frames ile atanır
+   — Editörde hiç el değmeden, oyun başlayınca otomatik devreye girer
+
+   _leila_get_dir() → String — 6 yönlü yüz tespiti:
+   — WASD tuş kombinasyonuna bakarak 6 yönden birini döndürür
+     (upper_right, upper_left, up, down, left, right)
+   — Çapraz alt hareketler (S+D, S+A): mevcut spritesheet'te satır olmadığından
+     sırasıyla "right" ve "left" satırlarına eşlenir
+   — Hiç tuş basılı değilse _leila_last_dir döndürülür (idle'da son yön korunur)
+
+   _play_anim(anim: String) — evrensel animasyon yönlendiricisi:
+   — Leila için: _leila_get_dir() çıktısıyla "walk_up", "idle_right" gibi
+     yönlü animasyon adı oluşturur; sadece isim değiştiğinde play() çağırır
+   — Leila.flip_h daima false — sol/sağ için ayrı satırlar zaten var, çevirmeye gerek yok
+   — Vector / Cyclone için: eski davranış birebir korunur ($AnimatedSprite2D.play(anim))
+
+0.0.6.2 — LEİLA RAKET SİSTEMİ
+25.05.2026
+
+BUGÜNÜN ÖZETİ:
+Leila karakterine fiziksel raket görseli ve davranışı eklendi.
+Raket, Leila'nın AnimatedSprite2D düğümünün altında Sprite2D olarak
+sahneye yerleştirildi; diğer karakterlerde gizlidir.
+Animasyon (look_at + swing) tamamen kodla yönetilir, harici asset eklenmedi.
+
+Değiştirilen Dosyalar:
+
+✅ player.tscn — 2 edit
+
+   Racket (Sprite2D, parent: AnimatedSprite2D):
+   — texture = leila's racket.png (373×669 px, dikey — baş üstte, sap altta)
+   — texture_filter = 1 (NEAREST — piksel art kalitesi)
+   — scale = Vector2(0.045, 0.045); parent scale 3.0 ile ×3 büyütülünce
+     ekranda ≈ 50×90 px görünür boyuta ulaşır
+   — offset = Vector2(0, -225); sap ucunu düğüm pivot noktasına taşır
+     → raket bu pivot etrafında döner (daha doğal salınım)
+   — position = Vector2(10, 5); sprite merkezinden el pozisyonuna ofset
+   — visible = false (yalnızca Leila için kodla açılır)
+
+   AnimatedSprite2D:
+   — texture_filter = 1 (NEAREST) eklendi; tüm karakter sprite'ları için
+     piksel art kalitesini korur
+
+✅ player.gd — 7 edit, ~85 satır yeni kod
+
+   Değişkenler eklendi:
+   — _racket: Sprite2D = null     → sahne düğümü referansı
+   — _racket_default_rot: float   → swing öncesi "tutma" rotasyonu
+   — _racket_swing_tween: Tween   → çakışmayan swing yönetimi
+
+   _ready() güncellendi (Leila için):
+   — $AnimatedSprite2D.scale = Vector2(3.0, 3.0)
+   — $AnimatedSprite2D.texture_filter = TEXTURE_FILTER_NEAREST
+   — _racket = $AnimatedSprite2D.get_node("Racket"); _racket.visible = true
+
+   _physics_process() güncellendi:
+   — Leila koluna _update_racket(delta) çağrısı eklendi
+
+   _update_racket(delta) — her frame raket rotasyonunu günceller:
+   — Öncelik 1: yakın top (150 px) varsa raket başını topa yönlendirir
+     formül: rotation = (top → raket yönü).angle() + PI/2
+     (dikey sprite için +PI/2 ofset: baş = yerel -Y ekseni)
+   — Öncelik 2: top yoksa Leila'nın baktığı yönde tutma pozisyonu
+     6 yön → dir_vecs sözlüğünden vektör → aynı angle() + PI/2 formülü
+   — Geçiş: lerp_angle(δ × 10) → ~100 ms'de hedefe yumuşakça ulaşır
+   — Swing tweeni çalışıyorsa müdahale etmez (tweenin bitmesine bırakır)
+
+   _racket_swing() — vuruş anında Tween animasyonu:
+   — Faz 1 (0.08 s): ~108° (PI × 0.60) hızlı ileri savurma + 6 birim uzanma
+     set_trans(TRANS_QUINT) + EASE_OUT → anlık güçlü darbe hissi
+   — Faz 2 (0.22 s, 0.08 s gecikme): başlangıç rotasyon ve pozisyona dönüş
+     set_trans(TRANS_CUBIC) + EASE_IN_OUT → doğal yavaşlama
+   — set_parallel(true) + set_delay() → rotasyon ve pozisyon eş zamanlı,
+     faz geçişi ise gecikme ile sıralı olarak yönetilir
+   — Birden fazla art arda vuruşta: önceki tween kill() ile iptal edilir
+
+   Swing tetikleyicileri eklendi:
+   — _leila_throw() sonunda → basılı tutup bırakma fırlatmalarında
+   — _swing() sonunda (character_type == "leila" koşuluyla) → kısa tık vuruşlarda
+   — _bat_swing() sonunda (character_type == "leila" koşuluyla) → zombie darbelerinde
+
+   Rotasyon formülü özeti:
+   — Raket spritei dikey: baş = yerel (0, -1) yönü
+   — direction.angle() = +X sağı 0 sayar, Godot CW pozitif
+   — +PI/2 ofseti: angle() sonucunu -Y eksenine hizalar → baş hedefe bakar
+   — lerp_angle kullanılır (açı sarması sorununu önler)
+
+   _ready() güncellendi:
+   — character_type = GameData.selected_character önce atanır
+   — Leila seçiliyse _setup_leila_frames() çağrılır, ardından _play_anim("idle")
+   — Önceki sıra (önce play, sonra character_type) düzeltildi
+
+   _physics_process() animasyon bölümü güncellendi:
+   — $AnimatedSprite2D.play("walk/run/idle") → _play_anim("walk/run/idle")
+   — flip_h ataması "if character_type != leila" koşuluna alındı
+     (Leila'nın yönlü sprite'ları olduğu için flip_h gereksizdir)
+
+   take_damage() güncellendi:
+   — $AnimatedSprite2D.play("hurt/idle") → _play_anim("hurt/idle")
+   — Leila için "hurt" → death_[yön] satırının ilk ~2-3 karesi görünür (0.3s),
+     ardından idle_[yön]'e döner (ayrı hurt sheet mevcut değil)
+
+──────────────────────────────────────────────────────────────────────────────
+
+0.0.6.3 — UI GÖRSEL İYİLEŞTİRMELERİ
+25.05.2026
+
+BUGÜNÜN ÖZETİ:
+Karakter seçim ekranı ve Hasmen seçim ekranı cyberpunk estetiğine uygun hale getirildi.
+Tüm iyileştirmeler görseldir; mevcut sahne hiyerarşisi ve GDScript mantığı değiştirilmedi.
+
+character_select.tscn — Karakter Seçim Ekranı:
+
+✅ Başlık yeniden tasarlandı:
+   — "Select Ch:" → "SELECT YOUR CHARACTER" (tam metin, 1920px genişlik, ortalı)
+   — Font boyutu büyütüldü (52px), neon cyan renk eklendi Color(0, 0.95, 1, 1)
+   — z_index = 10 eklendi — başlık artık karakter kartlarının üstünde kalıyor
+     (Sorun: aynı z_index=0'da HBoxContainer listede sonra geldiği için başlığı örtüyordu)
+
+✅ Confirm / Back butonları stilize edildi:
+   — Boyutlar büyütüldü: Confirm 250×70 px, Back 220×70 px
+   — Her buton için StyleBoxFlat sub_resource tanımlandı (normal, hover, pressed)
+   — Confirm: koyu bg + cyan neon border + cyan glow shadow
+   — Back: koyu bg + neon pembe border Color(1, 0.18, 0.58) + pembe glow shadow
+   — Buton ikonları eklendi: "◀  BACK" ve "CONFIRM  ▶"
+
+✅ InfoPanel etiketleri renklendiridi:
+   — LabelName   → neon cyan 26px     LabelTalent  → neon yeşil 22px
+   — LabelPassive → neon turuncu 20px  LabelDescription → açık mavi-gri 17px
+
+✅ Karakter kartları (VectorCard, LeilaCard, CycloneCard):
+   — Her karta koyu bg + soluk cyan border (StyleBoxFlat_card) eklendi
+   — LabelName → cyan 18px, LabelTalent → neon yeşil 16px
+   — Label genişlikleri kart sonuna kadar uzatıldı (offset_right 61-179 → 390)
+
+✅ Genel düzen iyileştirildi:
+   — InfoPanel üst boşluğu azaltıldı (offset_top: 391 → 120)
+   — InfoPanel alt boşluğu azaltıldı (offset_bottom: 791 → 960)
+
+game_scene.gd — _show_hasmen_selection() Fonksiyonu:
+
+✅ Mr. Hasmen görseli sağ alana eklendi:
+   — TextureRect: res://assets/mrHasmen.png, pozisyon (1310, 160), boyut 580×900 px
+   — STRETCH_KEEP_ASPECT_CENTERED — orantı korunarak alanı doldurur
+   — "MR. HASMEN" isim etiketi eklendi: neon pembe, 26px, görsel üzerinde ortalı
+
+✅ Dialog düz Label'dan konuşma balonuna dönüştürüldü:
+   — Panel + StyleBoxFlat: koyu bg, cyan neon border, yuvarlak köşeler, cyan glow shadow
+   — Balon kuyruğu: 2 katmanlı döndürülmüş ColorRect (dış: cyan, iç: koyu dolgu)
+     → Mr. Hasmen'a işaret eden diamond şekli
+   — Dialog metni Türkçe'den İngilizce'ye çevrildi:
+     "Hey Vec, let me make you look good! Pick one of these and benefit
+      from the gifts of technology !!!!!"
+
+✅ Layout yeniden düzenlendi (sol kart / sağ Hasmen ayrımı):
+   — Soluk cyan dikey ayraç eklendi (x=797, 960px yüksek)
+   — Sol alan (x=0–795): kartlar
+   — Sağ alan (x=820+): konuşma balonu + Mr. Hasmen görseli
+
+✅ Kartlar stilize edildi:
+   — Synergy Protocol: 2px neon cyan border (glow), hover'da border ve bg parlar
+   — ??? kartları: 2px soluk gri border (kilitli görünüm)
+   — Kart genişliği 600 → 700px (sol alanı daha iyi dolduruyor)
+   — Kart başlık label'ları: Synergy Protocol cyan 20px, ??? soluk gri 20px
+   — "// AVAILABLE UPGRADES //" bölüm başlığı eklendi
+
+──────────────────────────────────────────────────────────────────────────────
+
+
+
+──────────────────────────────────────────────────────────────────────────────
+
+0.0.6.4 — ANA MENÜ GÖRSEL YENİLEMESİ
+25.05.2026
+
+BUGÜNÜN ÖZETİ:
+main_menu.tscn sıfırdan cyberpunk estetiğiyle yeniden tasarlandı.
+Tüm iyileştirmeler görseldir; main_menu.gd script mantığına dokunulmadı.
+
+main_menu.tscn:
+
+✅ Başlık yeniden tasarlandı:
+   — "İnto The Yard" → "İNTO THE YARD" (büyük harf, 88px, neon cyan)
+   — 1920px tam genişliğe yayıldı, ortaya hizalandı (horizontal_alignment = CENTER)
+
+✅ Alt başlık / tagline eklendi:
+   — "[ ITY CORP. — SECURE TERMINAL v2.1 ]" — neon pembe, 17px, ortalı
+
+✅ Dekor çizgileri ve çubuklar eklendi:
+   — LineTop: başlık üstünde soluk cyan yatay çizgi (1680px genişlik)
+   — LineBottom: tagline altında soluk cyan yatay çizgi (800px genişlik)
+   — AccentLeft / AccentRight: ekranın sol ve sağ kenarında 4px cyan dikey bar
+
+✅ Butonlar stilize edildi (StyleBoxFlat sub_resource, 7 stil tanımı):
+   — BtnNewGame: koyu bg + cyan neon border + cyan glow — "▶  NEW GAME"
+     hover'da bg parlar, shadow genişler (10px → 18px)
+   — BtnLoadGame: soluk gri border + dim metin — "//  LOAD GAME  [ COMING SOON ]"
+     hover efekti yok (görsel olarak kilitli, henüz aktif değil)
+   — BtnQuit: koyu bg + neon pembe border + pembe glow — "■  QUIT"
+   — Tüm butonlar: 410×70 px, ekran ortasında (x=755–1165), 22px font
+
+✅ Versiyon etiketi eklendi:
+   — Sol alt köşe: "v0.0.6.4  //  ALPHA BUILD  //  ITY CORP. 2099"
+   — Soluk cyan, 14px, %38 opaklık
+
+0.0.6.5 — KARAKTER SEÇİM EKRANI MATRİX HOVER EFEKTİ
+25.05.2026
+
+BUGÜNÜN ÖZETİ:
+Karakter seçim ekranında hover sırasında her karta özgü neon renkli
+Matrix yağmuru efekti eklendi. Mevcut hover parlaması ve scale efektine
+dokunulmadı; matrix efekti buna ek olarak çalışır.
+
+character_select.gd — Matrix Rain Motoru:
+
+✅ Yeni sabitler eklendi:
+   — _MATRIX_N = 24        (her kartta 24 düşen damla)
+   — _MATRIX_FONT = 14px   (rakam font boyutu)
+   — _MATRIX_SPD = 90–210 px/s (rastgele hız aralığı)
+   — _RAIN_Y = 400.0       (kartın ortasından başlar — sadece alt yarı)
+
+✅ _start_matrix(card) — hover girişinde:
+   — 24 adet Label oluşturulur, karta child olarak eklenir
+   — Her label: rastgele x konumu, rastgele başlangıç y (400–800)
+   — mouse_filter = IGNORE → mouse olaylarını bloklamaz
+   — İkinci kez çağrılırsa tekrar oluşturmaz (guard ile)
+
+✅ _stop_matrix(card) — hover çıkışında:
+   — Tüm Label node'ları queue_free() ile temizlenir
+   — Dictionary'den silinir
+
+✅ _process(delta) eklendi:
+   — Her aktif damla speed × delta kadar aşağı kayar
+   — %12 olasılıkla rastgele yeni rakam (0–9) gösterilir
+   — Alt sınırı (y > 800) geçince y=400'e sıfırlanır
+   — Sıfırlanınca yeni x, yeni alpha (0.28–0.72), yeni hız atanır
+
+✅ _on_card_clicked güncellendi:
+   — Kart seçilmeden önce tüm kartlarda _stop_matrix() çağrılır
+   — Seçim sonrası kalan efekt kalıntısı engellenir
+
+✅ Karakter renk tablosu:
+   — VectorCard  → #00BFFF (elektrik mavisi)
+   — LeilaCard   → #FF2D78 (neon pembe)
+   — CycloneCard → #39FF14 (asit yeşili)
+
+character_select.tscn — Layout ve Z-Index Düzenlemeleri:
+
+✅ HBoxContainer offset_top = 100 eklendi:
+   — Kartlar artık "SELECT YOUR CHARACTER" başlığının 100px altından başlıyor
+   — Başlık ile kartlar arasında görsel boşluk oluştu
+
+✅ clip_contents = true — VectorCard, LeilaCard, CycloneCard:
+   — Matrix rakamları kart sınırı dışına taşmıyor
+   — Yağmur efekti kartın içinde kırpılıyor
+
+✅ z_index = 2 — Her kartın LabelName ve LabelTalent node'ları (6 adet):
+   — İsim ve Talent etiketleri matrix rakamlarının her zaman önünde kalıyor
+   — Z-index katman sırası (kart içi):
+       z=0  TextureRect   (karakter görseli, en altta)
+       z=0  Matrix Labels (rakamlar, görselin üstünde)
+       z=2  LabelName     (rakamların önünde)
+       z=2  LabelTalent   (rakamların önünde)
+
+──────────────────────────────────────────────────────────────────────────────
+
+0.0.6.6 — ORBİTRON FONT ENTEGRASYONU
+25.05.2026
+
+BUGÜNÜN ÖZETİ:
+Projedeki tüm UI elemanlarına Orbitron font ailesi uygulandı.
+assets/orbitronfont/ klasöründeki .ttf dosyaları kullanıldı.
+Kullanılan stiller: Orbitron-Bold (başlıklar, butonlar) ve Orbitron-Regular (açıklama, bilgi, zaman metinleri).
+İlk denemede sub_resource olarak eklendi (hatalı) — ext_resource olarak düzeltildi.
+
+character_select.tscn / main_menu.tscn / game_scene.tscn:
+
+✅ ext_resource type="FontFile" olarak iki font eklendi:
+   — id="font_bold"    → Orbitron-Bold.ttf
+   — id="font_regular" → Orbitron-Regular.ttf
+
+✅ theme_override_fonts/font bağlantıları eklendi — Bold: başlıklar, butonlar / Regular: bilgi metinleri
+
+character_select.gd / game_scene.gd:
+
+✅ _font_bold ve _font_regular preload değişkenleri eklendi
+✅ Tüm dinamik Label ve Button'lara add_theme_font_override() eklendi
+
+0.0.6.6 — ORBİTRON FONT ENTEGRASYONU
+25.05.2026
+
+BUGÜNÜN ÖZETİ:
+Projedeki tüm UI elemanlarına Orbitron font ailesi uygulandı.
+assets/orbitronfont/ klasöründeki .ttf dosyaları kullanıldı; font boyutlarına dokunulmadı.
+Kullanılan stiller: Orbitron-Bold (başlıklar, butonlar) ve Orbitron-Regular (açıklama, bilgi, zaman metinleri).
+
+character_select.tscn:
+
+✅ FontFile sub_resource'ları eklendi:
+   — FontFile_orbitron_bold   → res://assets/orbitronfont/Orbitron-Bold.ttf
+   — FontFile_orbitron_regular → res://assets/orbitronfont/Orbitron-Regular.ttf
+
+✅ theme_override_fonts/font bağlantıları eklendi (13 node):
+   Bold  → "SELECT YOUR CHARACTER" başlığı, InfoPanel/LabelName,
+            tüm kart LabelName'leri (Vector, Leila, Cyclone),
+            CONFIRM ▶ ve ◀ BACK butonları
+   Regular → InfoPanel/LabelTalent, LabelPassive, LabelDescription,
+             tüm kart LabelTalent'ları
+
+main_menu.tscn:
+
+✅ FontFile sub_resource'ları eklendi (aynı iki font)
+
+✅ theme_override_fonts/font bağlantıları eklendi (6 node):
+   Bold    → LabelTitle ("İNTO THE YARD"), BtnNewGame, BtnLoadGame, BtnQuit
+   Regular → LabelSubtitle ("[ ITY CORP. — SECURE TERMINAL v2.1 ]"), LabelVersion
+
+✅ LabelVersion metni güncellendi: v0.0.6.5 → v0.0.6.6
+
+game_scene.tscn:
+
+✅ FontFile sub_resource'ları eklendi
+
+✅ theme_override_fonts/font bağlantıları eklendi (9 node):
+   Regular → LabelLevel, LabelUpgrades, LabelCatch, LabelCalamity,
+             LabelBalls, LabelTime, LabelFusionEnergy, LabelIntegrity
+   Bold    → BtnPause
+
+game_scene.gd:
+
+✅ Dosya başına preload eklendi:
+   var _font_bold    = preload("res://assets/orbitronfont/Orbitron-Bold.ttf")
+   var _font_regular = preload("res://assets/orbitronfont/Orbitron-Regular.ttf")
+
+✅ add_theme_font_override("font", ...) eklenen dinamik node'lar:
+   — show_boss_bar()          → "CYBER 404" isim etiketi (Bold)
+   — show_game_over()         → "GAME OVER" başlığı (Bold), Tekrar Oyna butonu (Bold)
+   — show_upgrade_menu()      → "LEVEL UP!" başlığı (Bold), kategori etiketi (Bold),
+                                upgrade ismi (Bold), açıklama (Regular),
+                                Confirm ve Skip butonları (Bold)
+   — _show_pause_menu()       → "PAUSED" başlığı (Bold), Resume/Main Menu/Quit butonları (Bold)
+   — _show_hasmen_selection() → "MR. HASMEN" etiketi (Bold), dialog metni (Regular),
+                                "// AVAILABLE UPGRADES //" başlığı (Bold),
+                                Synergy Protocol başlığı (Bold), açıklama (Regular),
+                                ??? kart başlıkları (Regular)
+   — show_dialog()            → anlık diyalog etiketleri (Regular)
+
+character_select.gd:
+
+✅ Dosya başına preload eklendi (_font_bold, _font_regular)
+✅ _start_matrix() içinde oluşturulan matrix Label'larına da _font_regular uygulandı
+
+──────────────────────────────────────────────────────────────────────────────
+
+0.0.6.7 — OYUN İÇİ SAĞ UI PANELİ — CYBERPUNK TASARIM
+25.05.2026
+
+BUGÜNÜN ÖZETİ:
+game_scene.tscn ve game_scene.gd içindeki sağ UI paneli (1630–1920 px) sıfırdan
+cyberpunk estetiğiyle yeniden tasarlandı. Tüm node yolları ve isimleri korundu;
+sadece konum, boyut, renk ve stil değerleri güncellendi.
+
+game_scene.tscn — Yeni Yapılar:
+
+✅ Panel arka planı karartıldı:
+   — Color(0.067, 0.067, 0.067, 1) → Color(0.018, 0.018, 0.052, 0.97)
+   — Neredeyse siyah, hafif mor/lacivert cyberpunk zemini
+
+✅ Sol kenar neon şeridi eklendi (UIBorderLeft):
+   — 3px neon cyan, Color(0, 0.9, 1, 0.55), tüm panel boyu (1080 px)
+
+✅ 6 adet ince ayraç çizgisi eklendi (UISep1–UISep6):
+   — Seksiyon geçişlerinde soluk cyan çizgiler
+   — Konumlar: y=62, 104, 172, 343, 387, 460
+
+✅ StyleBoxFlat sub_resource'ları eklendi (progress bar stilleri):
+   — UI_int_bg  / UI_int_fill  → IntegrityBar: teal bg + neon cyan dolum
+   — UI_fuse_bg / UI_fuse_fill → FusionEnergyBar: amber bg + turuncu/altın dolum
+   — Her iki bar: show_percentage = false (metin label ile gösteriliyor)
+
+✅ Tüm Label/Bar node'ları yeniden konumlandırıldı (dar 40px → tam 272px genişlik):
+
+   y=14–56   ◈ LEVEL X     — bold cyan 16px  |  ⏸ sağ üstte
+   y=68–96   ♥ INTEGRITY BAR  — styled neon cyan
+   y=110–130 ⬤ BALLS  X / Y  — cyan 13px
+   y=140–162 ⏱ XX:XX         — neon yeşil 13px
+   y=180–338 — UPGRADES —    — soft mavi multi-line 12px
+   y=352–378 ✋ CATCH  X / Y  — cyan 13px
+   y=396–420 ⚡ FUSION ENERGY — neon sarı bold 13px
+   y=428–454 FUSION BAR       — turuncu dolum efekti
+   y=470–700 — CALAMITY —    — lila multi-line 13px
+
+game_scene.gd — update_ui() ve _process() Güncellemeleri:
+
+✅ Tüm metin formatları ikon ve sembollerle yenilendi:
+   — "Level: X"        → "◈  LEVEL X"
+   — "Balls: X/Y"      → "⬤  BALLS   X / Y"
+   — "Time: XX:XX"     → "⏱  XX:XX"
+   — "Catch: X/Y"      → "✋  CATCH   X / Y"
+   — "Upgrades:\n- X"  → "— UPGRADES —\n▸ X"
+   — "Calamity:\n[⚡]" → "— CALAMITY —\n◉ ⚡  ◎ 🔥  ◻"
+     (aktif slot = ◉, pasif dolu = ◎, boş = ◻)
+   — IntegrityBar metni: "X / Y" → "♥  X / Y"
+
+✅ LabelIntegrity → bar içinde tam genişlik (272px), ortalı, beyaz bold 12px
+
+    -- UI Panelinde ki BallCounter tutarlı çalışıyor.
+──────────────────────────────────────────────────────────────────────────────
+

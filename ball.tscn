@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://ybho7dx3214g"]
+
+[ext_resource type="Script" uid="uid://ba8rsoff801vm" path="res://ball.gd" id="1_x8fbi"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_cbx31"]
+
+[node name="Ball" type="CharacterBody2D" unique_id=270770002 groups=["balls"]]
+collision_layer = 3
+collision_mask = 3
+script = ExtResource("1_x8fbi")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1673983918]
+shape = SubResource("CircleShape2D_cbx31")

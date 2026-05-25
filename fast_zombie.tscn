@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://bguqgq38hqol5"]
+
+[ext_resource type="Script" uid="uid://cqthvcw1xf6ta" path="res://fast_zombie.gd" id="1_yhk8i"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_050lg"]
+size = Vector2(30, 50)
+
+[node name="FastZombie" type="CharacterBody2D" unique_id=1604379504 groups=["zombies"]]
+z_index = 2
+motion_mode = 1
+script = ExtResource("1_yhk8i")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1372125220]
+shape = SubResource("RectangleShape2D_050lg")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=666393726]
+offset_left = -10.0
+offset_top = -22.0
+offset_right = 30.0
+offset_bottom = 23.0
+color = Color(1, 0.6666667, 0, 1)
