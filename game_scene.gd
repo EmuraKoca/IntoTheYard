@@ -735,15 +735,18 @@ func show_upgrade_menu() -> void:
 
 		var name_label = Label.new()
 		name_label.text = upgrade["name"]
+		name_label.size = Vector2(260, 40)
 		name_label.position = Vector2(tx + 10, ty + card_height - 90)
-		name_label.add_theme_font_size_override("font_size", 22)
+		name_label.add_theme_font_size_override("font_size", 18)
 		name_label.add_theme_font_override("font", _font_bold)
 		canvas.add_child(name_label)
 
 		var desc_label = Label.new()
 		desc_label.text = upgrade["desc"]
-		desc_label.position = Vector2(tx + 10, ty + card_height - 60)
-		desc_label.add_theme_font_size_override("font_size", 16)
+		desc_label.size = Vector2(260, 46)
+		desc_label.position = Vector2(tx + 10, ty + card_height - 48)
+		desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD
+		desc_label.add_theme_font_size_override("font_size", 14)
 		desc_label.add_theme_font_override("font", _font_regular)
 		desc_label.modulate = Color(0.8, 0.8, 0.8)
 		canvas.add_child(desc_label)
