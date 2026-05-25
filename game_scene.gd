@@ -34,6 +34,7 @@ var boss_defeated = false
 var boss_warning = null
 var data_collected: int = 0
 var total_subjects_killed: int = 0
+var ally_chip_duration: float = 15.0  # Upgradeable via card (index 23)
 
 func _show_boss_warning() -> void:
 	boss_warning = ColorRect.new()
@@ -662,12 +663,13 @@ func show_upgrade_menu() -> void:
 	{"name": "Gravitational Force", "category": "Calamity", "color": Color(0.5, 0.0, 1.0), "desc": "Pulls subjects for 5s", "index": 9},
 	{"name": "Arise", "category": "Calamity", "color": Color(0.8, 0.8, 1.0), "desc": "Fallen balls start moving", "index": 10},
 	{"name": "Ball Mastery", "category": "Utility", "color": Color(0.2, 0.8, 0.2), "desc": "+1 damage to all balls", "index": 11},
-	{"name": "Pierce Sharpness", "category": "Utility", "color": Color(1.0, 0.8, 0.0), "desc": "Pierce topuna +2 hasar", "index": 12},
-	{"name": "Thunder Amp", "category": "Utility", "color": Color(0.2, 0.5, 1.0), "desc": "Electric topuna +2 hasar", "index": 13},
-	{"name": "Split Amp", "category": "Utility", "color": Color(1.0, 0.2, 0.2), "desc": "Split topuna +2 hasar", "index": 14},
-	{"name": "Medkit", "category": "Individuality", "color": Color(0.9, 0.1, 0.1), "desc": "+10 Can yenilersin", "index": 20},
-	{"name": "Max Health Up", "category": "Individuality", "color": Color(0.8, 0.2, 0.2), "desc": "Maksimum can +5 artar", "index": 21},
+	{"name": "Pierce Sharpness", "category": "Utility", "color": Color(1.0, 0.8, 0.0), "desc": "Pierce ball +2 damage", "index": 12},
+	{"name": "Thunder Amp", "category": "Utility", "color": Color(0.2, 0.5, 1.0), "desc": "Electric ball +2 damage", "index": 13},
+	{"name": "Split Amp", "category": "Utility", "color": Color(1.0, 0.2, 0.2), "desc": "Split ball +2 damage", "index": 14},
+	{"name": "Medkit", "category": "Individuality", "color": Color(0.9, 0.1, 0.1), "desc": "+10 HP restored", "index": 20},
+	{"name": "Max Health Up", "category": "Individuality", "color": Color(0.8, 0.2, 0.2), "desc": "Maximum HP +5", "index": 21},
 	{"name": "Data Leech Ball", "category": "Utility", "color": Color(0.6, 0.0, 0.2), "desc": "+2 Integrity on hit", "index": 22, "rarity": "rare"},
+	{"name": "Chip Boost", "category": "Connectivity", "color": Color(0.2, 1.0, 0.4), "desc": "Ally chip duration +5 seconds", "index": 23},
 ]
 	
 	var canvas = CanvasLayer.new()
@@ -1117,7 +1119,10 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 		player_hp = min(player_hp + 5, player_max_hp)
 	elif index == 22:
 		next_ball_upgrade = "leech"
-	
+	elif index == 23:
+		# Chip Boost — extend ally chip duration for all future allies
+		ally_chip_duration += 5.0
+
 	update_ui()
 	$BallLauncher.queue_redraw()
 	

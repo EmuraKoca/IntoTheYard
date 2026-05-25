@@ -13,6 +13,9 @@ var is_burning = false
 var attack_cooldown = 0.0
 var attack_rate = 1.0
 var is_electrified = false
+var chip_duration = 15.0  # Ally chip charge duration — upgradeable via card
+var _ally_timer = 0.0
+var _is_exiting = false
 
 func apply_burn() -> void:
 	if is_burning:
@@ -99,35 +102,15 @@ func _physics_process(delta: float) -> void:
 				closest = z
 		target = closest
 	else:
+		# Enemies focus only on the player — allies are never targeted
 		var player = get_tree().get_first_node_in_group("player")
-		var allies = get_tree().get_nodes_in_group("allies")
-
-		var closest_target = null
-		var closest_dist = INF
-
-		if player:
-			closest_dist = global_position.distance_to(player.global_position)
-			closest_target = player
-
-		for ally in allies:
-			var d = global_position.distance_to(ally.global_position)
-			if d < closest_dist:
-				closest_dist = d
-				closest_target = ally
-
-		target = closest_target
+		target = player
 
 		if target == null:
 			return
 		var direction = (target.global_position - global_position).normalized()
 		velocity = direction * speed
 		move_and_slide()
-
-	if target == null:
-		return
-	var direction = (target.global_position - global_position).normalized()
-	velocity = direction * speed
-	move_and_slide()
 	var dist = global_position.distance_to(target.global_position)
 	if dist < 60:
 		attack_cooldown -= delta
@@ -186,6 +169,7 @@ func _escape() -> void:
 	queue_free()
 
 func _become_ally() -> void:
+	var game = get_parent()
 	if randf() < 0.3:
 		var ally_dialogs = [
 			"Vec, we're with you brother!",
@@ -193,45 +177,70 @@ func _become_ally() -> void:
 			"Leila, I'd never leave you alone."
 		]
 		var dialog = ally_dialogs[randi() % ally_dialogs.size()]
-		var game = get_parent()
 		if game.has_method("show_dialog"):
 			game.show_dialog(dialog, global_position)
 
-	health = max_health * 0.25
 	add_to_group("allies")
 	remove_from_group("subjects")
 	modulate = Color(0.2, 1.0, 0.4)
+	# Use game-level chip duration if available (respects Chip Boost upgrade)
+	_ally_timer = game.ally_chip_duration if "ally_chip_duration" in game else chip_duration
+	_is_exiting = false
 
-	# First run to the tribune gate
-	var tween = create_tween()
-	tween.tween_property(self, "global_position", Vector2(850, 1000), 1.5)
-	await get_tree().create_timer(1.5).timeout
-
-	# Then move to the living area
-	var tween2 = create_tween()
-	tween2.tween_property(self, "global_position", Vector2(490, 1000), 1.0)
-	await get_tree().create_timer(1.0).timeout
-
+	# Re-enable physics so ally can follow the player
 	set_physics_process(true)
 	$CollisionShape2D.disabled = false
 
+func _start_exit() -> void:
+	_is_exiting = true
+	set_physics_process(false)
+	$CollisionShape2D.disabled = true
+
+	# Step 1: Move to the tribune gate (right edge of the tribune)
+	var gate_pos = Vector2(870, 900)
+	var step1_time = clamp(global_position.distance_to(gate_pos) / (speed * 3.0), 0.4, 2.5)
+	var tween = create_tween()
+	tween.tween_property(self, "global_position", gate_pos, step1_time)
+	await tween.finished
+	if not is_instance_valid(self):
+		return
+
+	# Step 2: Move left through the tribune
+	var tween2 = create_tween()
+	tween2.tween_property(self, "global_position", Vector2(490, 900), 1.2)
+	await tween2.finished
+	if not is_instance_valid(self):
+		return
+
+	# Step 3: Fade out as ally enters the living area
+	var tween3 = create_tween()
+	tween3.tween_property(self, "modulate", Color(0.2, 1.0, 0.4, 0.0), 0.6)
+	tween3.parallel().tween_property(self, "global_position", Vector2(350, 900), 0.8)
+	await tween3.finished
+	if is_instance_valid(self):
+		queue_free()
+
 func _ally_behavior() -> void:
-	var subjects = get_tree().get_nodes_in_group("subjects")
-	var closest = null
-	var closest_dist = INF
-	for z in subjects:
-		var d = global_position.distance_to(z.global_position)
-		if d < 200 and d < closest_dist:
-			closest_dist = d
-			closest = z
-	if closest != null:
-		var direction = (closest.global_position - global_position).normalized()
-		velocity = direction * speed
-		move_and_slide()
-		if closest_dist < 60:
-			attack_cooldown -= get_physics_process_delta_time()
-			if attack_cooldown <= 0:
-				closest.take_damage(5)
-				attack_cooldown = attack_rate
+	var delta = get_physics_process_delta_time()
+
+	if _is_exiting:
+		return
+
+	# Count down the chip duration, then exit
+	_ally_timer -= delta
+	if _ally_timer <= 0.0:
+		_start_exit()
+		return
+
+	# Follow the player closely during chip duration
+	var player = get_tree().get_first_node_in_group("player")
+	if player:
+		var dist = global_position.distance_to(player.global_position)
+		if dist > 80.0:
+			var direction = (player.global_position - global_position).normalized()
+			velocity = direction * speed
+			move_and_slide()
+		else:
+			velocity = Vector2.ZERO
 	else:
 		velocity = Vector2.ZERO
