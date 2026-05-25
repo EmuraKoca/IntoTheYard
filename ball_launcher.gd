@@ -140,15 +140,23 @@ func _launch_ball() -> void:
 			ball.is_mimic = false
 			_last_launch_type = ""
 
-	ball.global_position = global_position
-	get_parent().add_child(ball)   # top sahneye eklendi
+	var direction = (player.global_position - global_position).normalized()
+
+	# Spawn ball at launcher muzzle, then push it along direction until
+	# it clears the left game boundary (x=875) so it doesn't instantly bounce.
+	var spawn_pos = to_global(MUZZLE_OFFSET)
+	if spawn_pos.x < 875.0 and direction.x > 0.0:
+		var t = (875.0 - spawn_pos.x) / direction.x
+		spawn_pos += direction * (t + 2.0)   # +2 px margin
+
+	ball.global_position = spawn_pos
+	get_parent().add_child(ball)
 
 	# Increment counter only when ball is actually added to scene
 	balls_fired += 1
 	if game:
 		game.update_ui()           # Update UI immediately
 
-	var direction = (player.global_position - global_position).normalized()
 	ball.queue_redraw()
 	ball.launch(direction)
 
