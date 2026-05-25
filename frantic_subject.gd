@@ -1,5 +1,7 @@
 ﻿extends CharacterBody2D
 
+const SURGERY_EXIT := Vector2(850, 1000)  # The only exit point from the living area
+
 var speed = 160.0
 var health = 8
 var max_health = 8
@@ -19,6 +21,7 @@ var _is_exiting = false
 var _reached_living_area: bool = false
 var _wander_timer: float = 0.0
 var _wander_velocity: Vector2 = Vector2.ZERO
+var _killed_by_ally: bool = false
 
 func apply_burn() -> void:
 	if is_burning:
@@ -124,9 +127,10 @@ func _physics_process(delta: float) -> void:
 				target.take_damage(4)
 			attack_cooldown = attack_rate
 
-func take_damage(amount) -> void:
+func take_damage(amount, from_ally: bool = false) -> void:
 	health -= amount
 	if health <= 0:
+		_killed_by_ally = from_ally
 		die()
 
 func die() -> void:
@@ -150,6 +154,16 @@ func _collapse() -> void:
 	var tween = create_tween()
 	tween.tween_property(self, "scale", Vector2(0.8, 0.3), 0.3)
 	await get_tree().create_timer(1.0).timeout
+	# Killed by an ally — just run left, never become an ally
+	if _killed_by_ally:
+		var tween2 = create_tween()
+		tween2.tween_property(self, "global_position", Vector2(-200, global_position.y), 1.5)
+		await tween2.finished
+		if is_instance_valid(self):
+			queue_free()
+		return
+
+	# 60% ally chance
 	if randf() < 0.60:
 		_become_ally()
 	else:
@@ -201,12 +215,21 @@ func _start_exit() -> void:
 	set_physics_process(false)
 	# CollisionShape2D already disabled since _become_ally
 
-	# Run straight off-screen to the left
-	var exit_speed = max(speed * 3.0, 200.0)
-	var exit_time = (global_position.x + 200.0) / exit_speed
+	var nav_speed = max(speed * 3.0, 200.0)
+
+	# Step 1: Navigate to the Surgery exit door
+	var step1_time = global_position.distance_to(SURGERY_EXIT) / nav_speed
 	var tween = create_tween()
-	tween.tween_property(self, "global_position", Vector2(-200, global_position.y), exit_time)
+	tween.tween_property(self, "global_position", SURGERY_EXIT, step1_time)
 	await tween.finished
+	if not is_instance_valid(self):
+		return
+
+	# Step 2: Run off-screen to the left from Surgery
+	var exit_time = (SURGERY_EXIT.x + 200.0) / nav_speed
+	var tween2 = create_tween()
+	tween2.tween_property(self, "global_position", Vector2(-200, SURGERY_EXIT.y), exit_time)
+	await tween2.finished
 	if is_instance_valid(self):
 		queue_free()
 
@@ -255,7 +278,7 @@ func _ally_behavior() -> void:
 			velocity = Vector2.ZERO
 			attack_cooldown -= delta
 			if attack_cooldown <= 0:
-				closest.take_damage(5)
+				closest.take_damage(5, true)  # true = killed by ally, no ally chance
 				attack_cooldown = attack_rate
 	else:
 		# No enemies — wander upward toward the upper street
