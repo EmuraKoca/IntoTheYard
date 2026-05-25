@@ -1,4 +1,4 @@
-extends CharacterBody2D
+﻿extends CharacterBody2D
 
 var armor = 90
 var health = 90
@@ -67,7 +67,7 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
-	# Zincir kısıtlaması
+	# Chain constraint
 	var dist_to_anchor = global_position.distance_to(chain_anchor)
 	if dist_to_anchor > chain_length:
 		var dir_to_anchor = (chain_anchor - global_position).normalized()
@@ -197,7 +197,7 @@ func apply_slow(amount) -> void:
 	is_slowed = false
 
 func apply_frozen() -> void:
-	# Boss donmaya bağışık
+	# Boss is immune to freeze
 	return
 
 func apply_wet() -> void:
@@ -206,7 +206,7 @@ func apply_wet() -> void:
 	is_wet = false
 
 func apply_glitch() -> void:
-	# Boss glitch'e bağışık
+	# Boss is immune to glitch
 	return
 
 func apply_electrified() -> void:

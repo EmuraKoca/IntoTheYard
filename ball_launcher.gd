@@ -1,4 +1,4 @@
-extends Node2D
+﻿extends Node2D
 
 var ball_scene = preload("res://ball.tscn")
 var player = null
@@ -6,7 +6,7 @@ var game   = null
 var total_balls  = 50
 var balls_fired  = 0
 
-# ── Gerçek görsel sprite (game_scene'de kardeş düğüm) ────────────────────────
+# ── Actual visual sprite (sibling node in game_scene) ──────────────────────────
 var _sprite: Sprite2D = null
 var _sprite_rest_pos: Vector2 = Vector2.ZERO
 
@@ -20,11 +20,11 @@ var flash_radius := 0.0
 var flash_alpha  := 0.0
 var flash_color  := Color(2.0, 2.0, 3.5, 1.0)
 
-# ── Dahili yardımcılar ────────────────────────────────────────────────────────
+# ── Internal helpers ────────────────────────────────────────────────────────────
 var _last_launch_type := ""
 var _shake_tween: Tween = null
 
-# Namlu ucu: BallLauncher'ın local koordinatında (sprite ile aynı origin)
+# Muzzle tip: in BallLauncher's local coordinates (same origin as sprite)
 const MUZZLE_OFFSET := Vector2(0.0, 18.0)
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -33,15 +33,15 @@ func _ready() -> void:
 	player = get_parent().get_node("Player")
 	game   = get_parent()
 
-	# Beyaz kareyi gizle — görsel olarak kullanılmıyor
+	# Hide white square — not used visually
 	$ColorRect.visible = false
 
-	# Bu node'un _draw() çıktısı (charge glow + muzzle flash) her şeyin üstünde
+	# This node's _draw() output (charge glow + muzzle flash) renders above everything
 	visible       = true
 	z_index       = 10
 	z_as_relative = false
 
-	# Gerçek görsel: game_scene'deki kardeş BallLauncherSprite
+	# Actual visual: sibling BallLauncherSprite in game_scene
 	_sprite = get_parent().get_node_or_null("BallLauncherSprite") as Sprite2D
 	if _sprite:
 		_sprite_rest_pos = _sprite.position
@@ -50,7 +50,7 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	var tl: float = $Timer.time_left
 
-	# ── Şarj penceresi: son 1 saniye ─────────────────────────────────────────
+	# ── Charge window: last 1 second ─────────────────────────────────────────
 	if tl > 0.0 and tl <= 1.0:
 		if not is_charging:
 			is_charging = true
@@ -59,14 +59,14 @@ func _process(delta: float) -> void:
 		var t := charge_progress
 		var c := _get_charge_color()
 
-		# Sprite'ı HDR rengiyle parlaştır (gerçek görsel üzerinde)
+		# Light up sprite with HDR color (on actual visual)
 		if _sprite:
 			_sprite.modulate = Color(
 				lerp(1.0, c.r, t),
 				lerp(1.0, c.g, t),
 				lerp(1.0, c.b, t)
 			)
-			# Yatay titreşim: şarj arttıkça daha güçlü sarsılır
+			# Horizontal vibration: gets stronger as charge increases
 			var vib := sin(Time.get_ticks_msec() * 0.026) * t * 3.5
 			_sprite.position = _sprite_rest_pos + Vector2(vib, 0.0)
 
@@ -92,7 +92,7 @@ func _on_timer_timeout() -> void:
 
 # ─────────────────────────────────────────────────────────────────────────────
 func _launch_ball() -> void:
-	# Erken çıkış: limit dolmuş veya oyuncu yok
+	# Early exit: limit reached or no player
 	if balls_fired >= total_balls:
 		return
 	if player == null:
@@ -103,7 +103,7 @@ func _launch_ball() -> void:
 	ball.max_damage = 5 + player_node.ball_mastery
 
 	if game and game.next_ball_upgrade != "":
-		_last_launch_type = game.next_ball_upgrade   # flash rengi için kaydet
+		_last_launch_type = game.next_ball_upgrade   # save for flash color
 
 		ball.can_split    = game.next_ball_upgrade == "split"
 		ball.can_electric = game.next_ball_upgrade == "electric"
@@ -143,16 +143,16 @@ func _launch_ball() -> void:
 	ball.global_position = global_position
 	get_parent().add_child(ball)   # top sahneye eklendi
 
-	# Sayacı yalnızca top gerçekten sahneye eklendiğinde artır
+	# Increment counter only when ball is actually added to scene
 	balls_fired += 1
 	if game:
-		game.update_ui()           # UI'ı anında güncelle
+		game.update_ui()           # Update UI immediately
 
 	var direction = (player.global_position - global_position).normalized()
 	ball.queue_redraw()
 	ball.launch(direction)
 
-	# Şarj rengi söner, sprite rest'e döner; sonra recoil başlar
+	# Charge color fades, sprite returns to rest; then recoil begins
 	if _sprite:
 		_sprite.modulate = Color(1.0, 1.0, 1.0)
 		_sprite.position = _sprite_rest_pos
@@ -162,7 +162,7 @@ func _launch_ball() -> void:
 	queue_redraw()
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Muzzle flash: top tipine göre neon renk
+# Muzzle flash: neon color based on ball type
 func _trigger_flash() -> void:
 	match _last_launch_type:
 		"electric": flash_color = Color(0.4, 1.8, 4.5)
@@ -180,7 +180,7 @@ func _trigger_flash() -> void:
 	flash_alpha  = 1.0
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Recoil kick: sprite'ı geriye (yukarı) sonra öne sars
+# Recoil kick: shake sprite back (up) then forward
 func _trigger_recoil() -> void:
 	if _sprite == null:
 		return
@@ -195,7 +195,7 @@ func _trigger_recoil() -> void:
 	_shake_tween.tween_property(_sprite, "position", rest,                       0.15)
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Top tipine göre şarj rengi (HDR — glow tetikler)
+# Charge color by ball type (HDR — triggers glow)
 func _get_charge_color() -> Color:
 	if game == null:
 		return Color(2.0, 2.0, 3.5)
@@ -212,16 +212,16 @@ func _get_charge_color() -> Color:
 
 # ─────────────────────────────────────────────────────────────────────────────
 func _draw() -> void:
-	# ── 1) Namlu ucunda şarj topu (son 1 saniye) ─────────────────────────────
+	# ── 1) Charged ball at muzzle tip (last 1 second) ─────────────────────────────
 	if is_charging and charge_progress > 0.05:
 		var t := charge_progress
 		var c := _get_charge_color()
 
-		# Dış difüz halka
+		# Outer diffuse ring
 		draw_circle(MUZZLE_OFFSET,
 			8.0 + t * 24.0,
 			Color(c.r * 0.5, c.g * 0.35, c.b * 0.5, t * 0.22))
-		# Orta enerji küresi
+		# Middle energy sphere
 		draw_circle(MUZZLE_OFFSET,
 			4.5 + t * 13.0,
 			Color(c.r * t, c.g * t * 0.75, c.b * t, t * 0.72))
@@ -230,29 +230,29 @@ func _draw() -> void:
 			2.0 + t * 5.5,
 			Color(c.r * 1.6 * t, c.g * 1.4 * t, c.b * 1.6 * t, t * 0.95))
 
-	# ── 2) Muzzle Flash patlaması ─────────────────────────────────────────────
+	# ── 2) Muzzle Flash burst ─────────────────────────────────────────────
 	if flash_active and flash_alpha > 0.0:
 		var c := flash_color
 		var r := flash_radius
 		var a := flash_alpha
 
-		# Dış yumuşak halo
+		# Outer soft halo
 		draw_circle(MUZZLE_OFFSET, r * 1.65,
 			Color(c.r * 0.45, c.g * 0.35, c.b * 0.45, a * 0.16))
 		# Ana patlama diski
 		draw_circle(MUZZLE_OFFSET, r,
 			Color(c.r, c.g, c.b, a * 0.78))
-		# Sıcak merkez
+		# Hot center
 		draw_circle(MUZZLE_OFFSET, r * 0.32,
 			Color(c.r * 1.3, c.g * 1.2, c.b * 1.3, a))
-		# 8 kıvılcım ışını
+		# 8 spark rays
 		for i in 8:
 			var angle   := float(i) * TAU / 8.0
 			var ray_end := MUZZLE_OFFSET + Vector2(cos(angle), sin(angle)) * r * 2.1
 			draw_line(MUZZLE_OFFSET, ray_end,
 				Color(c.r, c.g, c.b, a * 0.42), 1.5)
 
-	# ── 3) Top tipi önizlemesi ────────────────────────────────────────────────
+	# ── 3) Ball type preview ────────────────────────────────────────────────
 	if game == null or game.next_ball_upgrade == "":
 		return
 

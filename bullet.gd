@@ -1,4 +1,4 @@
-extends Area2D
+﻿extends Area2D
 
 var speed     = 400.0
 var direction = Vector2.ZERO
@@ -14,7 +14,7 @@ func launch(dir: Vector2) -> void:
 func _physics_process(delta: float) -> void:
 	global_position += direction * speed * delta
 
-	# Oyun alanı sınırları
+	# Game area boundaries
 	if global_position.x <= 870:  queue_free()
 	if global_position.x >= 1630: queue_free()
 	if global_position.y <= 0:    queue_free()

@@ -1,4 +1,4 @@
-extends CharacterBody2D
+﻿extends CharacterBody2D
 
 var speed = 600.0
 var damage = 0
@@ -74,7 +74,7 @@ func _copy_ball(other: Node2D) -> void:
 	can_water = other.can_water
 	can_fire = other.can_fire
 	can_leech = other.can_leech
-	# max_damage kopyalanmıyor!
+	# max_damage is not copied!
 	slow_amount = other.slow_amount
 	is_mimic = false
 	mimic_done = true
@@ -92,7 +92,7 @@ func _physics_process(delta: float) -> void:
 	if not moving:
 		return
 	global_position += move_direction * speed * delta
-	# Zamanla yavaşla
+	# Slow down over time
 	speed -= 15 * delta
 	if speed <= 0:
 		speed = 0
@@ -101,7 +101,7 @@ func _physics_process(delta: float) -> void:
 		z_index = 1
 		$CollisionShape2D.disabled = true
 		return
-	# Derinlik hissi - topa vurunca büyü, uzaklaşınca küçül
+	# Depth effect - grows on hit, shrinks when moving away
 	if catch_cooldown > 0:
 		catch_cooldown -= delta
 	
@@ -129,7 +129,7 @@ func _physics_process(delta: float) -> void:
 		z_index = 1
 		$CollisionShape2D.disabled = true
 		return
-	# Duvar sınırları
+	# Wall boundaries
 	if global_position.x <= 870:
 		global_position.x = 870
 		move_direction.x = abs(move_direction.x)
@@ -146,7 +146,7 @@ func _physics_process(delta: float) -> void:
 		global_position.y = 1040
 		move_direction.y = -abs(move_direction.y)
 		speed = speed * 0.15
-	# Player'a yakınken mıknatıs etkisi
+	# Magnet effect when near player
 	#var magnet_player = get_tree().get_first_node_in_group("player")
 	#if magnet_player:
 		#var dist = global_position.distance_to(magnet_player.global_position)
@@ -154,7 +154,7 @@ func _physics_process(delta: float) -> void:
 			#var to_player = (magnet_player.global_position - global_position).normalized()
 			#move_direction = move_direction.lerp(to_player, 0.02)
 			#move_direction = move_direction.normalized()
-	# Mimic Ball - yakındaki güçlendirilmiş topa yaklaşınca kopyala
+	# Mimic Ball - copies the nearest powered-up ball when close
 	if mimic_done and not is_mimic:
 		mimic_ring_time += get_process_delta_time()
 		queue_redraw()
@@ -180,7 +180,7 @@ func _physics_process(delta: float) -> void:
 				move_direction = move_direction.bounce(collision.get_normal())
 				move_direction = move_direction.normalized()
 
-	# Phantom için tüm zombileri kontrol et
+	# Check all subjects for Phantom
 	if is_fused and fusion_type == "phantom":
 		var subjects = get_tree().get_nodes_in_group("subjects")
 		for z in subjects:
@@ -192,7 +192,7 @@ func _physics_process(delta: float) -> void:
 		mimic_color_time += get_process_delta_time()
 		queue_redraw()
 		
-# Cyclone işareti için sürekli redraw
+# Continuous redraw for Cyclone indicator
 	var cyclone_player = get_tree().get_first_node_in_group("player")
 	if cyclone_player and cyclone_player.character_type == "cyclone" and not moving:
 		if cyclone_player.global_position.distance_to(global_position) < 80:
@@ -222,7 +222,7 @@ func _try_fusion(other: Node2D) -> void:
 	
 	await get_tree().create_timer(1.0).timeout
 	
-	# Fusion topu oluştur
+	# Create fusion ball
 	var new_ball = ball_scene.instantiate()
 	new_ball.global_position = mid
 	_apply_fusion(new_ball, fusion)
@@ -366,7 +366,7 @@ func _apply_fusion(ball: Node2D, fusion: String) -> void:
 func _draw() -> void:
 	var cyclone_player = get_tree().get_first_node_in_group("player")
 	if cyclone_player and cyclone_player.character_type == "cyclone" and not moving and cyclone_player.held_ball != self:
-		# Sadece en yakın top işaretlensin
+		# Only the nearest ball should be marked
 		var closest = null
 		var closest_dist = INF
 		var all_balls = get_tree().get_nodes_in_group("balls")
@@ -468,7 +468,7 @@ func _draw() -> void:
 					var end = Vector2(cos(angle), sin(angle)) * 16
 					draw_line(start, end, Color(1.0, 0.5, 1.0), 2)
 			"electric_split":
-				# Sarı dikenli
+				# Yellow spiky
 				draw_circle(Vector2.ZERO, 10, Color(1.0, 1.0, 0.0))
 				for i in range(8):
 					var angle = i * TAU / 8
@@ -503,7 +503,7 @@ func _draw() -> void:
 				draw_line(Vector2(-8, -5), Vector2(8, 5), Color(0.2, 0.5, 1.0, 0.8), 2)
 				draw_line(Vector2(-8, 5), Vector2(8, -5), Color(0.2, 0.5, 1.0, 0.8), 2)
 			"railgun":
-				# Sarı oval elektrik
+				# Yellow oval electric
 				var points = PackedVector2Array([
 					Vector2(-15, 0), Vector2(0, -8),
 					Vector2(15, 0), Vector2(0, 8)
@@ -524,7 +524,7 @@ func _draw() -> void:
 				])
 				draw_colored_polygon(crystal_pts, Color(0.6, 0.9, 1.0, 0.5))
 			"phantom":
-				# Yarı saydam mor oval
+				# Semi-transparent purple oval
 				var points = PackedVector2Array([
 					Vector2(-15, 0), Vector2(0, -8),
 					Vector2(15, 0), Vector2(0, 8)
@@ -625,7 +625,7 @@ func _hit_subject(subject: Node2D) -> void:
 	if subject in hit_subjects:
 		return
 	hit_subjects.append(subject)
-	# Mimic 5 çarpmada eski haline döner
+	# Mimic reverts after 5 hits
 	if mimic_done and not is_mimic:
 		mimic_hits += 1
 		if mimic_hits >= max_mimic_hits:
@@ -639,7 +639,7 @@ func _hit_subject(subject: Node2D) -> void:
 			mimic_done = false
 			mimic_hits = 0
 			queue_redraw()
-	# Hıza göre hasar hesapla
+	# Calculate damage based on speed
 	var base_damage = max_damage
 	if can_split and not has_split:
 		base_damage = 7
@@ -659,7 +659,7 @@ func _hit_subject(subject: Node2D) -> void:
 		base_damage = 2
 	var total_damage = base_damage
 
-# Crit kontrolü
+# Crit check
 	var is_crit = randf() < crit_chance
 	if is_crit:
 		total_damage = int(total_damage * crit_multiplier)
@@ -667,7 +667,7 @@ func _hit_subject(subject: Node2D) -> void:
 	subject.take_damage(total_damage)
 
 	# ── Veri Toplama ─────────────────────────────────────────
-	# Fusion > Güçlü > Temel top sıralamasıyla veri miktarı belirlenir
+	# Data amount determined by Fusion > Enhanced > Basic ball order
 	var data_amount: int = 100
 	if is_fused:
 		data_amount = 450
@@ -686,11 +686,11 @@ func _hit_subject(subject: Node2D) -> void:
 	if game_player and game_player.character_type == "leila":
 		if speed > 200:
 			speed = min(speed + 150, 900.0)
-		# Durum etkisi etkileşimleri
-	# Electrified etkileşimleri
+		# Status effect interactions
+	# Electrified interactions
 	if subject.is_electrified:
 		if can_pierce:
-			# Railgun'a dönüş
+			# Convert to Railgun
 			can_pierce = false
 			can_electric = true
 			has_fused = true
@@ -715,12 +715,12 @@ func _hit_subject(subject: Node2D) -> void:
 			if is_instance_valid(subject):
 				subject.take_damage(20)
 		elif can_glitch:
-			# Aşırı yüklenme - düşene kadar etrafına saldırsın
+			# Overload - attacks surroundings until it drops
 			subject.is_electrified = false
 			subject.modulate = Color(1, 1, 1)
 			subject.apply_glitch()
 		elif can_water:
-			# Chain Reaction - yakındaki ıslak düşmanlara elektrik
+			# Chain Reaction - electrify nearby wet subjects
 			subject.is_electrified = false
 			subject.modulate = Color(1, 1, 1)
 			subject.take_damage(10)
@@ -732,7 +732,7 @@ func _hit_subject(subject: Node2D) -> void:
 						enemy.take_damage(10)
 						enemy.is_electrified = false
 		elif can_fire:
-			# Plazma bombası - AoE patlama
+			# Plasma bomb - AoE explosion
 			subject.is_electrified = false
 			subject.modulate = Color(1, 1, 1)
 			var enemies = get_tree().get_nodes_in_group("subjects")
@@ -751,7 +751,7 @@ func _hit_subject(subject: Node2D) -> void:
 	elif can_electric and subject.is_wet:
 		# Wet + Electric = Shock
 		subject.take_damage(6)
-		# Zincir hasar - yakındaki düşmanlara da çarpar
+		# Chain damage - also hits nearby subjects
 		var enemies = get_tree().get_nodes_in_group("subjects")
 		for enemy in enemies:
 			if enemy != subject and is_instance_valid(enemy):
@@ -759,19 +759,19 @@ func _hit_subject(subject: Node2D) -> void:
 				if dist < 150:
 					enemy.take_damage(4)
 	elif can_cryo and subject.is_wet:
-		# Wet + Cryo = Anında Frozen
+		# Wet + Cryo = Instant Frozen
 		subject.apply_frozen()
 	elif can_cryo and subject.is_burning:
 		# Burn + Cryo = Thermal Shock
 		subject.take_damage(12)
 		subject.is_burning = false
-	# Can çalma topu 
+	# Life steal ball 
 	if can_leech:
 		var game = get_tree().get_first_node_in_group("game")
 		if game:
 			game.player_hp = min(game.player_hp + 2, game.player_max_hp)
 			game.update_ui()
-	# Hydro Jet - vakum koridoru, yakındaki topları hızlandırır
+	# Hydro Jet - vacuum corridor, accelerates nearby balls
 	if is_fused and fusion_type == "hydro_jet" and is_instance_valid(subject):
 		subject.apply_wet()
 		var balls = get_tree().get_nodes_in_group("balls")
@@ -780,7 +780,7 @@ func _hit_subject(subject: Node2D) -> void:
 				var dist = global_position.distance_to(b.global_position)
 				if dist < 150:
 					b.speed = min(b.speed + 100, 800)
-	# Cryostatic - yolda elektrik sızdırır
+	# Cryostatic - leaks electricity along path
 	if is_fused and fusion_type == "cryostatic" and is_instance_valid(subject):
 		subject.apply_slow(slow_amount)
 		var subjects = get_tree().get_nodes_in_group("subjects")
@@ -789,19 +789,19 @@ func _hit_subject(subject: Node2D) -> void:
 				var dist = global_position.distance_to(z.global_position)
 				if dist < 100:
 					z.take_damage(total_damage / 2)
-	# Wet Split parçası - tek vurumluk, ıslatır
+	# Wet Split piece - single hit, applies wet
 	if is_fused and fusion_type == "wet_split_piece" and is_instance_valid(subject):
 		subject.apply_wet()
 		queue_free()
 		return
-	# Deep Freeze Error - animasyonu dondur, etraftaki topları yavaşlat
+	# Deep Freeze Error - freeze animation, slow nearby balls
 	if is_fused and fusion_type == "deep_freeze" and is_instance_valid(subject):
 		subject.apply_frozen()
 		subject.apply_glitch()
-	# Phantom - içinden geç ve glitch uygula
+	# Phantom - pass through and apply glitch
 	if is_fused and fusion_type == "phantom" and is_instance_valid(subject):
 		subject.apply_glitch()
-	# Overclock - birbirine saldırtır
+	# Overclock - make them attack each other
 	if is_fused and fusion_type == "overclock" and is_instance_valid(subject):
 		subject.apply_glitch()
 		var subjects = get_tree().get_nodes_in_group("subjects")
@@ -810,7 +810,7 @@ func _hit_subject(subject: Node2D) -> void:
 				var dist = global_position.distance_to(z.global_position)
 				if dist < 200:
 					z.apply_glitch()
-	# Railgun - elektrik hattı
+	# Railgun - electric line
 	if is_fused and fusion_type == "railgun" and is_instance_valid(subject):
 		var subjects = get_tree().get_nodes_in_group("subjects")
 		for z in subjects:
@@ -818,7 +818,7 @@ func _hit_subject(subject: Node2D) -> void:
 				var dist = global_position.distance_to(z.global_position)
 				if dist < 150:
 					z.take_damage(total_damage / 2)
-	# Glacier Spike - buz çekirdeği
+	# Glacier Spike - ice core
 	if is_fused and fusion_type == "glacier_spike" and is_instance_valid(subject):
 		var target_subject = subject
 		get_tree().create_timer(2.0).timeout.connect(func():
@@ -838,10 +838,10 @@ func _hit_subject(subject: Node2D) -> void:
 			if z != subject and global_position.distance_to(z.global_position) < 200:
 				if z.is_wet:
 					z.take_damage(total_damage)
-	# Absolute Zero - anında dondur
+	# Absolute Zero - instant freeze
 	if is_fused and fusion_type == "absolute_zero" and is_instance_valid(subject):
 		subject.apply_frozen()
-	# Firework parçası - tek vurumluk patlama
+	# Firework piece - single hit explosion
 	if is_fused and fusion_type == "firework_piece" and is_instance_valid(subject):
 		subject.apply_burn()
 		queue_free()
@@ -850,7 +850,7 @@ func _hit_subject(subject: Node2D) -> void:
 	if is_fused and fusion_type == "meltdown" and is_instance_valid(subject):
 		subject.apply_burn()
 		subject.apply_glitch()
-	# Thermite - içten yanma
+	# Thermite - internal combustion
 	if 	is_fused and fusion_type == "thermite" and is_instance_valid(subject):
 		subject.apply_burn()
 	# Steam Pressure - Knockback
@@ -862,7 +862,7 @@ func _hit_subject(subject: Node2D) -> void:
 	if is_fused and fusion_type == "thermal_shock" and is_instance_valid(subject):
 		if subject.is_frozen or subject.is_slowed:
 			subject.take_damage(total_damage * 2)
-	# Plasma Discharge - Alan hasarı
+	# Plasma Discharge - area damage
 	if is_fused and fusion_type == "plasma_discharge" and is_instance_valid(subject):
 		var subjects = get_tree().get_nodes_in_group("subjects")
 		for z in subjects:
@@ -955,12 +955,12 @@ func _electric_blast() -> void:
 			z.take_damage(5)
 
 # ─────────────────────────────────────────────
-# SİBERPUNK TRAIL (İZ) SİSTEMİ
+# CYBERPUNK TRAIL SYSTEM
 # ─────────────────────────────────────────────
 
 func _setup_trail() -> void:
 	trail = Line2D.new()
-	# top_level=true: parent transform'u devralmaz, dünya koordinatlarında çizilir
+	# top_level=true: does not inherit parent transform, drawn in world coordinates
 	trail.top_level = true
 	trail.z_index = 1
 	trail.width = 10.0
@@ -968,14 +968,14 @@ func _setup_trail() -> void:
 	trail.end_cap_mode   = Line2D.LINE_CAP_ROUND
 	trail.joint_mode     = Line2D.LINE_JOINT_ROUND
 
-	# Genişlik eğrisi: kuyruktan (0 → ince) başa (1 → kalın)
+	# Width curve: from tail (0 = thin) to head (1 = thick)
 	var wc := Curve.new()
 	wc.add_point(Vector2(0.0, 0.04))
 	wc.add_point(Vector2(0.55, 0.28))
 	wc.add_point(Vector2(1.0, 1.0))
 	trail.width_curve = wc
 
-	# Renk gradyanı: kuyruk şeffaf → baş HDR parlak
+	# Color gradient: tail transparent → head HDR bright
 	var grad := Gradient.new()
 	grad.set_color(0, Color(0.0, 0.0, 0.0, 0.0))
 	grad.set_color(1, _get_trail_color())
@@ -985,7 +985,7 @@ func _setup_trail() -> void:
 	add_child(trail)
 
 func _get_trail_color() -> Color:
-	# HDR değerleri (>1.0) → WorldEnvironment Glow ile bloom tetikler
+	# HDR values (>1.0) → trigger bloom with WorldEnvironment Glow
 	if is_fused:
 		return Color(2.5, 2.0, 4.5, 0.9)
 	elif can_electric:
@@ -1005,7 +1005,7 @@ func _get_trail_color() -> Color:
 	elif can_leech:
 		return Color(0.2, 4.0, 0.5, 0.9)
 	elif is_mimic:
-		# RGB kayma efekti (her frame farklı renk)
+		# RGB shift effect (different color each frame)
 		var t := Time.get_ticks_msec() / 500.0
 		return Color(
 			(sin(t)          + 1.5) * 1.5,
@@ -1013,7 +1013,7 @@ func _get_trail_color() -> Color:
 			(sin(t + 4.189)  + 1.5) * 1.5,
 			0.9
 		)
-	return Color(2.0, 2.0, 2.5, 0.9)  # Normal top: soğuk beyaz HDR
+	return Color(2.0, 2.0, 2.5, 0.9)  # Normal ball: cool white HDR
 
 func _update_modulate() -> void:
 	# CanvasItem.modulate > 1.0 → HDR → Glow bloom'u tetikler
@@ -1046,7 +1046,7 @@ func _update_trail(_delta: float) -> void:
 	if not is_instance_valid(trail):
 		return
 
-	# Mimic & kopyalanmış toplar için gradyan rengini dinamik güncelle
+	# Dynamically update gradient color for Mimic & copied balls
 	if is_mimic or mimic_done:
 		_update_trail_color()
 
@@ -1058,7 +1058,7 @@ func _update_trail(_delta: float) -> void:
 		if not trail.visible:
 			trail.visible = true
 	else:
-		# Top durduğunda iz yavaşça solar (her frame bir nokta düşer)
+		# When ball stops, trail fades slowly (one point drops each frame)
 		if trail_positions.size() > 0:
 			trail_positions.pop_front()
 			trail.points = PackedVector2Array(trail_positions)

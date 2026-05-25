@@ -1,4 +1,4 @@
-extends Node2D
+﻿extends Node2D
 
 var vacuum_radius = 80.0
 var is_processing = false
@@ -14,13 +14,13 @@ var max_energy = 50.0
 var energy_timer = 0.0
 var energy_tick = 2.0
 
-# ── Görsel efekt referansları ──────────────────────────────────────────────
+# ── Visual effect references ───────────────────────────────────────────────
 var _sprite: Sprite2D = null          # ProcessorSprite — otomatik tespit
-var _sprite_local: Vector2 = Vector2.ZERO  # FusionZone lokal uzayında sprite konumu
-var _arc_lines: Array = []            # Aktif yıldırım Line2D düğümleri
-var _arc_targets: Array = []          # Her Line2D'nin hedef top referansı
-var _idle_angle: float = 0.0          # Plazma girdabı dönme açısı (radyan)
-var _flash_intensity: float = 0.0     # Fusion patlaması parlaklığı (0.0 – 1.0)
+var _sprite_local: Vector2 = Vector2.ZERO  # Sprite position in FusionZone local space
+var _arc_lines: Array = []            # Active lightning Line2D nodes
+var _arc_targets: Array = []          # Target ball reference for each Line2D
+var _idle_angle: float = 0.0          # Plasma vortex rotation angle (radians)
+var _flash_intensity: float = 0.0     # Fusion explosion brightness (0.0 - 1.0)
 
 func _ready() -> void:
 	_sprite = get_parent().get_node_or_null("ProcessorSprite") as Sprite2D
@@ -30,9 +30,9 @@ func _ready() -> void:
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		var local_mouse = to_local(get_viewport().get_mouse_position())
-		# Tıklama merkezini sprite'ın görsel konumuna hizala.
-		# Önceki kontrol FusionZone orijinini (0,0) kullanıyordu;
-		# efektler _sprite_local'a taşındığından hit-area da oraya alındı.
+		# Align click center to sprite's visual position.
+		# Previous check used FusionZone origin (0,0);
+		# since effects moved to _sprite_local, hit-area was moved there too.
 		var click_center: Vector2 = _sprite_local if _sprite else Vector2.ZERO
 		if local_mouse.distance_to(click_center) <= 35.0:
 			is_active = !is_active
@@ -40,15 +40,15 @@ func _input(event: InputEvent) -> void:
 
 func _physics_process(delta: float) -> void:
 	queue_redraw()
-	# Plazma dönme açısını güncelle
+	# Update plasma rotation angle
 	_idle_angle = fmod(_idle_angle + delta * 1.8, TAU)
-	# Sprite konumunu her frame yeniden hesapla — paraşüt animasyonu sırasında takip eder
+	# Recalculate sprite position every frame — tracks during parachute animation
 	if _sprite:
 		_sprite_local = to_local(_sprite.global_position)
-	# Fusion flash'ı söndür
+	# Fade out fusion flash
 	if _flash_intensity > 0.0:
 		_flash_intensity = max(0.0, _flash_intensity - delta * 2.5)
-	# Elektrik yaylarını güncelle (is_processing kontrolü _update_arcs içinde)
+	# Update lightning arcs (is_processing check inside _update_arcs)
 	_update_arcs()
 	if is_processing:
 		return
@@ -79,10 +79,10 @@ func _physics_process(delta: float) -> void:
 				break
 	if loading:
 		load_timer += delta
-		# Enerji yavaşça azalsın
+		# Let energy decrease slowly
 		energy = max(energy - (10.0 / load_duration) * delta, 0.0)
 		_update_energy_bar()
-		queue_redraw()  # Her frame çiz — elektrik animasyonu için şart
+		queue_redraw()  # Draw every frame — required for lightning animation
 		if load_timer >= load_duration:
 				loading = false
 				load_timer = 0.0
@@ -105,8 +105,8 @@ func _absorb_ball(ball: Node2D) -> void:
 	ball.moving = false
 	ball.get_node("CollisionShape2D").disabled = true
 	
-	# Spiral absorpsiyon: top sprite'ın görsel merkezine doğru dönerek çekilir
-	# (FusionZone mantıksal merkezi değil; sprite konumu rotasyonla daha tutarlı)
+	# Spiral absorption: ball is pulled rotating toward the visual center of the sprite
+	# (not FusionZone logical center; sprite position is more consistent with rotation)
 	var sp_target: Vector2 = _sprite.global_position if _sprite else global_position
 	var sp_dist = ball.global_position.distance_to(sp_target)
 	var sp_tw = create_tween()
@@ -122,7 +122,7 @@ func _absorb_ball(ball: Node2D) -> void:
 		is_processing = false
 	else:
 		if energy < 10.0:
-			# Enerji yetersiz, topları iade et
+			# Insufficient energy, return balls
 			var type_a = pending_types[0]
 			var type_b = pending_types[1]
 			pending_types.clear()
@@ -185,15 +185,15 @@ func _spawn_fused_ball(type_a: String, type_b: String) -> void:
 	new_ball.speed = 600.0
 
 func _draw() -> void:
-	# ── Boşta plazma girdabı (ProcessorSprite üzerinde) ──────────────────────
+	# ── Idle plasma vortex (on ProcessorSprite) ──────────────────────────────
 	if is_active and not loading and not is_processing and _sprite:
 		_draw_plasma_vortex(_sprite_local)
 
-	# ── Fusion patlaması halkası ──────────────────────────────────────────────
+	# ── Fusion explosion ring ────────────────────────────────────────────────
 	if _flash_intensity > 0.0:
 		_draw_fusion_flash()
 
-	# ── Top ikonları: sprite merkezine hizalı, rotasyona duyarlı ─────────────
+	# ── Ball icons: aligned to sprite center, rotation-aware ────────────────
 	var center: Vector2    = _sprite_local
 	var sprite_rot: float  = _sprite.rotation if _sprite else 0.0
 	var side_dir: Vector2  = Vector2(1.0, 0.0).rotated(sprite_rot)
@@ -202,7 +202,7 @@ func _draw() -> void:
 	if display_types.size() == 1:
 		positions = [center]
 	elif display_types.size() == 2:
-		# Fuse başladığında (loading = true) iki top birbirine doğru yaklaşır
+		# When fuse starts (loading = true) two balls move toward each other
 		var progress: float = load_timer / load_duration if loading else 0.0
 		var offset: float   = lerp(22.0, 0.0, progress)
 		positions = [center - side_dir * offset, center + side_dir * offset]
@@ -210,7 +210,7 @@ func _draw() -> void:
 	for i in range(display_types.size()):
 		_draw_ball_icon(positions[i], display_types[i])
 
-	# ── Yükleme çubuğu: sprite rotasyonuyla hizalı, görsel altında ──────────
+	# ── Loading bar: aligned with sprite rotation, below visual ─────────────
 	if loading:
 		var down_dir: Vector2  = Vector2(0.0, 1.0).rotated(sprite_rot)
 		var bar_center: Vector2 = center + down_dir * 38.0
@@ -222,7 +222,7 @@ func _draw() -> void:
 		draw_rect(Rect2(-bar_w * 0.5, -bar_h * 0.5, fill_w, bar_h), Color(0.0, 1.0, 0.8))
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
-	# ── Elektrik animasyonu: sprite merkezinde, loading sırasında ────────────
+	# ── Lightning animation: at sprite center, during loading ────────────────
 	if loading:
 		var time: float = Time.get_ticks_msec() / 1000.0
 		for i in range(6):
@@ -389,50 +389,50 @@ func _update_energy_bar() -> void:
 			label.text = "⚡ Fusion Energy: " + str(int(energy)) + "/" + str(int(max_energy))
 
 # ════════════════════════════════════════════════════════════════════════════
-# GÖRSEL EFEKT FONKSİYONLARI
+# VISUAL EFFECT FUNCTIONS
 # ════════════════════════════════════════════════════════════════════════════
 
-# ── Dönen neon plazma girdabı ─────────────────────────────────────────────
-# FusionZone'un lokal koordinatında 'center' noktası etrafında çizilir.
-# HDR renk değerleri (>1.0) WorldEnvironment Glow ile parlama tetikler.
+# ── Spinning neon plasma vortex ──────────────────────────────────────────
+# Drawn around 'center' point in FusionZone's local coordinates.
+# HDR color values (>1.0) trigger glow with WorldEnvironment Glow.
 func _draw_plasma_vortex(center: Vector2) -> void:
 	var a := _idle_angle
 	var sprite_rot: float = _sprite.rotation if _sprite else 0.0
 
-	# Çizim bağlamını sprite'ın merkezi + rotasyonuna taşı
-	# Böylece tüm draw_* çağrıları sprite'ın eğimiyle hizalanır
+	# Move drawing context to sprite's center + rotation
+	# So all draw_* calls align with sprite's tilt
 	draw_set_transform(center, sprite_rot, Vector2.ONE)
 
-	# Dış halka — neon pembe (HDR) — sıfır merkezli, transform zaten uygulandı
+	# Outer ring — neon pink (HDR) — zero-centered, transform already applied
 	draw_arc(Vector2.ZERO, 38.0, a,              a + TAU * 0.65, 36, Color(2.2, 0.1, 1.8, 0.85), 2.5)
 	draw_arc(Vector2.ZERO, 38.0, a + PI,         a + PI + TAU * 0.28, 16, Color(2.2, 0.1, 1.8, 0.35), 4.0)
 
-	# İç halka — siyan/mavi (HDR), ters yönde döner
+	# Inner ring — cyan/blue (HDR), rotates in opposite direction
 	draw_arc(Vector2.ZERO, 23.0, -a * 1.5,       -a * 1.5 + TAU * 0.55, 28, Color(0.1, 1.9, 2.3, 0.90), 2.0)
 	draw_arc(Vector2.ZERO, 23.0, -a * 1.5 + PI, -a * 1.5 + PI + TAU * 0.35, 14, Color(0.1, 1.9, 2.3, 0.40), 3.0)
 
-	# Çekirdek parlaması
+	# Core glow
 	draw_circle(Vector2.ZERO, 9.0, Color(2.5, 0.6, 2.5, 0.55))
 	draw_circle(Vector2.ZERO, 4.5, Color(3.0, 1.2, 3.5, 0.80))
 
-	# Dönen kıvılcım parçacıkları
+	# Spinning spark particles
 	for s in range(5):
 		var spark_a := a * 2.3 + s * (TAU / 5.0)
 		var spark_r := 30.0 + sin(a * 3.0 + s) * 6.0
 		draw_circle(Vector2(cos(spark_a), sin(spark_a)) * spark_r, 2.5, Color(2.8, 1.0, 3.2, 0.75))
 
-	# Çizim bağlamını sıfırla — sonraki draw_* çağrıları etkilenmesin
+	# Reset drawing context — so subsequent draw_* calls are not affected
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
-# ── Fusion patlaması: genişleyen neon halka ──────────────────────────────
+# ── Fusion explosion: expanding neon ring ───────────────────────────────
 func _draw_fusion_flash() -> void:
 	var fi := _flash_intensity
-	var r: float = lerp(20.0, 115.0, 1.0 - fi)   # patlama anında küçük → genişler
+	var r: float = lerp(20.0, 115.0, 1.0 - fi)   # small at explosion moment → expands
 	draw_circle(_sprite_local, r,         Color(3.0, 1.2, 3.5, fi * 0.55))
 	draw_arc(_sprite_local, r * 1.30, 0.0, TAU, 48, Color(2.5, 0.5, 3.0, fi * 0.90), 3.5)
 	draw_arc(_sprite_local, r * 0.60, 0.0, TAU, 32, Color(3.5, 2.0, 4.0, fi * 0.70), 2.0)
 
-# ── Yıldırım yayı: A noktasından B noktasına zigzag Line2D noktaları ─────
+# ── Lightning arc: zigzag Line2D points from point A to point B ──────────
 func _make_lightning(a: Vector2, b: Vector2) -> PackedVector2Array:
 	var pts := PackedVector2Array()
 	var segments := 9
@@ -444,16 +444,16 @@ func _make_lightning(a: Vector2, b: Vector2) -> PackedVector2Array:
 	pts.append(b)
 	return pts
 
-# ── Elektrik yayı güncelleme: yakın toplar için Line2D oluşturur/günceller ──
+# ── Lightning arc update: creates/updates Line2D for nearby balls ──────────
 func _update_arcs() -> void:
-	# Geçersiz / duran top yaylarını temizle
+	# Clear invalid / stopped ball arcs
 	for i in range(_arc_lines.size() - 1, -1, -1):
 		if not is_instance_valid(_arc_targets[i]) or not _arc_targets[i].moving:
 			_arc_lines[i].queue_free()
 			_arc_lines.remove_at(i)
 			_arc_targets.remove_at(i)
 
-	# Cihaz pasif, yüklüyor veya işliyorsa tüm yayları kapat
+	# If device is passive, loading or processing, disable all arcs
 	if is_processing or loading or not is_active:
 		for arc_line in _arc_lines:
 			arc_line.queue_free()
@@ -461,7 +461,7 @@ func _update_arcs() -> void:
 		_arc_targets.clear()
 		return
 
-	# Vakum yarıçapının 1.6 katı içindeki güçlü topları tara
+	# Scan for powered balls within 1.6x vacuum radius
 	var nearby: Array = []
 	for ball in get_tree().get_nodes_in_group("balls"):
 		if not ball.moving or ball.is_fused:
@@ -473,7 +473,7 @@ func _update_arcs() -> void:
 		if global_position.distance_to(ball.global_position) < vacuum_radius * 1.6:
 			nearby.append(ball)
 
-	# Yeni toplar için Line2D yayı oluştur
+	# Create Line2D arc for new balls
 	for ball in nearby:
 		if not _arc_targets.has(ball):
 			var arc := Line2D.new()
@@ -486,14 +486,14 @@ func _update_arcs() -> void:
 			_arc_lines.append(arc)
 			_arc_targets.append(ball)
 
-	# Menzil dışına çıkan topların yayını kapat
+	# Disable arc for balls that leave range
 	for i in range(_arc_targets.size() - 1, -1, -1):
 		if not nearby.has(_arc_targets[i]):
 			_arc_lines[i].queue_free()
 			_arc_lines.remove_at(i)
 			_arc_targets.remove_at(i)
 
-	# Kalan yayların noktalarını ve renklerini her frame güncelle (flicker)
+	# Update points and colors of remaining arcs every frame (flicker)
 	var t := Time.get_ticks_msec() / 1000.0
 	for i in range(_arc_lines.size()):
 		if not is_instance_valid(_arc_targets[i]):
@@ -505,8 +505,8 @@ func _update_arcs() -> void:
 		var flicker := 0.65 + 0.35 * sin(t * 22.0 + i * 2.1)
 		_arc_lines[i].default_color = Color(1.6 * flicker, 0.3 * flicker, 2.6 * flicker, 0.85)
 
-# ── Spiral absorpsiyon: tween_method için Callable (p: 0→1) ──────────────
-# Godot 4 bind() sıralaması: callable(p, ...bound_args)
+# ── Spiral absorption: Callable for tween_method (p: 0->1) ──────────────
+# Godot 4 bind() order: callable(p, ...bound_args)
 func _spiral_to(p: float, ball: Node2D, target: Vector2, dist: float) -> void:
 	if not is_instance_valid(ball):
 		return
@@ -520,7 +520,7 @@ func _trigger_fusion_flash() -> void:
 	_flash_intensity = 1.0
 	if not _sprite:
 		return
-	# ProcessorSprite'ı en üste çek ve anlık neon parlaması ver
+	# Pull ProcessorSprite to top and give instant neon glow
 	var prev_z := _sprite.z_index
 	_sprite.z_index = 10
 	var flash_tw := create_tween()

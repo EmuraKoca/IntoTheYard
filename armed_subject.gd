@@ -1,4 +1,4 @@
-extends CharacterBody2D
+﻿extends CharacterBody2D
 
 var speed = 90.0
 var health = 20
@@ -89,7 +89,7 @@ func _physics_process(delta: float) -> void:
 		return
 	var target
 	if is_glitched:
-		# Yakındaki zombiye saldır
+		# Attack nearby subject
 		var subjects = get_tree().get_nodes_in_group("subjects")
 		var closest = null
 		var closest_dist = 999999.0
@@ -205,12 +205,12 @@ func _become_ally() -> void:
 	remove_from_group("subjects")
 	modulate = Color(0.2, 1.0, 0.4)
 
-	# Önce tribün kapısına koş
+	# First run to the tribune gate
 	var tween = create_tween()
 	tween.tween_property(self, "global_position", Vector2(850, 1000), 1.5)
 	await get_tree().create_timer(1.5).timeout
 
-	# Sonra yaşam alanına geç
+	# Then move to the living area
 	var tween2 = create_tween()
 	tween2.tween_property(self, "global_position", Vector2(490, 1000), 1.0)
 	await get_tree().create_timer(1.0).timeout

@@ -1,10 +1,10 @@
-extends Node2D
+﻿extends Node2D
 
 func _ready() -> void:
 	draw_tribune()
 
 func draw_tribune() -> void:
-	# Koltuk sıraları
+	# Seat rows
 	for i in range(15):
 		var line = Line2D.new()
 		var y = 280 + i * 56
@@ -13,7 +13,7 @@ func draw_tribune() -> void:
 		line.width = 2.0
 		line.default_color = Color(0.25, 0.15, 0.15)
 		add_child(line)
-	# Dikey bölücüler
+	# Vertical dividers
 	for i in range(5):
 		var line = Line2D.new()
 		var x = 490 + i * 72

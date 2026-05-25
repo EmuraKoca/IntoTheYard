@@ -1,4 +1,4 @@
-extends Area2D
+﻿extends Area2D
 
 var speed     = 300.0
 var target    = null
@@ -16,7 +16,7 @@ func _physics_process(delta: float) -> void:
 		queue_free()
 		return
 
-	# Hedefe doğru git ama takip etme
+	# Move toward target but don't track
 	if traveled == 0.0:
 		direction = (target.global_position - global_position).normalized()
 

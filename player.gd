@@ -1,4 +1,4 @@
-extends CharacterBody2D
+﻿extends CharacterBody2D
 
 var SPEED = 300.0
 var held_ball = null
@@ -40,7 +40,7 @@ var cyclone_hold_timer = 0.0
 var cyclone_is_holding = false
 var cyclone_ground_ball = null
 
-# Vector için
+# For Vector
 var auto_catch_timer = 0.0
 var auto_catch_ball = null
 
@@ -48,7 +48,7 @@ var auto_catch_ball = null
 var character_type = "vector"
 
 func _cyclone_process(delta: float) -> void:
-	# Yerdeki topa yaklaşınca işaret
+	# Detect ground ball when approaching
 	var ground_ball = _find_ground_ball()
 	cyclone_ground_ball = ground_ball
 
@@ -86,7 +86,7 @@ func _cyclone_process(delta: float) -> void:
 					_cyclone_throw()
 	else:
 		if cyclone_hold_timer > 0 and cyclone_hold_timer < 0.15:
-			# Kısa tık - normal vuruş
+			# Short tap - normal hit
 			if _no_ball_nearby():
 				_bat_swing()
 			else:
@@ -132,7 +132,7 @@ func _leila_process(delta: float) -> void:
 			if leila_hold_timer >= 0.15:
 				leila_is_holding = true
 		if leila_is_holding:
-			# Raket modu - yakın topu tut
+			# Racket mode - hold nearby ball
 			if held_ball == null:
 				var balls = get_tree().get_nodes_in_group("balls")
 				for ball in balls:
@@ -143,20 +143,20 @@ func _leila_process(delta: float) -> void:
 						held_balls.append(ball)
 						charge = 0.0
 						break
-			# Basılı tutma süresi dolunca otomatik fırlat
+			# Auto-throw when hold timer expires
 			if held_ball != null:
 				charge += delta
 				if charge >= 0.5:
 					_leila_throw()
 	else:
 		if leila_hold_timer > 0 and leila_hold_timer < 0.15:
-			# Kısa tık - normal vuruş
+			# Short tap - normal hit
 			if _no_ball_nearby():
 				_bat_swing()
 			else:
 				_swing()
 		elif leila_is_holding and held_ball != null:
-			# Bırakınca fırlat
+			# Throw on release
 			_leila_throw()
 		leila_hold_timer = 0.0
 		leila_is_holding = false
@@ -180,7 +180,7 @@ func _leila_throw() -> void:
 func _ready() -> void:
 	z_index = 2
 	character_type = GameData.selected_character
-	# Her karakter kendi ColorRect'ini açar; diğerleri tscn'de kapalı kalır
+	# Each character shows its own ColorRect; others remain hidden in tscn
 	match character_type:
 		"vector":
 			$VectorRect.visible = true
@@ -249,11 +249,11 @@ func _physics_process(delta: float) -> void:
 			dash_velocity = Vector2.ZERO
 			$CollisionShape2D.disabled = false
 
-	# Duvar sınırları
+	# Wall boundaries
 	global_position.x = clamp(global_position.x, 870, 1620)
 	global_position.y = clamp(global_position.y, 260, 1040)
 
-	# Kelepçe kontrolü
+	# Chain constraint check
 	var dist_to_anchor = global_position.distance_to(chain_anchor)
 	if dist_to_anchor > chain_length:
 		var dir_to_anchor = (chain_anchor - global_position).normalized()
@@ -264,7 +264,7 @@ func _physics_process(delta: float) -> void:
 	if is_charging:
 		charge = min(charge + delta * 1.5, max_charge)
 
-	# Karakter tipine göre vuruş sistemi
+	# Hit system based on character type
 	if character_type == "vector":
 		_vector_process(delta)
 	elif character_type == "leila":
@@ -282,7 +282,7 @@ func _physics_process(delta: float) -> void:
 
 	queue_redraw()
 
-	# Dash yük dolumu
+	# Dash charge recharge
 	if dash_charges < max_dash_charges:
 		dash_recharge_timer += delta
 		var recharge = dash_empty_recharge_time if dash_is_empty else dash_recharge_time
@@ -318,7 +318,7 @@ func _vector_process(delta: float) -> void:
 			await get_tree().create_timer(1.0).timeout
 			recently_launched.erase(ball)
 
-	# Yakın dövüş - sol tık ile yumruk
+	# Melee - punch with left click
 	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 		if bat_cooldown <= 0:
 			var subjects = get_tree().get_nodes_in_group("subjects")

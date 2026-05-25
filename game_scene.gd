@@ -1,4 +1,4 @@
-extends Node2D
+﻿extends Node2D
 
 var _font_bold    = preload("res://assets/orbitronfont/Orbitron-Bold.ttf")
 var _font_regular = preload("res://assets/orbitronfont/Orbitron-Regular.ttf")
@@ -43,7 +43,7 @@ func _show_boss_warning() -> void:
 	boss_warning.position = Vector2(280, -200)
 	add_child(boss_warning)
 	
-	# Yukarıdan düşsün
+	# Drop from above
 	var tween = create_tween()
 	tween.tween_property(boss_warning, "position", Vector2(280, 550), 1.0)\
 		.set_trans(Tween.TRANS_QUAD)\
@@ -52,7 +52,7 @@ func _show_boss_warning() -> void:
 	await get_tree().create_timer(1.0).timeout
 	_screen_shake()
 	
-	# 3 level bekle sonra aç
+	# Wait 3 levels then open
 	await get_tree().create_timer(15.0).timeout
 	_open_crate()
 
@@ -60,14 +60,14 @@ func _open_crate() -> void:
 	if boss_warning == null:
 		return
 	
-	# Sandık açılıyor - renk değişimi
+	# Crate opening - color change
 	var tween = create_tween()
 	tween.tween_property(boss_warning, "color", Color(0.1, 0.1, 0.1), 0.5)
 	tween.parallel().tween_property(boss_warning, "scale", Vector2(1.3, 1.3), 0.5)
 	
 	await get_tree().create_timer(1.0).timeout
 	
-	# Işıklar açılıyor - mavi parıltı
+	# Lights turning on - blue glow
 	var tween2 = create_tween()
 	tween2.tween_property(boss_warning, "color", Color(0.0, 0.5, 1.0), 0.5)
 	
@@ -85,7 +85,7 @@ func _spawn_boss() -> void:
 	add_child(b)
 	boss = b
 	
-	# Atlama sırasında collision kapat
+	# Disable collision during jump
 	b.get_node("CollisionShape2D").disabled = true
 	
 	var tween = create_tween()
@@ -99,7 +99,7 @@ func _spawn_boss() -> void:
 	await get_tree().create_timer(1.0).timeout
 	_screen_shake()
 	
-	# İndi, collision'ı geri aç
+	# Landed, re-enable collision
 	if is_instance_valid(b):
 		b.get_node("CollisionShape2D").disabled = false
 		b._landing_wave()
@@ -127,7 +127,7 @@ func show_boss_bar(boss_node: Node2D) -> void:
 	name_label.modulate = Color(1, 0.3, 0.3)
 	boss_bar_canvas.add_child(name_label)
 	
-	# Zırh barı
+	# Armor bar
 	var armor_bg = ColorRect.new()
 	armor_bg.name = "ArmorBG"
 	armor_bg.size = Vector2(400, 20)
@@ -142,7 +142,7 @@ func show_boss_bar(boss_node: Node2D) -> void:
 	armor_bar.color = Color(0.6, 0.6, 0.6)
 	boss_bar_canvas.add_child(armor_bar)
 	
-	# Can barı
+	# Health bar
 	var health_bg = ColorRect.new()
 	health_bg.name = "HealthBG"
 	health_bg.size = Vector2(400, 20)
@@ -155,7 +155,7 @@ func show_boss_bar(boss_node: Node2D) -> void:
 	health_bar.size = Vector2(400, 20)
 	health_bar.position = Vector2(760, 75)
 	health_bar.color = Color(0.8, 0.1, 0.1)
-	health_bar.visible = false  # Başta gizli
+	health_bar.visible = false  # Hidden at start
 	boss_bar_canvas.add_child(health_bar)
 
 func update_boss_bar(armor: int, health: int, max_armor: int, max_health: int) -> void:
@@ -213,7 +213,7 @@ func _show_hasmen_selection() -> void:
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	canvas.add_child(bg)
 
-	# ── MR. HASMEN — karakter görseli (sağ alan) ─────────────────────────
+	# ── MR. HASMEN — character visual (right area) ──────────────────────────
 	var hasmen_img = TextureRect.new()
 	hasmen_img.texture = load("res://assets/mrHasmen.png")
 	hasmen_img.size = Vector2(580, 900)
@@ -223,7 +223,7 @@ func _show_hasmen_selection() -> void:
 	hasmen_img.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	canvas.add_child(hasmen_img)
 
-	# İsim etiketi — görselin üstünde, ortada
+	# Name label — above visual, centered
 	var hasmen_label = Label.new()
 	hasmen_label.text = "MR. HASMEN"
 	hasmen_label.size = Vector2(580, 40)
@@ -234,7 +234,7 @@ func _show_hasmen_selection() -> void:
 	hasmen_label.add_theme_color_override("font_color", Color(1, 0.18, 0.58, 1))
 	canvas.add_child(hasmen_label)
 
-	# ── DİKEY AYRAÇ (kart alanı | Hasmen alanı) ──────────────────────────
+	# ── VERTICAL DIVIDER (card area | Hasmen area) ──────────────────────────
 	var divider = ColorRect.new()
 	divider.color = Color(0, 0.72, 0.82, 0.32)
 	divider.size = Vector2(2, 960)
@@ -242,7 +242,7 @@ func _show_hasmen_selection() -> void:
 	divider.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	canvas.add_child(divider)
 
-	# ── KONUŞMA BALONU — gövde ────────────────────────────────────────────
+	# ── SPEECH BUBBLE — body ────────────────────────────────────────────────
 	var bubble = Panel.new()
 	bubble.size = Vector2(458, 196)
 	bubble.position = Vector2(820, 64)
@@ -256,7 +256,7 @@ func _show_hasmen_selection() -> void:
 	bubble.add_theme_stylebox_override("panel", bubble_style)
 	canvas.add_child(bubble)
 
-	# Kuyruk — dış (cyan border, Mr. Hasmen'a doğru işaret eder)
+	# Tail — outer (cyan border, pointing toward Mr. Hasmen)
 	var tail_outer = ColorRect.new()
 	tail_outer.color = Color(0, 0.92, 1, 1)
 	tail_outer.size = Vector2(22, 22)
@@ -265,7 +265,7 @@ func _show_hasmen_selection() -> void:
 	tail_outer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	canvas.add_child(tail_outer)
 
-	# Kuyruk — iç (koyu dolgu, border etkisi yaratır)
+	# Tail — inner (dark fill, creates border effect)
 	var tail_inner = ColorRect.new()
 	tail_inner.color = Color(0.05, 0.05, 0.14, 0.97)
 	tail_inner.size = Vector2(16, 16)
@@ -274,7 +274,7 @@ func _show_hasmen_selection() -> void:
 	tail_inner.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	canvas.add_child(tail_inner)
 
-	# Konuşma metni (İngilizce)
+	# Speech text
 	var dialog = Label.new()
 	dialog.text = "Hey Vec, let me make you look good!\nPick one of these and benefit from\nthe gifts of technology !!!!!"
 	dialog.size = Vector2(426, 180)
@@ -285,7 +285,7 @@ func _show_hasmen_selection() -> void:
 	dialog.add_theme_color_override("font_color", Color(0.88, 0.93, 1.0, 1.0))
 	canvas.add_child(dialog)
 
-	# ── KART BÖLÜMÜ BAŞLIĞI ───────────────────────────────────────────────
+	# ── CARD SECTION HEADER ─────────────────────────────────────────────────
 	var section_label = Label.new()
 	section_label.text = "// AVAILABLE UPGRADES //"
 	section_label.position = Vector2(50, 388)
@@ -318,7 +318,7 @@ func _show_hasmen_selection() -> void:
 	canvas.add_child(title1)
 
 	var desc1 = Label.new()
-	desc1.text = "Sahaya paraşütle 'ITY RE-Processor cihazı' indirilir."
+	desc1.text = "An 'ITY RE-Processor device' is airdropped onto the field."
 	desc1.size = Vector2(660, 50)
 	desc1.position = Vector2(65, 472)
 	desc1.add_theme_font_size_override("font_size", 15)
@@ -395,7 +395,7 @@ func _activate_fusion_zone() -> void:
 		fusion_zone.visible = true
 		fusion_zone.set_physics_process(true)
 		
-		# İniş animasyonu
+		# Landing animation
 		var start_y = -150
 		var end_pos = processor_sprite.position
 		processor_sprite.position.y = start_y
@@ -412,7 +412,7 @@ func _ready() -> void:
 	$UI/IntegrityBar.max_value = player_max_hp
 	$UI/IntegrityBar.value = player_hp
 	$UI/IntegrityBar/LabelIntegrity.text = str(player_hp) + " / " + str(player_max_hp)
-			# Fusion Zone başlangıçta gizli
+			# Fusion Zone hidden at start
 	var fusion_zone = get_tree().get_first_node_in_group("fusion_zone")
 	if fusion_zone:
 		fusion_zone.visible = false
@@ -444,11 +444,11 @@ func update_ui() -> void:
 		upgrade_text += "  none"
 	$UI/LabelUpgrades.text = upgrade_text
 
-	# Catch slot göstergesi
+	# Catch slot indicator
 	var player = get_node("Player")
 	$UI/LabelCatch.text = "✋  CATCH   " + str(player.held_balls.size()) + " / " + str(player.max_held_balls)
 
-	# Calamity slotları
+	# Calamity slots
 	var calamity_text = "— CALAMITY —\n"
 	if calamity_slots.is_empty():
 		calamity_text += "◻  ◻  ◻"
@@ -493,7 +493,7 @@ func show_game_over() -> void:
 	bg.size     = Vector2(1920, 1080)
 	canvas.add_child(bg)
 
-	# ── Hasmen görseli (sağ taraf) ────────────────────────────
+	# ── Hasmen visual (right side) ─────────────────────────────
 	var hasmen_img = TextureRect.new()
 	hasmen_img.texture      = load("res://assets/mrHasmen.png")
 	hasmen_img.size         = Vector2(500, 900)
@@ -502,7 +502,7 @@ func show_game_over() -> void:
 	hasmen_img.expand_mode  = TextureRect.EXPAND_IGNORE_SIZE
 	canvas.add_child(hasmen_img)
 
-	# Neon pembe dikey ayraç
+	# Neon pink vertical divider
 	var divider = ColorRect.new()
 	divider.size     = Vector2(2, 1080)
 	divider.position = Vector2(1360, 0)
@@ -518,7 +518,7 @@ func show_game_over() -> void:
 	hasmen_name.add_theme_color_override("font_color", Color(1.0, 0.08, 0.58, 0.85))
 	canvas.add_child(hasmen_name)
 
-	# ── Başlık ────────────────────────────────────────────────
+	# ── Header ─────────────────────────────────────────────────
 	var header = Label.new()
 	header.text     = "// EXPERIMENT SESSION CONCLUDED //"
 	header.position = Vector2(80, 70)
@@ -540,7 +540,7 @@ func show_game_over() -> void:
 	report_border.color    = Color(0.0, 0.9, 1.0, 0.85)
 	canvas.add_child(report_border)
 
-	# Rapor satırları: [başlık, değer, renk]
+	# Report rows: [title, value, color]
 	var minutes = int(elapsed_time / 60)
 	var seconds = int(elapsed_time) % 60
 	var rows = [
@@ -567,7 +567,7 @@ func show_game_over() -> void:
 		val.add_theme_color_override("font_color", row[2])
 		canvas.add_child(val)
 
-	# ── Hasmen alıntısı ───────────────────────────────────────
+	# ── Hasmen quote ────────────────────────────────────────────
 	var quote_bg = ColorRect.new()
 	quote_bg.position = Vector2(80, 506)
 	quote_bg.size     = Vector2(1240, 110)
@@ -646,35 +646,35 @@ func show_upgrade_menu() -> void:
 	upgrading = true
 	
 	var upgrades = [
-	{"name": "Mimic Ball", "category": "Utility", "color": Color(0.5, 0.5, 1.0), "desc": "Güçlendirilmiş topu kopyalar", "index": 19},
-	{"name": "Split Ball", "category": "Utility", "color": Color(0.2, 0.8, 0.2), "desc": "Top 3'e ayrılır", "index": 0},
-	{"name": "Electric Ball", "category": "Utility", "color": Color(0.2, 0.5, 1.0), "desc": "Top elektrik kazanır", "index": 1},
-	{"name": "Pierce Ball", "category": "Utility", "color": Color(1.0, 0.8, 0.0), "desc": "Top deşip geçer", "index": 2},
-	{"name": "Cryo Ball", "category": "Utility", "color": Color(0.5, 0.8, 1.0), "desc": "Zombiyi %25 yavaşlatır", "index": 15},
-	{"name": "Glitch Ball", "category": "Utility", "color": Color(0.8, 0.0, 0.8), "desc": "Zombiyi 3sn şaşırtır", "index": 16},
-	{"name": "Water Ball", "category": "Utility", "color": Color(0.0, 0.5, 1.0), "desc": "Düşmanı ıslatır, tek vurumluk", "index": 17},
-	{"name": "Fire Ball", "category": "Utility", "color": Color(1.0, 0.3, 0.0), "desc": "Düşmana yanma efekti uygular", "index": 18},
-	{"name": "Speed Upgrade", "category": "Individuality", "color": Color(0.6, 0.2, 0.8), "desc": "Hareket hızı artar", "index": 4},
-	{"name": "Catch +1", "category": "Connectivity", "color": Color(1.0, 0.5, 0.0), "desc": "Aynı anda 2 top tutarsın", "index": 5},
-	{"name": "Next One", "category": "Connectivity", "color": Color(1.0, 0.5, 0.0), "desc": "Topları istediğin sırayla at", "index": 6},
-	{"name": "Lightning", "category": "Calamity", "color": Color(1.0, 1.0, 0.0), "desc": "Seçilen noktaya yıldırım düşer", "index": 7},
-	{"name": "Flame Zone", "category": "Calamity", "color": Color(1.0, 0.3, 0.0), "desc": "Seçilen bölgeye sürekli hasar", "index": 8},
-	{"name": "Gravitational Force", "category": "Calamity", "color": Color(0.5, 0.0, 1.0), "desc": "Zombileri 5 sn çeker", "index": 9},
-	{"name": "Arise", "category": "Calamity", "color": Color(0.8, 0.8, 1.0), "desc": "Düşmüş toplar harekete geçer", "index": 10},
-	{"name": "Ball Mastery", "category": "Utility", "color": Color(0.2, 0.8, 0.2), "desc": "Tüm toplara +1 hasar", "index": 11},
+	{"name": "Mimic Ball", "category": "Utility", "color": Color(0.5, 0.5, 1.0), "desc": "Copies the nearest powered-up ball", "index": 19},
+	{"name": "Split Ball", "category": "Utility", "color": Color(0.2, 0.8, 0.2), "desc": "Ball splits into 3", "index": 0},
+	{"name": "Electric Ball", "category": "Utility", "color": Color(0.2, 0.5, 1.0), "desc": "Ball gains electricity", "index": 1},
+	{"name": "Pierce Ball", "category": "Utility", "color": Color(1.0, 0.8, 0.0), "desc": "Ball pierces through", "index": 2},
+	{"name": "Cryo Ball", "category": "Utility", "color": Color(0.5, 0.8, 1.0), "desc": "Slows subject by 25%", "index": 15},
+	{"name": "Glitch Ball", "category": "Utility", "color": Color(0.8, 0.0, 0.8), "desc": "Disorients subject for 3s", "index": 16},
+	{"name": "Water Ball", "category": "Utility", "color": Color(0.0, 0.5, 1.0), "desc": "Applies wet, single hit", "index": 17},
+	{"name": "Fire Ball", "category": "Utility", "color": Color(1.0, 0.3, 0.0), "desc": "Applies burn to subject", "index": 18},
+	{"name": "Speed Upgrade", "category": "Individuality", "color": Color(0.6, 0.2, 0.8), "desc": "Movement speed increases", "index": 4},
+	{"name": "Catch +1", "category": "Connectivity", "color": Color(1.0, 0.5, 0.0), "desc": "Hold 2 balls simultaneously", "index": 5},
+	{"name": "Next One", "category": "Connectivity", "color": Color(1.0, 0.5, 0.0), "desc": "Throw balls in any order", "index": 6},
+	{"name": "Lightning", "category": "Calamity", "color": Color(1.0, 1.0, 0.0), "desc": "Lightning strikes selected point", "index": 7},
+	{"name": "Flame Zone", "category": "Calamity", "color": Color(1.0, 0.3, 0.0), "desc": "Continuous damage in selected area", "index": 8},
+	{"name": "Gravitational Force", "category": "Calamity", "color": Color(0.5, 0.0, 1.0), "desc": "Pulls subjects for 5s", "index": 9},
+	{"name": "Arise", "category": "Calamity", "color": Color(0.8, 0.8, 1.0), "desc": "Fallen balls start moving", "index": 10},
+	{"name": "Ball Mastery", "category": "Utility", "color": Color(0.2, 0.8, 0.2), "desc": "+1 damage to all balls", "index": 11},
 	{"name": "Pierce Sharpness", "category": "Utility", "color": Color(1.0, 0.8, 0.0), "desc": "Pierce topuna +2 hasar", "index": 12},
 	{"name": "Thunder Amp", "category": "Utility", "color": Color(0.2, 0.5, 1.0), "desc": "Electric topuna +2 hasar", "index": 13},
 	{"name": "Split Amp", "category": "Utility", "color": Color(1.0, 0.2, 0.2), "desc": "Split topuna +2 hasar", "index": 14},
 	{"name": "Medkit", "category": "Individuality", "color": Color(0.9, 0.1, 0.1), "desc": "+10 Can yenilersin", "index": 20},
 	{"name": "Max Health Up", "category": "Individuality", "color": Color(0.8, 0.2, 0.2), "desc": "Maksimum can +5 artar", "index": 21},
-	{"name": "Data Leech Ball", "category": "Utility", "color": Color(0.6, 0.0, 0.2), "desc": "Düşmana vurduğunda +2 Integrity", "index": 22, "rarity": "rare"},
+	{"name": "Data Leech Ball", "category": "Utility", "color": Color(0.6, 0.0, 0.2), "desc": "+2 Integrity on hit", "index": 22, "rarity": "rare"},
 ]
 	
 	var canvas = CanvasLayer.new()
 	canvas.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(canvas)
 	
-	# ── Blur arka planı: oyun sahnesi bulanık gösterilir ─────────────────────
+	# ── Blur background: game scene shown blurred ─────────────────────────
 	var blur_bg_rect = ColorRect.new()
 	blur_bg_rect.size = Vector2(1920, 1080)
 	blur_bg_rect.position = Vector2(0, 0)
@@ -773,7 +773,7 @@ func show_upgrade_menu() -> void:
 		click_area.mouse_entered.connect(func():
 			if selected_card_bg != bg:
 				bg.color = Color(0.2, 0.2, 0.3)
-			# Kartı büyüt
+			# Enlarge card
 			var tween = create_tween()
 			tween.tween_property(bg, "scale", Vector2(1.05, 1.05), 0.1)
 			tween.parallel().tween_property(bg, "position", Vector2(tx - 7, ty - 7), 0.1)
@@ -781,7 +781,7 @@ func show_upgrade_menu() -> void:
 		click_area.mouse_exited.connect(func():
 			if selected_card_bg != bg:
 				bg.color = Color(0.1, 0.1, 0.15)
-			# Kartı küçült
+			# Shrink card
 			var tween = create_tween()
 			tween.tween_property(bg, "scale", Vector2(1.0, 1.0), 0.1)
 			tween.parallel().tween_property(bg, "position", Vector2(tx, ty), 0.1)
@@ -789,19 +789,19 @@ func show_upgrade_menu() -> void:
 		click_area.pressed.connect(_on_card_selected.bind(upgrade["index"], canvas, bg))
 		canvas.add_child(click_area)
 
-		# ── Kart giriş animasyonu: aşağıdan yukarıya, gecikimli (stagger) ───────
+		# ── Card entry animation: bottom to top, staggered ─────────────────────
 		var card_anim_nodes = [bg, cat_strip, cat_label, name_label, desc_label, click_area]
 		var card_target_ys: Array = []
 		for anim_node in card_anim_nodes:
 			card_target_ys.append(anim_node.position.y)
 			anim_node.position.y += 160.0
-		# Sadece görsel elemanlar başlangıçta şeffaf (click_area zaten görünmez)
+		# Only visual elements start transparent (click_area is already invisible)
 		for anim_node in [bg, cat_strip, cat_label, name_label, desc_label]:
 			anim_node.modulate.a = 0.0
 
 		var slide_tw = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 		slide_tw.tween_interval(i * 0.13)
-		# bg ilk adım — sonraki tüm adımlar buna paralel bağlanır
+		# bg is first step — all subsequent steps are chained parallel to this
 		slide_tw.tween_property(bg, "position:y", card_target_ys[0], 0.40)\
 			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		slide_tw.parallel().tween_property(bg, "modulate:a", 1.0, 0.24)
@@ -809,11 +809,11 @@ func show_upgrade_menu() -> void:
 			var anim_node = card_anim_nodes[ci]
 			slide_tw.parallel().tween_property(anim_node, "position:y", card_target_ys[ci], 0.40)\
 				.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-			# click_area (son eleman) için alpha tween yok — görünmez kalmalı
+			# click_area (last element) has no alpha tween — must stay invisible
 			if ci < card_anim_nodes.size() - 1:
 				slide_tw.parallel().tween_property(anim_node, "modulate:a", 1.0, 0.24)
 
-	# ── Glitch intro: tüm kart UI'ının üstüne bindirilir, 0.7s'de solar ────
+	# ── Glitch intro: overlaid on all card UI, fades in 0.7s ─────────────
 	var glitch_rect = ColorRect.new()
 	glitch_rect.size = Vector2(1920, 1080)
 	glitch_rect.position = Vector2(0, 0)
@@ -856,15 +856,15 @@ func _activate_arise() -> void:
 			ball.move_direction = (player.global_position - ball.global_position).normalized()
 
 func _input(event: InputEvent) -> void:
-	# C tuşu - Calamity slotları arasında geçiş
+	# C key - cycle through Calamity slots
 	if event is InputEventKey and event.keycode == KEY_C and event.pressed:
 		if not calamity_slots.is_empty():
 			calamity_index = (calamity_index + 1) % calamity_slots.size()
 			update_ui()
 			
 	
-	# Sağ tık basılı - etki alanını göster
-	# E tuşu - Calamity ateşle
+	# Right click held - show area of effect
+	# E key - fire Calamity
 	if event is InputEventKey and event.keycode == KEY_E:
 		if event.pressed and not calamity_slots.is_empty():
 			calamity_aiming = true
@@ -949,14 +949,14 @@ func _on_quit_game() -> void:
 	get_tree().quit()
 
 func _activate_lightning(pos: Vector2) -> void:
-	# Yakındaki zombilere hasar ver
+	# Deal damage to nearby subjects
 	var subjects = get_tree().get_nodes_in_group("subjects")
 	for subject in subjects:
 		if subject.global_position.distance_to(pos) < 100:
 			subject.take_damage(3)
 
 func _activate_flame(pos: Vector2) -> void:
-	# Alanda sürekli hasar
+	# Continuous damage in area
 	var flame_timer = get_tree().create_timer(0.5)
 	var hits = 0
 	while hits < 6:
@@ -1044,7 +1044,7 @@ func _process(_delta: float) -> void:
 		var minutes = int(elapsed_time / 60)
 		var seconds = int(elapsed_time) % 60
 		$UI/LabelTime.text = "⏱  %02d:%02d" % [minutes, seconds]
-	# Boss öncesi uyarı
+	# Pre-boss warning
 	if level >= 13 and boss == null and not boss_defeated:
 		if not has_node("BossWarning"):
 			_show_boss_warning()
@@ -1087,7 +1087,7 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 			calamity_slots.append("🔮")
 			update_ui()
 	elif index == 11:
-	# Ball Mastery - tüm toplara +1
+	# Ball Mastery - +1 to all balls
 		var balls_dmg = get_node("Player")
 		balls_dmg.ball_mastery += 1
 	elif index == 12:

@@ -1,4 +1,4 @@
-extends Control
+﻿extends Control
 
 var _font_bold    = preload("res://assets/orbitronfont/Orbitron-Bold.ttf")
 var _font_regular = preload("res://assets/orbitronfont/Orbitron-Regular.ttf")
@@ -37,7 +37,7 @@ func _ready() -> void:
 	$Button.pressed.connect(_on_back)
 	$Button2.pressed.connect(_on_confirm)
 	
-	# Başlangıçta hiçbiri seçili değil
+	# None selected at start
 	for card in cards:
 		card.set_meta("selected", false)
 		var texture = card.get_node("TextureRect")
@@ -116,7 +116,7 @@ func _get_matrix_color(card: Panel) -> Color:
 func _start_matrix(card: Panel) -> void:
 	_matrix_active[card] = true
 	if _matrix_drops.has(card):
-		return  # Zaten oluşturuldu, sadece yeniden aktive et
+		return  # Already created, just re-activate
 	var base: Color = _get_matrix_color(card)
 	var drops: Array = []
 	for i in range(_MATRIX_N):
@@ -156,10 +156,10 @@ func _process(delta: float) -> void:
 			if not is_instance_valid(lbl):
 				continue
 			lbl.position.y += drop["speed"] * delta
-			# Rastgele rakam değişimi (~12% olasılık per frame)
+			# Random digit change (~12% chance per frame)
 			if randf() < 0.12:
 				lbl.text = str(randi() % 10)
-			# Alt sınırı geçince üst yarıya sıfırla
+			# Reset to upper half when below lower bound
 			if lbl.position.y > _CARD_H:
 				lbl.position.y = _RAIN_Y
 				lbl.position.x  = randf_range(4.0, _CARD_W - 12.0)

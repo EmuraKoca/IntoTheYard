@@ -1,4 +1,4 @@
-[gd_scene format=4 uid="uid://df1i1ndvamojj"]
+﻿[gd_scene format=4 uid="uid://df1i1ndvamojj"]
 
 [ext_resource type="Script" uid="uid://c41mp5vymmvwn" path="res://game_scene.gd" id="1_mj2jn"]
 [ext_resource type="PackedScene" uid="uid://c2k8iij3ej5h2" path="res://player.tscn" id="1_mlf6e"]
@@ -96,7 +96,7 @@ glow_bloom = 0.3
 glow_blend_mode = 0
 glow_hdr_threshold = 0.7
 
-; ── UI PANEL PROGRESS BAR STİLLERİ ───────────────────────────────────────────
+; ── UI PANEL PROGRESS BAR STYLES ───────────────────────────────────────────
 [sub_resource type="StyleBoxFlat" id="UI_int_bg"]
 bg_color = Color(0.03, 0.08, 0.08, 1)
 border_width_left = 1
@@ -188,7 +188,7 @@ offset_right = 1920.0
 offset_bottom = 1080.0
 color = Color(0.018, 0.018, 0.052, 0.97)
 
-; ── SOL NEON BORDER ŞERIDI ────────────────────────────────────────────────────
+; ── LEFT NEON BORDER STRIP ────────────────────────────────────────────────
 [node name="UIBorderLeft" type="ColorRect" parent="UI" unique_id=701010701]
 offset_left = 1630.0
 offset_right = 1633.0
@@ -196,7 +196,7 @@ offset_bottom = 1080.0
 mouse_filter = 2
 color = Color(0, 0.9, 1, 0.55)
 
-; ── AYRAÇ ÇİZGİLERİ ──────────────────────────────────────────────────────────
+; ── SEPARATOR LINES ──────────────────────────────────────────────────────
 [node name="UISep1" type="ColorRect" parent="UI" unique_id=701010702]
 offset_left = 1640.0
 offset_top = 62.0
@@ -354,7 +354,7 @@ theme_override_fonts/font = ExtResource("font_bold")
 theme_override_font_sizes/font_size = 12
 theme_override_colors/font_color = Color(1, 1, 1, 0.92)
 
-; ── VERİ SAYACI ───────────────────────────────────────────────────────────────
+; ── DATA COUNTER ─────────────────────────────────────────────────────────
 [node name="UISep7" type="ColorRect" parent="UI" unique_id=701010708]
 offset_left = 1640.0
 offset_top = 710.0
