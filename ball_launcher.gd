@@ -24,8 +24,16 @@ var flash_color  := Color(2.0, 2.0, 3.5, 1.0)
 var _last_launch_type := ""
 var _shake_tween: Tween = null
 
-# Muzzle tip: in BallLauncher's local coordinates (same origin as sprite)
-const MUZZLE_OFFSET := Vector2(0.0, 18.0)
+# Muzzle tip in sprite-local space (tune Y to match the visual barrel tip)
+const MUZZLE_SPRITE_LOCAL := Vector2(0.0, 30.0)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Returns the muzzle tip in global space, derived from the sprite's transform.
+# This accounts for the sprite's rotation so the flash and ball origin are exact.
+func _get_muzzle_global() -> Vector2:
+	if _sprite:
+		return _sprite.to_global(MUZZLE_SPRITE_LOCAL)
+	return global_position
 
 # ─────────────────────────────────────────────────────────────────────────────
 func _ready() -> void:
@@ -142,9 +150,9 @@ func _launch_ball() -> void:
 
 	var direction = (player.global_position - global_position).normalized()
 
-	# Spawn ball at launcher muzzle, then push it along direction until
-	# it clears the left game boundary (x=875) so it doesn't instantly bounce.
-	var spawn_pos = to_global(MUZZLE_OFFSET)
+	# Spawn ball at the exact muzzle tip (sprite-rotation-aware),
+	# then slide along direction until it clears the left game boundary (x=875).
+	var spawn_pos = _get_muzzle_global()
 	if spawn_pos.x < 875.0 and direction.x > 0.0:
 		var t = (875.0 - spawn_pos.x) / direction.x
 		spawn_pos += direction * (t + 2.0)   # +2 px margin
@@ -220,21 +228,24 @@ func _get_charge_color() -> Color:
 
 # ─────────────────────────────────────────────────────────────────────────────
 func _draw() -> void:
+	# Muzzle position in this node's local space (sprite-aware)
+	var muzzle := to_local(_get_muzzle_global())
+
 	# ── 1) Charged ball at muzzle tip (last 1 second) ─────────────────────────────
 	if is_charging and charge_progress > 0.05:
 		var t := charge_progress
 		var c := _get_charge_color()
 
 		# Outer diffuse ring
-		draw_circle(MUZZLE_OFFSET,
+		draw_circle(muzzle,
 			8.0 + t * 24.0,
 			Color(c.r * 0.5, c.g * 0.35, c.b * 0.5, t * 0.22))
 		# Middle energy sphere
-		draw_circle(MUZZLE_OFFSET,
+		draw_circle(muzzle,
 			4.5 + t * 13.0,
 			Color(c.r * t, c.g * t * 0.75, c.b * t, t * 0.72))
 		# Parlak merkez
-		draw_circle(MUZZLE_OFFSET,
+		draw_circle(muzzle,
 			2.0 + t * 5.5,
 			Color(c.r * 1.6 * t, c.g * 1.4 * t, c.b * 1.6 * t, t * 0.95))
 
@@ -245,19 +256,19 @@ func _draw() -> void:
 		var a := flash_alpha
 
 		# Outer soft halo
-		draw_circle(MUZZLE_OFFSET, r * 1.65,
+		draw_circle(muzzle, r * 1.65,
 			Color(c.r * 0.45, c.g * 0.35, c.b * 0.45, a * 0.16))
 		# Ana patlama diski
-		draw_circle(MUZZLE_OFFSET, r,
+		draw_circle(muzzle, r,
 			Color(c.r, c.g, c.b, a * 0.78))
 		# Hot center
-		draw_circle(MUZZLE_OFFSET, r * 0.32,
+		draw_circle(muzzle, r * 0.32,
 			Color(c.r * 1.3, c.g * 1.2, c.b * 1.3, a))
 		# 8 spark rays
 		for i in 8:
 			var angle   := float(i) * TAU / 8.0
-			var ray_end := MUZZLE_OFFSET + Vector2(cos(angle), sin(angle)) * r * 2.1
-			draw_line(MUZZLE_OFFSET, ray_end,
+			var ray_end := muzzle + Vector2(cos(angle), sin(angle)) * r * 2.1
+			draw_line(muzzle, ray_end,
 				Color(c.r, c.g, c.b, a * 0.42), 1.5)
 
 	# ── 3) Ball type preview ────────────────────────────────────────────────
