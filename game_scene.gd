@@ -619,9 +619,9 @@ func _on_restart() -> void:
 
 func add_data(amount: int) -> void:
 	data_collected += amount
-	var tribune = get_node_or_null("Tribune")
-	if tribune and tribune.has_method("update_data"):
-		tribune.update_data(data_collected)
+	var lbl = get_node_or_null("UI/LabelData")
+	if lbl:
+		lbl.text = _format_data(data_collected) + " units"
 
 func _format_data(n: int) -> String:
 	if n >= 1_000_000:

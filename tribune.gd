@@ -1,12 +1,7 @@
 extends Node2D
 
-var _data_label: Label = null
-var _font_bold    = preload("res://assets/orbitronfont/Orbitron-Bold.ttf")
-var _font_regular = preload("res://assets/orbitronfont/Orbitron-Regular.ttf")
-
 func _ready() -> void:
 	draw_tribune()
-	_add_data_display()
 
 func draw_tribune() -> void:
 	# Koltuk sıraları
@@ -27,52 +22,3 @@ func draw_tribune() -> void:
 		line.width = 1.0
 		line.default_color = Color(0.2, 0.12, 0.12)
 		add_child(line)
-
-func _add_data_display() -> void:
-	# ── Holografik Veri Ekranı (tribünün alt kısmı) ──────────
-	# z_index = 5 → BG_Tribune (z_index 3) üzerinde görünür
-	var screen_bg = ColorRect.new()
-	screen_bg.position = Vector2(507, 900)
-	screen_bg.size     = Vector2(332, 72)
-	screen_bg.color    = Color(0.0, 0.05, 0.04, 0.95)
-	screen_bg.z_index  = 5
-	add_child(screen_bg)
-
-	# Üst neon yeşil çizgi
-	var screen_top = ColorRect.new()
-	screen_top.position = Vector2(507, 900)
-	screen_top.size     = Vector2(332, 2)
-	screen_top.color    = Color(0.0, 1.0, 0.55, 0.85)
-	screen_top.z_index  = 5
-	add_child(screen_top)
-
-	# "DATA HARVESTED" başlığı
-	var title_lbl = Label.new()
-	title_lbl.text = "DATA HARVESTED"
-	title_lbl.position = Vector2(514, 904)
-	title_lbl.add_theme_font_override("font", _font_bold)
-	title_lbl.add_theme_font_size_override("font_size", 9)
-	title_lbl.add_theme_color_override("font_color", Color(0.0, 0.85, 0.5, 0.7))
-	title_lbl.z_index  = 5
-	add_child(title_lbl)
-
-	# Veri değeri
-	_data_label = Label.new()
-	_data_label.text = "0 units"
-	_data_label.position = Vector2(514, 918)
-	_data_label.add_theme_font_override("font", _font_bold)
-	_data_label.add_theme_font_size_override("font_size", 22)
-	_data_label.add_theme_color_override("font_color", Color(0.0, 1.0, 0.55, 1.0))
-	_data_label.z_index  = 5
-	add_child(_data_label)
-
-func update_data(amount: int) -> void:
-	if _data_label:
-		_data_label.text = _format_data(amount) + " units"
-
-func _format_data(n: int) -> String:
-	if n >= 1_000_000:
-		return "%.2f M" % (n / 1_000_000.0)
-	elif n >= 1_000:
-		return "%.1f K" % (n / 1_000.0)
-	return str(n)
