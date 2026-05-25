@@ -1,38 +1,9 @@
 [gd_scene format=3 uid="uid://c2k8iij3ej5h2"]
 
 [ext_resource type="Script" uid="uid://bmhpnlk066vf" path="res://player.gd" id="1_4flbx"]
-[ext_resource type="Texture2D" uid="uid://b6qgy3x61v3ae" path="res://assets/characters/leila/leila's racket.png" id="25_kqra7"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_sh265"]
 size = Vector2(40, 60)
-
-[sub_resource type="SpriteFrames" id="SpriteFrames_8gr2b"]
-animations = [{
-"frames": [],
-"loop": true,
-"name": &"idle",
-"speed": 5.0
-}, {
-"frames": [],
-"loop": true,
-"name": &"walk",
-"speed": 5.0
-}, {
-"frames": [],
-"loop": true,
-"name": &"run",
-"speed": 5.0
-}, {
-"frames": [],
-"loop": true,
-"name": &"hurt",
-"speed": 5.0
-}, {
-"frames": [],
-"loop": true,
-"name": &"death",
-"speed": 5.0
-}]
 
 [node name="Player" type="CharacterBody2D" unique_id=834626995 groups=["player"]]
 z_index = 2
@@ -44,22 +15,25 @@ shape = SubResource("RectangleShape2D_sh265")
 debug_color = Color(0.2901961, 0.61960787, 1, 0.21568628)
 
 [node name="VectorRect" type="ColorRect" parent="." unique_id=777444333]
+visible = false
 offset_left = -20.0
 offset_top = -30.0
 offset_right = 20.0
 offset_bottom = 30.0
 color = Color(0.2, 0.47, 1.0, 1)
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1077065642]
+[node name="LeilaRect" type="ColorRect" parent="." unique_id=777444334]
 visible = false
-sprite_frames = SubResource("SpriteFrames_8gr2b")
-animation = &"idle"
-texture_filter = 1
+offset_left = -20.0
+offset_top = -30.0
+offset_right = 20.0
+offset_bottom = 30.0
+color = Color(1.0, 0.08, 0.58, 1)
 
-[node name="Racket" type="Sprite2D" parent="./AnimatedSprite2D"]
+[node name="CycloneRect" type="ColorRect" parent="." unique_id=777444335]
 visible = false
-texture = ExtResource("25_kqra7")
-texture_filter = 1
-scale = Vector2(0.045, 0.045)
-offset = Vector2(0, -225)
-position = Vector2(10, 5)
+offset_left = -20.0
+offset_top = -30.0
+offset_right = 20.0
+offset_bottom = 30.0
+color = Color(0.0, 0.9, 0.3, 1)
