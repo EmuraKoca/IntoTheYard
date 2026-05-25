@@ -194,36 +194,21 @@ func _become_ally() -> void:
 	_reached_living_area = false
 	_wander_timer = 0.0
 
-	# Re-enable physics — ally immediately heads to living area
+	# Disable collision — ally moves freely through tribune walls etc.
+	$CollisionShape2D.disabled = true
 	set_physics_process(true)
-	$CollisionShape2D.disabled = false
 
 func _start_exit() -> void:
 	_is_exiting = true
 	set_physics_process(false)
-	$CollisionShape2D.disabled = true
+	# CollisionShape2D already disabled since _become_ally
 
-	# If somehow still in the game field, push through the tribune first
-	if global_position.x > 490.0:
-		var gate_pos = Vector2(870, clamp(global_position.y, 300, 900))
-		var step1_time = clamp(global_position.distance_to(gate_pos) / (speed * 2.0), 0.3, 2.0)
-		var tween = create_tween()
-		tween.tween_property(self, "global_position", gate_pos, step1_time)
-		await tween.finished
-		if not is_instance_valid(self):
-			return
-		var tween2 = create_tween()
-		tween2.tween_property(self, "global_position", Vector2(350, gate_pos.y), 1.0)
-		await tween2.finished
-		if not is_instance_valid(self):
-			return
-
-	# Run off-screen to the left at a brisk pace
-	var exit_speed = max(speed * 2.5, 180.0)
+	# Run straight off-screen to the left
+	var exit_speed = max(speed * 3.0, 200.0)
 	var exit_time = (global_position.x + 200.0) / exit_speed
-	var tween_exit = create_tween()
-	tween_exit.tween_property(self, "global_position", Vector2(-200, global_position.y), exit_time)
-	await tween_exit.finished
+	var tween = create_tween()
+	tween.tween_property(self, "global_position", Vector2(-200, global_position.y), exit_time)
+	await tween.finished
 	if is_instance_valid(self):
 		queue_free()
 
@@ -233,26 +218,23 @@ func _ally_behavior() -> void:
 	if _is_exiting:
 		return
 
-	# Count down the chip duration, then exit
 	_ally_timer -= delta
 	if _ally_timer <= 0.0:
 		_start_exit()
 		return
 
-	# Phase 1: Navigate to the living area (left of the tribune) at full enemy speed
+	# Use at least 150 px/s so even slow subjects move purposefully
+	var nav_speed = max(speed * 3.0, 150.0)
+
+	# Phase 1: Move straight left into the living area
+	# Collision is disabled so tribune walls don't block us
 	if not _reached_living_area:
-		if global_position.x > 870.0:
-			# Still in game field — head toward tribune gate
-			velocity = (Vector2(870, global_position.y) - global_position).normalized() * speed
-		elif global_position.x > 490.0:
-			# In the tribune — push straight left
-			velocity = Vector2(-speed, 0)
-		else:
-			# Arrived in living area
+		velocity = Vector2(-nav_speed, 0)
+		move_and_slide()
+		if global_position.x < 490.0:
 			_reached_living_area = true
 			_wander_timer = 0.0
 			velocity = Vector2.ZERO
-		move_and_slide()
 		return
 
 	# Phase 2: In living area — attack nearby enemies or wander upward
@@ -282,8 +264,7 @@ func _ally_behavior() -> void:
 		_wander_timer -= delta
 		if _wander_timer <= 0.0:
 			_wander_timer = randf_range(1.5, 3.0)
-			_wander_velocity = Vector2(randf_range(-speed * 0.4, speed * 0.4), -speed * 0.7)
-		# Clamp to living area bounds
+			_wander_velocity = Vector2(randf_range(-speed * 0.3, speed * 0.3), -speed * 0.6)
 		if global_position.y < 150.0:
 			_wander_velocity.y = abs(_wander_velocity.y)
 		if global_position.x < 50.0:
