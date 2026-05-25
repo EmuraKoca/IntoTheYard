@@ -208,17 +208,16 @@ func _start_exit() -> void:
 	if not is_instance_valid(self):
 		return
 
-	# Step 2: Move left through the tribune
+	# Step 2: Run left through the tribune
 	var tween2 = create_tween()
 	tween2.tween_property(self, "global_position", Vector2(490, 900), 1.2)
 	await tween2.finished
 	if not is_instance_valid(self):
 		return
 
-	# Step 3: Fade out as ally enters the living area
+	# Step 3: Keep running off-screen to the left — no fade, just disappear
 	var tween3 = create_tween()
-	tween3.tween_property(self, "modulate", Color(0.2, 1.0, 0.4, 0.0), 0.6)
-	tween3.parallel().tween_property(self, "global_position", Vector2(350, 900), 0.8)
+	tween3.tween_property(self, "global_position", Vector2(-200, 900), 0.8)
 	await tween3.finished
 	if is_instance_valid(self):
 		queue_free()
@@ -235,15 +234,38 @@ func _ally_behavior() -> void:
 		_start_exit()
 		return
 
-	# Follow the player closely during chip duration
-	var player = get_tree().get_first_node_in_group("player")
-	if player:
-		var dist = global_position.distance_to(player.global_position)
-		if dist > 80.0:
-			var direction = (player.global_position - global_position).normalized()
+	# Attack the nearest enemy subject within range
+	var subjects = get_tree().get_nodes_in_group("subjects")
+	var closest = null
+	var closest_dist = INF
+	for s in subjects:
+		var d = global_position.distance_to(s.global_position)
+		if d < closest_dist:
+			closest_dist = d
+			closest = s
+
+	if closest != null and closest_dist < 300.0:
+		# Chase and attack
+		if closest_dist > 60.0:
+			var direction = (closest.global_position - global_position).normalized()
 			velocity = direction * speed
 			move_and_slide()
 		else:
 			velocity = Vector2.ZERO
+			attack_cooldown -= delta
+			if attack_cooldown <= 0:
+				closest.take_damage(5)
+				attack_cooldown = attack_rate
 	else:
-		velocity = Vector2.ZERO
+		# No nearby enemy — stay close to the player
+		var player = get_tree().get_first_node_in_group("player")
+		if player:
+			var dist = global_position.distance_to(player.global_position)
+			if dist > 80.0:
+				var direction = (player.global_position - global_position).normalized()
+				velocity = direction * speed
+				move_and_slide()
+			else:
+				velocity = Vector2.ZERO
+		else:
+			velocity = Vector2.ZERO
