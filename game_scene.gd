@@ -409,8 +409,6 @@ func _ready() -> void:
 	$UI/FusionEnergyBar.value = 0
 	$UI/IntegrityBar.max_value = player_max_hp
 	$UI/IntegrityBar.value = player_hp
-	$UI/IntegrityBar.max_value = player_max_hp
-	$UI/IntegrityBar.value = player_hp
 	$UI/IntegrityBar/LabelIntegrity.text = str(player_hp) + " / " + str(player_max_hp)
 			# Fusion Zone başlangıçta gizli
 	var fusion_zone = get_tree().get_first_node_in_group("fusion_zone")
@@ -480,11 +478,8 @@ func player_damaged(amount: int = 1) -> void:
 		show_game_over()
 
 func show_game_over() -> void:
-	var player = get_tree().get_first_node_in_group("player")
-	if player:
-		player.get_node("AnimatedSprite2D").play("death")
-		await get_tree().create_timer(1.0).timeout
-	
+	await get_tree().create_timer(0.5).timeout
+
 	var canvas = CanvasLayer.new()
 	canvas.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(canvas)

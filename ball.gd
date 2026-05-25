@@ -85,10 +85,7 @@ func _copy_ball(other: Node2D) -> void:
 func _process(_delta: float) -> void:
 	var cyclone_player = get_tree().get_first_node_in_group("player")
 	if cyclone_player and cyclone_player.character_type == "cyclone" and not moving:
-		if cyclone_player.global_position.distance_to(global_position) < 80:
-			queue_redraw()
-		else:
-			queue_redraw()
+		queue_redraw()
 
 func _physics_process(delta: float) -> void:
 	_update_trail(delta)
@@ -788,15 +785,6 @@ func _hit_zombie(zombie: Node2D) -> void:
 	# Phantom - içinden geç ve glitch uygula
 	if is_fused and fusion_type == "phantom" and is_instance_valid(zombie):
 		zombie.apply_glitch()
-	# Hydro Jet - vakum koridoru, yakındaki topları hızlandırır
-	if is_fused and fusion_type == "hydro_jet" and is_instance_valid(zombie):
-		zombie.apply_wet()
-		var balls = get_tree().get_nodes_in_group("balls")
-		for b in balls:
-			if b != self and b.moving:
-				var dist = global_position.distance_to(b.global_position)
-				if dist < 150:
-					b.speed = min(b.speed + 100, 800)
 	# Overclock - birbirine saldırtır
 	if is_fused and fusion_type == "overclock" and is_instance_valid(zombie):
 		zombie.apply_glitch()
