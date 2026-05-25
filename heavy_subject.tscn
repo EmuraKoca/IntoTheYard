@@ -1,11 +1,11 @@
-[gd_scene format=3 uid="uid://bh886r4b1mar"]
+﻿[gd_scene format=3 uid="uid://bh886r4b1mar"]
 
-[ext_resource type="Script" uid="uid://wfeksj2txey6" path="res://armored_zombie.gd" id="1_hptqc"]
+[ext_resource type="Script" uid="uid://wfeksj2txey6" path="res://heavy_subject.gd" id="1_hptqc"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_050lg"]
 size = Vector2(30, 50)
 
-[node name="ArmoredZombie" type="CharacterBody2D" unique_id=1604379504 groups=["zombies"]]
+[node name="HeavySubject" type="CharacterBody2D" unique_id=1604379504 groups=["subjects"]]
 z_index = 2
 motion_mode = 1
 script = ExtResource("1_hptqc")

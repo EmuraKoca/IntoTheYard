@@ -6,17 +6,17 @@ var _font_regular = preload("res://assets/orbitronfont/Orbitron-Regular.ttf")
 var level = 1
 var player_hp = 50
 var player_max_hp = 50
-var zombie_scene = preload("res://zombie.tscn")
+var subject_scene = preload("res://subject.tscn")
 var upgrading = false
-var armored_zombie_scene = preload("res://armored_zombie.tscn")
-var cyber_zombie_scene = preload("res://cyber_zombie.tscn")
-var fast_zombie_scene = preload("res://fast_zombie.tscn")
+var heavy_subject_scene = preload("res://heavy_subject.tscn")
+var armed_subject_scene = preload("res://armed_subject.tscn")
+var frantic_subject_scene = preload("res://frantic_subject.tscn")
 var next_ball_upgrade = ""
 var calamity_slots = []
 var max_calamity_slots = 3
 var calamity_index = 0
 var calamity_aiming = false
-var zombies_killed = 0
+var subjects_killed = 0
 var kills_to_level = 3
 var spawn_timer = 0.0
 var spawn_interval = 2.0
@@ -33,7 +33,7 @@ var boss = null
 var boss_defeated = false
 var boss_warning = null
 var data_collected: int = 0
-var total_zombies_killed: int = 0
+var total_subjects_killed: int = 0
 
 func _show_boss_warning() -> void:
 	boss_warning = ColorRect.new()
@@ -462,12 +462,12 @@ func update_ui() -> void:
 			calamity_text += "◻  "
 	$UI/LabelCalamity.text = calamity_text
 
-func zombie_died() -> void:
-	zombies_killed += 1
-	total_zombies_killed += 1
+func subject_died() -> void:
+	subjects_killed += 1
+	total_subjects_killed += 1
 	update_ui()
-	if zombies_killed >= kills_to_level:
-		zombies_killed = 0
+	if subjects_killed >= kills_to_level:
+		subjects_killed = 0
 		kills_to_level = int(kills_to_level * 1.5)
 		spawn_interval = max(spawn_interval - 0.2, min_spawn_interval)
 		get_tree().paused = true
@@ -546,7 +546,7 @@ func show_game_over() -> void:
 	var rows = [
 		["DATA HARVESTED",       _format_data(data_collected) + " units", Color(0.0, 1.0, 0.55)],
 		["SESSION TIME",         "%02d:%02d" % [minutes, seconds],         Color(0.0, 0.9, 1.0)],
-		["THREATS NEUTRALIZED",  str(total_zombies_killed),                 Color(0.0, 0.9, 1.0)],
+		["THREATS NEUTRALIZED",  str(total_subjects_killed),                 Color(0.0, 0.9, 1.0)],
 		["EXPERIMENT LEVEL",     str(level),                               Color(0.0, 0.9, 1.0)],
 	]
 	for i in range(rows.size()):
@@ -834,11 +834,11 @@ func _activate_gravity(pos: Vector2) -> void:
 	var duration = 5.0
 	var elapsed = 0.0
 	while elapsed < duration:
-		var zombies = get_tree().get_nodes_in_group("zombies")
-		for zombie in zombies:
-			if zombie.global_position.distance_to(pos) < 150:
-				var direction = (pos - zombie.global_position).normalized()
-				zombie.global_position += direction * 60 * get_process_delta_time()
+		var subjects = get_tree().get_nodes_in_group("subjects")
+		for subject in subjects:
+			if subject.global_position.distance_to(pos) < 150:
+				var direction = (pos - subject.global_position).normalized()
+				subject.global_position += direction * 60 * get_process_delta_time()
 		elapsed += get_process_delta_time()
 		await get_tree().process_frame
 		
@@ -950,64 +950,64 @@ func _on_quit_game() -> void:
 
 func _activate_lightning(pos: Vector2) -> void:
 	# Yakındaki zombilere hasar ver
-	var zombies = get_tree().get_nodes_in_group("zombies")
-	for zombie in zombies:
-		if zombie.global_position.distance_to(pos) < 100:
-			zombie.take_damage(3)
+	var subjects = get_tree().get_nodes_in_group("subjects")
+	for subject in subjects:
+		if subject.global_position.distance_to(pos) < 100:
+			subject.take_damage(3)
 
 func _activate_flame(pos: Vector2) -> void:
 	# Alanda sürekli hasar
 	var flame_timer = get_tree().create_timer(0.5)
 	var hits = 0
 	while hits < 6:
-		var zombies = get_tree().get_nodes_in_group("zombies")
-		for zombie in zombies:
-			if zombie.global_position.distance_to(pos) < 120:
-				zombie.take_damage(1)
+		var subjects = get_tree().get_nodes_in_group("subjects")
+		for subject in subjects:
+			if subject.global_position.distance_to(pos) < 120:
+				subject.take_damage(1)
 		hits += 1
 		await flame_timer.timeout
 		flame_timer = get_tree().create_timer(0.5)
 
-func _spawn_zombie() -> void:
+func _spawn_subject() -> void:
 		
-	var zombie
+	var subject
 	var rand = randf()
 	
 	if level <= 2:
-		zombie = zombie_scene.instantiate()
+		subject = subject_scene.instantiate()
 	elif level <= 4:
 		if rand < 0.7:
-			zombie = zombie_scene.instantiate()
+			subject = subject_scene.instantiate()
 		else:
-			zombie = fast_zombie_scene.instantiate()
+			subject = frantic_subject_scene.instantiate()
 	elif level <= 6:
 		if rand < 0.5:
-			zombie = zombie_scene.instantiate()
+			subject = subject_scene.instantiate()
 		elif rand < 0.8:
-			zombie = fast_zombie_scene.instantiate()
+			subject = frantic_subject_scene.instantiate()
 		else:
-			zombie = cyber_zombie_scene.instantiate()
+			subject = armed_subject_scene.instantiate()
 	else:
 		var rand2 = randf()
 		if rand2 < 0.2:
-			zombie = zombie_scene.instantiate()
+			subject = subject_scene.instantiate()
 		elif rand2 < 0.4:
-			zombie = fast_zombie_scene.instantiate()
+			subject = frantic_subject_scene.instantiate()
 		elif rand2 < 0.55:
-			zombie = cyber_zombie_scene.instantiate()
+			subject = armed_subject_scene.instantiate()
 		elif rand2 < 0.7:
-			zombie = armored_zombie_scene.instantiate()
+			subject = heavy_subject_scene.instantiate()
 		elif rand2 < 0.85:
-			zombie = cyber_shooter_scene.instantiate()
+			subject = cyber_shooter_scene.instantiate()
 		elif rand2 < 0.92:
-			zombie = cyber_shotgun_scene.instantiate()
+			subject = cyber_shotgun_scene.instantiate()
 		else:
-			zombie = cyber_rifle_scene.instantiate()
+			subject = cyber_rifle_scene.instantiate()
 		
 	
 	var rand_x = randf_range(50, 1600)
-	zombie.position = Vector2(rand_x, -50)
-	add_child(zombie)
+	subject.position = Vector2(rand_x, -50)
+	add_child(subject)
 
 func _process(_delta: float) -> void:
 	
@@ -1016,7 +1016,7 @@ func _process(_delta: float) -> void:
 	spawn_timer += _delta
 	if spawn_timer >= spawn_interval:
 		spawn_timer = 0.0
-		_spawn_zombie()
+		_spawn_subject()
 	
 	if calamity_aiming and not calamity_slots.is_empty():
 		var mouse_pos = get_viewport().get_mouse_position()

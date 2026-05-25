@@ -1,8 +1,8 @@
 extends CharacterBody2D
 
-var speed = 45.0
-var health = 30
-var max_health = 30
+var speed = 160.0
+var health = 8
+var max_health = 8
 var is_dead = false
 var original_speed = 0.0
 var is_slowed = false
@@ -13,11 +13,6 @@ var is_burning = false
 var attack_cooldown = 0.0
 var attack_rate = 1.0
 var is_electrified = false
-
-func take_damage(amount) -> void:
-	health -= amount
-	if health <= 0:
-		die()
 
 func apply_burn() -> void:
 	if is_burning:
@@ -92,10 +87,10 @@ func _physics_process(delta: float) -> void:
 	var target
 	if is_glitched:
 		# Yakındaki zombiye saldır
-		var zombies = get_tree().get_nodes_in_group("zombies")
+		var subjects = get_tree().get_nodes_in_group("subjects")
 		var closest = null
 		var closest_dist = 999999.0
-		for z in zombies:
+		for z in subjects:
 			if z == self:
 				continue
 			var d = global_position.distance_to(z.global_position)
@@ -140,8 +135,13 @@ func _physics_process(delta: float) -> void:
 			if is_glitched:
 				target.take_damage(3)
 			else:
-				target.take_damage(8)
+				target.take_damage(4)
 			attack_cooldown = attack_rate
+
+func take_damage(amount) -> void:
+	health -= amount
+	if health <= 0:
+		die()
 
 func die() -> void:
 	is_dead = true
@@ -154,8 +154,8 @@ func die() -> void:
 		queue_free()
 		return
 	var game = get_parent()
-	if game.has_method("zombie_died"):
-		game.zombie_died()
+	if game.has_method("subject_died"):
+		game.subject_died()
 	_collapse()
 
 func _collapse() -> void:
@@ -199,7 +199,7 @@ func _become_ally() -> void:
 
 	health = max_health * 0.25
 	add_to_group("allies")
-	remove_from_group("zombies")
+	remove_from_group("subjects")
 	modulate = Color(0.2, 1.0, 0.4)
 
 	# Önce tribün kapısına koş
@@ -216,10 +216,10 @@ func _become_ally() -> void:
 	$CollisionShape2D.disabled = false
 
 func _ally_behavior() -> void:
-	var zombies = get_tree().get_nodes_in_group("zombies")
+	var subjects = get_tree().get_nodes_in_group("subjects")
 	var closest = null
 	var closest_dist = INF
-	for z in zombies:
+	for z in subjects:
 		var d = global_position.distance_to(z.global_position)
 		if d < 200 and d < closest_dist:
 			closest_dist = d

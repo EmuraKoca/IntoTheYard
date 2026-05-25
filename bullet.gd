@@ -24,7 +24,7 @@ func _on_body_entered(body: Node2D) -> void:
 	if body.is_in_group("player"):
 		body.take_damage(damage)
 		queue_free()
-	elif body.is_in_group("zombies") and not body.name.begins_with("Cyber404"):
+	elif body.is_in_group("subjects") and not body.name.begins_with("Cyber404"):
 		body.set_physics_process(false)
 		if body.has_node("CollisionShape2D"):
 			body.get_node("CollisionShape2D").disabled = true

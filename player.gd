@@ -321,13 +321,13 @@ func _vector_process(delta: float) -> void:
 	# Yakın dövüş - sol tık ile yumruk
 	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 		if bat_cooldown <= 0:
-			var zombies = get_tree().get_nodes_in_group("zombies")
-			for zombie in zombies:
-				var dist = global_position.distance_to(zombie.global_position)
+			var subjects = get_tree().get_nodes_in_group("subjects")
+			for subject in subjects:
+				var dist = global_position.distance_to(subject.global_position)
 				if dist < bat_range:
-					zombie.take_damage(bat_damage)
-					var push_dir = (zombie.global_position - global_position).normalized()
-					zombie.global_position += push_dir * 40
+					subject.take_damage(bat_damage)
+					var push_dir = (subject.global_position - global_position).normalized()
+					subject.global_position += push_dir * 40
 					bat_cooldown = 1.0
 					break
 
@@ -345,13 +345,13 @@ func _bat_swing() -> void:
 	if bat_cooldown > 0:
 		return
 	bat_cooldown = 1.0
-	var zombies = get_tree().get_nodes_in_group("zombies")
-	for zombie in zombies:
-		var dist = global_position.distance_to(zombie.global_position)
+	var subjects = get_tree().get_nodes_in_group("subjects")
+	for subject in subjects:
+		var dist = global_position.distance_to(subject.global_position)
 		if dist < bat_range:
-			zombie.take_damage(bat_damage)
-			var push_dir = (zombie.global_position - global_position).normalized()
-			zombie.global_position += push_dir * 40
+			subject.take_damage(bat_damage)
+			var push_dir = (subject.global_position - global_position).normalized()
+			subject.global_position += push_dir * 40
 
 func _swing() -> void:
 	var balls = get_tree().get_nodes_in_group("balls")

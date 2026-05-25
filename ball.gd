@@ -11,7 +11,7 @@ var move_direction = Vector2.ZERO
 var base_scale = 1.0
 var target_scale = 1.0
 var can_pierce = false
-var hit_zombies = []
+var hit_subjects = []
 var catch_cooldown = 0.0
 var is_active = false
 var max_damage = 5
@@ -173,8 +173,8 @@ func _physics_process(delta: float) -> void:
 	var collision = move_and_collide(Vector2.ZERO)
 	if collision:
 		var collider = collision.get_collider()
-		if collider.is_in_group("zombies"):
-			_hit_zombie(collider)
+		if collider.is_in_group("subjects"):
+			_hit_subject(collider)
 		elif collider.is_in_group("player"):
 			if not collider.is_dashing:
 				move_direction = move_direction.bounce(collision.get_normal())
@@ -182,12 +182,12 @@ func _physics_process(delta: float) -> void:
 
 	# Phantom için tüm zombileri kontrol et
 	if is_fused and fusion_type == "phantom":
-		var zombies = get_tree().get_nodes_in_group("zombies")
-		for z in zombies:
-			if z not in hit_zombies:
+		var subjects = get_tree().get_nodes_in_group("subjects")
+		for z in subjects:
+			if z not in hit_subjects:
 				var dist = global_position.distance_to(z.global_position)
 				if dist < 40:
-					_hit_zombie(z)
+					_hit_subject(z)
 	if is_mimic:
 		mimic_color_time += get_process_delta_time()
 		queue_redraw()
@@ -616,15 +616,15 @@ func _draw() -> void:
 		else:
 			draw_circle(Vector2.ZERO, 10, Color(1.0, 1.0, 1.0))
 		
-func _hit_zombie(zombie: Node2D) -> void:
+func _hit_subject(subject: Node2D) -> void:
 	var fusion_zone = get_tree().get_first_node_in_group("fusion_zone")
 	if fusion_zone:
 		fusion_zone.add_energy_from_hit(hit_type)
-	if not is_instance_valid(zombie):
+	if not is_instance_valid(subject):
 		return
-	if zombie in hit_zombies:
+	if subject in hit_subjects:
 		return
-	hit_zombies.append(zombie)
+	hit_subjects.append(subject)
 	# Mimic 5 çarpmada eski haline döner
 	if mimic_done and not is_mimic:
 		mimic_hits += 1
@@ -664,7 +664,7 @@ func _hit_zombie(zombie: Node2D) -> void:
 	if is_crit:
 		total_damage = int(total_damage * crit_multiplier)
 
-	zombie.take_damage(total_damage)
+	subject.take_damage(total_damage)
 
 	# ── Veri Toplama ─────────────────────────────────────────
 	# Fusion > Güçlü > Temel top sıralamasıyla veri miktarı belirlenir
@@ -688,7 +688,7 @@ func _hit_zombie(zombie: Node2D) -> void:
 			speed = min(speed + 150, 900.0)
 		# Durum etkisi etkileşimleri
 	# Electrified etkileşimleri
-	if zombie.is_electrified:
+	if subject.is_electrified:
 		if can_pierce:
 			# Railgun'a dönüş
 			can_pierce = false
@@ -709,62 +709,62 @@ func _hit_zombie(zombie: Node2D) -> void:
 				queue_redraw()
 		elif can_cryo:
 			# 3 saniye sonra Burst hasar
-			zombie.is_electrified = false
-			zombie.modulate = Color(1, 1, 1)
+			subject.is_electrified = false
+			subject.modulate = Color(1, 1, 1)
 			await get_tree().create_timer(3.0).timeout
-			if is_instance_valid(zombie):
-				zombie.take_damage(20)
+			if is_instance_valid(subject):
+				subject.take_damage(20)
 		elif can_glitch:
 			# Aşırı yüklenme - düşene kadar etrafına saldırsın
-			zombie.is_electrified = false
-			zombie.modulate = Color(1, 1, 1)
-			zombie.apply_glitch()
+			subject.is_electrified = false
+			subject.modulate = Color(1, 1, 1)
+			subject.apply_glitch()
 		elif can_water:
 			# Chain Reaction - yakındaki ıslak düşmanlara elektrik
-			zombie.is_electrified = false
-			zombie.modulate = Color(1, 1, 1)
-			zombie.take_damage(10)
-			var enemies = get_tree().get_nodes_in_group("zombies")
+			subject.is_electrified = false
+			subject.modulate = Color(1, 1, 1)
+			subject.take_damage(10)
+			var enemies = get_tree().get_nodes_in_group("subjects")
 			for enemy in enemies:
-				if enemy != zombie and is_instance_valid(enemy):
-					var dist = zombie.global_position.distance_to(enemy.global_position)
+				if enemy != subject and is_instance_valid(enemy):
+					var dist = subject.global_position.distance_to(enemy.global_position)
 					if dist < 200 and enemy.is_wet:
 						enemy.take_damage(10)
 						enemy.is_electrified = false
 		elif can_fire:
 			# Plazma bombası - AoE patlama
-			zombie.is_electrified = false
-			zombie.modulate = Color(1, 1, 1)
-			var enemies = get_tree().get_nodes_in_group("zombies")
+			subject.is_electrified = false
+			subject.modulate = Color(1, 1, 1)
+			var enemies = get_tree().get_nodes_in_group("subjects")
 			for enemy in enemies:
 				if is_instance_valid(enemy):
-					var dist = zombie.global_position.distance_to(enemy.global_position)
+					var dist = subject.global_position.distance_to(enemy.global_position)
 					if dist < 150:
 						enemy.take_damage(15)
-	if not is_instance_valid(zombie):
+	if not is_instance_valid(subject):
 		return
-	if can_water and zombie.is_burning:
+	if can_water and subject.is_burning:
 		# Burn + Water = Steam
-		zombie.apply_wet()
-		zombie.take_damage(8)
-		zombie.is_burning = false
-	elif can_electric and zombie.is_wet:
+		subject.apply_wet()
+		subject.take_damage(8)
+		subject.is_burning = false
+	elif can_electric and subject.is_wet:
 		# Wet + Electric = Shock
-		zombie.take_damage(6)
+		subject.take_damage(6)
 		# Zincir hasar - yakındaki düşmanlara da çarpar
-		var enemies = get_tree().get_nodes_in_group("zombies")
+		var enemies = get_tree().get_nodes_in_group("subjects")
 		for enemy in enemies:
-			if enemy != zombie and is_instance_valid(enemy):
-				var dist = zombie.global_position.distance_to(enemy.global_position)
+			if enemy != subject and is_instance_valid(enemy):
+				var dist = subject.global_position.distance_to(enemy.global_position)
 				if dist < 150:
 					enemy.take_damage(4)
-	elif can_cryo and zombie.is_wet:
+	elif can_cryo and subject.is_wet:
 		# Wet + Cryo = Anında Frozen
-		zombie.apply_frozen()
-	elif can_cryo and zombie.is_burning:
+		subject.apply_frozen()
+	elif can_cryo and subject.is_burning:
 		# Burn + Cryo = Thermal Shock
-		zombie.take_damage(12)
-		zombie.is_burning = false
+		subject.take_damage(12)
+		subject.is_burning = false
 	# Can çalma topu 
 	if can_leech:
 		var game = get_tree().get_first_node_in_group("game")
@@ -772,8 +772,8 @@ func _hit_zombie(zombie: Node2D) -> void:
 			game.player_hp = min(game.player_hp + 2, game.player_max_hp)
 			game.update_ui()
 	# Hydro Jet - vakum koridoru, yakındaki topları hızlandırır
-	if is_fused and fusion_type == "hydro_jet" and is_instance_valid(zombie):
-		zombie.apply_wet()
+	if is_fused and fusion_type == "hydro_jet" and is_instance_valid(subject):
+		subject.apply_wet()
 		var balls = get_tree().get_nodes_in_group("balls")
 		for b in balls:
 			if b != self and b.moving:
@@ -781,108 +781,108 @@ func _hit_zombie(zombie: Node2D) -> void:
 				if dist < 150:
 					b.speed = min(b.speed + 100, 800)
 	# Cryostatic - yolda elektrik sızdırır
-	if is_fused and fusion_type == "cryostatic" and is_instance_valid(zombie):
-		zombie.apply_slow(slow_amount)
-		var zombies = get_tree().get_nodes_in_group("zombies")
-		for z in zombies:
-			if z != zombie:
+	if is_fused and fusion_type == "cryostatic" and is_instance_valid(subject):
+		subject.apply_slow(slow_amount)
+		var subjects = get_tree().get_nodes_in_group("subjects")
+		for z in subjects:
+			if z != subject:
 				var dist = global_position.distance_to(z.global_position)
 				if dist < 100:
 					z.take_damage(total_damage / 2)
 	# Wet Split parçası - tek vurumluk, ıslatır
-	if is_fused and fusion_type == "wet_split_piece" and is_instance_valid(zombie):
-		zombie.apply_wet()
+	if is_fused and fusion_type == "wet_split_piece" and is_instance_valid(subject):
+		subject.apply_wet()
 		queue_free()
 		return
 	# Deep Freeze Error - animasyonu dondur, etraftaki topları yavaşlat
-	if is_fused and fusion_type == "deep_freeze" and is_instance_valid(zombie):
-		zombie.apply_frozen()
-		zombie.apply_glitch()
+	if is_fused and fusion_type == "deep_freeze" and is_instance_valid(subject):
+		subject.apply_frozen()
+		subject.apply_glitch()
 	# Phantom - içinden geç ve glitch uygula
-	if is_fused and fusion_type == "phantom" and is_instance_valid(zombie):
-		zombie.apply_glitch()
+	if is_fused and fusion_type == "phantom" and is_instance_valid(subject):
+		subject.apply_glitch()
 	# Overclock - birbirine saldırtır
-	if is_fused and fusion_type == "overclock" and is_instance_valid(zombie):
-		zombie.apply_glitch()
-		var zombies = get_tree().get_nodes_in_group("zombies")
-		for z in zombies:
-			if z != zombie:
+	if is_fused and fusion_type == "overclock" and is_instance_valid(subject):
+		subject.apply_glitch()
+		var subjects = get_tree().get_nodes_in_group("subjects")
+		for z in subjects:
+			if z != subject:
 				var dist = global_position.distance_to(z.global_position)
 				if dist < 200:
 					z.apply_glitch()
 	# Railgun - elektrik hattı
-	if is_fused and fusion_type == "railgun" and is_instance_valid(zombie):
-		var zombies = get_tree().get_nodes_in_group("zombies")
-		for z in zombies:
-			if z != zombie:
+	if is_fused and fusion_type == "railgun" and is_instance_valid(subject):
+		var subjects = get_tree().get_nodes_in_group("subjects")
+		for z in subjects:
+			if z != subject:
 				var dist = global_position.distance_to(z.global_position)
 				if dist < 150:
 					z.take_damage(total_damage / 2)
 	# Glacier Spike - buz çekirdeği
-	if is_fused and fusion_type == "glacier_spike" and is_instance_valid(zombie):
-		var target_zombie = zombie
+	if is_fused and fusion_type == "glacier_spike" and is_instance_valid(subject):
+		var target_subject = subject
 		get_tree().create_timer(2.0).timeout.connect(func():
-			if is_instance_valid(target_zombie):
-				target_zombie.apply_slow(0.5)
-				target_zombie.take_damage(total_damage)
+			if is_instance_valid(target_subject):
+				target_subject.apply_slow(0.5)
+				target_subject.take_damage(total_damage)
 		)
 	# Blue Screen - wet + glitch
-	if is_fused and fusion_type == "blue_screen" and is_instance_valid(zombie):
-		zombie.apply_wet()
-		zombie.apply_glitch()
+	if is_fused and fusion_type == "blue_screen" and is_instance_valid(subject):
+		subject.apply_wet()
+		subject.apply_glitch()
 	# Conductive - zincir elektrik
-	if is_fused and fusion_type == "conductive" and is_instance_valid(zombie):
-		zombie.apply_wet()
-		var zombies = get_tree().get_nodes_in_group("zombies")
-		for z in zombies:
-			if z != zombie and global_position.distance_to(z.global_position) < 200:
+	if is_fused and fusion_type == "conductive" and is_instance_valid(subject):
+		subject.apply_wet()
+		var subjects = get_tree().get_nodes_in_group("subjects")
+		for z in subjects:
+			if z != subject and global_position.distance_to(z.global_position) < 200:
 				if z.is_wet:
 					z.take_damage(total_damage)
 	# Absolute Zero - anında dondur
-	if is_fused and fusion_type == "absolute_zero" and is_instance_valid(zombie):
-		zombie.apply_frozen()
+	if is_fused and fusion_type == "absolute_zero" and is_instance_valid(subject):
+		subject.apply_frozen()
 	# Firework parçası - tek vurumluk patlama
-	if is_fused and fusion_type == "firework_piece" and is_instance_valid(zombie):
-		zombie.apply_burn()
+	if is_fused and fusion_type == "firework_piece" and is_instance_valid(subject):
+		subject.apply_burn()
 		queue_free()
 		return
 	# Meltdown - glitch + burn
-	if is_fused and fusion_type == "meltdown" and is_instance_valid(zombie):
-		zombie.apply_burn()
-		zombie.apply_glitch()
+	if is_fused and fusion_type == "meltdown" and is_instance_valid(subject):
+		subject.apply_burn()
+		subject.apply_glitch()
 	# Thermite - içten yanma
-	if 	is_fused and fusion_type == "thermite" and is_instance_valid(zombie):
-		zombie.apply_burn()
+	if 	is_fused and fusion_type == "thermite" and is_instance_valid(subject):
+		subject.apply_burn()
 	# Steam Pressure - Knockback
-	if is_fused and fusion_type == "steam_pressure" and is_instance_valid(zombie):
-		var push_dir = (zombie.global_position - global_position).normalized()
-		zombie.global_position += push_dir * 200
-		zombie.apply_wet()
+	if is_fused and fusion_type == "steam_pressure" and is_instance_valid(subject):
+		var push_dir = (subject.global_position - global_position).normalized()
+		subject.global_position += push_dir * 200
+		subject.apply_wet()
 	# Thermal Shock - Burst hasar
-	if is_fused and fusion_type == "thermal_shock" and is_instance_valid(zombie):
-		if zombie.is_frozen or zombie.is_slowed:
-			zombie.take_damage(total_damage * 2)
+	if is_fused and fusion_type == "thermal_shock" and is_instance_valid(subject):
+		if subject.is_frozen or subject.is_slowed:
+			subject.take_damage(total_damage * 2)
 	# Plasma Discharge - Alan hasarı
-	if is_fused and fusion_type == "plasma_discharge" and is_instance_valid(zombie):
-		var zombies = get_tree().get_nodes_in_group("zombies")
-		for z in zombies:
+	if is_fused and fusion_type == "plasma_discharge" and is_instance_valid(subject):
+		var subjects = get_tree().get_nodes_in_group("subjects")
+		for z in subjects:
 			if global_position.distance_to(z.global_position) < 120:
 				z.take_damage(total_damage)
-	if can_fire and is_instance_valid(zombie):
-		zombie.apply_burn()
-	if can_water and is_instance_valid(zombie):
-		zombie.apply_wet()
+	if can_fire and is_instance_valid(subject):
+		subject.apply_burn()
+	if can_water and is_instance_valid(subject):
+		subject.apply_wet()
 		#queue_free()
 		#return
-	if can_glitch and is_instance_valid(zombie):
-		zombie.apply_glitch()
-	if can_electric and is_instance_valid(zombie):
-		zombie.apply_electrified()
-	if can_cryo and is_instance_valid(zombie):
-		if zombie.is_wet:
-			zombie.apply_frozen()
+	if can_glitch and is_instance_valid(subject):
+		subject.apply_glitch()
+	if can_electric and is_instance_valid(subject):
+		subject.apply_electrified()
+	if can_cryo and is_instance_valid(subject):
+		if subject.is_wet:
+			subject.apply_frozen()
 		else:
-			zombie.apply_slow(slow_amount)
+			subject.apply_slow(slow_amount)
 	
 	if can_split and not has_split:
 		has_split = true
@@ -895,17 +895,17 @@ func _hit_zombie(zombie: Node2D) -> void:
 
 	
 	if is_fused and fusion_type == "phantom":
-		hit_zombies.erase(zombie)
+		hit_subjects.erase(subject)
 	elif can_pierce:
-		if is_instance_valid(zombie) and zombie.health > 0:
+		if is_instance_valid(subject) and subject.health > 0:
 			move_direction = move_direction.bounce(Vector2(0, 1))
-		hit_zombies.erase(zombie)
+		hit_subjects.erase(subject)
 	else:
-		var bounce_normal = (global_position - zombie.global_position).normalized()
+		var bounce_normal = (global_position - subject.global_position).normalized()
 		move_direction = move_direction.bounce(bounce_normal)
 		await get_tree().create_timer(0.5).timeout
-		if zombie in hit_zombies:
-			hit_zombies.erase(zombie)
+		if subject in hit_subjects:
+			hit_subjects.erase(subject)
 
 func _split() -> void:
 	var ball_scene_local = load("res://ball.tscn")
@@ -947,9 +947,9 @@ func _split() -> void:
 		new_ball.launch(dir)
 
 func _electric_blast() -> void:
-	var zombies = get_tree().get_nodes_in_group("zombies")
-	for z in zombies:
-		if z in hit_zombies:
+	var subjects = get_tree().get_nodes_in_group("subjects")
+	for z in subjects:
+		if z in hit_subjects:
 			continue
 		if global_position.distance_to(z.global_position) < 150:
 			z.take_damage(5)

@@ -27,7 +27,7 @@ var missile_scene = preload("res://missile.tscn")
 
 func _ready() -> void:
 	z_index = 3
-	add_to_group("zombies")
+	add_to_group("subjects")
 	scale = Vector2(0.1, 0.1)
 	await get_tree().process_frame
 	var game = get_parent()
@@ -35,8 +35,8 @@ func _ready() -> void:
 		game.show_boss_bar(self)
 
 func _landing_wave() -> void:
-	var zombies = get_tree().get_nodes_in_group("zombies")
-	for z in zombies:
+	var subjects = get_tree().get_nodes_in_group("subjects")
+	for z in subjects:
 		if z != self and is_instance_valid(z):
 			z.queue_free()
 
@@ -169,8 +169,8 @@ func _armor_break() -> void:
 func die() -> void:
 	is_dead = true
 	var game = get_parent()
-	if game.has_method("zombie_died"):
-		game.zombie_died()
+	if game.has_method("subject_died"):
+		game.subject_died()
 	if game.has_method("hide_boss_bar"):
 		game.hide_boss_bar()
 	_collapse()

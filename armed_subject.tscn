@@ -1,11 +1,11 @@
-[gd_scene format=3 uid="uid://b8e8scq6d6lsy"]
+﻿[gd_scene format=3 uid="uid://b8e8scq6d6lsy"]
 
-[ext_resource type="Script" uid="uid://qmtd8vkaaj36" path="res://cyber_zombie.gd" id="1_7ff7o"]
+[ext_resource type="Script" uid="uid://qmtd8vkaaj36" path="res://armed_subject.gd" id="1_7ff7o"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_050lg"]
 size = Vector2(30, 50)
 
-[node name="CyberZombie" type="CharacterBody2D" unique_id=1604379504 groups=["zombies"]]
+[node name="ArmedSubject" type="CharacterBody2D" unique_id=1604379504 groups=["subjects"]]
 z_index = 2
 motion_mode = 1
 script = ExtResource("1_7ff7o")

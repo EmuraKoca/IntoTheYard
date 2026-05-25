@@ -1,11 +1,11 @@
-[gd_scene format=3 uid="uid://bguqgq38hqol5"]
+﻿[gd_scene format=3 uid="uid://bguqgq38hqol5"]
 
-[ext_resource type="Script" uid="uid://cqthvcw1xf6ta" path="res://fast_zombie.gd" id="1_yhk8i"]
+[ext_resource type="Script" uid="uid://cqthvcw1xf6ta" path="res://frantic_subject.gd" id="1_yhk8i"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_050lg"]
 size = Vector2(30, 50)
 
-[node name="FastZombie" type="CharacterBody2D" unique_id=1604379504 groups=["zombies"]]
+[node name="FranticSubject" type="CharacterBody2D" unique_id=1604379504 groups=["subjects"]]
 z_index = 2
 motion_mode = 1
 script = ExtResource("1_yhk8i")
