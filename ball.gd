@@ -665,6 +665,22 @@ func _hit_zombie(zombie: Node2D) -> void:
 		total_damage = int(total_damage * crit_multiplier)
 
 	zombie.take_damage(total_damage)
+
+	# ── Veri Toplama ─────────────────────────────────────────
+	# Fusion > Güçlü > Temel top sıralamasıyla veri miktarı belirlenir
+	var data_amount: int = 100
+	if is_fused:
+		data_amount = 450
+	elif can_electric or can_pierce:
+		data_amount = 200
+	elif can_split or can_cryo or can_glitch or can_fire or can_water or can_leech:
+		data_amount = 150
+	if is_crit:
+		data_amount = int(data_amount * 1.5)
+	var game_node = get_tree().get_first_node_in_group("game")
+	if game_node and game_node.has_method("add_data"):
+		game_node.add_data(data_amount)
+
 	# Leila - top sektirme
 	var game_player = get_tree().get_first_node_in_group("player")
 	if game_player and game_player.character_type == "leila":

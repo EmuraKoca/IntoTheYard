@@ -32,6 +32,8 @@ var boss_bar_canvas = null
 var boss = null
 var boss_defeated = false
 var boss_warning = null
+var data_collected: int = 0
+var total_zombies_killed: int = 0
 
 func _show_boss_warning() -> void:
 	boss_warning = ColorRect.new()
@@ -462,6 +464,7 @@ func update_ui() -> void:
 
 func zombie_died() -> void:
 	zombies_killed += 1
+	total_zombies_killed += 1
 	update_ui()
 	if zombies_killed >= kills_to_level:
 		zombies_killed = 0
@@ -483,31 +486,161 @@ func show_game_over() -> void:
 	var canvas = CanvasLayer.new()
 	canvas.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(canvas)
-	
-	var panel = ColorRect.new()
-	panel.color = Color(0, 0, 0, 0.85)
-	panel.size = Vector2(800, 640)
-	panel.position = Vector2(0, 0)
-	canvas.add_child(panel)
-	
-	var title = Label.new()
-	title.text = "GAME OVER"
-	title.position = Vector2(320, 220)
-	title.add_theme_font_override("font", _font_bold)
-	canvas.add_child(title)
 
+	# ── Koyu arka plan ────────────────────────────────────────
+	var bg = ColorRect.new()
+	bg.color    = Color(0.01, 0.01, 0.04, 0.96)
+	bg.size     = Vector2(1920, 1080)
+	canvas.add_child(bg)
 
-	var btn = Button.new()
-	btn.text = "Tekrar Oyna"
-	btn.position = Vector2(310, 340)
-	btn.size = Vector2(180, 50)
-	btn.add_theme_font_override("font", _font_bold)
-	btn.pressed.connect(_on_restart)
-	canvas.add_child(btn)
+	# ── Hasmen görseli (sağ taraf) ────────────────────────────
+	var hasmen_img = TextureRect.new()
+	hasmen_img.texture      = load("res://assets/mrHasmen.png")
+	hasmen_img.size         = Vector2(500, 900)
+	hasmen_img.position     = Vector2(1380, 180)
+	hasmen_img.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	hasmen_img.expand_mode  = TextureRect.EXPAND_IGNORE_SIZE
+	canvas.add_child(hasmen_img)
+
+	# Neon pembe dikey ayraç
+	var divider = ColorRect.new()
+	divider.size     = Vector2(2, 1080)
+	divider.position = Vector2(1360, 0)
+	divider.color    = Color(1.0, 0.08, 0.58, 0.4)
+	canvas.add_child(divider)
+
+	# "MR. HASMEN" isim etiketi
+	var hasmen_name = Label.new()
+	hasmen_name.text     = "MR. HASMEN"
+	hasmen_name.position = Vector2(1385, 150)
+	hasmen_name.add_theme_font_override("font", _font_bold)
+	hasmen_name.add_theme_font_size_override("font_size", 18)
+	hasmen_name.add_theme_color_override("font_color", Color(1.0, 0.08, 0.58, 0.85))
+	canvas.add_child(hasmen_name)
+
+	# ── Başlık ────────────────────────────────────────────────
+	var header = Label.new()
+	header.text     = "// EXPERIMENT SESSION CONCLUDED //"
+	header.position = Vector2(80, 70)
+	header.add_theme_font_override("font", _font_bold)
+	header.add_theme_font_size_override("font_size", 22)
+	header.add_theme_color_override("font_color", Color(1.0, 0.08, 0.58, 1.0))
+	canvas.add_child(header)
+
+	# ── Rapor kutusu ──────────────────────────────────────────
+	var report_bg = ColorRect.new()
+	report_bg.position = Vector2(80, 148)
+	report_bg.size     = Vector2(1240, 320)
+	report_bg.color    = Color(0.03, 0.05, 0.08, 0.92)
+	canvas.add_child(report_bg)
+
+	var report_border = ColorRect.new()
+	report_border.position = Vector2(80, 148)
+	report_border.size     = Vector2(3, 320)
+	report_border.color    = Color(0.0, 0.9, 1.0, 0.85)
+	canvas.add_child(report_border)
+
+	# Rapor satırları: [başlık, değer, renk]
+	var minutes = int(elapsed_time / 60)
+	var seconds = int(elapsed_time) % 60
+	var rows = [
+		["DATA HARVESTED",       _format_data(data_collected) + " units", Color(0.0, 1.0, 0.55)],
+		["SESSION TIME",         "%02d:%02d" % [minutes, seconds],         Color(0.0, 0.9, 1.0)],
+		["THREATS NEUTRALIZED",  str(total_zombies_killed),                 Color(0.0, 0.9, 1.0)],
+		["EXPERIMENT LEVEL",     str(level),                               Color(0.0, 0.9, 1.0)],
+	]
+	for i in range(rows.size()):
+		var row = rows[i]
+		var key = Label.new()
+		key.text     = row[0]
+		key.position = Vector2(110, 172 + i * 72)
+		key.add_theme_font_override("font", _font_regular)
+		key.add_theme_font_size_override("font_size", 13)
+		key.add_theme_color_override("font_color", Color(0.5, 0.6, 0.7))
+		canvas.add_child(key)
+
+		var val = Label.new()
+		val.text     = row[1]
+		val.position = Vector2(110, 190 + i * 72)
+		val.add_theme_font_override("font", _font_bold)
+		val.add_theme_font_size_override("font_size", 28)
+		val.add_theme_color_override("font_color", row[2])
+		canvas.add_child(val)
+
+	# ── Hasmen alıntısı ───────────────────────────────────────
+	var quote_bg = ColorRect.new()
+	quote_bg.position = Vector2(80, 506)
+	quote_bg.size     = Vector2(1240, 110)
+	quote_bg.color    = Color(0.05, 0.02, 0.07, 0.92)
+	canvas.add_child(quote_bg)
+
+	var quote_lbl = Label.new()
+	quote_lbl.text          = "\"" + _get_hasmen_quote() + "\""
+	quote_lbl.position      = Vector2(110, 518)
+	quote_lbl.size          = Vector2(1190, 60)
+	quote_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
+	quote_lbl.add_theme_font_override("font", _font_regular)
+	quote_lbl.add_theme_font_size_override("font_size", 17)
+	quote_lbl.add_theme_color_override("font_color", Color(0.85, 0.80, 1.0))
+	canvas.add_child(quote_lbl)
+
+	var attr_lbl = Label.new()
+	attr_lbl.text     = "— Mr. Hasmen, ITY Corp."
+	attr_lbl.position = Vector2(110, 584)
+	attr_lbl.add_theme_font_override("font", _font_bold)
+	attr_lbl.add_theme_font_size_override("font_size", 12)
+	attr_lbl.add_theme_color_override("font_color", Color(1.0, 0.08, 0.58, 0.75))
+	canvas.add_child(attr_lbl)
+
+	# ── Butonlar ──────────────────────────────────────────────
+	var retry_btn = Button.new()
+	retry_btn.text         = "RETRY SESSION"
+	retry_btn.position     = Vector2(200, 760)
+	retry_btn.size         = Vector2(240, 55)
+	retry_btn.process_mode = Node.PROCESS_MODE_ALWAYS
+	retry_btn.add_theme_font_override("font", _font_bold)
+	retry_btn.pressed.connect(_on_restart)
+	canvas.add_child(retry_btn)
+
+	var menu_btn = Button.new()
+	menu_btn.text         = "MAIN MENU"
+	menu_btn.position     = Vector2(480, 760)
+	menu_btn.size         = Vector2(240, 55)
+	menu_btn.process_mode = Node.PROCESS_MODE_ALWAYS
+	menu_btn.add_theme_font_override("font", _font_bold)
+	menu_btn.pressed.connect(_on_main_menu.bind(canvas))
+	canvas.add_child(menu_btn)
 
 func _on_restart() -> void:
 	get_tree().paused = false
 	get_tree().reload_current_scene()
+
+# ── Veri Sistemi ─────────────────────────────────────────────────────────────
+
+func add_data(amount: int) -> void:
+	data_collected += amount
+	var tribune = get_node_or_null("Tribune")
+	if tribune and tribune.has_method("update_data"):
+		tribune.update_data(data_collected)
+
+func _format_data(n: int) -> String:
+	if n >= 1_000_000:
+		return "%.2f M" % (n / 1_000_000.0)
+	elif n >= 1_000:
+		return "%.1f K" % (n / 1_000.0)
+	return str(n)
+
+func _get_hasmen_quote() -> String:
+	if data_collected < 500:
+		return "Pathetic. My patience has limits, unlike your failure rate."
+	elif data_collected < 2_000:
+		return "Barely enough. The Personal-ITY chip deserves better test subjects."
+	elif data_collected < 8_000:
+		return "Mediocre results. But the behavioral patterns are... noted."
+	elif data_collected < 25_000:
+		return "Not bad. The next chip update draws closer. Keep going."
+	else:
+		return "Exceptional. You may yet prove worthy of my investment."
 
 func show_upgrade_menu() -> void:
 	upgrading = true
