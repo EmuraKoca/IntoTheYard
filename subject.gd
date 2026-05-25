@@ -16,6 +16,9 @@ var is_electrified = false
 var chip_duration = 15.0  # Ally chip charge duration — upgradeable via card
 var _ally_timer = 0.0
 var _is_exiting = false
+var _reached_living_area: bool = false
+var _wander_timer: float = 0.0
+var _wander_velocity: Vector2 = Vector2.ZERO
 
 func apply_burn() -> void:
 	if is_burning:
@@ -188,8 +191,10 @@ func _become_ally() -> void:
 	# Use game-level chip duration if available (respects Chip Boost upgrade)
 	_ally_timer = game.ally_chip_duration if "ally_chip_duration" in game else chip_duration
 	_is_exiting = false
+	_reached_living_area = false
+	_wander_timer = 0.0
 
-	# Re-enable physics so ally can follow the player
+	# Re-enable physics — ally immediately heads to living area
 	set_physics_process(true)
 	$CollisionShape2D.disabled = false
 
@@ -198,26 +203,27 @@ func _start_exit() -> void:
 	set_physics_process(false)
 	$CollisionShape2D.disabled = true
 
-	# Step 1: Move to the tribune gate (right edge of the tribune)
-	var gate_pos = Vector2(870, 900)
-	var step1_time = clamp(global_position.distance_to(gate_pos) / (speed * 3.0), 0.4, 2.5)
-	var tween = create_tween()
-	tween.tween_property(self, "global_position", gate_pos, step1_time)
-	await tween.finished
-	if not is_instance_valid(self):
-		return
+	# If somehow still in the game field, push through the tribune first
+	if global_position.x > 490.0:
+		var gate_pos = Vector2(870, clamp(global_position.y, 300, 900))
+		var step1_time = clamp(global_position.distance_to(gate_pos) / (speed * 2.0), 0.3, 2.0)
+		var tween = create_tween()
+		tween.tween_property(self, "global_position", gate_pos, step1_time)
+		await tween.finished
+		if not is_instance_valid(self):
+			return
+		var tween2 = create_tween()
+		tween2.tween_property(self, "global_position", Vector2(350, gate_pos.y), 1.0)
+		await tween2.finished
+		if not is_instance_valid(self):
+			return
 
-	# Step 2: Run left through the tribune
-	var tween2 = create_tween()
-	tween2.tween_property(self, "global_position", Vector2(490, 900), 1.2)
-	await tween2.finished
-	if not is_instance_valid(self):
-		return
-
-	# Step 3: Keep running off-screen to the left — no fade, just disappear
-	var tween3 = create_tween()
-	tween3.tween_property(self, "global_position", Vector2(-200, 900), 0.8)
-	await tween3.finished
+	# Run off-screen to the left at a brisk pace
+	var exit_speed = max(speed * 2.5, 180.0)
+	var exit_time = (global_position.x + 200.0) / exit_speed
+	var tween_exit = create_tween()
+	tween_exit.tween_property(self, "global_position", Vector2(-200, global_position.y), exit_time)
+	await tween_exit.finished
 	if is_instance_valid(self):
 		queue_free()
 
@@ -233,7 +239,23 @@ func _ally_behavior() -> void:
 		_start_exit()
 		return
 
-	# Attack the nearest enemy subject within range
+	# Phase 1: Navigate to the living area (left of the tribune) at full enemy speed
+	if not _reached_living_area:
+		if global_position.x > 870.0:
+			# Still in game field — head toward tribune gate
+			velocity = (Vector2(870, global_position.y) - global_position).normalized() * speed
+		elif global_position.x > 490.0:
+			# In the tribune — push straight left
+			velocity = Vector2(-speed, 0)
+		else:
+			# Arrived in living area
+			_reached_living_area = true
+			_wander_timer = 0.0
+			velocity = Vector2.ZERO
+		move_and_slide()
+		return
+
+	# Phase 2: In living area — attack nearby enemies or wander upward
 	var subjects = get_tree().get_nodes_in_group("subjects")
 	var closest = null
 	var closest_dist = INF
@@ -243,7 +265,7 @@ func _ally_behavior() -> void:
 			closest_dist = d
 			closest = s
 
-	if closest != null and closest_dist < 300.0:
+	if closest != null and closest_dist < 400.0:
 		# Chase and attack
 		if closest_dist > 60.0:
 			var direction = (closest.global_position - global_position).normalized()
@@ -256,15 +278,17 @@ func _ally_behavior() -> void:
 				closest.take_damage(5)
 				attack_cooldown = attack_rate
 	else:
-		# No nearby enemy — stay close to the player
-		var player = get_tree().get_first_node_in_group("player")
-		if player:
-			var dist = global_position.distance_to(player.global_position)
-			if dist > 80.0:
-				var direction = (player.global_position - global_position).normalized()
-				velocity = direction * speed
-				move_and_slide()
-			else:
-				velocity = Vector2.ZERO
-		else:
-			velocity = Vector2.ZERO
+		# No enemies — wander upward toward the upper street
+		_wander_timer -= delta
+		if _wander_timer <= 0.0:
+			_wander_timer = randf_range(1.5, 3.0)
+			_wander_velocity = Vector2(randf_range(-speed * 0.4, speed * 0.4), -speed * 0.7)
+		# Clamp to living area bounds
+		if global_position.y < 150.0:
+			_wander_velocity.y = abs(_wander_velocity.y)
+		if global_position.x < 50.0:
+			_wander_velocity.x = abs(_wander_velocity.x)
+		elif global_position.x > 470.0:
+			_wander_velocity.x = -abs(_wander_velocity.x)
+		velocity = _wander_velocity
+		move_and_slide()
