@@ -1,4 +1,4 @@
-﻿[gd_scene format=3 uid="uid://in5hhk02q7t8"]
+[gd_scene format=3 uid="uid://in5hhk02q7t8"]
 
 [ext_resource type="Script" uid="uid://745y30w6no5i" path="res://main_menu.gd" id="1_06t4h"]
 [ext_resource type="FontFile" uid="uid://bdbf1qeb2yg1s" path="res://assets/orbitronfont/Orbitron-Bold.ttf" id="font_bold"]
