@@ -217,13 +217,11 @@ func _start_exit() -> void:
 	# CollisionShape2D already disabled since _become_ally
 
 	var nav_speed = max(speed * 3.0, 200.0)
-	var step1_time = global_position.distance_to(SURGERY_EXIT) / nav_speed
-	var step2_time = (SURGERY_EXIT.x + 200.0) / nav_speed
+	var exit_time = (global_position.x + 200.0) / nav_speed
 
-	# Chained tween: Surgery door → off-screen left → queue_free
+	# Run straight left from current position → off-screen → queue_free
 	var tween = create_tween()
-	tween.tween_property(self, "global_position", SURGERY_EXIT, step1_time)
-	tween.tween_property(self, "global_position", Vector2(-200, SURGERY_EXIT.y), step2_time)
+	tween.tween_property(self, "global_position", Vector2(-200, global_position.y), exit_time)
 	tween.tween_callback(queue_free)
 
 func _ally_behavior() -> void:
