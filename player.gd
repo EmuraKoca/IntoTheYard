@@ -191,6 +191,9 @@ func _ready() -> void:
 	z_index = 2
 	character_type = GameData.selected_character
 	if character_type == "leila":
+		# Vector placeholder'ı gizle, Leila animasyonunu aç
+		$VectorRect.visible = false
+		$AnimatedSprite2D.visible = true
 		# Sprite büyütme ve piksel art filtresi
 		$AnimatedSprite2D.scale         = Vector2(3.0, 3.0)
 		$AnimatedSprite2D.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -198,6 +201,11 @@ func _ready() -> void:
 		# Raket düğümünü etkinleştir
 		_racket         = $AnimatedSprite2D.get_node("Racket") as Sprite2D
 		_racket.visible = true
+	elif character_type == "cyclone":
+		# Vector placeholder'ı gizle, Cyclone animasyonunu aç
+		$VectorRect.visible = false
+		$AnimatedSprite2D.visible = true
+	# Vector: VectorRect varsayılan olarak görünür kalır (tscn'de zaten açık)
 	_play_anim("idle")
 
 func _input(event: InputEvent) -> void:
@@ -259,7 +267,9 @@ func _physics_process(delta: float) -> void:
 	else:
 		_play_anim("idle")
 
-	if character_type != "leila":
+	# Yalnızca Cyclone için: AnimatedSprite2D yatay çevirme
+	# (Vector dikdörtgen kullanıyor, Leila yönlü sprite'lara sahip)
+	if character_type == "cyclone":
 		if velocity.x < 0:
 			$AnimatedSprite2D.flip_h = true
 		elif velocity.x > 0:
@@ -654,7 +664,9 @@ func _racket_swing() -> void:
 ##   Leila  → yönlü sprite satırına (walk_up, idle_right, …) yönlendirir
 ##   Vector / Cyclone → doğrudan animasyon adıyla çalar (mevcut davranış)
 func _play_anim(anim: String) -> void:
-	if character_type == "leila":
+	if character_type == "vector":
+		return  # Vector geçici dikdörtgen kullanıyor; animasyon yok
+	elif character_type == "leila":
 		var dir: String = _leila_get_dir()
 		var leila_anim: String
 		match anim:
