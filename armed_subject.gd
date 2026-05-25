@@ -219,22 +219,14 @@ func _start_exit() -> void:
 	# CollisionShape2D already disabled since _become_ally
 
 	var nav_speed = max(speed * 3.0, 200.0)
-
-	# Step 1: Navigate to the Surgery exit door
 	var step1_time = global_position.distance_to(SURGERY_EXIT) / nav_speed
+	var step2_time = (SURGERY_EXIT.x + 200.0) / nav_speed
+
+	# Chained tween: Surgery door → off-screen left → queue_free
 	var tween = create_tween()
 	tween.tween_property(self, "global_position", SURGERY_EXIT, step1_time)
-	await tween.finished
-	if not is_instance_valid(self):
-		return
-
-	# Step 2: Run off-screen to the left from Surgery
-	var exit_time = (SURGERY_EXIT.x + 200.0) / nav_speed
-	var tween2 = create_tween()
-	tween2.tween_property(self, "global_position", Vector2(-200, SURGERY_EXIT.y), exit_time)
-	await tween2.finished
-	if is_instance_valid(self):
-		queue_free()
+	tween.tween_property(self, "global_position", Vector2(-200, SURGERY_EXIT.y), step2_time)
+	tween.tween_callback(queue_free)
 
 func _ally_behavior() -> void:
 	var delta = get_physics_process_delta_time()
@@ -250,10 +242,16 @@ func _ally_behavior() -> void:
 	# Use at least 150 px/s so even slow subjects move purposefully
 	var nav_speed = max(speed * 3.0, 150.0)
 
-	# Phase 1: Move straight left into the living area
-	# Collision is disabled so tribune walls don't block us
+	# Phase 1: Navigate through Surgery door into the living area
+	# Collision is disabled so we pass through everything freely
 	if not _reached_living_area:
-		velocity = Vector2(-nav_speed, 0)
+		if global_position.x >= 850.0:
+			# Still in game field — head toward Surgery door first
+			var dir = (SURGERY_EXIT - global_position).normalized()
+			velocity = dir * nav_speed
+		else:
+			# Passed Surgery door — go straight left to living area
+			velocity = Vector2(-nav_speed, 0)
 		move_and_slide()
 		if global_position.x < 490.0:
 			_reached_living_area = true
