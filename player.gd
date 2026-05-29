@@ -1,6 +1,6 @@
 ﻿extends CharacterBody2D
 
-var SPEED = 300.0
+var SPEED = 150.0
 var held_ball = null
 var aim_direction = Vector2(0, -1)
 var charge = 0.0
