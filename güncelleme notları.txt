@@ -1652,3 +1652,45 @@ game_scene.gd — update_ui() ve _process() Güncellemeleri:
     -- UI Panelinde ki BallCounter tutarlı çalışıyor.
 ──────────────────────────────────────────────────────────────────────────────
 
+0.0.6.8 — VECTOR KARAKTER SPRİT SİSTEMİ VE GÖRÜNMEZLIK BUGÜ DÜZELTMESİ
+29.05.2026
+
+BUGÜNÜN ÖZETİ:
+Vector karakterinin Blender/Mixamo render'larından üretilen spritesheet sistemi
+oyuna entegre edildi. Birden fazla kritik bug tespit edilip düzeltildi.
+
+Vector Animasyon Sistemi:
+
+✅ AnimatedSprite2D + SpriteFrames sistemi kuruldu (16 animasyon, 3 yön)
+✅ Spritesheet formatı: 256×256px kare, MAX_COLS=64, GPU limiti 16384px
+✅ throw_ball için 2 satırlı spritesheet (85 kare × 256px = 21760px limiti aşıyor)
+✅ AtlasTexture ile her kare dinamik olarak yükleniyor (_setup_vector_sprite)
+✅ Animasyona göre ölçek normalizasyonu (_get_vector_scale):
+   — idle: 0.63 / run: 0.60 / throw_ball: 0.82 / melee_kick: 0.86
+✅ Yön bazlı animasyonlar: N, NE, NW (WASD kombinasyonu)
+✅ Top atma animasyonu zamanlaması: THROW_RELEASE_RATIO = 0.50
+✅ Melee sadece tıklama anında tetikleniyor (basılı tutma sorunu düzeltildi)
+
+Görünmezlik Bugü Düzeltmesi:
+
+✅ throw_ball animasyonu sonunda karakter görünmez kalıyordu
+   — Kök neden: spritesheet içinde boş/şeffaf kareler (frame 54–65 arası)
+   — Ek neden: animation_finished sinyalinden play() çağrısı iç-state çakışması
+✅ Düzeltme 1: process_priority = 1 eklendi
+   — Player._process artık AnimatedSprite2D._process'ten SONRA çalışıyor
+✅ Düzeltme 2: _process içinde is_playing() kontrolü + set_frame_and_progress(0,0)
+   — Animasyon durduğu frame'de anında idle/run'a geçiş, boşluk kalmıyor
+✅ Düzeltme 3: throw_ball spritesheet yeniden oluşturuldu
+   — Blender render'larından (0001–0085.png) doğrudan PowerShell ile yeniden üretildi
+   — Önceki scriptteki hata nedeniyle boş kalan kareler düzeldi
+
+Diğer Düzeltmeler:
+
+✅ bullet.gd — physics flush hatası düzeltildi
+   — disabled = true → set_deferred("disabled", true)
+✅ SPEED 300 → 150 — foot sliding (kayar yürüyüş) düzeltmesi
+   — run animasyonunun görsel adım hızıyla eşleştirildi
+✅ IsoEffect node eklendi (devre dışı) — izometrik görünüm deneyi, kaldırıldı
+
+──────────────────────────────────────────────────────────────────────────────
+
