@@ -50,6 +50,11 @@ var _vector_oneshot: bool = false
 var _vector_dead: bool = false
 var _lmb_was_pressed: bool = false  # melee sadece tıklama anında tetiklensin
 
+# Dash trail
+const DASH_TRAIL_COLOR    := Color(0.0, 0.82, 1.0, 0.9)  # neon cyan — buradan değiştirebilirsin
+const DASH_TRAIL_INTERVAL := 0.02                          # her 20ms'de bir ghost
+var   _dash_trail_timer: float = 0.0
+
 # Karakter tipi
 var character_type = "vector"
 
@@ -211,7 +216,7 @@ func _process(_delta: float) -> void:
 		if _vector_oneshot:
 			_vector_oneshot = false
 		var moving = velocity != Vector2.ZERO
-		var anim = ("run" if moving else "idle") + "_" + _anim_dir
+		var anim = _resolve_anim(("run" if moving else "idle"), _anim_dir)
 		sprite.scale = _get_vector_scale(anim)
 		sprite.play(anim)
 		# Frame'i anında 0'a ayarla — play() iç gecikmesi olmadan
@@ -272,9 +277,16 @@ func _physics_process(delta: float) -> void:
 	if is_dashing:
 		dash_timer -= delta
 		global_position += dash_velocity * delta
+		# Dash trail — ghost spawn
+		if character_type == "vector":
+			_dash_trail_timer -= delta
+			if _dash_trail_timer <= 0.0:
+				_dash_trail_timer = DASH_TRAIL_INTERVAL
+				_spawn_dash_ghost()
 		if dash_timer <= 0:
 			is_dashing = false
 			dash_velocity = Vector2.ZERO
+			_dash_trail_timer = 0.0
 			$CollisionShape2D.disabled = false
 
 	# Wall boundaries
@@ -339,7 +351,7 @@ func _vector_process(delta: float) -> void:
 				ball.moving = false
 				ball.get_node("CollisionShape2D").disabled = true
 				ball.visible = false
-				_play_vector_oneshot("throw_ball_" + _anim_dir)  # animasyon hemen başlar
+				_play_vector_oneshot(_resolve_anim("throw_ball", _anim_dir))  # animasyon hemen başlar
 				break
 
 	# Topu animasyon boyunca player'a sabit tut (görünmez)
@@ -353,7 +365,7 @@ func _vector_process(delta: float) -> void:
 
 	if lmb_just and bat_cooldown <= 0:
 		bat_cooldown = 1.0
-		_play_vector_oneshot("melee_kick_" + _anim_dir)
+		_play_vector_oneshot(_resolve_anim("melee_kick", _anim_dir))
 		var subjects = get_tree().get_nodes_in_group("subjects")
 		for subject in subjects:
 			var dist = global_position.distance_to(subject.global_position)
@@ -379,22 +391,32 @@ func _setup_vector_sprite() -> void:
 
 	# [sheet_dosyası, fps, loop, frame_sayısı, animasyon_adı]
 	var defs = [
-		["idle_n",         30.0,  true,  49, "idle_N"],
-		["idle_ne",        30.0,  true,  49, "idle_NE"],
-		["idle_nw",        30.0,  true,  49, "idle_NW"],
-		["run_n",          30.0,  true,  22, "run_N"],
-		["run_ne",         30.0,  true,  22, "run_NE"],
-		["run_nw",         30.0,  true,  22, "run_NW"],
-		["take_damage_n",  30.0,  false, 31, "take_damage_N"],
-		["take_damage_ne", 30.0,  false, 31, "take_damage_NE"],
-		["take_damage_nw", 30.0,  false, 31, "take_damage_NW"],
-		["throw_ball_n",   85.0,  false, 85, "throw_ball_N"],
-		["throw_ball_ne",  85.0,  false, 85, "throw_ball_NE"],
-		["throw_ball_nw",  85.0,  false, 85, "throw_ball_NW"],
-		["melee_kick_n",   98.0,  false, 49, "melee_kick_N"],
-		["melee_kick_ne",  98.0,  false, 49, "melee_kick_NE"],
-		["melee_kick_nw",  98.0,  false, 49, "melee_kick_NW"],
-		["death",          30.0,  false, 57, "death"],
+		["idle_n",          30.0,  true,  49, "idle_N"],
+		["idle_ne",         30.0,  true,  49, "idle_NE"],
+		["idle_nw",         30.0,  true,  49, "idle_NW"],
+		["run_n",           30.0,  true,  21, "run_N"],
+		["run_ne",          30.0,  true,  21, "run_NE"],
+		["run_e",           30.0,  true,  21, "run_E"],
+		["run_se",          30.0,  true,  21, "run_SE"],
+		["run_s",           30.0,  true,  21, "run_S"],
+		["run_sw",          30.0,  true,  21, "run_SW"],
+		["run_w",           30.0,  true,  21, "run_W"],
+		["run_nw",          30.0,  true,  21, "run_NW"],
+		["take_damage_n",   30.0,  false, 31, "take_damage_N"],
+		["take_damage_ne",  30.0,  false, 31, "take_damage_NE"],
+		["take_damage_nw",  30.0,  false, 31, "take_damage_NW"],
+		["throw_ball_n",    85.0,  false, 85, "throw_ball_N"],
+		["throw_ball_ne",   85.0,  false, 85, "throw_ball_NE"],
+		["throw_ball_nw",   85.0,  false, 85, "throw_ball_NW"],
+		["melee_kick_n",    98.0,  false, 49, "melee_kick_N"],
+		["melee_kick_ne",   98.0,  false, 49, "melee_kick_NE"],
+		["melee_kick_nw",   98.0,  false, 49, "melee_kick_NW"],
+		["melee_kick_e",    98.0,  false, 45, "melee_kick_E"],
+		["melee_kick_se",   98.0,  false, 45, "melee_kick_SE"],
+		["melee_kick_s",    98.0,  false, 45, "melee_kick_S"],
+		["melee_kick_sw",   98.0,  false, 45, "melee_kick_SW"],
+		["melee_kick_w",    98.0,  false, 45, "melee_kick_W"],
+		["death",           30.0,  false, 57, "death"],
 	]
 
 	for d in defs:
@@ -425,31 +447,45 @@ func _update_anim_dir() -> void:
 	var d = Input.is_key_pressed(KEY_D)
 	if   w and d: _anim_dir = "NE"
 	elif w and a: _anim_dir = "NW"
+	elif s and d: _anim_dir = "SE"
+	elif s and a: _anim_dir = "SW"
 	elif w:       _anim_dir = "N"
-	elif s and a: _anim_dir = "NE"  # geri-sol → NE
-	elif s and d: _anim_dir = "NW"  # geri-sağ → NW
-	elif s:       _anim_dir = "N"   # geri-düz → N
-	elif d:       _anim_dir = "NE"
-	elif a:       _anim_dir = "NW"
+	elif s:       _anim_dir = "S"
+	elif d:       _anim_dir = "E"
+	elif a:       _anim_dir = "W"
 	# tuş basılı değilse mevcut yön korunur
 
 
 func _get_vector_scale(anim_name: String) -> Vector2:
+	# Her animasyonun Blender render boyutu farklı — run (120px) referans alındı
 	var s: float
-	if   "throw_ball"  in anim_name: s = 0.82
-	elif "melee_kick"  in anim_name: s = 0.86
-	elif "death"       in anim_name: s = 0.88
-	elif "take_damage" in anim_name: s = 0.61
-	elif "idle"        in anim_name: s = 0.63
-	else:                             s = 0.60  # run
+	if   "melee_kick"  in anim_name: s = 0.46  # 158px → 0.4557
+	elif "throw_ball"  in anim_name: s = 0.51  # 140px → 0.5143
+	elif "take_damage" in anim_name: s = 0.53  # 135px → 0.5333
+	elif "death"       in anim_name: s = 0.55  # 130px → 0.5539
+	elif "idle"        in anim_name: s = 0.54  # 133px → 0.5414
+	else:                             s = 0.60  # run 120px — referans
 	return Vector2(s, s)
+
+
+# Animasyon adı + yön → mevcut spritesheet yoksa en yakın yöne düşer
+# idle/run: 8 yön tam mevcut
+# throw_ball / take_damage: sadece N, NE, NW → E/SE/S/SW/W → N'e eşlenir
+func _resolve_anim(base: String, dir: String) -> String:
+	var full = base + "_" + dir
+	if $VectorSprite.sprite_frames.has_animation(full):
+		return full
+	# Fallback tablosu: mevcut olmayan yönü en yakın mevcut yöne eşle
+	var fallback := {"E": "NE", "SE": "NE", "S": "N", "SW": "NW", "W": "NW"}
+	var fb_dir: String = fallback.get(dir, "N")
+	return base + "_" + fb_dir
 
 
 func _update_vector_animation() -> void:
 	if _vector_dead or _vector_oneshot:
 		return
 	var moving = velocity != Vector2.ZERO
-	var anim = ("run" if moving else "idle") + "_" + _anim_dir
+	var anim = _resolve_anim(("run" if moving else "idle"), _anim_dir)
 	if $VectorSprite.animation != anim:
 		$VectorSprite.scale = _get_vector_scale(anim)
 		$VectorSprite.play(anim)
@@ -498,6 +534,27 @@ func _release_throw_ball() -> void:
 	get_tree().create_timer(1.0).timeout.connect(
 		func(): recently_launched.erase(ball), CONNECT_ONE_SHOT
 	)
+
+
+func _spawn_dash_ghost() -> void:
+	var sprite: AnimatedSprite2D = $VectorSprite
+	if not sprite.sprite_frames or not sprite.sprite_frames.has_animation(sprite.animation):
+		return
+	var tex: Texture2D = sprite.sprite_frames.get_frame_texture(sprite.animation, sprite.frame)
+	if not tex:
+		return
+	var ghost := Sprite2D.new()
+	ghost.texture        = tex
+	ghost.global_position = sprite.global_position
+	ghost.scale          = sprite.global_scale
+	ghost.z_index        = 1          # karakterin (z=2) arkasında
+	ghost.z_as_relative  = false
+	ghost.modulate       = DASH_TRAIL_COLOR
+	get_parent().add_child(ghost)
+	# Kısa sürede solar ve yok olur
+	var tw: Tween = ghost.create_tween()
+	tw.tween_property(ghost, "modulate:a", 0.0, 0.35).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.tween_callback(ghost.queue_free)
 
 
 func play_death() -> void:
@@ -599,7 +656,7 @@ func take_damage(amount) -> void:
 		return
 	invincible = true
 	if character_type == "vector" and not _vector_dead:
-		_play_vector_oneshot("take_damage_" + _anim_dir)
+		_play_vector_oneshot(_resolve_anim("take_damage", _anim_dir))
 	var game = get_parent()
 	if game.has_method("player_damaged"):
 		game.player_damaged(amount)
@@ -607,6 +664,15 @@ func take_damage(amount) -> void:
 	invincible = false
 
 func _draw() -> void:
+	# Karakter gölgesi — tüm karakterler için ayakların altında oval
+	var shadow_pts := PackedVector2Array()
+	var s_rx: float = 18.0; var s_ry: float = 7.0
+	var s_cy: float = 20.0  # ayak seviyesi
+	for i in range(32):
+		var a: float = (float(i) / 32.0) * TAU
+		shadow_pts.append(Vector2(cos(a) * s_rx, s_cy + sin(a) * s_ry))
+	draw_colored_polygon(shadow_pts, Color(0.0, 0.0, 0.0, 0.38))
+
 	if character_type != "vector":
 		if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) or catch_mode:
 			var dash_length = 10
