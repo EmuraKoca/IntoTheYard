@@ -1694,3 +1694,35 @@ Diğer Düzeltmeler:
 
 ──────────────────────────────────────────────────────────────────────────────
 
+0.0.6.9 — 8 YÖN ANİMASYON, GÖLGE VE DASH TRAIL
+29.05.2026
+
+BUGÜNÜN ÖZETİ:
+
+8 Yönlü Animasyon Sistemi:
+
+✅ Run ve Melee Kick için 8 yön (N/NE/E/SE/S/SW/W/NW) spritesheeti oluşturuldu
+✅ WASD → 8 yönlü animasyon haritası (S artık gerçekten güneye bakıyor)
+✅ _resolve_anim() ile eksik yönlere otomatik fallback (throw/take_damage → N/NE/NW)
+✅ Piksel ölçümüyle animasyon boyutu normalize edildi (run 120px referans)
+   — idle: 0.54 / melee_kick: 0.46 / throw_ball: 0.51 / take_damage: 0.53 / death: 0.55
+
+Görsel Efektler:
+
+✅ Karakter gölgesi — _draw() içinde oval, yarı şeffaf (şeffaf arka plan, tüm karakterler)
+✅ Dash trail — neon cyan (0.0, 0.82, 1.0) afterimage ghost sistemi
+   — Her 20ms'de bir ghost spawn, 0.35s EASE_IN fade
+   — Ghost z_index=1 (karakterin arkasında)
+
+Denemeler (geri alındı):
+
+⬜ Kamera takibi — Camera2D player'a eklendi, top-down açıda iyi görünmedi, geri alındı
+   (izometrik açıyla birlikte tekrar denenecek)
+⬜ 6 frame'e indirme — 12fps ile çirkin göründü, orijinal frame sayılarına geri dönüldü
+
+Diğer:
+
+✅ .claude/settings.json — Always Allow eklendi (izin sorulmuyor artık)
+
+──────────────────────────────────────────────────────────────────────────────
+
