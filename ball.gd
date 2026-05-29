@@ -130,11 +130,11 @@ func _physics_process(delta: float) -> void:
 		$CollisionShape2D.disabled = true
 		return
 	# Wall boundaries
-	if global_position.x <= 870:
-		global_position.x = 870
+	if global_position.x <= 910:
+		global_position.x = 910
 		move_direction.x = abs(move_direction.x)
-	if global_position.x >= 1620:
-		global_position.x = 1620
+	if global_position.x >= 1580:
+		global_position.x = 1580
 		move_direction.x = -abs(move_direction.x)
 	if global_position.y <= 260:
 		global_position.y = 260

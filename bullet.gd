@@ -15,8 +15,8 @@ func _physics_process(delta: float) -> void:
 	global_position += direction * speed * delta
 
 	# Game area boundaries
-	if global_position.x <= 870:  queue_free()
-	if global_position.x >= 1630: queue_free()
+	if global_position.x <= 910:  queue_free()
+	if global_position.x >= 1580: queue_free()
 	if global_position.y <= 0:    queue_free()
 	if global_position.y >= 1080: queue_free()
 

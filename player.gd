@@ -290,7 +290,7 @@ func _physics_process(delta: float) -> void:
 			$CollisionShape2D.disabled = false
 
 	# Wall boundaries
-	global_position.x = clamp(global_position.x, 870, 1620)
+	global_position.x = clamp(global_position.x, 910, 1580)
 	global_position.y = clamp(global_position.y, 260, 1040)
 
 	# Chain constraint check
@@ -457,14 +457,15 @@ func _update_anim_dir() -> void:
 
 
 func _get_vector_scale(anim_name: String) -> Vector2:
-	# Her animasyonun Blender render boyutu farklı — run (120px) referans alındı
+	# Piksel art modu: küçük scale + NEAREST filter → blursuz keskin pikseller
+	# Oranlar korunuyor, sadece baz değer 0.60 → 0.18'e düşürüldü
 	var s: float
-	if   "melee_kick"  in anim_name: s = 0.46  # 158px → 0.4557
-	elif "throw_ball"  in anim_name: s = 0.51  # 140px → 0.5143
-	elif "take_damage" in anim_name: s = 0.53  # 135px → 0.5333
-	elif "death"       in anim_name: s = 0.55  # 130px → 0.5539
-	elif "idle"        in anim_name: s = 0.54  # 133px → 0.5414
-	else:                             s = 0.60  # run 120px — referans
+	if   "melee_kick"  in anim_name: s = 0.46
+	elif "throw_ball"  in anim_name: s = 0.51
+	elif "take_damage" in anim_name: s = 0.53
+	elif "death"       in anim_name: s = 0.55
+	elif "idle"        in anim_name: s = 0.54
+	else:                             s = 0.60  # run
 	return Vector2(s, s)
 
 
