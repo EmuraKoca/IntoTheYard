@@ -27,6 +27,6 @@ func _on_body_entered(body: Node2D) -> void:
 	elif body.is_in_group("subjects") and not body.name.begins_with("Cyber404"):
 		body.set_physics_process(false)
 		if body.has_node("CollisionShape2D"):
-			body.get_node("CollisionShape2D").disabled = true
+			body.get_node("CollisionShape2D").set_deferred("disabled", true)
 		body.queue_free()
 		queue_free()

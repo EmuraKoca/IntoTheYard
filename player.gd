@@ -44,6 +44,12 @@ var cyclone_ground_ball = null
 var auto_catch_timer = 0.0
 var auto_catch_ball = null
 
+# Vector animation
+var _anim_dir: String = "N"
+var _vector_oneshot: bool = false
+var _vector_dead: bool = false
+var _lmb_was_pressed: bool = false  # melee sadece tıklama anında tetiklensin
+
 # Karakter tipi
 var character_type = "vector"
 
@@ -178,16 +184,38 @@ func _leila_throw() -> void:
 	leila_hold_timer = 0.0
 
 func _ready() -> void:
+	# _process'i AnimatedSprite2D'den (priority 0) SONRA çalıştır
+	# Böylece aynı frame'de animasyon durduğu an is_playing() false görürüz
+	process_priority = 1
 	z_index = 2
 	character_type = GameData.selected_character
-	# Each character shows its own ColorRect; others remain hidden in tscn
+	# Each character shows its own visual; others remain hidden in tscn
 	match character_type:
 		"vector":
-			$VectorRect.visible = true
+			$VectorSprite.visible = true
+			_setup_vector_sprite()
 		"leila":
 			$LeilaRect.visible = true
 		"cyclone":
 			$CycloneRect.visible = true
+
+func _process(_delta: float) -> void:
+	if character_type != "vector" or _vector_dead:
+		return
+	var sprite: AnimatedSprite2D = $VectorSprite
+	# Güvenlik: sprite hiçbir zaman görünmez kalmasın
+	if not sprite.visible:
+		sprite.visible = true
+	# AnimatedSprite2D (priority 0) bu frame'de durmuşsa, biz (priority 1) hemen yakalayız
+	if not sprite.is_playing():
+		if _vector_oneshot:
+			_vector_oneshot = false
+		var moving = velocity != Vector2.ZERO
+		var anim = ("run" if moving else "idle") + "_" + _anim_dir
+		sprite.scale = _get_vector_scale(anim)
+		sprite.play(anim)
+		# Frame'i anında 0'a ayarla — play() iç gecikmesi olmadan
+		sprite.set_frame_and_progress(0, 0.0)
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.keycode == KEY_E and event.pressed:
@@ -264,6 +292,10 @@ func _physics_process(delta: float) -> void:
 	if is_charging:
 		charge = min(charge + delta * 1.5, max_charge)
 
+	# Update animation direction for Vector (before _vector_process so it's current)
+	if character_type == "vector":
+		_update_anim_dir()
+
 	# Hit system based on character type
 	if character_type == "vector":
 		_vector_process(delta)
@@ -271,6 +303,10 @@ func _physics_process(delta: float) -> void:
 		_leila_process(delta)
 	elif character_type == "cyclone":
 		_cyclone_process(delta)
+
+	# Update Vector idle/run animation state
+	if character_type == "vector":
+		_update_vector_animation()
 
 	for idx in range(held_balls.size()):
 		held_balls[idx].global_position = global_position + Vector2(-20 + idx * 40, -40)
@@ -302,37 +338,175 @@ func _vector_process(delta: float) -> void:
 				auto_catch_ball = ball
 				ball.moving = false
 				ball.get_node("CollisionShape2D").disabled = true
-				auto_catch_timer = 0.5
+				ball.visible = false
+				_play_vector_oneshot("throw_ball_" + _anim_dir)  # animasyon hemen başlar
 				break
 
+	# Topu animasyon boyunca player'a sabit tut (görünmez)
 	if auto_catch_ball != null:
 		auto_catch_ball.global_position = global_position + Vector2(0, -40)
-		auto_catch_timer -= delta
-		if auto_catch_timer <= 0:
-			var ball = auto_catch_ball
-			auto_catch_ball = null
-			ball.catch_cooldown = 1.0
-			ball.launch_with_speed(aim_direction, 750.0)
-			ball.hit_type = "perfect"
-			recently_launched.append(ball)
-			await get_tree().create_timer(1.0).timeout
-			recently_launched.erase(ball)
 
-	# Melee - punch with left click
-	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
-		if bat_cooldown <= 0:
-			var subjects = get_tree().get_nodes_in_group("subjects")
-			for subject in subjects:
-				var dist = global_position.distance_to(subject.global_position)
-				if dist < bat_range:
-					subject.take_damage(bat_damage)
-					var push_dir = (subject.global_position - global_position).normalized()
-					subject.global_position += push_dir * 40
-					bat_cooldown = 1.0
-					break
+	# Melee - punch with left click (sadece tıklama ANında tetikle, basılı tutunca değil)
+	var lmb = Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
+	var lmb_just = lmb and not _lmb_was_pressed
+	_lmb_was_pressed = lmb
+
+	if lmb_just and bat_cooldown <= 0:
+		bat_cooldown = 1.0
+		_play_vector_oneshot("melee_kick_" + _anim_dir)
+		var subjects = get_tree().get_nodes_in_group("subjects")
+		for subject in subjects:
+			var dist = global_position.distance_to(subject.global_position)
+			if dist < bat_range:
+				subject.take_damage(bat_damage)
+				var push_dir = (subject.global_position - global_position).normalized()
+				subject.global_position += push_dir * 40
+				break
 
 	if bat_cooldown > 0:
 		bat_cooldown -= get_process_delta_time()
+
+func _setup_vector_sprite() -> void:
+	var sprite: AnimatedSprite2D = $VectorSprite
+	var frames := SpriteFrames.new()
+	if frames.has_animation("default"):
+		frames.remove_animation("default")
+
+	var FW := 256; var FH := 256
+	var sbase := "res://assets/characters/Vector/sheets/"
+
+	var MAX_COLS := 64  # GPU limiti: 64 × 256 = 16384px
+
+	# [sheet_dosyası, fps, loop, frame_sayısı, animasyon_adı]
+	var defs = [
+		["idle_n",         30.0,  true,  49, "idle_N"],
+		["idle_ne",        30.0,  true,  49, "idle_NE"],
+		["idle_nw",        30.0,  true,  49, "idle_NW"],
+		["run_n",          30.0,  true,  22, "run_N"],
+		["run_ne",         30.0,  true,  22, "run_NE"],
+		["run_nw",         30.0,  true,  22, "run_NW"],
+		["take_damage_n",  30.0,  false, 31, "take_damage_N"],
+		["take_damage_ne", 30.0,  false, 31, "take_damage_NE"],
+		["take_damage_nw", 30.0,  false, 31, "take_damage_NW"],
+		["throw_ball_n",   85.0,  false, 85, "throw_ball_N"],
+		["throw_ball_ne",  85.0,  false, 85, "throw_ball_NE"],
+		["throw_ball_nw",  85.0,  false, 85, "throw_ball_NW"],
+		["melee_kick_n",   98.0,  false, 49, "melee_kick_N"],
+		["melee_kick_ne",  98.0,  false, 49, "melee_kick_NE"],
+		["melee_kick_nw",  98.0,  false, 49, "melee_kick_NW"],
+		["death",          30.0,  false, 57, "death"],
+	]
+
+	for d in defs:
+		var tex: Texture2D    = load(sbase + d[0] + ".png")
+		var anim_name: String = d[4]
+		frames.add_animation(anim_name)
+		frames.set_animation_speed(anim_name, d[1])
+		frames.set_animation_loop(anim_name, d[2])
+		for i in range(d[3]):
+			var col          := i % MAX_COLS
+			var row          := i / MAX_COLS
+			var atlas        := AtlasTexture.new()
+			atlas.atlas       = tex
+			atlas.region      = Rect2(col * FW, row * FH, FW, FH)
+			frames.add_frame(anim_name, atlas)
+
+	sprite.sprite_frames  = frames
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	sprite.scale          = Vector2(0.6, 0.6)
+	sprite.animation_finished.connect(_on_vector_anim_finished)
+	sprite.play("idle_N")
+
+
+func _update_anim_dir() -> void:
+	var w = Input.is_key_pressed(KEY_W)
+	var s = Input.is_key_pressed(KEY_S)
+	var a = Input.is_key_pressed(KEY_A)
+	var d = Input.is_key_pressed(KEY_D)
+	if   w and d: _anim_dir = "NE"
+	elif w and a: _anim_dir = "NW"
+	elif w:       _anim_dir = "N"
+	elif s and a: _anim_dir = "NE"  # geri-sol → NE
+	elif s and d: _anim_dir = "NW"  # geri-sağ → NW
+	elif s:       _anim_dir = "N"   # geri-düz → N
+	elif d:       _anim_dir = "NE"
+	elif a:       _anim_dir = "NW"
+	# tuş basılı değilse mevcut yön korunur
+
+
+func _get_vector_scale(anim_name: String) -> Vector2:
+	var s: float
+	if   "throw_ball"  in anim_name: s = 0.82
+	elif "melee_kick"  in anim_name: s = 0.86
+	elif "death"       in anim_name: s = 0.88
+	elif "take_damage" in anim_name: s = 0.61
+	elif "idle"        in anim_name: s = 0.63
+	else:                             s = 0.60  # run
+	return Vector2(s, s)
+
+
+func _update_vector_animation() -> void:
+	if _vector_dead or _vector_oneshot:
+		return
+	var moving = velocity != Vector2.ZERO
+	var anim = ("run" if moving else "idle") + "_" + _anim_dir
+	if $VectorSprite.animation != anim:
+		$VectorSprite.scale = _get_vector_scale(anim)
+		$VectorSprite.play(anim)
+
+
+## Topun animasyonun kaçıncı yüzdesinde elden çıkacağı (0.0 - 1.0)
+const THROW_RELEASE_RATIO: float = 0.50
+
+func _play_vector_oneshot(anim_name: String) -> void:
+	if _vector_dead:
+		return
+	_vector_oneshot = true
+	$VectorSprite.scale = _get_vector_scale(anim_name)
+	$VectorSprite.play(anim_name)
+
+	# Throw animasyonunda topu %80'de bırak, kalan %20 toparlama fazı
+	if "throw_ball" in anim_name and auto_catch_ball != null:
+		var sf: SpriteFrames = $VectorSprite.sprite_frames
+		var fps: float       = sf.get_animation_speed(anim_name)
+		var frames: int      = sf.get_frame_count(anim_name)
+		var release_t := (frames / fps) * THROW_RELEASE_RATIO
+		get_tree().create_timer(release_t).timeout.connect(
+			func():
+				if auto_catch_ball != null:
+					_release_throw_ball(),
+			CONNECT_ONE_SHOT
+		)
+
+
+func _on_vector_anim_finished() -> void:
+	# Yalnızca bayrağı temizle.
+	# Geçişi (idle/run oynatma) _process (priority 1) üstleniyor —
+	# AnimatedSprite2D'nin kendi signal'inden play() çağırmak iç-state
+	# çakışmasına yol açıyordu ve bir frame boşluk bırakıyordu.
+	_vector_oneshot = false
+
+
+func _release_throw_ball() -> void:
+	var ball = auto_catch_ball
+	auto_catch_ball = null
+	ball.visible = true
+	ball.catch_cooldown = 1.0
+	ball.launch_with_speed(aim_direction, 750.0)
+	ball.hit_type = "perfect"
+	recently_launched.append(ball)
+	get_tree().create_timer(1.0).timeout.connect(
+		func(): recently_launched.erase(ball), CONNECT_ONE_SHOT
+	)
+
+
+func play_death() -> void:
+	if character_type != "vector":
+		return
+	_vector_dead = true
+	_vector_oneshot = true
+	$VectorSprite.play("death")
+
 
 func _no_ball_nearby() -> bool:
 	var balls = get_tree().get_nodes_in_group("balls")
@@ -424,6 +598,8 @@ func take_damage(amount) -> void:
 	if invincible:
 		return
 	invincible = true
+	if character_type == "vector" and not _vector_dead:
+		_play_vector_oneshot("take_damage_" + _anim_dir)
 	var game = get_parent()
 	if game.has_method("player_damaged"):
 		game.player_damaged(amount)

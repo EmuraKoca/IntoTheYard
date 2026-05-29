@@ -15,8 +15,9 @@
 [ext_resource type="Texture2D" uid="uid://ddygumfivo4ex" path="res://assets/devices/BallLauncher.png" id="13_daj04"]
 [ext_resource type="Texture2D" uid="uid://cjclcd8f7g7gw" path="res://assets/devices/ITYProccessor.png" id="14_mlphb"]
 [ext_resource type="Texture2D" uid="uid://cti5awflt8gw0" path="res://assets/backgrounds/8.png" id="16_3d2pr"]
-[ext_resource type="FontFile" path="res://assets/orbitronfont/Orbitron-Bold.ttf" id="font_bold"]
-[ext_resource type="FontFile" path="res://assets/orbitronfont/Orbitron-Regular.ttf" id="font_regular"]
+[ext_resource type="FontFile" uid="uid://bdbf1qeb2yg1s" path="res://assets/orbitronfont/Orbitron-Bold.ttf" id="font_bold"]
+[ext_resource type="FontFile" uid="uid://xo24eqnt6ct1" path="res://assets/orbitronfont/Orbitron-Regular.ttf" id="font_regular"]
+[ext_resource type="Script" uid="uid://bid3xvdmvsmpj" path="res://iso_effect.gd" id="iso_script"]
 
 [sub_resource type="SegmentShape2D" id="SegmentShape2D_mj2jn"]
 a = Vector2(850, 1080)
@@ -32,6 +33,44 @@ b = Vector2(1630, 1080)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_po0ka"]
 size = Vector2(780, 20)
+
+[sub_resource type="StyleBoxFlat" id="UI_fuse_bg"]
+bg_color = Color(0.08, 0.05, 0.01, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.8, 0.5, 0, 0.5)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="UI_fuse_fill"]
+bg_color = Color(1, 0.65, 0, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="UI_int_bg"]
+bg_color = Color(0.03, 0.08, 0.08, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0, 0.6, 0.65, 0.5)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="UI_int_fill"]
+bg_color = Color(0, 0.85, 0.9, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
 
 [sub_resource type="SegmentShape2D" id="SegmentShape2D_mixcd"]
 a = Vector2(850, 255)
@@ -96,45 +135,6 @@ glow_bloom = 0.3
 glow_blend_mode = 0
 glow_hdr_threshold = 0.7
 
-; ── UI PANEL PROGRESS BAR STYLES ───────────────────────────────────────────
-[sub_resource type="StyleBoxFlat" id="UI_int_bg"]
-bg_color = Color(0.03, 0.08, 0.08, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0, 0.6, 0.65, 0.5)
-corner_radius_top_left = 2
-corner_radius_top_right = 2
-corner_radius_bottom_right = 2
-corner_radius_bottom_left = 2
-
-[sub_resource type="StyleBoxFlat" id="UI_int_fill"]
-bg_color = Color(0, 0.85, 0.9, 1)
-corner_radius_top_left = 2
-corner_radius_top_right = 2
-corner_radius_bottom_right = 2
-corner_radius_bottom_left = 2
-
-[sub_resource type="StyleBoxFlat" id="UI_fuse_bg"]
-bg_color = Color(0.08, 0.05, 0.01, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.8, 0.5, 0, 0.5)
-corner_radius_top_left = 2
-corner_radius_top_right = 2
-corner_radius_bottom_right = 2
-corner_radius_bottom_left = 2
-
-[sub_resource type="StyleBoxFlat" id="UI_fuse_fill"]
-bg_color = Color(1.0, 0.65, 0, 1)
-corner_radius_top_left = 2
-corner_radius_top_right = 2
-corner_radius_bottom_right = 2
-corner_radius_bottom_left = 2
-
 [node name="GameScene" type="Node2D" unique_id=1986935700 groups=["game"]]
 script = ExtResource("1_mj2jn")
 
@@ -148,6 +148,10 @@ color = Color(0.16862746, 0.16862746, 0.16862746, 1)
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1131633756]
 position = Vector2(960, 540)
+
+[node name="IsoEffect" type="Node" parent="." unique_id=999888777]
+script = ExtResource("iso_script")
+enabled = false
 
 [node name="Player" parent="." unique_id=834626995 instance=ExtResource("1_mlf6e")]
 position = Vector2(1240, 1000)
@@ -188,7 +192,6 @@ offset_right = 1920.0
 offset_bottom = 1080.0
 color = Color(0.018, 0.018, 0.052, 0.97)
 
-; ── LEFT NEON BORDER STRIP ────────────────────────────────────────────────
 [node name="UIBorderLeft" type="ColorRect" parent="UI" unique_id=701010701]
 offset_left = 1630.0
 offset_right = 1633.0
@@ -196,7 +199,6 @@ offset_bottom = 1080.0
 mouse_filter = 2
 color = Color(0, 0.9, 1, 0.55)
 
-; ── SEPARATOR LINES ──────────────────────────────────────────────────────
 [node name="UISep1" type="ColorRect" parent="UI" unique_id=701010702]
 offset_left = 1640.0
 offset_top = 62.0
@@ -250,38 +252,38 @@ offset_left = 1640.0
 offset_top = 14.0
 offset_right = 1848.0
 offset_bottom = 56.0
+theme_override_colors/font_color = Color(0, 0.95, 1, 1)
 theme_override_fonts/font = ExtResource("font_bold")
 theme_override_font_sizes/font_size = 16
-theme_override_colors/font_color = Color(0, 0.95, 1, 1)
 
 [node name="LabelUpgrades" type="Label" parent="UI" unique_id=343827120]
 offset_left = 1640.0
 offset_top = 180.0
 offset_right = 1912.0
 offset_bottom = 338.0
-autowrap_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.8, 0.98, 0.88)
 theme_override_fonts/font = ExtResource("font_regular")
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.72, 0.8, 0.98, 0.88)
+autowrap_mode = 2
 
 [node name="LabelCatch" type="Label" parent="UI" unique_id=1681266815]
 offset_left = 1640.0
 offset_top = 352.0
 offset_right = 1912.0
 offset_bottom = 378.0
+theme_override_colors/font_color = Color(0, 0.9, 1, 0.9)
 theme_override_fonts/font = ExtResource("font_regular")
 theme_override_font_sizes/font_size = 13
-theme_override_colors/font_color = Color(0, 0.9, 1, 0.9)
 
 [node name="LabelCalamity" type="Label" parent="UI" unique_id=844923665]
 offset_left = 1640.0
 offset_top = 470.0
 offset_right = 1912.0
 offset_bottom = 700.0
-autowrap_mode = 2
+theme_override_colors/font_color = Color(0.88, 0.82, 1, 0.92)
 theme_override_fonts/font = ExtResource("font_regular")
 theme_override_font_sizes/font_size = 13
-theme_override_colors/font_color = Color(0.88, 0.82, 1.0, 0.92)
+autowrap_mode = 2
 
 [node name="CalamityCircle" type="Node2D" parent="UI" unique_id=94084691]
 script = ExtResource("5_kdryc")
@@ -291,9 +293,9 @@ offset_left = 1858.0
 offset_top = 14.0
 offset_right = 1912.0
 offset_bottom = 56.0
+theme_override_colors/font_color = Color(0, 0.95, 1, 0.85)
 theme_override_fonts/font = ExtResource("font_bold")
 theme_override_font_sizes/font_size = 18
-theme_override_colors/font_color = Color(0, 0.95, 1, 0.85)
 text = "⏸"
 
 [node name="LabelBalls" type="Label" parent="UI" unique_id=30518129]
@@ -301,27 +303,27 @@ offset_left = 1640.0
 offset_top = 110.0
 offset_right = 1912.0
 offset_bottom = 132.0
+theme_override_colors/font_color = Color(0, 0.9, 1, 0.9)
 theme_override_fonts/font = ExtResource("font_regular")
 theme_override_font_sizes/font_size = 13
-theme_override_colors/font_color = Color(0, 0.9, 1, 0.9)
 
 [node name="LabelTime" type="Label" parent="UI" unique_id=1910538735]
 offset_left = 1640.0
 offset_top = 140.0
 offset_right = 1912.0
 offset_bottom = 162.0
+theme_override_colors/font_color = Color(0.4, 1, 0.2, 0.9)
 theme_override_fonts/font = ExtResource("font_regular")
 theme_override_font_sizes/font_size = 13
-theme_override_colors/font_color = Color(0.4, 1, 0.2, 0.9)
 
 [node name="LabelFusionEnergy" type="Label" parent="UI" unique_id=1826011581]
 offset_left = 1640.0
 offset_top = 396.0
 offset_right = 1912.0
 offset_bottom = 420.0
+theme_override_colors/font_color = Color(1, 0.72, 0, 1)
 theme_override_fonts/font = ExtResource("font_bold")
 theme_override_font_sizes/font_size = 13
-theme_override_colors/font_color = Color(1, 0.72, 0, 1)
 text = "⚡  FUSION ENERGY"
 
 [node name="FusionEnergyBar" type="ProgressBar" parent="UI" unique_id=1788074043]
@@ -329,48 +331,45 @@ offset_left = 1640.0
 offset_top = 428.0
 offset_right = 1912.0
 offset_bottom = 454.0
-show_percentage = false
 theme_override_styles/background = SubResource("UI_fuse_bg")
 theme_override_styles/fill = SubResource("UI_fuse_fill")
+show_percentage = false
 
 [node name="IntegrityBar" type="ProgressBar" parent="UI" unique_id=1453217262]
 offset_left = 1640.0
 offset_top = 68.0
 offset_right = 1912.0
 offset_bottom = 96.0
-show_percentage = false
 theme_override_styles/background = SubResource("UI_int_bg")
 theme_override_styles/fill = SubResource("UI_int_fill")
+show_percentage = false
 
 [node name="LabelIntegrity" type="Label" parent="UI/IntegrityBar" unique_id=1573887301]
 layout_mode = 0
-offset_left = 0.0
-offset_top = 0.0
 offset_right = 272.0
 offset_bottom = 28.0
-horizontal_alignment = 1
-vertical_alignment = 1
+theme_override_colors/font_color = Color(1, 1, 1, 0.92)
 theme_override_fonts/font = ExtResource("font_bold")
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(1, 1, 1, 0.92)
+horizontal_alignment = 1
+vertical_alignment = 1
 
-; ── DATA COUNTER ─────────────────────────────────────────────────────────
 [node name="UISep7" type="ColorRect" parent="UI" unique_id=701010708]
 offset_left = 1640.0
 offset_top = 710.0
 offset_right = 1912.0
 offset_bottom = 712.0
 mouse_filter = 2
-color = Color(0.0, 1.0, 0.55, 0.5)
+color = Color(0, 1, 0.55, 0.5)
 
 [node name="LabelDataTitle" type="Label" parent="UI" unique_id=701010709]
 offset_left = 1640.0
 offset_top = 718.0
 offset_right = 1912.0
 offset_bottom = 732.0
+theme_override_colors/font_color = Color(0, 0.85, 0.5, 0.7)
 theme_override_fonts/font = ExtResource("font_bold")
 theme_override_font_sizes/font_size = 9
-theme_override_colors/font_color = Color(0.0, 0.85, 0.5, 0.7)
 text = "DATA HARVESTED"
 
 [node name="LabelData" type="Label" parent="UI" unique_id=701010710]
@@ -378,9 +377,9 @@ offset_left = 1640.0
 offset_top = 736.0
 offset_right = 1912.0
 offset_bottom = 780.0
+theme_override_colors/font_color = Color(0, 1, 0.55, 1)
 theme_override_fonts/font = ExtResource("font_bold")
 theme_override_font_sizes/font_size = 24
-theme_override_colors/font_color = Color(0.0, 1.0, 0.55, 1.0)
 text = "0 units"
 
 [node name="EnergyBarrier" type="StaticBody2D" parent="." unique_id=1861161730]
