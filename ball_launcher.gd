@@ -25,7 +25,7 @@ var _last_launch_type := ""
 var _shake_tween: Tween = null
 
 # Muzzle tip in sprite-local space (tune Y to match the visual barrel tip)
-const MUZZLE_SPRITE_LOCAL := Vector2(0.0, 30.0)
+const MUZZLE_SPRITE_LOCAL := Vector2(0.0, 60.0)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Returns the muzzle tip in global space, derived from the sprite's transform.

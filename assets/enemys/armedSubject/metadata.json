@@ -1,0 +1,185 @@
+{
+  "group_id": null,
+  "states": [
+    {
+      "character": {
+        "id": "7e174d23-5d54-49c4-b716-77d344356f2b",
+        "name": "High Top-down pixel art game",
+        "prompt": "High Top-down pixel art game sprite, cybernetic human enemy,  medium build, mechanical leg joint enhancers for jumping,  purple neural implants on knees wrists and shoulders,  glowing purple eyes, crouched ready-to-jump pose,  half-industrial suit, transparent background, 64x64px, game asset",
+        "size": {
+          "width": 128,
+          "height": 128
+        },
+        "template_id": "mannequin",
+        "directions": 8,
+        "view": "high top-down",
+        "created_at": "2026-05-30T15:53:12.730557+00:00"
+      },
+      "folder": "High_Top-down_pixel_art_game",
+      "frames": {
+        "rotations": {
+          "south": "High_Top-down_pixel_art_game/rotations/south.png",
+          "south-east": "High_Top-down_pixel_art_game/rotations/south-east.png",
+          "east": "High_Top-down_pixel_art_game/rotations/east.png",
+          "north-east": "High_Top-down_pixel_art_game/rotations/north-east.png",
+          "north": "High_Top-down_pixel_art_game/rotations/north.png",
+          "north-west": "High_Top-down_pixel_art_game/rotations/north-west.png",
+          "west": "High_Top-down_pixel_art_game/rotations/west.png",
+          "south-west": "High_Top-down_pixel_art_game/rotations/south-west.png"
+        },
+        "animations": {
+          "Flying_Kick-015a8803": {
+            "north": [
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/north/frame_000.png",
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/north/frame_001.png",
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/north/frame_002.png",
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/north/frame_003.png",
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/north/frame_004.png",
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/north/frame_005.png"
+            ],
+            "north-west": [
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/north-west/frame_000.png",
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/north-west/frame_001.png",
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/north-west/frame_002.png",
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/north-west/frame_003.png",
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/north-west/frame_004.png",
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/north-west/frame_005.png"
+            ],
+            "south-east": [
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/south-east/frame_000.png",
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/south-east/frame_001.png",
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/south-east/frame_002.png",
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/south-east/frame_003.png",
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/south-east/frame_004.png",
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/south-east/frame_005.png"
+            ],
+            "south": [
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/south/frame_000.png",
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/south/frame_001.png",
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/south/frame_002.png",
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/south/frame_003.png",
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/south/frame_004.png",
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/south/frame_005.png"
+            ],
+            "east": [
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/east/frame_000.png",
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/east/frame_001.png",
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/east/frame_002.png",
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/east/frame_003.png",
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/east/frame_004.png",
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/east/frame_005.png"
+            ],
+            "north-east": [
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/north-east/frame_000.png",
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/north-east/frame_001.png",
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/north-east/frame_002.png",
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/north-east/frame_003.png",
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/north-east/frame_004.png",
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/north-east/frame_005.png"
+            ],
+            "south-west": [
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/south-west/frame_000.png",
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/south-west/frame_001.png",
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/south-west/frame_002.png",
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/south-west/frame_003.png",
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/south-west/frame_004.png",
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/south-west/frame_005.png"
+            ],
+            "west": [
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/west/frame_000.png",
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/west/frame_001.png",
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/west/frame_002.png",
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/west/frame_003.png",
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/west/frame_004.png",
+              "High_Top-down_pixel_art_game/animations/Flying_Kick-015a8803/west/frame_005.png"
+            ]
+          },
+          "Running_Jump-eb770755": {
+            "south": [
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/south/frame_000.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/south/frame_001.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/south/frame_002.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/south/frame_003.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/south/frame_004.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/south/frame_005.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/south/frame_006.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/south/frame_007.png"
+            ],
+            "south-east": [
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/south-east/frame_000.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/south-east/frame_001.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/south-east/frame_002.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/south-east/frame_003.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/south-east/frame_004.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/south-east/frame_005.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/south-east/frame_006.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/south-east/frame_007.png"
+            ],
+            "north-east": [
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/north-east/frame_000.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/north-east/frame_001.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/north-east/frame_002.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/north-east/frame_003.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/north-east/frame_004.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/north-east/frame_005.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/north-east/frame_006.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/north-east/frame_007.png"
+            ],
+            "south-west": [
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/south-west/frame_000.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/south-west/frame_001.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/south-west/frame_002.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/south-west/frame_003.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/south-west/frame_004.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/south-west/frame_005.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/south-west/frame_006.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/south-west/frame_007.png"
+            ],
+            "north-west": [
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/north-west/frame_000.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/north-west/frame_001.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/north-west/frame_002.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/north-west/frame_003.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/north-west/frame_004.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/north-west/frame_005.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/north-west/frame_006.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/north-west/frame_007.png"
+            ],
+            "north": [
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/north/frame_000.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/north/frame_001.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/north/frame_002.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/north/frame_003.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/north/frame_004.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/north/frame_005.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/north/frame_006.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/north/frame_007.png"
+            ],
+            "west": [
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/west/frame_000.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/west/frame_001.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/west/frame_002.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/west/frame_003.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/west/frame_004.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/west/frame_005.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/west/frame_006.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/west/frame_007.png"
+            ],
+            "east": [
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/east/frame_000.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/east/frame_001.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/east/frame_002.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/east/frame_003.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/east/frame_004.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/east/frame_005.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/east/frame_006.png",
+              "High_Top-down_pixel_art_game/animations/Running_Jump-eb770755/east/frame_007.png"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "export_version": "3.0",
+  "export_date": "2026-05-30T16:46:21.406888"
+}

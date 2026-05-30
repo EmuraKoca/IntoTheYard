@@ -23,6 +23,10 @@ var _wander_timer: float = 0.0
 var _wander_velocity: Vector2 = Vector2.ZERO
 var _killed_by_ally: bool = false
 
+# Animasyon
+var _anim_dir: String = "S"
+var _uppercutting: bool = false
+
 func take_damage(amount, from_ally: bool = false) -> void:
 	health -= amount
 	if health <= 0:
@@ -92,6 +96,71 @@ func apply_slow(amount) -> void:
 
 func _ready() -> void:
 	z_index = 2
+	_setup_sprite()
+
+func _setup_sprite() -> void:
+	var sprite: AnimatedSprite2D = $HeavySprite
+	var frames := SpriteFrames.new()
+	if frames.has_animation("default"):
+		frames.remove_animation("default")
+
+	var base := "res://assets/enemys/heavySubject/sheets/"
+	var dirs  := ["N","NE","E","SE","S","SW","W","NW"]
+	var anims := [["walk", 6, true], ["uppercut", 7, false]]
+
+	for a in anims:
+		var anim_name: String = str(a[0])
+		var frame_count: int  = int(a[1])
+		var looping: bool     = bool(a[2])
+		for d in dirs:
+			var key: String = anim_name + "_" + str(d)
+			var tex: Texture2D = load(base + "heavy_" + anim_name + "_" + str(d) + ".png")
+			frames.add_animation(key)
+			frames.set_animation_speed(key, 8.0)
+			frames.set_animation_loop(key, looping)
+			for i in range(frame_count):
+				var atlas := AtlasTexture.new()
+				atlas.atlas  = tex
+				atlas.region = Rect2(i * 128, 0, 128, 128)
+				frames.add_frame(key, atlas)
+
+	sprite.sprite_frames  = frames
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	sprite.scale          = Vector2(0.85, 0.85)
+	sprite.animation_finished.connect(_on_uppercut_finished)
+	sprite.play("walk_S")
+
+func _on_uppercut_finished() -> void:
+	_uppercutting = false
+	_update_heavy_anim()
+
+func _update_heavy_anim() -> void:
+	if _uppercutting:
+		return
+	var sprite: AnimatedSprite2D = $HeavySprite
+	var anim := "walk_" + _anim_dir
+	if sprite.animation != anim:
+		sprite.play(anim)
+
+func _update_anim_dir_from_velocity() -> void:
+	if velocity == Vector2.ZERO:
+		return
+	var angle := velocity.angle()
+	var deg   := rad_to_deg(angle)
+	if   deg > -22.5  and deg <= 22.5:   _anim_dir = "E"
+	elif deg > 22.5   and deg <= 67.5:   _anim_dir = "SE"
+	elif deg > 67.5   and deg <= 112.5:  _anim_dir = "S"
+	elif deg > 112.5  and deg <= 157.5:  _anim_dir = "SW"
+	elif deg > 157.5  or  deg <= -157.5: _anim_dir = "W"
+	elif deg > -157.5 and deg <= -112.5: _anim_dir = "NW"
+	elif deg > -112.5 and deg <= -67.5:  _anim_dir = "N"
+	elif deg > -67.5  and deg <= -22.5:  _anim_dir = "NE"
+
+func play_uppercut() -> void:
+	if _uppercutting:
+		return
+	_uppercutting = true
+	$HeavySprite.play("uppercut_" + _anim_dir)
 
 func _physics_process(delta: float) -> void:
 	if is_in_group("allies"):
@@ -101,7 +170,6 @@ func _physics_process(delta: float) -> void:
 		return
 	var target
 	if is_glitched:
-		# Attack nearby subject
 		var subjects = get_tree().get_nodes_in_group("subjects")
 		var closest = null
 		var closest_dist = 999999.0
@@ -114,16 +182,20 @@ func _physics_process(delta: float) -> void:
 				closest = z
 		target = closest
 	else:
-		# Enemies focus only on the player — allies are never targeted
 		var player = get_tree().get_first_node_in_group("player")
 		target = player
 
-		if target == null:
-			return
+	if target == null:
+		return
+	var dist = global_position.distance_to(target.global_position)
+	if dist > 60:
 		var direction = (target.global_position - global_position).normalized()
 		velocity = direction * speed
 		move_and_slide()
-	var dist = global_position.distance_to(target.global_position)
+	else:
+		velocity = Vector2.ZERO
+	_update_anim_dir_from_velocity()
+	_update_heavy_anim()
 	if dist < 60:
 		attack_cooldown -= delta
 		if attack_cooldown <= 0:
@@ -132,6 +204,7 @@ func _physics_process(delta: float) -> void:
 			else:
 				target.take_damage(8)
 			attack_cooldown = attack_rate
+			play_uppercut()
 
 func die() -> void:
 	is_dead = true
@@ -248,6 +321,8 @@ func _ally_behavior() -> void:
 			# Passed Surgery door — go straight left to living area
 			velocity = Vector2(-nav_speed, 0)
 		move_and_slide()
+		_update_anim_dir_from_velocity()
+		_update_heavy_anim()
 		if global_position.x < 490.0:
 			_reached_living_area = true
 			_wander_timer = 0.0
@@ -270,12 +345,15 @@ func _ally_behavior() -> void:
 			var direction = (closest.global_position - global_position).normalized()
 			velocity = direction * speed
 			move_and_slide()
+			_update_anim_dir_from_velocity()
+			_update_heavy_anim()
 		else:
 			velocity = Vector2.ZERO
 			attack_cooldown -= delta
 			if attack_cooldown <= 0:
-				closest.take_damage(5, true)  # true = killed by ally, no ally chance
+				closest.take_damage(5, true)
 				attack_cooldown = attack_rate
+				play_uppercut()
 	else:
 		# No enemies — wander upward toward the upper street
 		_wander_timer -= delta
@@ -290,3 +368,5 @@ func _ally_behavior() -> void:
 			_wander_velocity.x = -abs(_wander_velocity.x)
 		velocity = _wander_velocity
 		move_and_slide()
+		_update_anim_dir_from_velocity()
+		_update_heavy_anim()

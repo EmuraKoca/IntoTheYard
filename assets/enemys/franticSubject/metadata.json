@@ -1,0 +1,223 @@
+{
+  "group_id": null,
+  "states": [
+    {
+      "character": {
+        "id": "9f7589b7-2b68-4c07-9894-92c6bdc95b0b",
+        "name": "Top-down pixel art game sprite,",
+        "prompt": "Top-down pixel art game sprite, fast aggressive human enemy,  thin frantic body, torn clothes,  bright red-orange glowing chip on neck,  bloodshot eyes, aggressive sprinting pose,  tense muscles, orange neon accent,  transparent background, 64x64px, game asset",
+        "size": {
+          "width": 124,
+          "height": 124
+        },
+        "template_id": "mannequin",
+        "directions": 8,
+        "view": "high top-down",
+        "created_at": "2026-05-30T14:26:09.767121+00:00"
+      },
+      "folder": "Top-down_pixel_art_game_sprite",
+      "frames": {
+        "rotations": {
+          "south": "Top-down_pixel_art_game_sprite/rotations/south.png",
+          "south-east": "Top-down_pixel_art_game_sprite/rotations/south-east.png",
+          "east": "Top-down_pixel_art_game_sprite/rotations/east.png",
+          "north-east": "Top-down_pixel_art_game_sprite/rotations/north-east.png",
+          "north": "Top-down_pixel_art_game_sprite/rotations/north.png",
+          "north-west": "Top-down_pixel_art_game_sprite/rotations/north-west.png",
+          "west": "Top-down_pixel_art_game_sprite/rotations/west.png",
+          "south-west": "Top-down_pixel_art_game_sprite/rotations/south-west.png"
+        },
+        "animations": {
+          "Running-13d3d397": {
+            "south-east": [
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/south-east/frame_000.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/south-east/frame_001.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/south-east/frame_002.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/south-east/frame_003.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/south-east/frame_004.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/south-east/frame_005.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/south-east/frame_006.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/south-east/frame_007.png"
+            ],
+            "east": [
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/east/frame_000.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/east/frame_001.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/east/frame_002.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/east/frame_003.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/east/frame_004.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/east/frame_005.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/east/frame_006.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/east/frame_007.png"
+            ],
+            "south-west": [
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/south-west/frame_000.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/south-west/frame_001.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/south-west/frame_002.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/south-west/frame_003.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/south-west/frame_004.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/south-west/frame_005.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/south-west/frame_006.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/south-west/frame_007.png"
+            ],
+            "west-eaaf25e7": [
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/west-eaaf25e7/frame_000.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/west-eaaf25e7/frame_001.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/west-eaaf25e7/frame_002.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/west-eaaf25e7/frame_003.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/west-eaaf25e7/frame_004.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/west-eaaf25e7/frame_005.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/west-eaaf25e7/frame_006.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/west-eaaf25e7/frame_007.png"
+            ],
+            "south": [
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/south/frame_000.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/south/frame_001.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/south/frame_002.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/south/frame_003.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/south/frame_004.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/south/frame_005.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/south/frame_006.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/south/frame_007.png"
+            ],
+            "north-west-a24d124b": [
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/north-west-a24d124b/frame_000.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/north-west-a24d124b/frame_001.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/north-west-a24d124b/frame_002.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/north-west-a24d124b/frame_003.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/north-west-a24d124b/frame_004.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/north-west-a24d124b/frame_005.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/north-west-a24d124b/frame_006.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/north-west-a24d124b/frame_007.png"
+            ],
+            "north-east": [
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/north-east/frame_000.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/north-east/frame_001.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/north-east/frame_002.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/north-east/frame_003.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/north-east/frame_004.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/north-east/frame_005.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/north-east/frame_006.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/north-east/frame_007.png"
+            ],
+            "west-a1131fc7": [
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/west-a1131fc7/frame_000.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/west-a1131fc7/frame_001.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/west-a1131fc7/frame_002.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/west-a1131fc7/frame_003.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/west-a1131fc7/frame_004.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/west-a1131fc7/frame_005.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/west-a1131fc7/frame_006.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/west-a1131fc7/frame_007.png"
+            ],
+            "north-west-b606ba21": [
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/north-west-b606ba21/frame_000.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/north-west-b606ba21/frame_001.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/north-west-b606ba21/frame_002.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/north-west-b606ba21/frame_003.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/north-west-b606ba21/frame_004.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/north-west-b606ba21/frame_005.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/north-west-b606ba21/frame_006.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/north-west-b606ba21/frame_007.png"
+            ],
+            "north-a8c06f19": [
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/north-a8c06f19/frame_000.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/north-a8c06f19/frame_001.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/north-a8c06f19/frame_002.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/north-a8c06f19/frame_003.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/north-a8c06f19/frame_004.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/north-a8c06f19/frame_005.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/north-a8c06f19/frame_006.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/north-a8c06f19/frame_007.png"
+            ],
+            "north-8c416539": [
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/north-8c416539/frame_000.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/north-8c416539/frame_001.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/north-8c416539/frame_002.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/north-8c416539/frame_003.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/north-8c416539/frame_004.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/north-8c416539/frame_005.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/north-8c416539/frame_006.png",
+              "Top-down_pixel_art_game_sprite/animations/Running-13d3d397/north-8c416539/frame_007.png"
+            ]
+          },
+          "High_Kick-a96d3fa6": {
+            "south": [
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/south/frame_000.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/south/frame_001.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/south/frame_002.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/south/frame_003.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/south/frame_004.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/south/frame_005.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/south/frame_006.png"
+            ],
+            "south-east": [
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/south-east/frame_000.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/south-east/frame_001.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/south-east/frame_002.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/south-east/frame_003.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/south-east/frame_004.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/south-east/frame_005.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/south-east/frame_006.png"
+            ],
+            "north": [
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/north/frame_000.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/north/frame_001.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/north/frame_002.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/north/frame_003.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/north/frame_004.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/north/frame_005.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/north/frame_006.png"
+            ],
+            "south-west": [
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/south-west/frame_000.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/south-west/frame_001.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/south-west/frame_002.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/south-west/frame_003.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/south-west/frame_004.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/south-west/frame_005.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/south-west/frame_006.png"
+            ],
+            "north-west": [
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/north-west/frame_000.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/north-west/frame_001.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/north-west/frame_002.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/north-west/frame_003.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/north-west/frame_004.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/north-west/frame_005.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/north-west/frame_006.png"
+            ],
+            "west": [
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/west/frame_000.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/west/frame_001.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/west/frame_002.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/west/frame_003.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/west/frame_004.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/west/frame_005.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/west/frame_006.png"
+            ],
+            "east": [
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/east/frame_000.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/east/frame_001.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/east/frame_002.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/east/frame_003.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/east/frame_004.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/east/frame_005.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/east/frame_006.png"
+            ],
+            "north-east": [
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/north-east/frame_000.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/north-east/frame_001.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/north-east/frame_002.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/north-east/frame_003.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/north-east/frame_004.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/north-east/frame_005.png",
+              "Top-down_pixel_art_game_sprite/animations/High_Kick-a96d3fa6/north-east/frame_006.png"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "export_version": "3.0",
+  "export_date": "2026-05-30T15:11:12.322948"
+}

@@ -14,8 +14,12 @@ script = ExtResource("1_uiaus")
 shape = SubResource("RectangleShape2D_050lg")
 
 [node name="ColorRect" type="ColorRect" parent="." unique_id=666393726]
+visible = false
 offset_left = -15.0
 offset_top = -25.0
 offset_right = 15.0
 offset_bottom = 25.0
 color = Color(0.13333334, 0.6666667, 0.13333334, 1)
+
+[node name="SubjectSprite" type="AnimatedSprite2D" parent="." unique_id=888100001]
+z_index = 2

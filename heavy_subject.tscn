@@ -13,9 +13,4 @@ script = ExtResource("1_hptqc")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1372125220]
 shape = SubResource("RectangleShape2D_050lg")
 
-[node name="ColorRect" type="ColorRect" parent="." unique_id=666393726]
-offset_left = -20.0
-offset_top = -30.0
-offset_right = 20.0
-offset_bottom = 30.0
-color = Color(0.53333336, 0.53333336, 0.53333336, 1)
+[node name="HeavySprite" type="AnimatedSprite2D" parent="." unique_id=666393726]

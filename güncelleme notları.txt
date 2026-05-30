@@ -1726,3 +1726,46 @@ Diğer:
 
 ──────────────────────────────────────────────────────────────────────────────
 
+
+
+────────────────────────────────────────────────────────────────────────────────
+
+0.0.7.0
+30.05.2026
+
+Pixel Art Geçişi ve Düşman Animasyon Sistemi
+
+✅ Pixel art stiline geçildi — eski Vector karakter görselleri kaldırıldı
+✅ Vector / Leila / Cyclone için placeholder görseller oluşturuldu (karakter seçim ekranı bozulmasın)
+
+Subject:
+✅ AnimatedSprite2D sistemi eklendi (walk 6 frame / punch 7 frame, 8 yön)
+✅ Sprite sheet'ler oluşturuldu (assets/enemys/subject/sheets/)
+✅ Yürürken yön bazlı animasyon, player'a vurduğunda punch animasyonu
+
+Frantic Subject:
+✅ AnimatedSprite2D sistemi eklendi (run 8 frame / kick 7 frame, 8 yön)
+✅ Sprite sheet'ler oluşturuldu (assets/enemys/franticSubject/sheets/)
+
+Heavy Subject:
+✅ AnimatedSprite2D sistemi eklendi (walk 6 frame / uppercut 7 frame, 8 yön)
+✅ Sprite sheet'ler oluşturuldu (assets/enemys/heavySubject/sheets/)
+
+Armed Subject:
+✅ AnimatedSprite2D sistemi eklendi (run 8 frame / kick 6 frame, 8 yön)
+✅ Sprite sheet'ler oluşturuldu (assets/enemys/armedSubject/sheets/)
+✅ Zıplama davranışı — frame 0-3 hız x2.5, frame 4-7 normal hız
+
+Hata Düzeltmeleri:
+✅ Glitch topu ile glitchlenen düşman hareketsiz kalıyordu — hareket kodu else bloğundan çıkarıldı, tüm düşmanlara uygulandı
+✅ Cyber düşmanlar ally'ları hedef alıp oyun alanı dışına çıkıyordu — sadece player hedef alınıyor
+✅ take_damage() parametresi eksikti (cyber düşmanlar) — from_ally: bool = false eklendi
+✅ bullet.gd — body.queue_free() direkt çağrısı kaldırıldı, düşmanlar artık sağlık sisteminden geçiyor
+✅ bullet.gd — x<=910 sınırı x<=840'a düzeltildi
+
+Cyber Düşman Davranışı:
+✅ Cyber Rifle 400px, Cyber Shooter 320px, Cyber Shotgun 250px mesafede durup ateş ediyor
+✅ Player'ın dibine kadar girmiyorlar
+
+Player:
+✅ Vector karakteri için geçici mavi ColorRect eklendi (test amaçlı)

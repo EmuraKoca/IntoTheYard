@@ -978,36 +978,21 @@ func _spawn_subject() -> void:
 	var subject
 	var rand = randf()
 	
-	if level <= 2:
+	# TEST: tüm düşmanlar ilk safhada — sonra düzelteceğiz
+	if rand < 0.2:
 		subject = subject_scene.instantiate()
-	elif level <= 4:
-		if rand < 0.7:
-			subject = subject_scene.instantiate()
-		else:
-			subject = frantic_subject_scene.instantiate()
-	elif level <= 6:
-		if rand < 0.5:
-			subject = subject_scene.instantiate()
-		elif rand < 0.8:
-			subject = frantic_subject_scene.instantiate()
-		else:
-			subject = armed_subject_scene.instantiate()
+	elif rand < 0.35:
+		subject = frantic_subject_scene.instantiate()
+	elif rand < 0.5:
+		subject = armed_subject_scene.instantiate()
+	elif rand < 0.65:
+		subject = heavy_subject_scene.instantiate()
+	elif rand < 0.78:
+		subject = cyber_shooter_scene.instantiate()
+	elif rand < 0.89:
+		subject = cyber_shotgun_scene.instantiate()
 	else:
-		var rand2 = randf()
-		if rand2 < 0.2:
-			subject = subject_scene.instantiate()
-		elif rand2 < 0.4:
-			subject = frantic_subject_scene.instantiate()
-		elif rand2 < 0.55:
-			subject = armed_subject_scene.instantiate()
-		elif rand2 < 0.7:
-			subject = heavy_subject_scene.instantiate()
-		elif rand2 < 0.85:
-			subject = cyber_shooter_scene.instantiate()
-		elif rand2 < 0.92:
-			subject = cyber_shotgun_scene.instantiate()
-		else:
-			subject = cyber_rifle_scene.instantiate()
+		subject = cyber_rifle_scene.instantiate()
 		
 	
 	var rand_x = randf_range(50, 1600)

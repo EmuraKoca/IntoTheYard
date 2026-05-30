@@ -29,27 +29,17 @@ func _physics_process(delta: float) -> void:
 		return
 
 	var player = get_tree().get_first_node_in_group("player")
-	var allies = get_tree().get_nodes_in_group("allies")
-
-	var closest_target = null
-	var closest_dist = INF
-
-	if player:
-		closest_dist = global_position.distance_to(player.global_position)
-		closest_target = player
-
-	for ally in allies:
-		var d = global_position.distance_to(ally.global_position)
-		if d < closest_dist:
-			closest_dist = d
-			closest_target = ally
-
-	if closest_target == null:
+	if player == null:
 		return
 
-	var direction = (closest_target.global_position - global_position).normalized()
-	velocity = direction * speed
-	move_and_slide()
+	var dist = global_position.distance_to(player.global_position)
+
+	if dist > 250:
+		var direction = (player.global_position - global_position).normalized()
+		velocity = direction * speed
+		move_and_slide()
+	else:
+		velocity = Vector2.ZERO
 
 	# Fire
 	shoot_timer += delta
@@ -69,11 +59,8 @@ func _physics_process(delta: float) -> void:
 			if closest:
 				_shoot(closest)
 		else:
-			_shoot(closest_target)
+			_shoot(player)
 
-	if player == null:
-		return
-	var dist = global_position.distance_to(player.global_position)
 	if dist < 35:
 		player.take_damage(1)
 
@@ -88,7 +75,7 @@ func _shoot(target: Node2D) -> void:
 		get_parent().add_child(bullet)
 		bullet.launch(spread_dir)
 
-func take_damage(amount) -> void:
+func take_damage(amount, from_ally: bool = false) -> void:
 	health -= amount
 	if health <= 0:
 		die()

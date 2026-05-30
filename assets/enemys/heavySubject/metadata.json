@@ -1,0 +1,177 @@
+{
+  "group_id": null,
+  "states": [
+    {
+      "character": {
+        "id": "b4422f3b-de90-4115-94af-91084a93af5c",
+        "name": "High Top-down pixel art game",
+        "prompt": "High Top-down pixel art game sprite, large heavily armored human enemy,  massive bulky build, industrial grey metal armor plates on shoulders and chest,  multiple neural chips along spine glowing cold blue,  slow menacing stance, steel boots,  transparent background, 64x64px, game asset",
+        "size": {
+          "width": 128,
+          "height": 128
+        },
+        "template_id": "mannequin",
+        "directions": 8,
+        "view": "high top-down",
+        "created_at": "2026-05-30T15:12:29.600443+00:00"
+      },
+      "folder": "High_Top-down_pixel_art_game",
+      "frames": {
+        "rotations": {
+          "south": "High_Top-down_pixel_art_game/rotations/south.png",
+          "south-east": "High_Top-down_pixel_art_game/rotations/south-east.png",
+          "east": "High_Top-down_pixel_art_game/rotations/east.png",
+          "north-east": "High_Top-down_pixel_art_game/rotations/north-east.png",
+          "north": "High_Top-down_pixel_art_game/rotations/north.png",
+          "north-west": "High_Top-down_pixel_art_game/rotations/north-west.png",
+          "west": "High_Top-down_pixel_art_game/rotations/west.png",
+          "south-west": "High_Top-down_pixel_art_game/rotations/south-west.png"
+        },
+        "animations": {
+          "animation-a71fb852": {
+            "east": [
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/east/frame_000.png",
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/east/frame_001.png",
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/east/frame_002.png",
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/east/frame_003.png",
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/east/frame_004.png",
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/east/frame_005.png"
+            ],
+            "south-east": [
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/south-east/frame_000.png",
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/south-east/frame_001.png",
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/south-east/frame_002.png",
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/south-east/frame_003.png",
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/south-east/frame_004.png",
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/south-east/frame_005.png"
+            ],
+            "south": [
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/south/frame_000.png",
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/south/frame_001.png",
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/south/frame_002.png",
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/south/frame_003.png",
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/south/frame_004.png",
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/south/frame_005.png"
+            ],
+            "north-east": [
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/north-east/frame_000.png",
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/north-east/frame_001.png",
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/north-east/frame_002.png",
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/north-east/frame_003.png",
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/north-east/frame_004.png",
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/north-east/frame_005.png"
+            ],
+            "west": [
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/west/frame_000.png",
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/west/frame_001.png",
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/west/frame_002.png",
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/west/frame_003.png",
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/west/frame_004.png",
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/west/frame_005.png"
+            ],
+            "north-west": [
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/north-west/frame_000.png",
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/north-west/frame_001.png",
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/north-west/frame_002.png",
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/north-west/frame_003.png",
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/north-west/frame_004.png",
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/north-west/frame_005.png"
+            ],
+            "south-west": [
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/south-west/frame_000.png",
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/south-west/frame_001.png",
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/south-west/frame_002.png",
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/south-west/frame_003.png",
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/south-west/frame_004.png",
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/south-west/frame_005.png"
+            ],
+            "north": [
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/north/frame_000.png",
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/north/frame_001.png",
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/north/frame_002.png",
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/north/frame_003.png",
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/north/frame_004.png",
+              "High_Top-down_pixel_art_game/animations/animation-a71fb852/north/frame_005.png"
+            ]
+          },
+          "Surprise_Uppercut-856eb82f": {
+            "east": [
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/east/frame_000.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/east/frame_001.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/east/frame_002.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/east/frame_003.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/east/frame_004.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/east/frame_005.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/east/frame_006.png"
+            ],
+            "south": [
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/south/frame_000.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/south/frame_001.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/south/frame_002.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/south/frame_003.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/south/frame_004.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/south/frame_005.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/south/frame_006.png"
+            ],
+            "north-east": [
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/north-east/frame_000.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/north-east/frame_001.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/north-east/frame_002.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/north-east/frame_003.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/north-east/frame_004.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/north-east/frame_005.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/north-east/frame_006.png"
+            ],
+            "north-west": [
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/north-west/frame_000.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/north-west/frame_001.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/north-west/frame_002.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/north-west/frame_003.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/north-west/frame_004.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/north-west/frame_005.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/north-west/frame_006.png"
+            ],
+            "west": [
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/west/frame_000.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/west/frame_001.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/west/frame_002.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/west/frame_003.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/west/frame_004.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/west/frame_005.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/west/frame_006.png"
+            ],
+            "south-east": [
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/south-east/frame_000.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/south-east/frame_001.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/south-east/frame_002.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/south-east/frame_003.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/south-east/frame_004.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/south-east/frame_005.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/south-east/frame_006.png"
+            ],
+            "south-west": [
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/south-west/frame_000.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/south-west/frame_001.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/south-west/frame_002.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/south-west/frame_003.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/south-west/frame_004.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/south-west/frame_005.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/south-west/frame_006.png"
+            ],
+            "north": [
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/north/frame_000.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/north/frame_001.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/north/frame_002.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/north/frame_003.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/north/frame_004.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/north/frame_005.png",
+              "High_Top-down_pixel_art_game/animations/Surprise_Uppercut-856eb82f/north/frame_006.png"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "export_version": "3.0",
+  "export_date": "2026-05-30T15:58:17.478291"
+}
