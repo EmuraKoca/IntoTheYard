@@ -1,0 +1,103 @@
+{
+  "group_id": null,
+  "states": [
+    {
+      "character": {
+        "id": "bf559dab-8e37-453d-8b6c-99104c8e1e7b",
+        "name": "cyberShotgun",
+        "prompt": "High Top-down pixel art cyberpunk human, slim build,  bodysuit with cracked glowing chip implant on chest, bulky prototype cannon FUSED TO ABDOMEN/STOMACH area, barrel pointing forward from gut level, mechanical tubes connecting gun to body.",
+        "size": {
+          "width": 124,
+          "height": 124
+        },
+        "template_id": "mannequin",
+        "directions": 8,
+        "view": "high top-down",
+        "created_at": "2026-05-31T01:15:04.055548+00:00"
+      },
+      "folder": "cyberShotgun",
+      "frames": {
+        "rotations": {
+          "south": "cyberShotgun/rotations/south.png",
+          "south-east": "cyberShotgun/rotations/south-east.png",
+          "east": "cyberShotgun/rotations/east.png",
+          "north-east": "cyberShotgun/rotations/north-east.png",
+          "north": "cyberShotgun/rotations/north.png",
+          "north-west": "cyberShotgun/rotations/north-west.png",
+          "west": "cyberShotgun/rotations/west.png",
+          "south-west": "cyberShotgun/rotations/south-west.png"
+        },
+        "animations": {
+          "animation-c08dd5b7": {
+            "south": [
+              "cyberShotgun/animations/animation-c08dd5b7/south/frame_000.png",
+              "cyberShotgun/animations/animation-c08dd5b7/south/frame_001.png",
+              "cyberShotgun/animations/animation-c08dd5b7/south/frame_002.png",
+              "cyberShotgun/animations/animation-c08dd5b7/south/frame_003.png",
+              "cyberShotgun/animations/animation-c08dd5b7/south/frame_004.png",
+              "cyberShotgun/animations/animation-c08dd5b7/south/frame_005.png"
+            ],
+            "north": [
+              "cyberShotgun/animations/animation-c08dd5b7/north/frame_000.png",
+              "cyberShotgun/animations/animation-c08dd5b7/north/frame_001.png",
+              "cyberShotgun/animations/animation-c08dd5b7/north/frame_002.png",
+              "cyberShotgun/animations/animation-c08dd5b7/north/frame_003.png",
+              "cyberShotgun/animations/animation-c08dd5b7/north/frame_004.png",
+              "cyberShotgun/animations/animation-c08dd5b7/north/frame_005.png"
+            ],
+            "south-east": [
+              "cyberShotgun/animations/animation-c08dd5b7/south-east/frame_000.png",
+              "cyberShotgun/animations/animation-c08dd5b7/south-east/frame_001.png",
+              "cyberShotgun/animations/animation-c08dd5b7/south-east/frame_002.png",
+              "cyberShotgun/animations/animation-c08dd5b7/south-east/frame_003.png",
+              "cyberShotgun/animations/animation-c08dd5b7/south-east/frame_004.png",
+              "cyberShotgun/animations/animation-c08dd5b7/south-east/frame_005.png"
+            ],
+            "east": [
+              "cyberShotgun/animations/animation-c08dd5b7/east/frame_000.png",
+              "cyberShotgun/animations/animation-c08dd5b7/east/frame_001.png",
+              "cyberShotgun/animations/animation-c08dd5b7/east/frame_002.png",
+              "cyberShotgun/animations/animation-c08dd5b7/east/frame_003.png",
+              "cyberShotgun/animations/animation-c08dd5b7/east/frame_004.png",
+              "cyberShotgun/animations/animation-c08dd5b7/east/frame_005.png"
+            ],
+            "north-east": [
+              "cyberShotgun/animations/animation-c08dd5b7/north-east/frame_000.png",
+              "cyberShotgun/animations/animation-c08dd5b7/north-east/frame_001.png",
+              "cyberShotgun/animations/animation-c08dd5b7/north-east/frame_002.png",
+              "cyberShotgun/animations/animation-c08dd5b7/north-east/frame_003.png",
+              "cyberShotgun/animations/animation-c08dd5b7/north-east/frame_004.png",
+              "cyberShotgun/animations/animation-c08dd5b7/north-east/frame_005.png"
+            ],
+            "north-west": [
+              "cyberShotgun/animations/animation-c08dd5b7/north-west/frame_000.png",
+              "cyberShotgun/animations/animation-c08dd5b7/north-west/frame_001.png",
+              "cyberShotgun/animations/animation-c08dd5b7/north-west/frame_002.png",
+              "cyberShotgun/animations/animation-c08dd5b7/north-west/frame_003.png",
+              "cyberShotgun/animations/animation-c08dd5b7/north-west/frame_004.png",
+              "cyberShotgun/animations/animation-c08dd5b7/north-west/frame_005.png"
+            ],
+            "west": [
+              "cyberShotgun/animations/animation-c08dd5b7/west/frame_000.png",
+              "cyberShotgun/animations/animation-c08dd5b7/west/frame_001.png",
+              "cyberShotgun/animations/animation-c08dd5b7/west/frame_002.png",
+              "cyberShotgun/animations/animation-c08dd5b7/west/frame_003.png",
+              "cyberShotgun/animations/animation-c08dd5b7/west/frame_004.png",
+              "cyberShotgun/animations/animation-c08dd5b7/west/frame_005.png"
+            ],
+            "south-west": [
+              "cyberShotgun/animations/animation-c08dd5b7/south-west/frame_000.png",
+              "cyberShotgun/animations/animation-c08dd5b7/south-west/frame_001.png",
+              "cyberShotgun/animations/animation-c08dd5b7/south-west/frame_002.png",
+              "cyberShotgun/animations/animation-c08dd5b7/south-west/frame_003.png",
+              "cyberShotgun/animations/animation-c08dd5b7/south-west/frame_004.png",
+              "cyberShotgun/animations/animation-c08dd5b7/south-west/frame_005.png"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "export_version": "3.0",
+  "export_date": "2026-05-31T01:47:52.195582"
+}

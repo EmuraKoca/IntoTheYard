@@ -53,8 +53,8 @@ func _show_boss_warning() -> void:
 	await get_tree().create_timer(1.0).timeout
 	_screen_shake()
 	
-	# Wait 3 levels then open
-	await get_tree().create_timer(15.0).timeout
+	# TEST: kısa bekleme
+	await get_tree().create_timer(3.0).timeout
 	_open_crate()
 
 func _open_crate() -> void:
@@ -1035,7 +1035,7 @@ func _process(_delta: float) -> void:
 		var seconds = int(elapsed_time) % 60
 		$UI/LabelTime.text = "⏱  %02d:%02d" % [minutes, seconds]
 	# Pre-boss warning
-	if level >= 13 and boss == null and not boss_defeated:
+	if level >= 2 and boss == null and not boss_defeated:
 		if not has_node("BossWarning"):
 			_show_boss_warning()
 

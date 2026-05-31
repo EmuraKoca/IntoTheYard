@@ -2,7 +2,7 @@
 
 const SURGERY_EXIT := Vector2(850, 1000)  # The only exit point from the living area
 
-var speed = 90.0
+var speed = 63.0
 var health = 20
 var max_health = 20
 var jump_timer = 0.0

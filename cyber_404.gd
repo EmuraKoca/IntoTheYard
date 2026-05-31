@@ -29,10 +29,34 @@ func _ready() -> void:
 	z_index = 3
 	add_to_group("subjects")
 	scale = Vector2(0.1, 0.1)
+	_setup_sprite()
 	await get_tree().process_frame
 	var game = get_parent()
 	if game.has_method("show_boss_bar"):
 		game.show_boss_bar(self)
+
+func _setup_sprite() -> void:
+	var sprite: AnimatedSprite2D = $Boss404Sprite
+	var frames := SpriteFrames.new()
+	if frames.has_animation("default"):
+		frames.remove_animation("default")
+
+	var base := "res://assets/enemys/cyber404/sheets/"
+	var tex: Texture2D = load(base + "cyber404_walk_S.png")
+
+	frames.add_animation("walk")
+	frames.set_animation_speed("walk", 8.0)
+	frames.set_animation_loop("walk", true)
+	for i in range(6):
+		var atlas := AtlasTexture.new()
+		atlas.atlas  = tex
+		atlas.region = Rect2(i * 252, 0, 252, 252)
+		frames.add_frame("walk", atlas)
+
+	sprite.sprite_frames  = frames
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	sprite.scale          = Vector2(0.7, 0.7)
+	sprite.play("walk")
 
 func _landing_wave() -> void:
 	var subjects = get_tree().get_nodes_in_group("subjects")

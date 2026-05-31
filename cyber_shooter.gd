@@ -1,6 +1,6 @@
 ﻿extends CharacterBody2D
 
-var speed = 60.0
+var speed = 42.0
 var health = 15
 var is_dead = false
 var is_frozen = false
@@ -18,8 +18,68 @@ var attack_rate = 1.0
 
 var bullet_scene = preload("res://bullet.tscn")
 
+# Animasyon
+var _anim_dir: String = "S"
+
 func _ready() -> void:
 	z_index = 2
+	_setup_sprite()
+
+func _setup_sprite() -> void:
+	var sprite: AnimatedSprite2D = $ShooterSprite
+	var frames := SpriteFrames.new()
+	if frames.has_animation("default"):
+		frames.remove_animation("default")
+
+	var base := "res://assets/enemys/cyberShooter/sheets/"
+	var dirs  := ["N","NE","E","SE","S","SW","W","NW"]
+
+	for d in dirs:
+		var dd: String = str(d)
+		var walk_key: String = "walk_" + dd
+		var walk_tex: Texture2D = load(base + "cybershooter_walk_" + dd + ".png")
+		frames.add_animation(walk_key)
+		frames.set_animation_speed(walk_key, 10.0)
+		frames.set_animation_loop(walk_key, true)
+		for i in range(6):
+			var atlas := AtlasTexture.new()
+			atlas.atlas  = walk_tex
+			atlas.region = Rect2(i * 128, 0, 128, 128)
+			frames.add_frame(walk_key, atlas)
+		var idle_key: String = "idle_" + dd
+		var idle_tex: Texture2D = load(base + "cybershooter_idle_" + dd + ".png")
+		frames.add_animation(idle_key)
+		frames.set_animation_speed(idle_key, 2.0)
+		frames.set_animation_loop(idle_key, true)
+		for i in range(2):
+			var atlas := AtlasTexture.new()
+			atlas.atlas  = idle_tex
+			atlas.region = Rect2(i * 128, 0, 128, 128)
+			frames.add_frame(idle_key, atlas)
+
+	sprite.sprite_frames  = frames
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	sprite.scale          = Vector2(0.85, 0.85)
+	sprite.play("idle_S")
+
+func _update_anim_dir(vel: Vector2) -> void:
+	if vel == Vector2.ZERO:
+		return
+	var deg := rad_to_deg(vel.angle())
+	if   deg > -22.5  and deg <= 22.5:   _anim_dir = "E"
+	elif deg > 22.5   and deg <= 67.5:   _anim_dir = "SE"
+	elif deg > 67.5   and deg <= 112.5:  _anim_dir = "S"
+	elif deg > 112.5  and deg <= 157.5:  _anim_dir = "SW"
+	elif deg > 157.5  or  deg <= -157.5: _anim_dir = "W"
+	elif deg > -157.5 and deg <= -112.5: _anim_dir = "NW"
+	elif deg > -112.5 and deg <= -67.5:  _anim_dir = "N"
+	elif deg > -67.5  and deg <= -22.5:  _anim_dir = "NE"
+
+func _update_anim(moving: bool) -> void:
+	var sprite: AnimatedSprite2D = $ShooterSprite
+	var anim: String = ("walk_" if moving else "idle_") + _anim_dir
+	if sprite.animation != anim:
+		sprite.play(anim)
 
 func _physics_process(delta: float) -> void:
 	if is_in_group("allies"):
@@ -33,14 +93,18 @@ func _physics_process(delta: float) -> void:
 		return
 
 	var dist = global_position.distance_to(player.global_position)
+	var moving: bool = dist > 340
 
-	# Durma mesafesine gelince yürümeyi kes
-	if dist > 320:
+	if moving:
 		var direction = (player.global_position - global_position).normalized()
 		velocity = direction * speed
-		move_and_slide()
+		_update_anim_dir(velocity)
 	else:
 		velocity = Vector2.ZERO
+		var to_player = (player.global_position - global_position).normalized()
+		_update_anim_dir(to_player)
+	move_and_slide()
+	_update_anim(moving)
 
 	# Ateş
 	shoot_timer += delta

@@ -1769,3 +1769,51 @@ Cyber Düşman Davranışı:
 
 Player:
 ✅ Vector karakteri için geçici mavi ColorRect eklendi (test amaçlı)
+
+
+────────────────────────────────────────────────────────────────────────────────
+
+0.0.7.1
+31.05.2026
+
+Cyber Düşman Animasyon Sistemi & Çeşitli Düzeltmeler
+
+Cyber Shooter:
+✅ AnimatedSprite2D eklendi (walk 6 frame / idle 2 frame, 8 yön)
+✅ Sprite sheet'ler oluşturuldu (assets/enemys/cyberShooter/sheets/)
+✅ Durduğunda idle animasyonu oynar, player'a yönelir
+
+Cyber Rifle:
+✅ AnimatedSprite2D eklendi (walk 6 frame / idle 2 frame, 8 yön)
+✅ Sprite sheet'ler oluşturuldu (assets/enemys/cyberRifle/sheets/)
+✅ Namlu güncellendi, sheet'ler yenilendi
+
+Cyber Shotgun:
+✅ AnimatedSprite2D eklendi (walk 6 frame / idle 2 frame, 8 yön)
+✅ Sprite sheet'ler oluşturuldu (assets/enemys/cyberShotgun/sheets/)
+
+Armed Subject:
+✅ Zıplama davranışı düzeltildi — frame 0-3 hız x2.5, frame 4-7 normal hız
+✅ Hızlanma/yavaşlama oranı korunarak tüm hızlar %30 düşürüldü
+
+Hız Dengeleme (%30 azaltıldı):
+✅ Subject: 40 → 28
+✅ Frantic: 160 → 110
+✅ Heavy: 45 → 32
+✅ Armed: 90 → 63 (zıplama çarpanı 2.5x korundu)
+✅ Cyber Shooter: 60 → 42
+✅ Cyber Rifle: 70 → 49
+✅ Cyber Shotgun: 50 → 35
+
+bullet.gd:
+✅ Düşmanları direkt queue_free() ile silme kaldırıldı
+✅ Sadece player ve ally'lara hasar veriyor
+✅ x<=910 sınır hatası düzeltildi → x<=840
+
+Spawn:
+✅ Spawn pozisyonu eski haline döndürüldü (tüm alana dağılım)
+
+Cyber 404 (Boss):
+✅ AnimatedSprite2D eklendi (walk south 6 frame, 252x252)
+✅ Test için spawn level 2'ye çekildi
+✅ Warning süresi 15s → 3s (test)

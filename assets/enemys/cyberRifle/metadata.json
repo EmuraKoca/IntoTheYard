@@ -1,0 +1,103 @@
+{
+  "group_id": null,
+  "states": [
+    {
+      "character": {
+        "id": "23d2816a-c255-4810-affc-ebdfad8d97d0",
+        "name": "High top down pixel art",
+        "prompt": "High top down pixel art tasar\u0131m\u0131na sahip CyberPunk evren i\u00e7in karn\u0131nda silah prototipi olan bir cyber karakter olsun , neon mavi ye\u015fil tasar\u0131ml\u0131 olsun , \u00e7ip benzeri prototipler olsun omzunda ve kollar\u0131nda .",
+        "size": {
+          "width": 124,
+          "height": 124
+        },
+        "template_id": "mannequin",
+        "directions": 8,
+        "view": "low top-down",
+        "created_at": "2026-05-30T21:52:28.950504+00:00"
+      },
+      "folder": "High_top_down_pixel_art",
+      "frames": {
+        "rotations": {
+          "south": "High_top_down_pixel_art/rotations/south.png",
+          "south-east": "High_top_down_pixel_art/rotations/south-east.png",
+          "east": "High_top_down_pixel_art/rotations/east.png",
+          "north-east": "High_top_down_pixel_art/rotations/north-east.png",
+          "north": "High_top_down_pixel_art/rotations/north.png",
+          "north-west": "High_top_down_pixel_art/rotations/north-west.png",
+          "west": "High_top_down_pixel_art/rotations/west.png",
+          "south-west": "High_top_down_pixel_art/rotations/south-west.png"
+        },
+        "animations": {
+          "animation-cce157c4": {
+            "south": [
+              "High_top_down_pixel_art/animations/animation-cce157c4/south/frame_000.png",
+              "High_top_down_pixel_art/animations/animation-cce157c4/south/frame_001.png",
+              "High_top_down_pixel_art/animations/animation-cce157c4/south/frame_002.png",
+              "High_top_down_pixel_art/animations/animation-cce157c4/south/frame_003.png",
+              "High_top_down_pixel_art/animations/animation-cce157c4/south/frame_004.png",
+              "High_top_down_pixel_art/animations/animation-cce157c4/south/frame_005.png"
+            ],
+            "south-east": [
+              "High_top_down_pixel_art/animations/animation-cce157c4/south-east/frame_000.png",
+              "High_top_down_pixel_art/animations/animation-cce157c4/south-east/frame_001.png",
+              "High_top_down_pixel_art/animations/animation-cce157c4/south-east/frame_002.png",
+              "High_top_down_pixel_art/animations/animation-cce157c4/south-east/frame_003.png",
+              "High_top_down_pixel_art/animations/animation-cce157c4/south-east/frame_004.png",
+              "High_top_down_pixel_art/animations/animation-cce157c4/south-east/frame_005.png"
+            ],
+            "east": [
+              "High_top_down_pixel_art/animations/animation-cce157c4/east/frame_000.png",
+              "High_top_down_pixel_art/animations/animation-cce157c4/east/frame_001.png",
+              "High_top_down_pixel_art/animations/animation-cce157c4/east/frame_002.png",
+              "High_top_down_pixel_art/animations/animation-cce157c4/east/frame_003.png",
+              "High_top_down_pixel_art/animations/animation-cce157c4/east/frame_004.png",
+              "High_top_down_pixel_art/animations/animation-cce157c4/east/frame_005.png"
+            ],
+            "north-east": [
+              "High_top_down_pixel_art/animations/animation-cce157c4/north-east/frame_000.png",
+              "High_top_down_pixel_art/animations/animation-cce157c4/north-east/frame_001.png",
+              "High_top_down_pixel_art/animations/animation-cce157c4/north-east/frame_002.png",
+              "High_top_down_pixel_art/animations/animation-cce157c4/north-east/frame_003.png",
+              "High_top_down_pixel_art/animations/animation-cce157c4/north-east/frame_004.png",
+              "High_top_down_pixel_art/animations/animation-cce157c4/north-east/frame_005.png"
+            ],
+            "north-west": [
+              "High_top_down_pixel_art/animations/animation-cce157c4/north-west/frame_000.png",
+              "High_top_down_pixel_art/animations/animation-cce157c4/north-west/frame_001.png",
+              "High_top_down_pixel_art/animations/animation-cce157c4/north-west/frame_002.png",
+              "High_top_down_pixel_art/animations/animation-cce157c4/north-west/frame_003.png",
+              "High_top_down_pixel_art/animations/animation-cce157c4/north-west/frame_004.png",
+              "High_top_down_pixel_art/animations/animation-cce157c4/north-west/frame_005.png"
+            ],
+            "west": [
+              "High_top_down_pixel_art/animations/animation-cce157c4/west/frame_000.png",
+              "High_top_down_pixel_art/animations/animation-cce157c4/west/frame_001.png",
+              "High_top_down_pixel_art/animations/animation-cce157c4/west/frame_002.png",
+              "High_top_down_pixel_art/animations/animation-cce157c4/west/frame_003.png",
+              "High_top_down_pixel_art/animations/animation-cce157c4/west/frame_004.png",
+              "High_top_down_pixel_art/animations/animation-cce157c4/west/frame_005.png"
+            ],
+            "north": [
+              "High_top_down_pixel_art/animations/animation-cce157c4/north/frame_000.png",
+              "High_top_down_pixel_art/animations/animation-cce157c4/north/frame_001.png",
+              "High_top_down_pixel_art/animations/animation-cce157c4/north/frame_002.png",
+              "High_top_down_pixel_art/animations/animation-cce157c4/north/frame_003.png",
+              "High_top_down_pixel_art/animations/animation-cce157c4/north/frame_004.png",
+              "High_top_down_pixel_art/animations/animation-cce157c4/north/frame_005.png"
+            ],
+            "south-west": [
+              "High_top_down_pixel_art/animations/animation-cce157c4/south-west/frame_000.png",
+              "High_top_down_pixel_art/animations/animation-cce157c4/south-west/frame_001.png",
+              "High_top_down_pixel_art/animations/animation-cce157c4/south-west/frame_002.png",
+              "High_top_down_pixel_art/animations/animation-cce157c4/south-west/frame_003.png",
+              "High_top_down_pixel_art/animations/animation-cce157c4/south-west/frame_004.png",
+              "High_top_down_pixel_art/animations/animation-cce157c4/south-west/frame_005.png"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "export_version": "3.0",
+  "export_date": "2026-05-31T01:42:36.181467"
+}

@@ -1,0 +1,95 @@
+{
+  "group_id": null,
+  "states": [
+    {
+      "character": {
+        "id": "4350d5ec-269f-4700-8b2c-fed9ca2674e0",
+        "name": "High Top-down pixel art game boss sprite, massive imposing cybernetic creature, \nsimilar to Urgot from League of Legends, \nhuge mechanical spider-like lower body with 6 metal legs, \nlarge armored upper humanoid torso, \nmissile launcher pods on shoulders, \nglowing red hologram displaying \"ERROR 404\" on chest, \nyellow-orange energy core, \nmultiple weapon systems, terrifying and dominant presence, \ntakes up large sprite space, neon red and orange glow, \ntransparent background, 128x128px, game asset",
+        "prompt": "High Top-down pixel art game boss sprite, massive imposing cybernetic creature, \nsimilar to Urgot from League of Legends, \nhuge mechanical spider-like lower body with 6 metal legs, \nlarge armored upper humanoid torso, \nmissile launcher pods on shoulders, \nglowing red hologram displaying \"ERROR 404\" on chest, \nyellow-orange energy core, \nmultiple weapon systems, terrifying and dominant presence, \ntakes up large sprite space, neon red and orange glow, \ntransparent background, 128x128px, game asset",
+        "size": {
+          "width": 252,
+          "height": 252
+        },
+        "template_id": "mannequin",
+        "directions": 8,
+        "view": "high top-down",
+        "created_at": "2026-05-31T01:52:06.500087+00:00"
+      },
+      "folder": "High_Top-down_pixel_art_game_boss_sprite_massive_i",
+      "frames": {
+        "rotations": {
+          "south": "High_Top-down_pixel_art_game_boss_sprite_massive_i/rotations/south.png",
+          "south-east": "High_Top-down_pixel_art_game_boss_sprite_massive_i/rotations/south-east.png",
+          "east": "High_Top-down_pixel_art_game_boss_sprite_massive_i/rotations/east.png",
+          "north-east": "High_Top-down_pixel_art_game_boss_sprite_massive_i/rotations/north-east.png",
+          "north": "High_Top-down_pixel_art_game_boss_sprite_massive_i/rotations/north.png",
+          "north-west": "High_Top-down_pixel_art_game_boss_sprite_massive_i/rotations/north-west.png",
+          "west": "High_Top-down_pixel_art_game_boss_sprite_massive_i/rotations/west.png",
+          "south-west": "High_Top-down_pixel_art_game_boss_sprite_massive_i/rotations/south-west.png"
+        },
+        "animations": {
+          "animation-3e031936": {
+            "east": [
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/east/frame_000.png",
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/east/frame_001.png",
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/east/frame_002.png",
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/east/frame_003.png",
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/east/frame_004.png",
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/east/frame_005.png"
+            ],
+            "north-east": [
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/north-east/frame_000.png",
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/north-east/frame_001.png",
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/north-east/frame_002.png",
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/north-east/frame_003.png",
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/north-east/frame_004.png",
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/north-east/frame_005.png"
+            ],
+            "north-west": [
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/north-west/frame_000.png",
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/north-west/frame_001.png",
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/north-west/frame_002.png",
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/north-west/frame_003.png",
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/north-west/frame_004.png",
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/north-west/frame_005.png"
+            ],
+            "west": [
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/west/frame_000.png",
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/west/frame_001.png",
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/west/frame_002.png",
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/west/frame_003.png",
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/west/frame_004.png",
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/west/frame_005.png"
+            ],
+            "south-east": [
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/south-east/frame_000.png",
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/south-east/frame_001.png",
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/south-east/frame_002.png",
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/south-east/frame_003.png",
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/south-east/frame_004.png",
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/south-east/frame_005.png"
+            ],
+            "north": [
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/north/frame_000.png",
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/north/frame_001.png",
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/north/frame_002.png",
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/north/frame_003.png",
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/north/frame_004.png",
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/north/frame_005.png"
+            ],
+            "south": [
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/south/frame_000.png",
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/south/frame_001.png",
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/south/frame_002.png",
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/south/frame_003.png",
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/south/frame_004.png",
+              "High_Top-down_pixel_art_game_boss_sprite_massive_i/animations/animation-3e031936/south/frame_005.png"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "export_version": "3.0",
+  "export_date": "2026-05-31T02:18:33.112336"
+}

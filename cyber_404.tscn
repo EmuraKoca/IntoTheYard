@@ -11,9 +11,4 @@ script = ExtResource("1_2s2ma")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1122698052]
 shape = SubResource("RectangleShape2D_3ketf")
 
-[node name="ColorRect" type="ColorRect" parent="." unique_id=251852818]
-offset_left = -50.0
-offset_top = -40.0
-offset_right = 50.0
-offset_bottom = 40.0
-color = Color(0.2, 0.26666668, 0.33333334, 1)
+[node name="Boss404Sprite" type="AnimatedSprite2D" parent="." unique_id=251852818]
