@@ -1817,3 +1817,32 @@ Cyber 404 (Boss):
 ✅ AnimatedSprite2D eklendi (walk south 6 frame, 252x252)
 ✅ Test için spawn level 2'ye çekildi
 ✅ Warning süresi 15s → 3s (test)
+
+
+────────────────────────────────────────────────────────────────────────────────
+
+0.0.7.2
+01.06.2026
+
+Leila Karakter Animasyon Sistemi:
+✅ 6 animasyon için sprite sheet'ler oluşturuldu (idle, walk, run, punch, throw, take_damage)
+✅ 8 yön desteği, 224x224 frame
+✅ Walk: hareket yönüne göre, Run: SPEED >= 200 olunca aktif
+✅ Top atma ve vurma animasyonları mouse yönünde çalışıyor
+✅ Dash trail — neon pembe ghost efekti (Vector ile aynı sistem, farklı renk)
+✅ Take damage animasyonu bağlandı
+✅ LeilaSprite player.tscn'e eklendi
+
+Karakter Seçim Ekranı:
+✅ .gif dosyaları frame'lere ayrıldı, sprite sheet oluşturuldu
+✅ TextureRect → AnimatedSprite2D ile değiştirildi
+✅ Hover: spin animasyonu oynar
+✅ Seçili/varsayılan: south frame'de durur (kameraya bakıyor)
+✅ Mevcut matrix rain efekti korundu
+✅ VectorRect test görseli gizlendi
+
+Hata Düzeltmeleri:
+✅ 7 düşman dosyasında await sonrası is_instance_valid kontrolü eklendi
+   (apply_burn, apply_frozen, apply_wet, apply_glitch, apply_slow)
+   Etkilenen: subject, frantic_subject, heavy_subject, armed_subject,
+   cyber_shooter, cyber_rifle, cyber_shotgun

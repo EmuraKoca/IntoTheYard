@@ -178,6 +178,8 @@ func apply_slow(amount) -> void:
 	speed = speed * (1.0 - amount)
 	modulate = Color(0.7, 0.9, 1.0)
 	await get_tree().create_timer(3.0).timeout
+	if not is_instance_valid(self):
+		return
 	speed = original_speed
 	is_slowed = false
 	modulate = Color(1, 1, 1)
@@ -188,6 +190,8 @@ func apply_frozen() -> void:
 	var tween = create_tween()
 	tween.tween_property(self, "modulate", Color(0.5, 0.8, 1.0), 0.2)
 	await get_tree().create_timer(3.0).timeout
+	if not is_instance_valid(self):
+		return
 	is_frozen = false
 	modulate = Color(1, 1, 1)
 
@@ -195,6 +199,8 @@ func apply_wet() -> void:
 	is_wet = true
 	modulate = Color(0.3, 0.6, 1.0)
 	await get_tree().create_timer(5.0).timeout
+	if not is_instance_valid(self):
+		return
 	is_wet = false
 	modulate = Color(1, 1, 1)
 
@@ -204,6 +210,8 @@ func apply_glitch() -> void:
 	is_glitched = true
 	modulate = Color(0.8, 0.2, 1.0)
 	await get_tree().create_timer(3.0).timeout
+	if not is_instance_valid(self):
+		return
 	is_glitched = false
 	modulate = Color(1, 1, 1)
 
@@ -228,6 +236,8 @@ func apply_burn() -> void:
 			health -= 2
 			if health <= 0:
 				die()
+	if not is_instance_valid(self):
+		return
 	is_burning = false
 	modulate = Color(1, 1, 1)
 

@@ -50,9 +50,15 @@ var _vector_oneshot: bool = false
 var _vector_dead: bool = false
 var _lmb_was_pressed: bool = false  # melee sadece tıklama anında tetiklensin
 
+# Leila animation
+var _leila_anim_dir: String = "S"
+var _leila_oneshot: bool = false
+const LEILA_RUN_SPEED: float = 200.0  # Bu hızın üstünde run animasyonu oynar
+
 # Dash trail
-const DASH_TRAIL_COLOR    := Color(0.0, 0.82, 1.0, 0.9)  # neon cyan — buradan değiştirebilirsin
-const DASH_TRAIL_INTERVAL := 0.02                          # her 20ms'de bir ghost
+const DASH_TRAIL_COLOR       := Color(0.0, 0.82, 1.0, 0.9)  # Vector — neon cyan
+const DASH_TRAIL_COLOR_LEILA := Color(1.0, 0.08, 0.58, 0.9)  # Leila — neon pink
+const DASH_TRAIL_INTERVAL    := 0.02
 var   _dash_trail_timer: float = 0.0
 
 # Karakter tipi
@@ -164,11 +170,14 @@ func _leila_process(delta: float) -> void:
 			# Short tap - normal hit
 			if _no_ball_nearby():
 				_bat_swing()
+				_play_leila_oneshot("punch_" + _leila_anim_dir)
 			else:
 				_swing()
+				_play_leila_oneshot("punch_" + _leila_anim_dir)
 		elif leila_is_holding and held_ball != null:
 			# Throw on release
 			_leila_throw()
+			_play_leila_oneshot("throw_" + _leila_anim_dir)
 		leila_hold_timer = 0.0
 		leila_is_holding = false
 
@@ -200,7 +209,8 @@ func _ready() -> void:
 			$VectorSprite.visible = true
 			_setup_vector_sprite()
 		"leila":
-			$LeilaRect.visible = true
+			$LeilaSprite.visible = true
+			_setup_leila_sprite()
 		"cyclone":
 			$CycloneRect.visible = true
 
@@ -278,7 +288,7 @@ func _physics_process(delta: float) -> void:
 		dash_timer -= delta
 		global_position += dash_velocity * delta
 		# Dash trail — ghost spawn
-		if character_type == "vector":
+		if character_type == "vector" or character_type == "leila":
 			_dash_trail_timer -= delta
 			if _dash_trail_timer <= 0.0:
 				_dash_trail_timer = DASH_TRAIL_INTERVAL
@@ -307,6 +317,8 @@ func _physics_process(delta: float) -> void:
 	# Update animation direction for Vector (before _vector_process so it's current)
 	if character_type == "vector":
 		_update_anim_dir()
+	elif character_type == "leila":
+		_update_leila_anim_dir()
 
 	# Hit system based on character type
 	if character_type == "vector":
@@ -316,9 +328,11 @@ func _physics_process(delta: float) -> void:
 	elif character_type == "cyclone":
 		_cyclone_process(delta)
 
-	# Update Vector idle/run animation state
+	# Update idle/run/walk animation state
 	if character_type == "vector":
 		_update_vector_animation()
+	elif character_type == "leila":
+		_update_leila_animation()
 
 	for idx in range(held_balls.size()):
 		held_balls[idx].global_position = global_position + Vector2(-20 + idx * 40, -40)
@@ -440,6 +454,87 @@ func _setup_vector_sprite() -> void:
 	sprite.play("idle_N")
 
 
+func _setup_leila_sprite() -> void:
+	var sprite: AnimatedSprite2D = $LeilaSprite
+	var frames := SpriteFrames.new()
+	if frames.has_animation("default"):
+		frames.remove_animation("default")
+
+	var base := "res://assets/characters/leila/sheets/"
+	var dirs  := ["N","NE","E","SE","S","SW","W","NW"]
+
+	# [key, frame_count, fps, loop]
+	var anims := [
+		["idle",        4,  8.0,  true],
+		["walk",        6,  10.0, true],
+		["run",         6,  13.0, true],
+		["punch",       6,  14.0, false],
+		["throw",       7,  14.0, false],
+		["take_damage", 6,  12.0, false],
+	]
+
+	for a in anims:
+		var anim_key: String  = str(a[0])
+		var frame_count: int  = int(a[1])
+		var fps: float        = float(a[2])
+		var looping: bool     = bool(a[3])
+		for d in dirs:
+			var dd: String = str(d)
+			var key: String = anim_key + "_" + dd
+			var tex: Texture2D = load(base + "leila_" + anim_key + "_" + dd + ".png")
+			frames.add_animation(key)
+			frames.set_animation_speed(key, fps)
+			frames.set_animation_loop(key, looping)
+			for i in range(frame_count):
+				var atlas := AtlasTexture.new()
+				atlas.atlas  = tex
+				atlas.region = Rect2(i * 224, 0, 224, 224)
+				frames.add_frame(key, atlas)
+
+	sprite.sprite_frames  = frames
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	sprite.scale          = Vector2(0.58, 0.58)
+	sprite.animation_finished.connect(_on_leila_anim_finished)
+	sprite.play("idle_S")
+
+func _update_leila_anim_dir() -> void:
+	# Hareket varsa yöne göre, yoksa mouse yönüne göre
+	var deg: float
+	if velocity != Vector2.ZERO:
+		deg = rad_to_deg(velocity.angle())
+	else:
+		deg = rad_to_deg(aim_direction.angle())
+	if   deg > -22.5  and deg <= 22.5:   _leila_anim_dir = "E"
+	elif deg > 22.5   and deg <= 67.5:   _leila_anim_dir = "SE"
+	elif deg > 67.5   and deg <= 112.5:  _leila_anim_dir = "S"
+	elif deg > 112.5  and deg <= 157.5:  _leila_anim_dir = "SW"
+	elif deg > 157.5  or  deg <= -157.5: _leila_anim_dir = "W"
+	elif deg > -157.5 and deg <= -112.5: _leila_anim_dir = "NW"
+	elif deg > -112.5 and deg <= -67.5:  _leila_anim_dir = "N"
+	elif deg > -67.5  and deg <= -22.5:  _leila_anim_dir = "NE"
+
+func _update_leila_animation() -> void:
+	if _leila_oneshot:
+		return
+	var sprite: AnimatedSprite2D = $LeilaSprite
+	var anim: String
+	if velocity != Vector2.ZERO:
+		anim = ("run_" if SPEED >= LEILA_RUN_SPEED else "walk_") + _leila_anim_dir
+	else:
+		anim = "idle_" + _leila_anim_dir
+	if sprite.animation != anim:
+		sprite.play(anim)
+
+func _play_leila_oneshot(anim_name: String) -> void:
+	_leila_oneshot = true
+	var sprite: AnimatedSprite2D = $LeilaSprite
+	# Atış ve vurma animasyonları mouse yönünde
+	if sprite.animation != anim_name:
+		sprite.play(anim_name)
+
+func _on_leila_anim_finished() -> void:
+	_leila_oneshot = false
+
 func _update_anim_dir() -> void:
 	var w = Input.is_key_pressed(KEY_W)
 	var s = Input.is_key_pressed(KEY_S)
@@ -538,21 +633,27 @@ func _release_throw_ball() -> void:
 
 
 func _spawn_dash_ghost() -> void:
-	var sprite: AnimatedSprite2D = $VectorSprite
+	var sprite: AnimatedSprite2D
+	var trail_color: Color
+	if character_type == "leila":
+		sprite      = $LeilaSprite
+		trail_color = DASH_TRAIL_COLOR_LEILA
+	else:
+		sprite      = $VectorSprite
+		trail_color = DASH_TRAIL_COLOR
 	if not sprite.sprite_frames or not sprite.sprite_frames.has_animation(sprite.animation):
 		return
 	var tex: Texture2D = sprite.sprite_frames.get_frame_texture(sprite.animation, sprite.frame)
 	if not tex:
 		return
 	var ghost := Sprite2D.new()
-	ghost.texture        = tex
+	ghost.texture         = tex
 	ghost.global_position = sprite.global_position
-	ghost.scale          = sprite.global_scale
-	ghost.z_index        = 1          # karakterin (z=2) arkasında
-	ghost.z_as_relative  = false
-	ghost.modulate       = DASH_TRAIL_COLOR
+	ghost.scale           = sprite.global_scale
+	ghost.z_index         = 1
+	ghost.z_as_relative   = false
+	ghost.modulate        = trail_color
 	get_parent().add_child(ghost)
-	# Kısa sürede solar ve yok olur
 	var tw: Tween = ghost.create_tween()
 	tw.tween_property(ghost, "modulate:a", 0.0, 0.35).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	tw.tween_callback(ghost.queue_free)
@@ -658,6 +759,8 @@ func take_damage(amount) -> void:
 	invincible = true
 	if character_type == "vector" and not _vector_dead:
 		_play_vector_oneshot(_resolve_anim("take_damage", _anim_dir))
+	elif character_type == "leila":
+		_play_leila_oneshot("take_damage_" + _leila_anim_dir)
 	var game = get_parent()
 	if game.has_method("player_damaged"):
 		game.player_damaged(amount)

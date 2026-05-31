@@ -254,14 +254,9 @@ layout_mode = 2
 clip_contents = true
 theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 
-[node name="TextureRect" type="TextureRect" parent="HBoxContainer/CharacterPanel/CardsContainer/VectorCard" unique_id=336636497]
-layout_mode = 0
-offset_left = 22.0
-offset_top = 11.0
-offset_right = 372.0
-offset_bottom = 711.0
-texture = ExtResource("2_5duen")
-expand_mode = 4
+[node name="CharSprite" type="AnimatedSprite2D" parent="HBoxContainer/CharacterPanel/CardsContainer/VectorCard" unique_id=336636497]
+position = Vector2(200, 355)
+mouse_filter = 2
 
 [node name="LabelName" type="Label" parent="HBoxContainer/CharacterPanel/CardsContainer/VectorCard" unique_id=1111904103]
 layout_mode = 0
@@ -294,14 +289,9 @@ layout_mode = 2
 clip_contents = true
 theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 
-[node name="TextureRect" type="TextureRect" parent="HBoxContainer/CharacterPanel/CardsContainer/LeilaCard" unique_id=1056698487]
-layout_mode = 0
-offset_left = 22.0
-offset_top = 11.0
-offset_right = 372.0
-offset_bottom = 711.0
-texture = ExtResource("3_aoibv")
-expand_mode = 4
+[node name="CharSprite" type="AnimatedSprite2D" parent="HBoxContainer/CharacterPanel/CardsContainer/LeilaCard" unique_id=1056698487]
+position = Vector2(200, 355)
+mouse_filter = 2
 
 [node name="LabelName" type="Label" parent="HBoxContainer/CharacterPanel/CardsContainer/LeilaCard" unique_id=1914554500]
 layout_mode = 0
@@ -334,14 +324,9 @@ layout_mode = 2
 clip_contents = true
 theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 
-[node name="TextureRect" type="TextureRect" parent="HBoxContainer/CharacterPanel/CardsContainer/CycloneCard" unique_id=377722657]
-layout_mode = 0
-offset_left = 22.0
-offset_top = 14.0
-offset_right = 372.0
-offset_bottom = 714.0
-texture = ExtResource("4_aoibv")
-expand_mode = 4
+[node name="CharSprite" type="AnimatedSprite2D" parent="HBoxContainer/CharacterPanel/CardsContainer/CycloneCard" unique_id=377722657]
+position = Vector2(200, 355)
+mouse_filter = 2
 
 [node name="LabelName" type="Label" parent="HBoxContainer/CharacterPanel/CardsContainer/CycloneCard" unique_id=967200947]
 layout_mode = 0

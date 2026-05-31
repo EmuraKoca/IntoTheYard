@@ -18,6 +18,7 @@ debug_color = Color(0.2901961, 0.61960787, 1, 0.21568628)
 visible = false
 
 [node name="VectorRect" type="ColorRect" parent="." unique_id=777444336]
+visible = false
 offset_left = -20.0
 offset_top = -30.0
 offset_right = 20.0
@@ -31,6 +32,9 @@ offset_top = -30.0
 offset_right = 20.0
 offset_bottom = 30.0
 color = Color(1.0, 0.08, 0.58, 1)
+
+[node name="LeilaSprite" type="AnimatedSprite2D" parent="." unique_id=777444337]
+visible = false
 
 [node name="CycloneRect" type="ColorRect" parent="." unique_id=777444335]
 visible = false

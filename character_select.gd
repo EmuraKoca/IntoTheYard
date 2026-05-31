@@ -22,58 +22,99 @@ const _CARD_H: float = 800.0
 const _CARD_W: float = 400.0
 const _RAIN_Y: float = 400.0
 
+func _setup_char_sprite(card: Panel, sheet_path: String, frame_w: int, frame_count: int, sprite_scale: float) -> void:
+	var sprite: AnimatedSprite2D = card.get_node("CharSprite")
+	var frames := SpriteFrames.new()
+	if frames.has_animation("default"):
+		frames.remove_animation("default")
+
+	var tex: Texture2D = load(sheet_path)
+	frames.add_animation("spin")
+	frames.set_animation_speed("spin", 8.0)
+	frames.set_animation_loop("spin", true)
+	for i in range(frame_count):
+		var atlas := AtlasTexture.new()
+		atlas.atlas  = tex
+		atlas.region = Rect2(i * frame_w, 0, frame_w, frame_w)
+		frames.add_frame("spin", atlas)
+
+	sprite.sprite_frames  = frames
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	sprite.scale          = Vector2(sprite_scale, sprite_scale)
+	sprite.animation      = "spin"
+	sprite.frame          = 0
+	sprite.stop()
+
 func _ready() -> void:
-	vector_card = $HBoxContainer/CharacterPanel/CardsContainer/VectorCard
-	leila_card = $HBoxContainer/CharacterPanel/CardsContainer/LeilaCard
+	vector_card  = $HBoxContainer/CharacterPanel/CardsContainer/VectorCard
+	leila_card   = $HBoxContainer/CharacterPanel/CardsContainer/LeilaCard
 	cyclone_card = $HBoxContainer/CharacterPanel/CardsContainer/CycloneCard
-	
+
 	cards = [vector_card, leila_card, cyclone_card]
-	
+
+	_setup_char_sprite(vector_card,  "res://assets/selectCharacters/vector_sheet.png",  208, 8, 1.65)
+	_setup_char_sprite(leila_card,   "res://assets/selectCharacters/leila_sheet.png",   224, 8, 1.50)
+	_setup_char_sprite(cyclone_card, "res://assets/selectCharacters/cyclone_sheet.png", 224, 8, 1.50)
+
 	for card in cards:
 		card.mouse_entered.connect(_on_hover.bind(card))
 		card.mouse_exited.connect(_on_hover_exit.bind(card))
 		card.connect("gui_input", _on_card_clicked.bind(card))
-	
+
 	$Button.pressed.connect(_on_back)
 	$Button2.pressed.connect(_on_confirm)
-	
-	# None selected at start
+
 	for card in cards:
 		card.set_meta("selected", false)
-		var texture = card.get_node("TextureRect")
-		texture.modulate = Color(1, 1, 1)
+		var sprite: AnimatedSprite2D = card.get_node("CharSprite")
+		sprite.modulate = Color(0.4, 0.4, 0.4)
 		
 
 
 func _on_hover(card) -> void:
 	if card.get_meta("selected", false):
 		return
-	var texture = card.get_node("TextureRect")
-	texture.scale = Vector2(1.08, 1.08)
-	texture.modulate = Color(1.2, 1.2, 1.2)
+	var sprite: AnimatedSprite2D = card.get_node("CharSprite")
+	sprite.scale = Vector2(sprite.scale.x * 1.08, sprite.scale.y * 1.08)
+	sprite.modulate = Color(1.2, 1.2, 1.2)
+	sprite.play("spin")
 	_start_matrix(card)
 
 func _on_hover_exit(card) -> void:
 	if card.get_meta("selected", false):
 		return
-	var texture = card.get_node("TextureRect")
-	texture.scale = Vector2(1.0, 1.0)
-	texture.modulate = Color(0.4, 0.4, 0.4)
+	var sprite: AnimatedSprite2D = card.get_node("CharSprite")
+	# Scale'i orijinaline döndür
+	var base_scale := _get_base_scale(card)
+	sprite.scale = Vector2(base_scale, base_scale)
+	sprite.modulate = Color(0.4, 0.4, 0.4)
+	sprite.stop()
+	sprite.frame = 0
 	_stop_matrix(card)
+
+func _get_base_scale(card: Panel) -> float:
+	match card.name:
+		"VectorCard":  return 1.65
+		"LeilaCard":   return 1.50
+		"CycloneCard": return 1.50
+	return 1.5
 
 func _select_card(selected) -> void:
 	for card in cards:
-		var texture = card.get_node("TextureRect")
+		var sprite: AnimatedSprite2D = card.get_node("CharSprite")
+		var base_scale := _get_base_scale(card)
 		if card == selected:
 			card.set_meta("selected", true)
-			card.scale = Vector2(1.0, 1.0)
-			texture.scale = Vector2(1.1, 1.1)
-			texture.modulate = Color(1, 1, 1)
+			sprite.scale   = Vector2(base_scale * 1.1, base_scale * 1.1)
+			sprite.modulate = Color(1, 1, 1)
+			sprite.stop()
+			sprite.frame = 0
 		else:
 			card.set_meta("selected", false)
-			card.scale = Vector2(1.0, 1.0)
-			texture.scale = Vector2(1.0, 1.0)
-			texture.modulate = Color(0.4, 0.4, 0.4)
+			sprite.scale   = Vector2(base_scale, base_scale)
+			sprite.modulate = Color(0.4, 0.4, 0.4)
+			sprite.stop()
+			sprite.frame = 0
 
 func _on_card_clicked(event: InputEvent, card) -> void:
 	if event is InputEventMouseButton and event.pressed:
