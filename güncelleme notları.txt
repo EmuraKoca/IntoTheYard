@@ -1970,3 +1970,24 @@ Hata Düzeltmeleri:
 ✅ ball_launcher.gd add_child → add_child.call_deferred (ready sırasında crash)
 ✅ cyber_404.gd ColorRect bulunamıyor hatası — get_node_or_null ile güvenli hale getirildi
 ✅ Tip çıkarımı hataları: var angle, var dart, var crate, var snap vb. — açık tip eklendi
+
+
+────────────────────────────────────────────────────────────────────────────────
+
+0.0.8.1
+02.06.2026
+
+Calamity VFX:
+✅ Lightning — zigzag şimşek boltu, beyaz ekran flash, çarpma halkası
+✅ Flame Zone — ateş parçacıkları (CPUParticles2D), zemin halkası, 3s süre
+✅ Gravitational Force — mor vorteks + spiral parçacıklar, 5s süre
+✅ Arise upgrade listesinden kaldırıldı
+
+Top Fizik Düzeltmeleri:
+✅ Top player'ı itmiyor artık — player'a 80px yaklaşınca collision kapanıyor
+✅ Sonsuz sağ-sol sekme engellendi — 6 duvar sekmesinde returning'e geçiyor
+✅ Düşmana çarpınca sekme sayacı sıfırlanıyor
+
+Hasmen NPC:
+✅ sit klasörü doğru konuma taşındı (animations/sit/)
+✅ git'e eklendi, artık her bilgisayarda çalışıyor
