@@ -1846,3 +1846,127 @@ Hata Düzeltmeleri:
    (apply_burn, apply_frozen, apply_wet, apply_glitch, apply_slow)
    Etkilenen: subject, frantic_subject, heavy_subject, armed_subject,
    cyber_shooter, cyber_rifle, cyber_shotgun
+
+────────────────────────────────────────────────────────────────────────────────
+
+0.0.8.0
+01.06.2026
+
+BÜYÜK GÜNCELLEME — OYNANIŞIN BAŞTAN YAZILMASI
+
+Toplar artık fırlatılıp tutulmak yerine player etrafında orbit yapıyor,
+düşmanlara Brotato tarzı dart vurşu yapıyor ve her zaman orbit'e geri dönüyor.
+Sporif mekanik tamamen kaldırıldı.
+
+────────────────────────────────
+
+Orbit Sistemi (ball.gd / player.gd):
+
+✅ Top state machine: "flying" → "orbiting" → "returning"
+✅ Maksimum 7 top orbit'te tutulabiliyor (MAX_ORBIT)
+✅ Orbit yarıçapı: 65px, toplar eşit açı aralığıyla döngüsel pozisyonlanıyor
+✅ Launcher oyun başında 2 normal + 1 karaktere özel top fırlatıyor (2s arayla)
+   — Vector: Electric / Leila: Glitch / Cyc: Cryo
+✅ Sol tık → orbit'teki sıradaki topu mouse yönüne fırlatır
+✅ Fırlatma anında top önce player merkezine çekilir (0.07s snap), ardından fırlatılır
+   → Player'ın arkasındaki topların player'a çarpması engellendi
+✅ Fırlatılan top her durumda orbit'e döner (duvar sekmeleri dahil)
+✅ Düşme fiziği tamamen kaldırıldı — top yavaşlamaz, player'a yaklaşınca anında orbit'e girer
+✅ Toplar orbit'e katılırken defense_life sıfırlanıp yeniden hesaplanıyor
+
+Brotato Dart Strike (ball.gd):
+
+✅ Orbit'teki top 78px yakınında düşman tespit edince dart strike başlatıyor
+✅ 0.07s'de hedefe doğru fırlar (max 45px), hedefe vurur, 0.11s'de geri çekilir
+✅ strike_offset: player.gd orbit pozisyonuna eklenerek görsel efekt sağlanıyor
+✅ Vuruş sonrası 0.50s cooldown
+✅ defense_life dolana kadar dart strike yapılıyor, bitince otomatik fırlatılıyor
+✅ defense_damage: flying damage'ın %50'si; defense_life_max = defense_damage × 3
+
+Performans Optimizasyonu (ball.gd):
+
+✅ _cached_player değişkeni eklendi — player referansı önbelleğe alınıyor
+✅ _get_player() helper: sadece geçersizleştiğinde yeniden aranıyor
+✅ ball._process() cyclone kontrolü: sadece state != "orbiting" iken çalışıyor
+✅ Tüm get_first_node_in_group("player") çağrıları _get_player() ile değiştirildi
+   → 7 top × 60fps grup sorgusundan kurtulundu
+
+────────────────────────────────
+
+Cyclone ve Vector Sprite Sistemi:
+
+✅ Cyclone: 224×224px, idle(8 frame) + run(6 frame), 8 yön
+   — assets/characters/cyclone/sheets/ klasörüne spritesheet'ler oluşturuldu
+✅ Vector: 208×208px, idle(4 frame) + run(6 frame), 8 yön
+   — assets/characters/vector/sheets/ klasörüne spritesheet'ler oluşturuldu
+✅ make_sheets.js ve make_imports.js araçları oluşturuldu (tools/ klasörü)
+✅ player.gd'ye _setup_cyclone_sprite() ve _setup_vector_sprite_new() eklendi
+✅ Cyclone ve Vector animasyonları 8 yönlü çalışıyor
+
+────────────────────────────────
+
+Prosedürel Tahta Sandık — Boss Giriş Sekansı (crate_intro.gd):
+
+✅ Yeni dosya: crate_intro.gd — tamamen prosedürel _draw() ile çizilen sandık
+✅ Çizilen elemanlar: ahşap gövde (3 renk katman), metal orta bant, 4 köşe L-braketi,
+   perçinler, sarı uyarı üçgeni, kapak (metal kilit)
+✅ Sekans:
+   — Yukarıdan düşer → yere çarpar (sarı flash + toz bulutu + kamera sarsıntısı)
+   — Titrer → kapak fırlar ve dönerek uçup gider
+   — Kırmızı gözler sandıktan yükselir → boss_emerged sinyali
+✅ Boss sandık pozisyonundan sahaya fırlar (scale 0.4 → 1.8)
+✅ Eski ColorRect tabanlı boss giriş sistemi kaldırıldı
+
+────────────────────────────────
+
+Mr. Hasmen NPC Girişi (hasmen_npc.gd):
+
+✅ Yeni dosya: hasmen_npc.gd — Mr. Hasmen'ın sahaya giriş sekansı
+✅ Assets: assets/npcs/mrHasmen/ — walk(north/west, 6 frame) + idle(east, 4 frame)
+✅ Sekans: Hasmen seçim ekranı kapanınca başlar
+   — Güney girişten kuzey koridora yürür (walk_north)
+   — Sandalyeye doğru batıya döner (walk_west)
+   — Doğuya bakarak idle'a geçer — oyunu izliyor (idle_east)
+✅ Animasyonlar mesafeye bölü hıza göre dinamik süreyle tamamlanıyor (72px/s)
+
+────────────────────────────────
+
+ITY Processor UI Düğmesi (game_scene.gd / fusion_zone.gd):
+
+✅ Fusion_zone.gd'deki _input() tıklama handler'ı kaldırıldı
+✅ toggle_active() metodu eklendi (dışarıdan çağrılabilir)
+✅ UI panelinde FusionEnergyBar'ın altına "⚙ ITY PROCESSOR ■ ON/OFF" butonu eklendi
+   — Cihaz aktive edilince otomatik görünür, başlangıçta yok
+   — ON: neon cyan / OFF: gri
+✅ LabelCalamity 32px aşağı kaydırıldı (çakışma giderildi)
+
+────────────────────────────────
+
+Upgrade Kartı Nadirlik Sistemi (game_scene.gd):
+
+✅ Ağırlıklı random seçim sistemi — _weighted_pick() fonksiyonu eklendi
+✅ Nadirlik seviyeleri:
+   — Common  (weight 10): hareket, sağlık, hasar bonusleri, calamity kartları
+   — Rare    (weight 3) : tüm top tipi upgradeler (split, electric, pierce, cryo, glitch, water, fire, leech)
+   — Epic    (weight 1) : Mimic Ball
+✅ Kart görsel rozeti: "★ RARE" (altın) ve "✦ EPIC" (mor) strip üzerinde gösteriliyor
+✅ Rare/Epic kartlarda hafif koyu kart arka planı
+
+────────────────────────────────
+
+Silahlı Düşman Dengeleme:
+
+✅ CyberShotgun: 7 mermi → 3 mermi (−20°, 0°, +20°), ateş aralığı 3s → 5.5s
+✅ CyberRifle: 5 mermi → 3 mermi art arda, ateş aralığı 3s → 5.0s
+✅ CyberShooter: değişmedi
+
+────────────────────────────────
+
+Hata Düzeltmeleri:
+
+✅ ball.$CollisionShape2D sözdizimi hatası — ball.get_node("CollisionShape2D") ile değiştirildi
+✅ Başlangıçta 2 top aynı anda fırlatılıyordu — _startup_timer = 0.0 → 2.0 düzeltildi
+✅ Başlangıç top sırası yanlıştı (1 normal 2 upgrade) — _startup_fired sayacı eklendi
+✅ ball_launcher.gd add_child → add_child.call_deferred (ready sırasında crash)
+✅ cyber_404.gd ColorRect bulunamıyor hatası — get_node_or_null ile güvenli hale getirildi
+✅ Tip çıkarımı hataları: var angle, var dart, var crate, var snap vb. — açık tip eklendi

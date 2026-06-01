@@ -1,0 +1,91 @@
+{
+  "group_id": null,
+  "states": [
+    {
+      "character": {
+        "id": "709b724b-ebbb-46cd-a200-56e54405a82b",
+        "name": "Pixel art character, short stout",
+        "prompt": "Pixel art character, short stout villain, cyberpunk mob boss, dark patterned suit with cyan neon trim details on lapels, red shirt and tie underneath, round dark sunglasses with red lens tint, wild curly black hair, smug grin, shiny black shoes",
+        "size": {
+          "width": 128,
+          "height": 128
+        },
+        "template_id": "mannequin",
+        "directions": 8,
+        "view": "high top-down",
+        "created_at": "2026-05-31T22:02:36.47196+00:00"
+      },
+      "folder": "Pixel_art_character_short_stout",
+      "frames": {
+        "rotations": {
+          "south": "Pixel_art_character_short_stout/rotations/south.png",
+          "south-east": "Pixel_art_character_short_stout/rotations/south-east.png",
+          "east": "Pixel_art_character_short_stout/rotations/east.png",
+          "north-east": "Pixel_art_character_short_stout/rotations/north-east.png",
+          "north": "Pixel_art_character_short_stout/rotations/north.png",
+          "north-west": "Pixel_art_character_short_stout/rotations/north-west.png",
+          "west": "Pixel_art_character_short_stout/rotations/west.png",
+          "south-west": "Pixel_art_character_short_stout/rotations/south-west.png"
+        },
+        "animations": {
+          "Breathing_Idle-7fa09e2e": {
+            "south": [
+              "Pixel_art_character_short_stout/animations/Breathing_Idle-7fa09e2e/south/frame_000.png",
+              "Pixel_art_character_short_stout/animations/Breathing_Idle-7fa09e2e/south/frame_001.png",
+              "Pixel_art_character_short_stout/animations/Breathing_Idle-7fa09e2e/south/frame_002.png",
+              "Pixel_art_character_short_stout/animations/Breathing_Idle-7fa09e2e/south/frame_003.png"
+            ],
+            "east": [
+              "Pixel_art_character_short_stout/animations/Breathing_Idle-7fa09e2e/east/frame_000.png",
+              "Pixel_art_character_short_stout/animations/Breathing_Idle-7fa09e2e/east/frame_001.png",
+              "Pixel_art_character_short_stout/animations/Breathing_Idle-7fa09e2e/east/frame_002.png",
+              "Pixel_art_character_short_stout/animations/Breathing_Idle-7fa09e2e/east/frame_003.png"
+            ],
+            "north": [
+              "Pixel_art_character_short_stout/animations/Breathing_Idle-7fa09e2e/north/frame_000.png",
+              "Pixel_art_character_short_stout/animations/Breathing_Idle-7fa09e2e/north/frame_001.png",
+              "Pixel_art_character_short_stout/animations/Breathing_Idle-7fa09e2e/north/frame_002.png",
+              "Pixel_art_character_short_stout/animations/Breathing_Idle-7fa09e2e/north/frame_003.png"
+            ]
+          },
+          "animation-eb40b4de": {
+            "south": [
+              "Pixel_art_character_short_stout/animations/animation-eb40b4de/south/frame_000.png",
+              "Pixel_art_character_short_stout/animations/animation-eb40b4de/south/frame_001.png",
+              "Pixel_art_character_short_stout/animations/animation-eb40b4de/south/frame_002.png",
+              "Pixel_art_character_short_stout/animations/animation-eb40b4de/south/frame_003.png",
+              "Pixel_art_character_short_stout/animations/animation-eb40b4de/south/frame_004.png",
+              "Pixel_art_character_short_stout/animations/animation-eb40b4de/south/frame_005.png"
+            ],
+            "north": [
+              "Pixel_art_character_short_stout/animations/animation-eb40b4de/north/frame_000.png",
+              "Pixel_art_character_short_stout/animations/animation-eb40b4de/north/frame_001.png",
+              "Pixel_art_character_short_stout/animations/animation-eb40b4de/north/frame_002.png",
+              "Pixel_art_character_short_stout/animations/animation-eb40b4de/north/frame_003.png",
+              "Pixel_art_character_short_stout/animations/animation-eb40b4de/north/frame_004.png",
+              "Pixel_art_character_short_stout/animations/animation-eb40b4de/north/frame_005.png"
+            ],
+            "east": [
+              "Pixel_art_character_short_stout/animations/animation-eb40b4de/east/frame_000.png",
+              "Pixel_art_character_short_stout/animations/animation-eb40b4de/east/frame_001.png",
+              "Pixel_art_character_short_stout/animations/animation-eb40b4de/east/frame_002.png",
+              "Pixel_art_character_short_stout/animations/animation-eb40b4de/east/frame_003.png",
+              "Pixel_art_character_short_stout/animations/animation-eb40b4de/east/frame_004.png",
+              "Pixel_art_character_short_stout/animations/animation-eb40b4de/east/frame_005.png"
+            ],
+            "west": [
+              "Pixel_art_character_short_stout/animations/animation-eb40b4de/west/frame_000.png",
+              "Pixel_art_character_short_stout/animations/animation-eb40b4de/west/frame_001.png",
+              "Pixel_art_character_short_stout/animations/animation-eb40b4de/west/frame_002.png",
+              "Pixel_art_character_short_stout/animations/animation-eb40b4de/west/frame_003.png",
+              "Pixel_art_character_short_stout/animations/animation-eb40b4de/west/frame_004.png",
+              "Pixel_art_character_short_stout/animations/animation-eb40b4de/west/frame_005.png"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "export_version": "3.0",
+  "export_date": "2026-06-01T08:35:46.804123"
+}

@@ -10,7 +10,7 @@ var is_wet = false
 var is_burning = false
 var original_speed = 70.0
 var shoot_timer = 0.0
-var shoot_interval = 3.0
+var shoot_interval = 5.0
 var is_electrified = false
 var max_health = 12
 var attack_cooldown = 0.0
@@ -131,13 +131,14 @@ func _physics_process(delta: float) -> void:
 
 func _shoot(target: Node2D) -> void:
 	var dir = (target.global_position - global_position).normalized()
-	# 5 mermi art arda
-	for i in range(5):
+	# 3 mermi art arda tarama
+	for i in range(3):
+		if not is_instance_valid(self): return
 		var bullet = bullet_scene.instantiate()
 		bullet.global_position = global_position
 		get_parent().add_child(bullet)
 		bullet.launch(dir)
-		await get_tree().create_timer(0.15).timeout
+		await get_tree().create_timer(0.18).timeout
 
 func take_damage(amount, from_ally: bool = false) -> void:
 	health -= amount

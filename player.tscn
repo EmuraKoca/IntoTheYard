@@ -36,10 +36,5 @@ color = Color(1.0, 0.08, 0.58, 1)
 [node name="LeilaSprite" type="AnimatedSprite2D" parent="." unique_id=777444337]
 visible = false
 
-[node name="CycloneRect" type="ColorRect" parent="." unique_id=777444335]
+[node name="CycloneSprite" type="AnimatedSprite2D" parent="." unique_id=777444335]
 visible = false
-offset_left = -20.0
-offset_top = -30.0
-offset_right = 20.0
-offset_bottom = 30.0
-color = Color(0.0, 0.9, 0.3, 1)

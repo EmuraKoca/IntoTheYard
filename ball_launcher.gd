@@ -3,8 +3,16 @@
 var ball_scene = preload("res://ball.tscn")
 var player = null
 var game   = null
-var total_balls  = 50
-var balls_fired  = 0
+
+# ── Başlangıç sekansı: 3 top, 2'şer saniye arayla ────────────────────────────
+var _startup_balls_left: int  = 0
+var _startup_timer: float     = 0.0
+var _startup_active: bool     = false
+var _startup_fired: int       = 0   # kaç top fırlatıldı (tip hesabı için)
+
+# Upgrade'den gelen top kuyruğu
+var _pending_upgrades: Array  = []
+var _upgrade_timer: float     = 0.0
 
 # ── Actual visual sprite (sibling node in game_scene) ──────────────────────────
 var _sprite: Sprite2D = null
@@ -37,28 +45,73 @@ func _get_muzzle_global() -> Vector2:
 
 # ─────────────────────────────────────────────────────────────────────────────
 func _ready() -> void:
-	$Timer.timeout.connect(_on_timer_timeout)
 	player = get_parent().get_node("Player")
 	game   = get_parent()
 
-	# Hide white square — not used visually
 	$ColorRect.visible = false
-
-	# This node's _draw() output (charge glow + muzzle flash) renders above everything
 	visible       = true
 	z_index       = 10
 	z_as_relative = false
 
-	# Actual visual: sibling BallLauncherSprite in game_scene
 	_sprite = get_parent().get_node_or_null("BallLauncherSprite") as Sprite2D
 	if _sprite:
 		_sprite_rest_pos = _sprite.position
 
+	# Başlangıç sekansı: ilk top hemen, sonrakiler 2s arayla
+	_startup_balls_left = 2      # ilkini hemen fırlatacağız, kalan 2
+	_startup_active     = true
+	_startup_timer      = 2.0    # process döngüsü 2s bekleyecek (anında ikinci top gitmesin)
+	_startup_fired      = 0
+	_launch_startup_ball()       # 1. top hemen
+
+func _launch_startup_ball() -> void:
+	if player == null: return
+	var type := _get_character_start_type()
+	_launch_typed_ball(type)
+	_last_launch_type = type
+	_startup_fired += 1
+
+func _get_character_start_type() -> String:
+	# _startup_fired: 0 → normal, 1 → normal, 2 → karaktere özel
+	if _startup_fired < 2:
+		return ""   # normal
+	match player.character_type:
+		"vector":  return "electric"
+		"leila":   return "glitch"
+		"cyclone": return "cryo"
+	return ""
+
+func queue_upgrade_ball(ball_type: String) -> void:
+	_pending_upgrades.append(ball_type)
+	if _pending_upgrades.size() == 1:
+		_upgrade_timer = 2.0   # ilk upgrade bekleme
+
 # ─────────────────────────────────────────────────────────────────────────────
 func _process(delta: float) -> void:
-	var tl: float = $Timer.time_left
+	# ── Başlangıç sekansı ─────────────────────────────────────────────────────
+	if _startup_active and _startup_balls_left > 0:
+		_startup_timer -= delta
+		if _startup_timer <= 0.0:
+			_startup_balls_left -= 1
+			_launch_startup_ball()
+			if _startup_balls_left > 0:
+				_startup_timer = 2.0
+			else:
+				_startup_active = false
 
-	# ── Charge window: last 1 second ─────────────────────────────────────────
+	# ── Upgrade top kuyruğu ───────────────────────────────────────────────────
+	if not _pending_upgrades.is_empty():
+		_upgrade_timer -= delta
+		if _upgrade_timer <= 0.0:
+			var utype: String = _pending_upgrades.pop_front()
+			_launch_typed_ball(utype)
+			_last_launch_type = utype
+			if not _pending_upgrades.is_empty():
+				_upgrade_timer = 2.0
+
+	# ── Charge window: last 1 second (artık Timer yerine upgrade zaman) ───────
+	var tl: float = _upgrade_timer if not _pending_upgrades.is_empty() else 0.0
+
 	if tl > 0.0 and tl <= 1.0:
 		if not is_charging:
 			is_charging = true
@@ -95,80 +148,52 @@ func _process(delta: float) -> void:
 		queue_redraw()
 
 # ─────────────────────────────────────────────────────────────────────────────
-func _on_timer_timeout() -> void:
-	_launch_ball()
-
-# ─────────────────────────────────────────────────────────────────────────────
-func _launch_ball() -> void:
-	# Early exit: limit reached or no player
-	if balls_fired >= total_balls:
-		return
-	if player == null:
-		return
-
-	var ball        = ball_scene.instantiate()
+func _launch_typed_ball(ball_type: String) -> void:
+	if player == null: return
 	var player_node = get_parent().get_node("Player")
+
+	var ball = ball_scene.instantiate()
 	ball.max_damage = 5 + player_node.ball_mastery
 
-	if game and game.next_ball_upgrade != "":
-		_last_launch_type = game.next_ball_upgrade   # save for flash color
+	match ball_type:
+		"split":
+			ball.can_split    = true
+			ball.max_damage   = 7 + player_node.split_bonus + player_node.ball_mastery
+		"electric":
+			ball.can_electric = true
+			ball.max_damage   = 9 + player_node.electric_bonus + player_node.ball_mastery
+		"pierce":
+			ball.can_pierce   = true
+			ball.max_damage   = 10 + player_node.pierce_bonus + player_node.ball_mastery
+		"cryo":
+			ball.can_cryo     = true
+			ball.max_damage   = 4 + player_node.ball_mastery
+		"glitch":
+			ball.can_glitch   = true
+			ball.max_damage   = 4 + player_node.ball_mastery
+		"water":
+			ball.can_water    = true
+			ball.max_damage   = 3 + player_node.ball_mastery
+		"fire":
+			ball.can_fire     = true
+			ball.max_damage   = 6 + player_node.ball_mastery
+		"leech":
+			ball.can_leech    = true
+			ball.max_damage   = 2
+		"mimic":
+			ball.is_mimic     = true
 
-		ball.can_split    = game.next_ball_upgrade == "split"
-		ball.can_electric = game.next_ball_upgrade == "electric"
-		ball.can_pierce   = game.next_ball_upgrade == "pierce"
-		ball.can_cryo     = game.next_ball_upgrade == "cryo"
-		ball.can_glitch   = game.next_ball_upgrade == "glitch"
-		ball.can_water    = game.next_ball_upgrade == "water"
-		ball.can_fire     = game.next_ball_upgrade == "fire"
-		ball.can_leech    = game.next_ball_upgrade == "leech"
-
-		if ball.can_fire:
-			ball.max_damage = 6 + player_node.ball_mastery
-		if ball.can_water:
-			ball.max_damage = 3 + player_node.ball_mastery
-		if ball.can_glitch:
-			ball.max_damage = 4 + player_node.ball_mastery
-		if ball.can_split:
-			ball.max_damage = 7 + player_node.split_bonus + player_node.ball_mastery
-		elif ball.can_electric:
-			ball.max_damage = 9 + player_node.electric_bonus + player_node.ball_mastery
-		elif ball.can_pierce:
-			ball.max_damage = 10 + player_node.pierce_bonus + player_node.ball_mastery
-		elif ball.can_cryo:
-			ball.max_damage = 4 + player_node.ball_mastery
-		elif ball.can_leech:
-			ball.max_damage = 2
-
-		game.next_ball_upgrade = ""
-	else:
-		if game and game.get_node("Player").has_mimic:
-			ball.is_mimic = true
-			_last_launch_type = "mimic"
-		else:
-			ball.is_mimic = false
-			_last_launch_type = ""
-
-	var direction = (player.global_position - global_position).normalized()
-
-	# Spawn ball at the exact muzzle tip (sprite-rotation-aware),
-	# then slide along direction until it clears the left game boundary (x=875).
-	var spawn_pos = _get_muzzle_global()
+	var direction  = (player.global_position - global_position).normalized()
+	var spawn_pos  = _get_muzzle_global()
 	if spawn_pos.x < 875.0 and direction.x > 0.0:
 		var t = (875.0 - spawn_pos.x) / direction.x
-		spawn_pos += direction * (t + 2.0)   # +2 px margin
+		spawn_pos += direction * (t + 2.0)
 
 	ball.global_position = spawn_pos
-	get_parent().add_child(ball)
-
-	# Increment counter only when ball is actually added to scene
-	balls_fired += 1
-	if game:
-		game.update_ui()           # Update UI immediately
-
+	get_parent().add_child.call_deferred(ball)
 	ball.queue_redraw()
 	ball.launch(direction)
 
-	# Charge color fades, sprite returns to rest; then recoil begins
 	if _sprite:
 		_sprite.modulate = Color(1.0, 1.0, 1.0)
 		_sprite.position = _sprite_rest_pos
@@ -176,6 +201,9 @@ func _launch_ball() -> void:
 	_trigger_flash()
 	_trigger_recoil()
 	queue_redraw()
+
+	if game:
+		game.update_ui()
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Muzzle flash: neon color based on ball type

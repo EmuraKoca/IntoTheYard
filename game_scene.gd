@@ -1,4 +1,4 @@
-﻿extends Node2D
+extends Node2D
 
 var _font_bold    = preload("res://assets/orbitronfont/Orbitron-Bold.ttf")
 var _font_regular = preload("res://assets/orbitronfont/Orbitron-Regular.ttf")
@@ -31,79 +31,55 @@ var cyber_404_scene = preload("res://cyber_404.tscn")
 var boss_bar_canvas = null
 var boss = null
 var boss_defeated = false
-var boss_warning = null
+var _crate_node = null
+var _processor_btn: Button = null
+var _hasmen_npc = null
 var data_collected: int = 0
 var total_subjects_killed: int = 0
 var ally_chip_duration: float = 15.0  # Upgradeable via card (index 23)
 
-func _show_boss_warning() -> void:
-	boss_warning = ColorRect.new()
-	boss_warning.name = "BossWarning"
-	boss_warning.size = Vector2(150, 150)
-	boss_warning.color = Color(0.4, 0.2, 0.0)
-	boss_warning.position = Vector2(280, -200)
-	add_child(boss_warning)
-	
-	# Drop from above
-	var tween = create_tween()
-	tween.tween_property(boss_warning, "position", Vector2(280, 550), 1.0)\
-		.set_trans(Tween.TRANS_QUAD)\
-		.set_ease(Tween.EASE_IN)
-	
-	await get_tree().create_timer(1.0).timeout
-	_screen_shake()
-	
-	# TEST: kısa bekleme
-	await get_tree().create_timer(3.0).timeout
-	_open_crate()
+func _start_boss_intro() -> void:
+	var crate = load("res://crate_intro.gd").new()
+	crate.name   = "BossCrate"
+	_crate_node  = crate
+	add_child(crate)
+	crate.landed.connect(_screen_shake)
+	crate.boss_emerged.connect(_on_boss_emerged)
+	crate.play_intro(Vector2(1240, 570))
 
-func _open_crate() -> void:
-	if boss_warning == null:
+func _on_boss_emerged() -> void:
+	var crate: Node2D = _crate_node
+	_crate_node = null
+	if not is_instance_valid(crate):
 		return
-	
-	# Crate opening - color change
-	var tween = create_tween()
-	tween.tween_property(boss_warning, "color", Color(0.1, 0.1, 0.1), 0.5)
-	tween.parallel().tween_property(boss_warning, "scale", Vector2(1.3, 1.3), 0.5)
-	
-	await get_tree().create_timer(1.0).timeout
-	
-	# Lights turning on - blue glow
-	var tween2 = create_tween()
-	tween2.tween_property(boss_warning, "color", Color(0.0, 0.5, 1.0), 0.5)
-	
-	await get_tree().create_timer(1.0).timeout
-	
-	# Sahaya atla
-	boss_warning.queue_free()
-	boss_warning = null
-	_spawn_boss()
+	var spawn_pos: Vector2 = crate.position
+	# Sandık solar ve kaybolur
+	var tw := create_tween()
+	tw.tween_property(crate, "modulate:a", 0.0, 0.30)
+	tw.tween_callback(crate.queue_free)
+	_spawn_boss_at(spawn_pos)
 
-func _spawn_boss() -> void:
+func _spawn_boss_at(spawn_pos: Vector2) -> void:
 	var b = cyber_404_scene.instantiate()
-	b.position = Vector2(350, 550)
-	b.scale = Vector2(3.0, 3.0)
+	b.position = spawn_pos
+	b.scale    = Vector2(0.4, 0.4)
 	add_child(b)
 	boss = b
-	
-	# Disable collision during jump
 	b.get_node("CollisionShape2D").disabled = true
-	
-	var tween = create_tween()
-	tween.tween_property(b, "position", Vector2(1240, 400), 1.0)\
-		.set_trans(Tween.TRANS_QUAD)\
-		.set_ease(Tween.EASE_IN_OUT)
-	tween.parallel().tween_property(b, "scale", Vector2(1.8, 1.8), 1.0)\
-		.set_trans(Tween.TRANS_QUAD)\
-		.set_ease(Tween.EASE_OUT)
-	
-	await get_tree().create_timer(1.0).timeout
+
+	var tw := create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(b, "position", Vector2(1240, 400), 0.75)\
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_property(b, "scale", Vector2(1.8, 1.8), 0.75)\
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	await tw.finished
+
 	_screen_shake()
-	
-	# Landed, re-enable collision
 	if is_instance_valid(b):
 		b.get_node("CollisionShape2D").disabled = false
-		b._landing_wave()
+		if b.has_method("_landing_wave"):
+			b._landing_wave()
 	
 func _screen_shake() -> void:
 	var camera = get_node("Camera2D")
@@ -340,6 +316,7 @@ func _show_hasmen_selection() -> void:
 			canvas.queue_free()
 			get_tree().paused = false
 			_activate_fusion_zone()
+			_spawn_hasmen_entrance()
 	)
 
 	# ── KART 2: ??? (kilitli, gri) ───────────────────────────────────────
@@ -391,19 +368,71 @@ func _show_hasmen_selection() -> void:
 func _activate_fusion_zone() -> void:
 	var fusion_zone = get_tree().get_first_node_in_group("fusion_zone")
 	var processor_sprite = get_node("ProcessorSprite")
-	
+
 	if fusion_zone and processor_sprite:
 		fusion_zone.visible = true
 		fusion_zone.set_physics_process(true)
-		
+
 		# Landing animation
 		var start_y = -150
 		var end_pos = processor_sprite.position
 		processor_sprite.position.y = start_y
-		
+
 		var tween = create_tween()
 		tween.tween_property(processor_sprite, "position:y", end_pos.y, 2.0)\
 			.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+
+		# UI toggle butonu oluştur (FusionEnergyBar'ın altında)
+		_processor_btn = Button.new()
+		_processor_btn.name = "BtnProcessor"
+		_processor_btn.offset_left   = 1640.0
+		_processor_btn.offset_top    = 460.0
+		_processor_btn.offset_right  = 1912.0
+		_processor_btn.offset_bottom = 488.0
+		_processor_btn.add_theme_font_override("font", _font_bold)
+		_processor_btn.add_theme_font_size_override("font_size", 12)
+		_processor_btn.pressed.connect(_on_processor_toggle)
+		$UI.add_child(_processor_btn)
+		_update_processor_btn()
+
+func _on_processor_toggle() -> void:
+	var fusion_zone = get_tree().get_first_node_in_group("fusion_zone")
+	if fusion_zone:
+		fusion_zone.toggle_active()
+	_update_processor_btn()
+
+func _update_processor_btn() -> void:
+	if _processor_btn == null:
+		return
+	var fusion_zone = get_tree().get_first_node_in_group("fusion_zone")
+	var active: bool = fusion_zone.is_active if fusion_zone else false
+	if active:
+		_processor_btn.text = "⚙  ITY PROCESSOR   ■ ON"
+		_processor_btn.add_theme_color_override("font_color",         Color(0.0, 0.95, 1.0))
+		_processor_btn.add_theme_color_override("font_hover_color",   Color(0.4, 1.0,  1.0))
+		_processor_btn.add_theme_color_override("font_pressed_color", Color(0.0, 0.7,  0.8))
+	else:
+		_processor_btn.text = "⚙  ITY PROCESSOR   □ OFF"
+		_processor_btn.add_theme_color_override("font_color",         Color(0.45, 0.45, 0.50))
+		_processor_btn.add_theme_color_override("font_hover_color",   Color(0.65, 0.65, 0.70))
+		_processor_btn.add_theme_color_override("font_pressed_color", Color(0.30, 0.30, 0.35))
+
+func _spawn_hasmen_entrance() -> void:
+	if _hasmen_npc != null:
+		return
+	var npc = load("res://hasmen_npc.gd").new()
+	npc.name  = "HasmenNPC"
+	_hasmen_npc = npc
+	add_child(npc)
+	# ── Koordinatları sahana göre ayarla ──────────────────────────────────
+	# start_pos : güney girişi (ekran dışından gelir)
+	# mid_pos   : kuzey koridoru sonu (dönüş noktası)
+	# chair_pos : sandalye — doğuya bakıyor, oyunu izliyor
+	npc.play_entrance(
+		Vector2(820, 1260),   # giriş — güney (ekran altı)
+		Vector2(820, 570),    # kuzey sonu
+		Vector2(725, 570)     # sandalye
+	)
 
 func _ready() -> void:
 	update_ui()
@@ -428,7 +457,7 @@ func update_ui() -> void:
 	$UI/LabelLevel.text = "◈  LEVEL " + str(level)
 	$UI/IntegrityBar.max_value = player_max_hp
 	$UI/IntegrityBar.value = player_hp
-	$UI/LabelBalls.text = "⬤  BALLS   " + str($BallLauncher.balls_fired) + " / " + str($BallLauncher.total_balls)
+	$UI/LabelBalls.text = "⬤  BALLS   " + str(get_node("Player").orbit_balls.size()) + " / " + str(get_node("Player").MAX_ORBIT)
 	$UI/IntegrityBar.max_value = player_max_hp
 	$UI/IntegrityBar.value = player_hp
 	$UI/IntegrityBar/LabelIntegrity.text = "♥  " + str(player_hp) + " / " + str(player_max_hp)
@@ -445,9 +474,10 @@ func update_ui() -> void:
 		upgrade_text += "  none"
 	$UI/LabelUpgrades.text = upgrade_text
 
-	# Catch slot indicator
-	var player = get_node("Player")
-	$UI/LabelCatch.text = "✋  CATCH   " + str(player.held_balls.size()) + " / " + str(player.max_held_balls)
+	# Catch slot indicator (legacy — hidden or repurposed)
+	var catch_lbl = get_node_or_null("UI/LabelCatch")
+	if catch_lbl:
+		catch_lbl.visible = false
 
 	# Calamity slots
 	var calamity_text = "— CALAMITY —\n"
@@ -462,6 +492,7 @@ func update_ui() -> void:
 		for _j in range(max_calamity_slots - calamity_slots.size()):
 			calamity_text += "◻  "
 	$UI/LabelCalamity.text = calamity_text
+	_update_processor_btn()
 
 func subject_died() -> void:
 	subjects_killed += 1
@@ -643,33 +674,54 @@ func _get_hasmen_quote() -> String:
 	else:
 		return "Exceptional. You may yet prove worthy of my investment."
 
+func _weighted_pick(pool: Array, count: int) -> Array:
+	var result: Array = []
+	var remaining := pool.duplicate()
+	for _i in range(count):
+		if remaining.is_empty():
+			break
+		var total: int = 0
+		for item in remaining:
+			total += item.get("weight", 10)
+		var roll := randi() % total
+		var acc: int = 0
+		for j in range(remaining.size()):
+			acc += remaining[j].get("weight", 10)
+			if roll < acc:
+				result.append(remaining[j])
+				remaining.remove_at(j)
+				break
+	return result
+
 func show_upgrade_menu() -> void:
 	upgrading = true
-	
+
+	# weight: seçilme ağırlığı — düşük = nadir
+	# rarity: "common" | "rare" | "epic"
 	var upgrades = [
-	{"name": "Mimic Ball", "category": "Utility", "color": Color(0.5, 0.5, 1.0), "desc": "Copies the nearest powered-up ball", "index": 19},
-	{"name": "Split Ball", "category": "Utility", "color": Color(0.2, 0.8, 0.2), "desc": "Ball splits into 3", "index": 0},
-	{"name": "Electric Ball", "category": "Utility", "color": Color(0.2, 0.5, 1.0), "desc": "Ball gains electricity", "index": 1},
-	{"name": "Pierce Ball", "category": "Utility", "color": Color(1.0, 0.8, 0.0), "desc": "Ball pierces through", "index": 2},
-	{"name": "Cryo Ball", "category": "Utility", "color": Color(0.5, 0.8, 1.0), "desc": "Slows subject by 25%", "index": 15},
-	{"name": "Glitch Ball", "category": "Utility", "color": Color(0.8, 0.0, 0.8), "desc": "Disorients subject for 3s", "index": 16},
-	{"name": "Water Ball", "category": "Utility", "color": Color(0.0, 0.5, 1.0), "desc": "Applies wet, single hit", "index": 17},
-	{"name": "Fire Ball", "category": "Utility", "color": Color(1.0, 0.3, 0.0), "desc": "Applies burn to subject", "index": 18},
-	{"name": "Speed Upgrade", "category": "Individuality", "color": Color(0.6, 0.2, 0.8), "desc": "Movement speed increases", "index": 4},
-	{"name": "Catch +1", "category": "Connectivity", "color": Color(1.0, 0.5, 0.0), "desc": "Hold 2 balls simultaneously", "index": 5},
-	{"name": "Next One", "category": "Connectivity", "color": Color(1.0, 0.5, 0.0), "desc": "Throw balls in any order", "index": 6},
-	{"name": "Lightning", "category": "Calamity", "color": Color(1.0, 1.0, 0.0), "desc": "Lightning strikes selected point", "index": 7},
-	{"name": "Flame Zone", "category": "Calamity", "color": Color(1.0, 0.3, 0.0), "desc": "Continuous damage in selected area", "index": 8},
-	{"name": "Gravitational Force", "category": "Calamity", "color": Color(0.5, 0.0, 1.0), "desc": "Pulls subjects for 5s", "index": 9},
-	{"name": "Arise", "category": "Calamity", "color": Color(0.8, 0.8, 1.0), "desc": "Fallen balls start moving", "index": 10},
-	{"name": "Ball Mastery", "category": "Utility", "color": Color(0.2, 0.8, 0.2), "desc": "+1 damage to all balls", "index": 11},
-	{"name": "Pierce Sharpness", "category": "Utility", "color": Color(1.0, 0.8, 0.0), "desc": "Pierce ball +2 damage", "index": 12},
-	{"name": "Thunder Amp", "category": "Utility", "color": Color(0.2, 0.5, 1.0), "desc": "Electric ball +2 damage", "index": 13},
-	{"name": "Split Amp", "category": "Utility", "color": Color(1.0, 0.2, 0.2), "desc": "Split ball +2 damage", "index": 14},
-	{"name": "Medkit", "category": "Individuality", "color": Color(0.9, 0.1, 0.1), "desc": "+10 HP restored", "index": 20},
-	{"name": "Max Health Up", "category": "Individuality", "color": Color(0.8, 0.2, 0.2), "desc": "Maximum HP +5", "index": 21},
-	{"name": "Data Leech Ball", "category": "Utility", "color": Color(0.6, 0.0, 0.2), "desc": "+2 Integrity on hit", "index": 22, "rarity": "rare"},
-	{"name": "Chip Boost", "category": "Connectivity", "color": Color(0.2, 1.0, 0.4), "desc": "Ally chip duration +5 seconds", "index": 23},
+	{"name": "Mimic Ball",          "category": "Utility",       "color": Color(0.5, 0.5, 1.0), "desc": "Copies the nearest powered-up ball",       "index": 19, "weight": 1,  "rarity": "epic"},
+	{"name": "Split Ball",          "category": "Utility",       "color": Color(0.2, 0.8, 0.2), "desc": "Ball splits into 3",                        "index": 0,  "weight": 3,  "rarity": "rare"},
+	{"name": "Electric Ball",       "category": "Utility",       "color": Color(0.2, 0.5, 1.0), "desc": "Ball gains electricity",                    "index": 1,  "weight": 3,  "rarity": "rare"},
+	{"name": "Pierce Ball",         "category": "Utility",       "color": Color(1.0, 0.8, 0.0), "desc": "Ball pierces through",                      "index": 2,  "weight": 3,  "rarity": "rare"},
+	{"name": "Cryo Ball",           "category": "Utility",       "color": Color(0.5, 0.8, 1.0), "desc": "Slows subject by 25%",                      "index": 15, "weight": 3,  "rarity": "rare"},
+	{"name": "Glitch Ball",         "category": "Utility",       "color": Color(0.8, 0.0, 0.8), "desc": "Disorients subject for 3s",                 "index": 16, "weight": 3,  "rarity": "rare"},
+	{"name": "Water Ball",          "category": "Utility",       "color": Color(0.0, 0.5, 1.0), "desc": "Applies wet, single hit",                   "index": 17, "weight": 3,  "rarity": "rare"},
+	{"name": "Fire Ball",           "category": "Utility",       "color": Color(1.0, 0.3, 0.0), "desc": "Applies burn to subject",                   "index": 18, "weight": 3,  "rarity": "rare"},
+	{"name": "Data Leech Ball",     "category": "Utility",       "color": Color(0.6, 0.0, 0.2), "desc": "+2 Integrity on hit",                       "index": 22, "weight": 2,  "rarity": "rare"},
+	{"name": "Speed Upgrade",       "category": "Individuality", "color": Color(0.6, 0.2, 0.8), "desc": "Movement speed increases",                  "index": 4,  "weight": 10, "rarity": "common"},
+	{"name": "Catch +1",            "category": "Connectivity",  "color": Color(1.0, 0.5, 0.0), "desc": "Orbit'e +1 top eklenir",                    "index": 5,  "weight": 10, "rarity": "common"},
+	{"name": "Next One",            "category": "Connectivity",  "color": Color(1.0, 0.5, 0.0), "desc": "Throw balls in any order",                  "index": 6,  "weight": 10, "rarity": "common"},
+	{"name": "Lightning",           "category": "Calamity",      "color": Color(1.0, 1.0, 0.0), "desc": "Lightning strikes selected point",          "index": 7,  "weight": 8,  "rarity": "common"},
+	{"name": "Flame Zone",          "category": "Calamity",      "color": Color(1.0, 0.3, 0.0), "desc": "Continuous damage in selected area",        "index": 8,  "weight": 8,  "rarity": "common"},
+	{"name": "Gravitational Force", "category": "Calamity",      "color": Color(0.5, 0.0, 1.0), "desc": "Pulls subjects for 5s",                     "index": 9,  "weight": 8,  "rarity": "common"},
+	{"name": "Arise",               "category": "Calamity",      "color": Color(0.8, 0.8, 1.0), "desc": "Fallen balls start moving",                 "index": 10, "weight": 8,  "rarity": "common"},
+	{"name": "Ball Mastery",        "category": "Utility",       "color": Color(0.2, 0.8, 0.2), "desc": "+1 damage to all balls",                    "index": 11, "weight": 10, "rarity": "common"},
+	{"name": "Pierce Sharpness",    "category": "Utility",       "color": Color(1.0, 0.8, 0.0), "desc": "Pierce ball +2 damage",                     "index": 12, "weight": 10, "rarity": "common"},
+	{"name": "Thunder Amp",         "category": "Utility",       "color": Color(0.2, 0.5, 1.0), "desc": "Electric ball +2 damage",                   "index": 13, "weight": 10, "rarity": "common"},
+	{"name": "Split Amp",           "category": "Utility",       "color": Color(1.0, 0.2, 0.2), "desc": "Split ball +2 damage",                      "index": 14, "weight": 10, "rarity": "common"},
+	{"name": "Medkit",              "category": "Individuality", "color": Color(0.9, 0.1, 0.1), "desc": "+10 HP restored",                           "index": 20, "weight": 10, "rarity": "common"},
+	{"name": "Max Health Up",       "category": "Individuality", "color": Color(0.8, 0.2, 0.2), "desc": "Maximum HP +5",                             "index": 21, "weight": 10, "rarity": "common"},
+	{"name": "Chip Boost",          "category": "Connectivity",  "color": Color(0.2, 1.0, 0.4), "desc": "Ally chip duration +5 seconds",             "index": 23, "weight": 10, "rarity": "common"},
 ]
 	
 	var canvas = CanvasLayer.new()
@@ -707,31 +759,49 @@ func show_upgrade_menu() -> void:
 	var card_height = 400
 	var start_x = 520
 	
-	upgrades.shuffle()
-	var selected = upgrades.slice(0, 3)
+	var selected = _weighted_pick(upgrades, 3)
 	for i in range(selected.size()):
 		var upgrade = selected[i]
 		var tx = start_x + i * (card_width + 40)
 		var ty = 300
-		
+		var rarity: String = upgrade.get("rarity", "common")
+
+		# Kartın arka planı — epic için hafif mor parıltı
 		var bg = ColorRect.new()
 		bg.size = Vector2(card_width, card_height)
-		bg.color = Color(0.1, 0.1, 0.15)
+		bg.color = Color(0.1, 0.1, 0.15) if rarity == "common" else \
+				   Color(0.12, 0.08, 0.18) if rarity == "rare"   else \
+				   Color(0.10, 0.06, 0.22)
 		bg.position = Vector2(tx, ty)
 		canvas.add_child(bg)
-		
+
 		var cat_strip = ColorRect.new()
 		cat_strip.size = Vector2(card_width, 40)
 		cat_strip.color = upgrade["color"]
 		cat_strip.position = Vector2(tx, ty)
 		canvas.add_child(cat_strip)
-		
+
 		var cat_label = Label.new()
 		cat_label.text = upgrade["category"]
 		cat_label.position = Vector2(tx + 10, ty + 8)
 		cat_label.add_theme_font_size_override("font_size", 18)
 		cat_label.add_theme_font_override("font", _font_bold)
 		canvas.add_child(cat_label)
+
+		# Rarity rozeti (sağ üst — strip içinde)
+		if rarity != "common":
+			var rarity_lbl = Label.new()
+			rarity_lbl.add_theme_font_override("font", _font_bold)
+			if rarity == "rare":
+				rarity_lbl.text = "★ RARE"
+				rarity_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.1))
+				rarity_lbl.add_theme_font_size_override("font_size", 11)
+			else:  # epic
+				rarity_lbl.text = "✦ EPIC"
+				rarity_lbl.add_theme_color_override("font_color", Color(0.85, 0.4, 1.0))
+				rarity_lbl.add_theme_font_size_override("font_size", 11)
+			rarity_lbl.position = Vector2(tx + card_width - 58, ty + 13)
+			canvas.add_child(rarity_lbl)
 
 		var name_label = Label.new()
 		name_label.text = upgrade["name"]
@@ -1034,10 +1104,9 @@ func _process(_delta: float) -> void:
 		var minutes = int(elapsed_time / 60)
 		var seconds = int(elapsed_time) % 60
 		$UI/LabelTime.text = "⏱  %02d:%02d" % [minutes, seconds]
-	# Pre-boss warning
-	if level >= 2 and boss == null and not boss_defeated:
-		if not has_node("BossWarning"):
-			_show_boss_warning()
+	# Boss intro
+	if level >= 2 and boss == null and not boss_defeated and _crate_node == null:
+		_start_boss_intro()
 
 func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 	canvas.queue_free()
@@ -1046,20 +1115,20 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 	level += 1
 	
 	if index == 0:
-		next_ball_upgrade = "split"
+		$BallLauncher.queue_upgrade_ball("split")
 	elif index == 1:
-		next_ball_upgrade = "electric"
+		$BallLauncher.queue_upgrade_ball("electric")
 	elif index == 2:
-		next_ball_upgrade = "pierce"
+		$BallLauncher.queue_upgrade_ball("pierce")
 	elif index == 4:
 		var player = get_node("Player")
 		player.SPEED += 50
 	elif index == 5:
-		var player = get_node("Player")
-		player.max_held_balls += 1
+		# Orbit +1 — Launcher fires an extra ball toward player
+		$BallLauncher.queue_upgrade_ball("")
 	elif index == 6:
-		var player = get_node("Player")
-		player.has_next_one = true
+		# "Next One" — currently a no-op in orbit system (kept for future)
+		pass
 	elif index == 7:
 		if calamity_slots.size() < max_calamity_slots:
 			calamity_slots.append("⚡")
@@ -1090,23 +1159,22 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 		var balls_dmg = get_node("Player")
 		balls_dmg.split_bonus += 2
 	elif index == 15:
-		next_ball_upgrade = "cryo"
+		$BallLauncher.queue_upgrade_ball("cryo")
 	elif index == 16:
-		next_ball_upgrade = "glitch"
+		$BallLauncher.queue_upgrade_ball("glitch")
 	elif index == 17:
-		next_ball_upgrade = "water"
+		$BallLauncher.queue_upgrade_ball("water")
 	elif index == 18:
-		next_ball_upgrade = "fire"
+		$BallLauncher.queue_upgrade_ball("fire")
 	elif index == 19:
-		var player = get_node("Player")
-		player.has_mimic = true
+		$BallLauncher.queue_upgrade_ball("mimic")
 	elif index == 20:
 		player_hp = min(player_hp + 10, player_max_hp)
 	elif index == 21:
 		player_max_hp += 5
 		player_hp = min(player_hp + 5, player_max_hp)
 	elif index == 22:
-		next_ball_upgrade = "leech"
+		$BallLauncher.queue_upgrade_ball("leech")
 	elif index == 23:
 		# Chip Boost — extend ally chip duration for all future allies
 		ally_chip_duration += 5.0

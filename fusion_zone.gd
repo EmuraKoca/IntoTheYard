@@ -27,16 +27,9 @@ func _ready() -> void:
 	if _sprite:
 		_sprite_local = to_local(_sprite.global_position)
 
-func _input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		var local_mouse = to_local(get_viewport().get_mouse_position())
-		# Align click center to sprite's visual position.
-		# Previous check used FusionZone origin (0,0);
-		# since effects moved to _sprite_local, hit-area was moved there too.
-		var click_center: Vector2 = _sprite_local if _sprite else Vector2.ZERO
-		if local_mouse.distance_to(click_center) <= 35.0:
-			is_active = !is_active
-			queue_redraw()
+func toggle_active() -> void:
+	is_active = !is_active
+	queue_redraw()
 
 func _physics_process(delta: float) -> void:
 	queue_redraw()
@@ -102,8 +95,8 @@ func _absorb_ball(ball: Node2D) -> void:
 	pending_types.append(ball_type)
 	display_types.append(ball_type)
 	
-	ball.moving = false
-	ball.get_node("CollisionShape2D").disabled = true
+	ball.absorb()
+	# (absorb() collision ve state'i temizler)
 	
 	# Spiral absorption: ball is pulled rotating toward the visual center of the sprite
 	# (not FusionZone logical center; sprite position is more consistent with rotation)
@@ -180,6 +173,7 @@ func _spawn_fused_ball(type_a: String, type_b: String) -> void:
 	get_parent().add_child(new_ball)
 	await get_tree().process_frame
 	new_ball.get_node("CollisionShape2D").disabled = false
+	new_ball.state = "flying"
 	new_ball.moving = true
 	new_ball.move_direction = dir
 	new_ball.speed = 600.0

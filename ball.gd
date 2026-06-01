@@ -38,26 +38,70 @@ var trail: Line2D = null
 var trail_positions: Array = []
 var trail_max_length: int = 24
 
+# ── Orbit / State sistemi ─────────────────────────────────────────────────────
+# "flying"   → normal fizik, düşmana çarpar
+# "orbiting" → player etrafında döner, defans modu
+# "returning"→ player'a geri döner (homing)
+var state: String = "flying"
+
+# Defense
+var defense_life: int     = 0
+var defense_life_max: int = 0
+var defense_damage: int   = 0
+var defense_cooldown: float = 0.0
+
+# Brotato-style dart strike
+var strike_offset: Vector2 = Vector2.ZERO   # player.gd orbit pozisyonuna eklenir
+var _is_striking: bool     = false
+
+# Önbellek — her frame grup sorgusu yerine bir kez alınır
+var _cached_player: Node2D = null
+
 func _ready() -> void:
 	z_index = 2
 	$CollisionShape2D.disabled = false
 	_setup_trail()
 	_update_modulate()
+	# Player'ı bir kez önbelleğe al
+	_cached_player = get_tree().get_first_node_in_group("player")
+
+func _get_player() -> Node2D:
+	if not is_instance_valid(_cached_player):
+		_cached_player = get_tree().get_first_node_in_group("player")
+	return _cached_player
 
 func launch(direction: Vector2, spd: float = 600.0) -> void:
 	move_direction = direction.normalized()
 	speed = spd
 	moving = true
+	state = "flying"
 	catch_cooldown = 0.5
+	$CollisionShape2D.disabled = false
+	scale = Vector2(1.0, 1.0)
+	z_index = 2
 
 func launch_with_speed(direction: Vector2, spd: float) -> void:
 	move_direction = direction.normalized()
 	speed = spd
 	moving = true
+	state = "flying"
 	catch_cooldown = 0.5
 	$CollisionShape2D.disabled = false
+	scale = Vector2(1.0, 1.0)
+	z_index = 2
 
 func caught() -> void:
+	# Legacy uyumluluk — orbit join artık player.add_to_orbit() ile yapılıyor
+	moving = false
+	$CollisionShape2D.disabled = true
+	trail_positions.clear()
+	if is_instance_valid(trail):
+		trail.points = PackedVector2Array()
+		trail.visible = false
+
+func absorb() -> void:
+	# Fusion Zone tarafından çağrılır — returning'e geçmemesi için ayrı state
+	state = "flying"   # fusion tween sırasında fizik çalışmasın
 	moving = false
 	$CollisionShape2D.disabled = true
 	trail_positions.clear()
@@ -83,53 +127,37 @@ func _copy_ball(other: Node2D) -> void:
 	queue_redraw()
 
 func _process(_delta: float) -> void:
-	var cyclone_player = get_tree().get_first_node_in_group("player")
-	if cyclone_player and cyclone_player.character_type == "cyclone" and not moving:
-		queue_redraw()
+	# Cyclone yakın-top göstergesi — sadece orbiting değilken
+	if state != "orbiting":
+		var cp := _get_player()
+		if cp and cp.character_type == "cyclone" and not moving:
+			queue_redraw()
 
 func _physics_process(delta: float) -> void:
 	_update_trail(delta)
+
+	match state:
+		"orbiting":  _process_orbiting(delta); return
+		"returning": _process_returning(delta); return
+
+	# ── state == "flying" ─────────────────────────────────────────────────────
 	if not moving:
 		return
+
+	# Player'a yaklaşınca anında orbit'e katıl (düşme fiziği yok)
+	if catch_cooldown <= 0:
+		var _fly_player := _get_player()
+		if is_instance_valid(_fly_player):
+			if global_position.distance_to(_fly_player.global_position) < 55:
+				_fly_player.add_to_orbit(self)
+				return
+
 	global_position += move_direction * speed * delta
-	# Slow down over time
-	speed -= 15 * delta
-	if speed <= 0:
-		speed = 0
-		moving = false
-		scale = Vector2(0.3, 0.3)
-		z_index = 1
-		$CollisionShape2D.disabled = true
-		return
-	# Depth effect - grows on hit, shrinks when moving away
+
 	if catch_cooldown > 0:
 		catch_cooldown -= delta
-	
-	var player = get_tree().get_first_node_in_group("player")
-	if player and catch_cooldown <= 0:
-		var dist = global_position.distance_to(player.global_position)
-		if dist < 60:
-			if player.character_type == "vector":
-				player.catch_ball(self)
-			else:
-				move_direction = move_direction.bounce(
-					(global_position - player.global_position).normalized()
-				)
-		target_scale = clamp(1.5 - dist / 800.0, 0.5, 1.5)
-		base_scale = lerp(base_scale, target_scale, 0.1)
-		scale = Vector2(base_scale, base_scale)
-	speed -= 5.0 * delta
-	if speed <= 130:
-		var scale_factor = max(speed / 130.0, 0.3)
-		scale = Vector2(scale_factor, scale_factor)
-		speed = speed * 0.98
-	if speed <= 10:
-		moving = false
-		scale = Vector2(0.3, 0.3)
-		z_index = 1
-		$CollisionShape2D.disabled = true
-		return
-	# Wall boundaries
+
+	# Duvar sınırları
 	if global_position.x <= 910:
 		global_position.x = 910
 		move_direction.x = abs(move_direction.x)
@@ -139,37 +167,29 @@ func _physics_process(delta: float) -> void:
 	if global_position.y <= 260:
 		global_position.y = 260
 		move_direction.y = abs(move_direction.y)
-	if global_position.y >= 1070:
-		queue_free()
-		return
 	if global_position.y >= 1040:
 		global_position.y = 1040
 		move_direction.y = -abs(move_direction.y)
-		speed = speed * 0.15
-	# Magnet effect when near player
-	#var magnet_player = get_tree().get_first_node_in_group("player")
-	#if magnet_player:
-		#var dist = global_position.distance_to(magnet_player.global_position)
-		#if dist < 300:
-			#var to_player = (magnet_player.global_position - global_position).normalized()
-			#move_direction = move_direction.lerp(to_player, 0.02)
-			#move_direction = move_direction.normalized()
-	# Mimic Ball - copies the nearest powered-up ball when close
+		_start_returning()
+
+	# Mimic
 	if mimic_done and not is_mimic:
 		mimic_ring_time += get_process_delta_time()
 		queue_redraw()
 	if is_mimic and not mimic_done:
 		var balls = get_tree().get_nodes_in_group("balls")
 		for other_ball in balls:
-			if other_ball == self:
-				continue
+			if other_ball == self: continue
 			var has_power = other_ball.can_split or other_ball.can_electric or other_ball.can_pierce or other_ball.can_cryo or other_ball.can_glitch or other_ball.can_fire or other_ball.can_water
 			if has_power and other_ball.moving and not other_ball.is_fused:
-				var dist = global_position.distance_to(other_ball.global_position)
-				if dist < 200:
+				if global_position.distance_to(other_ball.global_position) < 200:
 					_copy_ball(other_ball)
 					mimic_done = true
 					break
+	if is_mimic:
+		mimic_color_time += get_process_delta_time()
+		queue_redraw()
+
 	var collision = move_and_collide(Vector2.ZERO)
 	if collision:
 		var collider = collision.get_collider()
@@ -180,23 +200,146 @@ func _physics_process(delta: float) -> void:
 				move_direction = move_direction.bounce(collision.get_normal())
 				move_direction = move_direction.normalized()
 
-	# Check all subjects for Phantom
 	if is_fused and fusion_type == "phantom":
 		var subjects = get_tree().get_nodes_in_group("subjects")
 		for z in subjects:
 			if z not in hit_subjects:
-				var dist = global_position.distance_to(z.global_position)
-				if dist < 40:
+				if global_position.distance_to(z.global_position) < 40:
 					_hit_subject(z)
-	if is_mimic:
-		mimic_color_time += get_process_delta_time()
-		queue_redraw()
-		
-# Continuous redraw for Cyclone indicator
-	var cyclone_player = get_tree().get_first_node_in_group("player")
-	if cyclone_player and cyclone_player.character_type == "cyclone" and not moving:
-		if cyclone_player.global_position.distance_to(global_position) < 80:
-			queue_redraw()
+
+# ── State: Orbiting ───────────────────────────────────────────────────────────
+func _process_orbiting(delta: float) -> void:
+	if _is_striking:
+		return
+	if defense_cooldown > 0:
+		defense_cooldown -= delta
+		return
+	# Yakında düşman var mı? → dart strike başlat
+	var subjects = get_tree().get_nodes_in_group("subjects")
+	for subject in subjects:
+		if is_instance_valid(subject):
+			if global_position.distance_to(subject.global_position) < 78:
+				_start_strike(subject)
+				return
+
+func _start_strike(target: Node2D) -> void:
+	if _is_striking: return
+	_is_striking = true
+
+	# Hedefe doğru dart vektörü (max 45 px)
+	var to_target := target.global_position - global_position
+	var dart: Vector2 = to_target.normalized() * min(to_target.length() * 0.75, 45.0)
+
+	# Dışarı fırlat
+	var tw_out := create_tween()
+	tw_out.tween_property(self, "strike_offset", dart, 0.07)\
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	await tw_out.finished
+
+	# Hedefe vur
+	if is_instance_valid(target):
+		_defense_hit(target)
+
+	# Geri çek
+	var tw_back := create_tween()
+	tw_back.tween_property(self, "strike_offset", Vector2.ZERO, 0.11)\
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	await tw_back.finished
+
+	_is_striking  = false
+	defense_cooldown = 0.50
+
+# ── State: Returning ──────────────────────────────────────────────────────────
+func _process_returning(delta: float) -> void:
+	var player := _get_player()
+	if not is_instance_valid(player):
+		return
+
+	var to_player = player.global_position - global_position
+	var dist = to_player.length()
+
+	if dist < 40:
+		player.add_to_orbit(self)
+		return
+
+	# Homing — her frame biraz daha player'a döner
+	var target_dir = to_player.normalized()
+	move_direction = move_direction.lerp(target_dir, 0.12)
+	if move_direction.length() > 0.01:
+		move_direction = move_direction.normalized()
+
+	speed = min(speed + 220.0 * delta, 680.0)
+	global_position += move_direction * speed * delta
+
+	# Duvar sekme
+	if global_position.x <= 910:
+		global_position.x = 910
+		move_direction.x = abs(move_direction.x)
+	if global_position.x >= 1580:
+		global_position.x = 1580
+		move_direction.x = -abs(move_direction.x)
+	if global_position.y <= 260:
+		global_position.y = 260
+		move_direction.y = abs(move_direction.y)
+	if global_position.y >= 1040:
+		global_position.y = 1040
+		move_direction.y = -abs(move_direction.y)
+
+	# Dönerken de düşmana çarpar (tam hasar)
+	var collision = move_and_collide(Vector2.ZERO)
+	if collision:
+		var collider = collision.get_collider()
+		if collider.is_in_group("subjects"):
+			_hit_subject(collider)
+
+# ── Defense helpers ───────────────────────────────────────────────────────────
+func _defense_hit(subject: Node2D) -> void:
+	if not is_instance_valid(subject): return
+	subject.take_damage(defense_damage)
+	if can_fire    and is_instance_valid(subject): subject.apply_burn()
+	if can_water   and is_instance_valid(subject): subject.apply_wet()
+	if can_electric and is_instance_valid(subject): subject.apply_electrified()
+	if can_cryo    and is_instance_valid(subject): subject.apply_slow(slow_amount)
+	if can_glitch  and is_instance_valid(subject): subject.apply_glitch()
+	defense_life -= defense_damage
+	if defense_life <= 0:
+		_auto_fire()
+
+func _auto_fire() -> void:
+	var player := _get_player()
+	if not is_instance_valid(player): return
+	player.remove_from_orbit(self)
+	launch(player.aim_direction, 650.0)
+
+func _reset_defense_life() -> void:
+	defense_damage    = _get_defense_base_damage()
+	defense_life_max  = max(int(defense_damage * 3), 1)
+	defense_life      = defense_life_max
+
+func _get_defense_base_damage() -> int:
+	var fd: int
+	if is_fused:      fd = max_damage
+	elif can_split:   fd = 7
+	elif can_electric:fd = 9
+	elif can_pierce:  fd = 10
+	elif can_cryo:    fd = 4
+	elif can_glitch:  fd = 4
+	elif can_water:   fd = 3
+	elif can_fire:    fd = 6
+	elif can_leech:   fd = 2
+	else:             fd = 5
+	return max(int(fd * 0.5), 1)
+
+func _start_returning() -> void:
+	state         = "returning"
+	moving        = true
+	speed         = 200.0
+	scale         = Vector2(1.0, 1.0)
+	z_index       = 2
+	strike_offset = Vector2.ZERO
+	_is_striking  = false
+	$CollisionShape2D.disabled = false
+	hit_subjects.clear()
 		
 func _try_fusion(other: Node2D) -> void:
 	var self_type = _get_type()
@@ -364,7 +507,7 @@ func _apply_fusion(ball: Node2D, fusion: String) -> void:
 			ball.max_damage = 12
 	ball.queue_redraw()
 func _draw() -> void:
-	var cyclone_player = get_tree().get_first_node_in_group("player")
+	var cyclone_player := _get_player()
 	if cyclone_player and cyclone_player.character_type == "cyclone" and not moving and cyclone_player.held_ball != self:
 		# Only the nearest ball should be marked
 		var closest = null
@@ -682,7 +825,7 @@ func _hit_subject(subject: Node2D) -> void:
 		game_node.add_data(data_amount)
 
 	# Leila - top sektirme
-	var game_player = get_tree().get_first_node_in_group("player")
+	var game_player := _get_player()
 	if game_player and game_player.character_type == "leila":
 		if speed > 200:
 			speed = min(speed + 150, 900.0)
@@ -1050,7 +1193,7 @@ func _update_trail(_delta: float) -> void:
 	if is_mimic or mimic_done:
 		_update_trail_color()
 
-	if moving:
+	if state == "flying" or state == "returning":
 		trail_positions.append(global_position)
 		if trail_positions.size() > trail_max_length:
 			trail_positions.pop_front()
@@ -1058,7 +1201,7 @@ func _update_trail(_delta: float) -> void:
 		if not trail.visible:
 			trail.visible = true
 	else:
-		# When ball stops, trail fades slowly (one point drops each frame)
+		# Orbiting / durmuş — trail yavaşça söner
 		if trail_positions.size() > 0:
 			trail_positions.pop_front()
 			trail.points = PackedVector2Array(trail_positions)

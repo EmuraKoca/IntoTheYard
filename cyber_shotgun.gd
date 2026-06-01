@@ -10,7 +10,7 @@ var is_wet = false
 var is_burning = false
 var original_speed = 50.0
 var shoot_timer = 0.0
-var shoot_interval = 3.0
+var shoot_interval = 5.5
 var is_electrified = false
 var max_health = 20
 var attack_cooldown = 0.0
@@ -131,12 +131,11 @@ func _physics_process(delta: float) -> void:
 
 func _shoot(target: Node2D) -> void:
 	var dir = (target.global_position - global_position).normalized()
-	# 7 bullets spread shotgun-style
-	for i in range(7):
+	# 3 mermi yelpazeyle: -20°, 0°, +20°
+	for i in range(3):
 		var bullet = bullet_scene.instantiate()
 		bullet.global_position = global_position
-		var angle = deg_to_rad(-30 + i * 10)
-		var spread_dir = dir.rotated(angle)
+		var spread_dir = dir.rotated(deg_to_rad(-20 + i * 20))
 		get_parent().add_child(bullet)
 		bullet.launch(spread_dir)
 
