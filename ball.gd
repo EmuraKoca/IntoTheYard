@@ -35,6 +35,7 @@ var mimic_ring_time = 0.0
 var hit_type = ""
 var can_leech = false
 var trail: Line2D = null
+var _wall_bounce_count: int = 0  # sonsuz sekme önlemi
 var trail_positions: Array = []
 var trail_max_length: int = 24
 
@@ -79,6 +80,7 @@ func launch(direction: Vector2, spd: float = 600.0) -> void:
 	$CollisionShape2D.disabled = false
 	scale = Vector2(1.0, 1.0)
 	z_index = 2
+	_wall_bounce_count = 0
 
 func launch_with_speed(direction: Vector2, spd: float) -> void:
 	move_direction = direction.normalized()
@@ -89,6 +91,7 @@ func launch_with_speed(direction: Vector2, spd: float) -> void:
 	$CollisionShape2D.disabled = false
 	scale = Vector2(1.0, 1.0)
 	z_index = 2
+	_wall_bounce_count = 0
 
 func caught() -> void:
 	# Legacy uyumluluk — orbit join artık player.add_to_orbit() ile yapılıyor
@@ -144,33 +147,54 @@ func _physics_process(delta: float) -> void:
 	if not moving:
 		return
 
-	# Player'a yaklaşınca anında orbit'e katıl (düşme fiziği yok)
-	if catch_cooldown <= 0:
-		var _fly_player := _get_player()
-		if is_instance_valid(_fly_player):
-			if global_position.distance_to(_fly_player.global_position) < 55:
+	# Player yakınında iken collision kapat — itme engeli
+	var _fly_player := _get_player()
+	if is_instance_valid(_fly_player):
+		var _fly_dist := global_position.distance_to(_fly_player.global_position)
+		if _fly_dist < 80:
+			$CollisionShape2D.disabled = true
+			# Orbit'e katılmaya hazırsa katıl
+			if catch_cooldown <= 0 and _fly_dist < 55:
 				_fly_player.add_to_orbit(self)
 				return
+		else:
+			if $CollisionShape2D.disabled and catch_cooldown <= 0:
+				$CollisionShape2D.disabled = false
 
 	global_position += move_direction * speed * delta
 
 	if catch_cooldown > 0:
 		catch_cooldown -= delta
 
-	# Duvar sınırları
+	# Duvar sınırları + sonsuz sekme koruması
+	var _bounced := false
 	if global_position.x <= 910:
 		global_position.x = 910
 		move_direction.x = abs(move_direction.x)
+		_bounced = true
 	if global_position.x >= 1580:
 		global_position.x = 1580
 		move_direction.x = -abs(move_direction.x)
+		_bounced = true
 	if global_position.y <= 260:
 		global_position.y = 260
 		move_direction.y = abs(move_direction.y)
+		_bounced = true
 	if global_position.y >= 1040:
 		global_position.y = 1040
 		move_direction.y = -abs(move_direction.y)
 		_start_returning()
+		return
+
+	if _bounced:
+		_wall_bounce_count += 1
+		if _wall_bounce_count >= 6:
+			_wall_bounce_count = 0
+			_start_returning()
+			return
+	else:
+		# Düşmana çarpınca sayaç sıfırlanır
+		pass
 
 	# Mimic
 	if mimic_done and not is_mimic:
@@ -194,6 +218,7 @@ func _physics_process(delta: float) -> void:
 	if collision:
 		var collider = collision.get_collider()
 		if collider.is_in_group("subjects"):
+			_wall_bounce_count = 0  # düşmana çarpınca sıfırla
 			_hit_subject(collider)
 		elif collider.is_in_group("player"):
 			if not collider.is_dashing:

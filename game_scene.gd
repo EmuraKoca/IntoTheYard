@@ -714,7 +714,7 @@ func show_upgrade_menu() -> void:
 	{"name": "Lightning",           "category": "Calamity",      "color": Color(1.0, 1.0, 0.0), "desc": "Lightning strikes selected point",          "index": 7,  "weight": 8,  "rarity": "common"},
 	{"name": "Flame Zone",          "category": "Calamity",      "color": Color(1.0, 0.3, 0.0), "desc": "Continuous damage in selected area",        "index": 8,  "weight": 8,  "rarity": "common"},
 	{"name": "Gravitational Force", "category": "Calamity",      "color": Color(0.5, 0.0, 1.0), "desc": "Pulls subjects for 5s",                     "index": 9,  "weight": 8,  "rarity": "common"},
-	{"name": "Arise",               "category": "Calamity",      "color": Color(0.8, 0.8, 1.0), "desc": "Fallen balls start moving",                 "index": 10, "weight": 8,  "rarity": "common"},
+	# Arise kaldırıldı
 	{"name": "Ball Mastery",        "category": "Utility",       "color": Color(0.2, 0.8, 0.2), "desc": "+1 damage to all balls",                    "index": 11, "weight": 10, "rarity": "common"},
 	{"name": "Pierce Sharpness",    "category": "Utility",       "color": Color(1.0, 0.8, 0.0), "desc": "Pierce ball +2 damage",                     "index": 12, "weight": 10, "rarity": "common"},
 	{"name": "Thunder Amp",         "category": "Utility",       "color": Color(0.2, 0.5, 1.0), "desc": "Electric ball +2 damage",                   "index": 13, "weight": 10, "rarity": "common"},
@@ -906,6 +906,7 @@ func show_upgrade_menu() -> void:
 	glitch_tw.tween_callback(glitch_rect.queue_free)
 
 func _activate_gravity(pos: Vector2) -> void:
+	_vfx_gravity(pos)
 	var duration = 5.0
 	var elapsed = 0.0
 	while elapsed < duration:
@@ -1024,14 +1025,14 @@ func _on_quit_game() -> void:
 	get_tree().quit()
 
 func _activate_lightning(pos: Vector2) -> void:
-	# Deal damage to nearby subjects
 	var subjects = get_tree().get_nodes_in_group("subjects")
 	for subject in subjects:
 		if subject.global_position.distance_to(pos) < 100:
 			subject.take_damage(3)
+	_vfx_lightning(pos)
 
 func _activate_flame(pos: Vector2) -> void:
-	# Continuous damage in area
+	_vfx_flame(pos)
 	var flame_timer = get_tree().create_timer(0.5)
 	var hits = 0
 	while hits < 6:
@@ -1042,6 +1043,182 @@ func _activate_flame(pos: Vector2) -> void:
 		hits += 1
 		await flame_timer.timeout
 		flame_timer = get_tree().create_timer(0.5)
+
+# ── VFX: Lightning ────────────────────────────────────────────────────────────
+func _vfx_lightning(pos: Vector2) -> void:
+	# Beyaz flash
+	var flash := ColorRect.new()
+	flash.color = Color(1, 1, 1, 0.45)
+	flash.size  = Vector2(1920, 1080)
+	flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	flash.z_index = 10
+	add_child(flash)
+	var ftw := create_tween()
+	ftw.tween_property(flash, "modulate:a", 0.0, 0.12)
+	ftw.tween_callback(flash.queue_free)
+
+	# Gökten gelen zigzag şimşek çizgisi
+	for _bolt in range(3):
+		var bolt := Line2D.new()
+		bolt.width           = randf_range(2.0, 4.0)
+		bolt.default_color   = Color(0.85, 0.95, 1.0, 1.0)
+		bolt.z_index         = 9
+		var top := Vector2(pos.x + randf_range(-30, 30), 240.0)
+		var pts  := [top]
+		var cur  := top
+		while cur.y < pos.y:
+			cur = Vector2(
+				cur.x + randf_range(-28, 28),
+				cur.y + randf_range(18, 40)
+			)
+			pts.append(cur)
+		pts.append(pos)
+		for p in pts:
+			bolt.add_point(p)
+		add_child(bolt)
+		var btw := create_tween()
+		btw.tween_interval(randf_range(0.0, 0.06))
+		btw.tween_property(bolt, "modulate:a", 0.0, randf_range(0.10, 0.20))
+		btw.tween_callback(bolt.queue_free)
+
+	# Çarpma noktasında halka
+	for ring_i in range(3):
+		var ring := Node2D.new()
+		ring.global_position = pos
+		ring.z_index = 9
+		add_child(ring)
+		var r_start := randf_range(8.0, 20.0)
+		var r_end   := r_start + randf_range(60.0, 100.0)
+		var rtw := create_tween()
+		rtw.tween_interval(ring_i * 0.05)
+		rtw.tween_method(
+			func(r: float):
+				if is_instance_valid(ring):
+					ring.queue_redraw()
+					ring.set_meta("r", r),
+			r_start, r_end, 0.35
+		)
+		rtw.tween_callback(ring.queue_free)
+		ring.draw.connect(func():
+			if ring.has_meta("r"):
+				var rr: float = ring.get_meta("r")
+				ring.draw_arc(Vector2.ZERO, rr, 0, TAU, 32,
+					Color(0.7, 0.9, 1.0, 1.0 - (rr - r_start) / (r_end - r_start)), 2.0)
+		)
+
+# ── VFX: Flame Zone ───────────────────────────────────────────────────────────
+func _vfx_flame(pos: Vector2) -> void:
+	var duration := 3.0   # görsel süresi
+	var radius   := 120.0
+
+	# Zemin halkası
+	var ground := Node2D.new()
+	ground.global_position = pos
+	ground.z_index = 3
+	add_child(ground)
+	ground.draw.connect(func():
+		ground.draw_arc(Vector2.ZERO, radius, 0, TAU, 48, Color(1.0, 0.25, 0.0, 0.55), 3.0)
+		ground.draw_arc(Vector2.ZERO, radius * 0.6, 0, TAU, 32, Color(1.0, 0.55, 0.0, 0.35), 2.0)
+	)
+	ground.queue_redraw()
+	var gtw := create_tween()
+	gtw.tween_interval(duration)
+	gtw.tween_property(ground, "modulate:a", 0.0, 0.4)
+	gtw.tween_callback(ground.queue_free)
+
+	# Ateş parçacıkları
+	var particles := CPUParticles2D.new()
+	particles.global_position  = pos
+	particles.z_index           = 4
+	particles.amount            = 60
+	particles.lifetime          = 0.9
+	particles.explosiveness     = 0.0
+	particles.emission_shape    = CPUParticles2D.EMISSION_SHAPE_SPHERE
+	particles.emission_sphere_radius = radius * 0.8
+	particles.direction         = Vector2(0, -1)
+	particles.spread            = 35.0
+	particles.gravity           = Vector2(0, -80)
+	particles.initial_velocity_min = 40.0
+	particles.initial_velocity_max = 120.0
+	particles.scale_amount_min  = 3.0
+	particles.scale_amount_max  = 7.0
+	particles.color             = Color(1.0, 0.45, 0.0, 0.9)
+	particles.color_ramp        = _make_flame_gradient()
+	add_child(particles)
+	await get_tree().create_timer(duration).timeout
+	if is_instance_valid(particles):
+		particles.emitting = false
+		await get_tree().create_timer(1.0).timeout
+		if is_instance_valid(particles):
+			particles.queue_free()
+
+func _make_flame_gradient() -> Gradient:
+	var g := Gradient.new()
+	g.colors = [Color(1.0, 0.9, 0.2, 1.0), Color(1.0, 0.3, 0.0, 0.8), Color(0.2, 0.2, 0.2, 0.0)]
+	g.offsets = [0.0, 0.5, 1.0]
+	return g
+
+# ── VFX: Gravitational Force ──────────────────────────────────────────────────
+func _vfx_gravity(pos: Vector2) -> void:
+	var duration := 5.0
+
+	# Dönen spiral parçacıklar
+	var particles := CPUParticles2D.new()
+	particles.global_position       = pos
+	particles.z_index                = 4
+	particles.amount                 = 80
+	particles.lifetime               = 1.2
+	particles.explosiveness          = 0.0
+	particles.emission_shape         = CPUParticles2D.EMISSION_SHAPE_SPHERE
+	particles.emission_sphere_radius = 160.0
+	particles.direction              = Vector2(0, 0)
+	particles.spread                 = 180.0
+	particles.gravity                = Vector2(0, 0)
+	particles.initial_velocity_min   = 60.0
+	particles.initial_velocity_max   = 140.0
+	particles.angular_velocity_min   = 180.0
+	particles.angular_velocity_max   = 360.0
+	particles.scale_amount_min       = 2.0
+	particles.scale_amount_max       = 5.0
+	particles.color                  = Color(0.65, 0.1, 1.0, 0.9)
+	particles.color_ramp             = _make_gravity_gradient()
+	add_child(particles)
+
+	# Merkez vorteks halkası — büyüyüp küçülüyor
+	var vortex := Node2D.new()
+	vortex.global_position = pos
+	vortex.z_index = 5
+	add_child(vortex)
+	var vr := 0.0
+	var vtw := create_tween().set_loops()
+	vtw.tween_method(func(r: float):
+		vr = r
+		if is_instance_valid(vortex): vortex.queue_redraw(),
+		8.0, 55.0, 0.6)
+	vtw.tween_method(func(r: float):
+		vr = r
+		if is_instance_valid(vortex): vortex.queue_redraw(),
+		55.0, 8.0, 0.6)
+	vortex.draw.connect(func():
+		vortex.draw_arc(Vector2.ZERO, vr, 0, TAU, 48, Color(0.8, 0.2, 1.0, 0.7), 3.0)
+		vortex.draw_arc(Vector2.ZERO, vr * 0.5, 0, TAU, 32, Color(0.5, 0.0, 1.0, 0.5), 2.0)
+	)
+
+	await get_tree().create_timer(duration).timeout
+	vtw.kill()
+	if is_instance_valid(vortex):
+		vortex.queue_free()
+	if is_instance_valid(particles):
+		particles.emitting = false
+		await get_tree().create_timer(1.2).timeout
+		if is_instance_valid(particles):
+			particles.queue_free()
+
+func _make_gravity_gradient() -> Gradient:
+	var g := Gradient.new()
+	g.colors  = [Color(0.9, 0.5, 1.0, 1.0), Color(0.5, 0.0, 1.0, 0.6), Color(0.1, 0.0, 0.3, 0.0)]
+	g.offsets = [0.0, 0.5, 1.0]
+	return g
 
 func _spawn_subject() -> void:
 		

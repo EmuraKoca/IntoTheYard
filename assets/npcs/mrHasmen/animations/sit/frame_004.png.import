@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://chrq0mbs6tmyg"
-path="res://.godot/imported/frame_004.png-1ccaac1ff65f1d7e97772874ebba024b.ctex"
+path="res://.godot/imported/frame_004.png-6f771b6cb4758ad8d7b455d81945b6e3.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/npcs/mrHasmen/sit/frame_004.png"
-dest_files=["res://.godot/imported/frame_004.png-1ccaac1ff65f1d7e97772874ebba024b.ctex"]
+source_file="res://assets/npcs/mrHasmen/animations/sit/frame_004.png"
+dest_files=["res://.godot/imported/frame_004.png-6f771b6cb4758ad8d7b455d81945b6e3.ctex"]
 
 [params]
 
