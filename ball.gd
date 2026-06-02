@@ -63,8 +63,11 @@ func _ready() -> void:
 	$CollisionShape2D.disabled = false
 	_setup_trail()
 	_update_modulate()
-	# Player'ı bir kez önbelleğe al
 	_cached_player = get_tree().get_first_node_in_group("player")
+	# Layer 2 = toplar; mask=1 → sadece katman-1 (dusman, player, bariyer) algilanir
+	# Toplar birbirini algılamaz
+	collision_layer = 2
+	collision_mask  = 1
 
 func _get_player() -> Node2D:
 	if not is_instance_valid(_cached_player):
@@ -130,11 +133,7 @@ func _copy_ball(other: Node2D) -> void:
 	queue_redraw()
 
 func _process(_delta: float) -> void:
-	# Cyclone yakın-top göstergesi — sadece orbiting değilken
-	if state != "orbiting":
-		var cp := _get_player()
-		if cp and cp.character_type == "cyclone" and not moving:
-			queue_redraw()
+	pass
 
 func _physics_process(delta: float) -> void:
 	_update_trail(delta)
@@ -160,8 +159,6 @@ func _physics_process(delta: float) -> void:
 		else:
 			if $CollisionShape2D.disabled and catch_cooldown <= 0:
 				$CollisionShape2D.disabled = false
-
-	global_position += move_direction * speed * delta
 
 	if catch_cooldown > 0:
 		catch_cooldown -= delta
@@ -214,16 +211,22 @@ func _physics_process(delta: float) -> void:
 		mimic_color_time += get_process_delta_time()
 		queue_redraw()
 
-	var collision = move_and_collide(Vector2.ZERO)
+	var collision = move_and_collide(move_direction * speed * delta)
 	if collision:
 		var collider = collision.get_collider()
 		if collider.is_in_group("subjects"):
-			_wall_bounce_count = 0  # düşmana çarpınca sıfırla
+			_wall_bounce_count = 0
 			_hit_subject(collider)
 		elif collider.is_in_group("player"):
 			if not collider.is_dashing:
 				move_direction = move_direction.bounce(collision.get_normal())
 				move_direction = move_direction.normalized()
+		else:
+			# Bariyer veya statik duvar — normal'e gore sektir
+			move_direction = move_direction.bounce(collision.get_normal())
+			if move_direction.length() > 0.01:
+				move_direction = move_direction.normalized()
+			_bounced = true
 
 	if is_fused and fusion_type == "phantom":
 		var subjects = get_tree().get_nodes_in_group("subjects")
@@ -294,7 +297,6 @@ func _process_returning(delta: float) -> void:
 		move_direction = move_direction.normalized()
 
 	speed = min(speed + 220.0 * delta, 680.0)
-	global_position += move_direction * speed * delta
 
 	# Duvar sekme
 	if global_position.x <= 910:
@@ -311,11 +313,16 @@ func _process_returning(delta: float) -> void:
 		move_direction.y = -abs(move_direction.y)
 
 	# Dönerken de düşmana çarpar (tam hasar)
-	var collision = move_and_collide(Vector2.ZERO)
+	var collision = move_and_collide(move_direction * speed * delta)
 	if collision:
 		var collider = collision.get_collider()
 		if collider.is_in_group("subjects"):
 			_hit_subject(collider)
+		elif not collider.is_in_group("player"):
+			# Bariyer veya statik duvar — sektir
+			move_direction = move_direction.bounce(collision.get_normal())
+			if move_direction.length() > 0.01:
+				move_direction = move_direction.normalized()
 
 # ── Defense helpers ───────────────────────────────────────────────────────────
 func _defense_hit(subject: Node2D) -> void:
@@ -532,20 +539,6 @@ func _apply_fusion(ball: Node2D, fusion: String) -> void:
 			ball.max_damage = 12
 	ball.queue_redraw()
 func _draw() -> void:
-	var cyclone_player := _get_player()
-	if cyclone_player and cyclone_player.character_type == "cyclone" and not moving and cyclone_player.held_ball != self:
-		# Only the nearest ball should be marked
-		var closest = null
-		var closest_dist = INF
-		var all_balls = get_tree().get_nodes_in_group("balls")
-		for b in all_balls:
-			if not b.moving and cyclone_player.held_ball != b:
-				var d = cyclone_player.global_position.distance_to(b.global_position)
-				if d < closest_dist:
-					closest_dist = d
-					closest = b
-		if closest == self and closest_dist < 80:
-			draw_arc(Vector2.ZERO, 18, 0, TAU, 32, Color(0.0, 1.0, 0.4), 2)
 	# Mimic RGB halka
 	if mimic_done and not is_mimic:
 		var r = (sin(mimic_ring_time * 2.0) + 1.0) / 2.0

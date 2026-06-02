@@ -34,6 +34,8 @@ var boss_defeated = false
 var _crate_node = null
 var _processor_btn: Button = null
 var _hasmen_npc = null
+var _nyx_spawned: bool = false
+var _nyx_node = null
 var data_collected: int = 0
 var total_subjects_killed: int = 0
 var ally_chip_duration: float = 15.0  # Upgradeable via card (index 23)
@@ -89,15 +91,15 @@ func _screen_shake() -> void:
 		tween.tween_property(camera, "offset", Vector2(randf_range(-15, 15), randf_range(-15, 15)), 0.05)
 	tween.tween_property(camera, "offset", original_pos, 0.05)
 
-func show_boss_bar(boss_node: Node2D) -> void:
+func show_boss_bar(boss_node: Node2D, boss_name: String = "CYBER 404") -> void:
 	boss = boss_node
 	boss_bar_canvas = CanvasLayer.new()
 	boss_bar_canvas.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(boss_bar_canvas)
-	
+
 	var name_label = Label.new()
 	name_label.name = "BossName"
-	name_label.text = "CYBER 404"
+	name_label.text = boss_name
 	name_label.position = Vector2(760, 20)
 	name_label.add_theme_font_size_override("font_size", 24)
 	name_label.add_theme_font_override("font", _font_bold)
@@ -140,10 +142,11 @@ func update_boss_bar(armor: int, health: int, max_armor: int, max_health: int) -
 		return
 	var armor_bar = boss_bar_canvas.get_node("ArmorBar")
 	var health_bar = boss_bar_canvas.get_node("HealthBar")
-	
-	armor_bar.size.x = 400 * (float(armor) / float(max_armor))
-	
-	if armor <= 0:
+
+	if max_armor > 0:
+		armor_bar.size.x = 400 * (float(armor) / float(max_armor))
+
+	if armor <= 0 or max_armor == 0:
 		armor_bar.visible = false
 		health_bar.visible = true
 		health_bar.size.x = 400 * (float(health) / float(max_health))
@@ -416,6 +419,54 @@ func _update_processor_btn() -> void:
 		_processor_btn.add_theme_color_override("font_color",         Color(0.45, 0.45, 0.50))
 		_processor_btn.add_theme_color_override("font_hover_color",   Color(0.65, 0.65, 0.70))
 		_processor_btn.add_theme_color_override("font_pressed_color", Color(0.30, 0.30, 0.35))
+
+func _spawn_nyx() -> void:
+	var nyx = load("res://nyx_09.gd").new()
+	nyx.name   = "Nyx09"
+	_nyx_node  = nyx
+	add_child(nyx)
+	nyx.landed.connect(_on_nyx_landed)
+	nyx.play_entry(Vector2(1240, 380))
+
+func _on_nyx_landed() -> void:
+	var subjects := get_tree().get_nodes_in_group("subjects")
+	var delay    := 0.0
+	for s in subjects:
+		if not is_instance_valid(s): continue
+		if s == _nyx_node:           continue
+		_zap_and_kill(s, delay)
+		delay += 0.06
+	spawn_interval = 20.0
+
+func _zap_and_kill(s: Node2D, delay: float) -> void:
+	if not is_instance_valid(s): return
+	s.set_physics_process(false)
+	if s.has_node("CollisionShape2D"):
+		s.get_node("CollisionShape2D").set_deferred("disabled", true)
+
+	var tw := s.create_tween()
+	tw.tween_interval(delay)
+	# Uc hizli elektrik parlamasi
+	for _i in 3:
+		tw.tween_property(s, "modulate", Color(2.5, 2.5, 0.2, 1.0), 0.06)
+		tw.tween_property(s, "modulate", Color(1.0, 1.0, 1.0, 1.0),  0.05)
+	# Solarken kaybol
+	tw.tween_property(s, "modulate", Color(1.5, 1.8, 0.1, 0.0), 0.22)
+	tw.tween_callback(func():
+		if is_instance_valid(s): s.queue_free()
+	)
+
+	# Elektrik kivircima efekti — delay sonra spawn
+	var ZapScript = load("res://zap_effect.gd")
+	var zap := Node2D.new()
+	zap.set_script(ZapScript)
+	zap.global_position = s.global_position
+	add_child(zap)
+	if delay > 0.001:
+		zap.modulate.a = 0.0
+		var ztw := zap.create_tween()
+		ztw.tween_interval(delay)
+		ztw.tween_property(zap, "modulate:a", 1.0, 0.01)
 
 func _spawn_hasmen_entrance() -> void:
 	if _hasmen_npc != null:
@@ -1253,7 +1304,17 @@ func _process(_delta: float) -> void:
 	spawn_timer += _delta
 	if spawn_timer >= spawn_interval:
 		spawn_timer = 0.0
-		_spawn_subject()
+		var nyx_alive: bool = is_instance_valid(_nyx_node) and not _nyx_node.is_dead
+		if nyx_alive:
+			# Boss modunda: 3 dusman, aralik sabit kalir (20s)
+			for _si in 3:
+				_spawn_subject()
+		else:
+			_spawn_subject()
+			# Boss olunca normal araliga don
+			if _nyx_node != null and not is_instance_valid(_nyx_node):
+				_nyx_node = null
+				spawn_interval = max(spawn_interval, min_spawn_interval)
 	
 	if calamity_aiming and not calamity_slots.is_empty():
 		var mouse_pos = get_viewport().get_mouse_position()
@@ -1281,8 +1342,13 @@ func _process(_delta: float) -> void:
 		var minutes = int(elapsed_time / 60)
 		var seconds = int(elapsed_time) % 60
 		$UI/LabelTime.text = "⏱  %02d:%02d" % [minutes, seconds]
+	# Nyx-09 — test için level 2
+	if level >= 2 and not _nyx_spawned:
+		_nyx_spawned = true
+		_spawn_nyx()
+
 	# Boss intro
-	if level >= 2 and boss == null and not boss_defeated and _crate_node == null:
+	if level >= 10 and boss == null and not boss_defeated and _crate_node == null:
 		_start_boss_intro()
 
 func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:

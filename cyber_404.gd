@@ -41,9 +41,9 @@ func _setup_sprite() -> void:
 	if frames.has_animation("default"):
 		frames.remove_animation("default")
 
+	# Walk animasyonu (sheet'ten)
 	var base := "res://assets/enemys/cyber404/sheets/"
 	var tex: Texture2D = load(base + "cyber404_walk_S.png")
-
 	frames.add_animation("walk")
 	frames.set_animation_speed("walk", 8.0)
 	frames.set_animation_loop("walk", true)
@@ -52,6 +52,15 @@ func _setup_sprite() -> void:
 		atlas.atlas  = tex
 		atlas.region = Rect2(i * 252, 0, 252, 252)
 		frames.add_frame("walk", atlas)
+
+	# Death animasyonu (tek tek frame'ler)
+	var death_base := "res://assets/enemys/cyber404/animations/death/"
+	frames.add_animation("death")
+	frames.set_animation_speed("death", 10.0)
+	frames.set_animation_loop("death", false)
+	for i in range(9):
+		var t: Texture2D = load(death_base + "frame_%03d.png" % i)
+		frames.add_frame("death", t)
 
 	sprite.sprite_frames  = frames
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -194,23 +203,23 @@ func _armor_break() -> void:
 
 func die() -> void:
 	is_dead = true
+	set_physics_process(false)
+	$CollisionShape2D.disabled = true
 	var game = get_parent()
 	if game.has_method("subject_died"):
 		game.subject_died()
 	if game.has_method("hide_boss_bar"):
 		game.hide_boss_bar()
-	_collapse()
+	_play_death()
 
-func _collapse() -> void:
-	set_physics_process(false)
-	$CollisionShape2D.disabled = true
-	var tween = create_tween()
-	tween.tween_property(self, "scale", Vector2(0.8, 0.3), 0.3)
-	await get_tree().create_timer(1.0).timeout
-	var tween2 = create_tween()
-	tween2.tween_property(self, "position", Vector2(1700, 1100), 1.0)
-	await get_tree().create_timer(1.0).timeout
-	queue_free()
+func _play_death() -> void:
+	var sprite: AnimatedSprite2D = $Boss404Sprite
+	sprite.play("death")
+	# Animasyon bitince son frame'de 1.5s bekle, sonra yok ol
+	await sprite.animation_finished
+	await get_tree().create_timer(1.5).timeout
+	if is_instance_valid(self):
+		queue_free()
 
 func apply_slow(amount) -> void:
 	if is_slowed:
