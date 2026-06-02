@@ -13,6 +13,7 @@ var shoot_timer = 0.0
 var shoot_interval = 3.0
 var is_electrified = false
 var max_health = 15
+var _elem_indicator = null
 var attack_cooldown = 0.0
 var attack_rate = 1.0
 
@@ -24,6 +25,7 @@ var _anim_dir: String = "S"
 func _ready() -> void:
 	z_index = 2
 	_setup_sprite()
+	_setup_element_indicator(-72.0)
 
 func _setup_sprite() -> void:
 	var sprite: AnimatedSprite2D = $ShooterSprite
@@ -173,60 +175,59 @@ func apply_slow(amount) -> void:
 	is_slowed = true
 	original_speed = speed
 	speed = speed * (1.0 - amount)
-	modulate = Color(0.7, 0.9, 1.0)
+	_set_element("slow")
 	await get_tree().create_timer(3.0).timeout
 	if not is_instance_valid(self):
 		return
 	speed = original_speed
 	is_slowed = false
-	modulate = Color(1, 1, 1)
+	_clear_element()
 
 func apply_frozen() -> void:
 	is_frozen = true
 	is_wet = false
-	var tween = create_tween()
-	tween.tween_property(self, "modulate", Color(0.5, 0.8, 1.0), 0.2)
+	_set_element("frozen")
 	await get_tree().create_timer(3.0).timeout
 	if not is_instance_valid(self):
 		return
 	is_frozen = false
-	modulate = Color(1, 1, 1)
+	_clear_element()
 
 func apply_wet() -> void:
 	is_wet = true
-	modulate = Color(0.3, 0.6, 1.0)
+	_set_element("wet")
 	await get_tree().create_timer(5.0).timeout
 	if not is_instance_valid(self):
 		return
 	is_wet = false
-	modulate = Color(1, 1, 1)
+	_clear_element()
 
 func apply_glitch() -> void:
 	if is_glitched:
 		return
 	is_glitched = true
-	modulate = Color(0.8, 0.2, 1.0)
+	_set_element("glitch")
 	await get_tree().create_timer(3.0).timeout
 	if not is_instance_valid(self):
 		return
 	is_glitched = false
-	modulate = Color(1, 1, 1)
+	_clear_element()
 
 func apply_electrified() -> void:
 	if is_electrified:
 		return
 	is_electrified = true
-	modulate = Color(0.8, 1.0, 0.2)
+	_set_element("electrified")
 	await get_tree().create_timer(5.0).timeout
 	if is_instance_valid(self):
 		is_electrified = false
-		modulate = Color(1, 1, 1)
+		_clear_element()
 
 func apply_burn() -> void:
 	if is_burning:
 		return
 	is_burning = true
-	modulate = Color(1.0, 0.4, 0.1)
+	_set_element("burn")
 	for i in range(3):
 		await get_tree().create_timer(1.0).timeout
 		if is_instance_valid(self) and health > 0:
@@ -236,7 +237,7 @@ func apply_burn() -> void:
 	if not is_instance_valid(self):
 		return
 	is_burning = false
-	modulate = Color(1, 1, 1)
+	_clear_element()
 
 func _escape() -> void:
 	if randf() < 0.3:
@@ -269,6 +270,7 @@ func _become_ally() -> void:
 	health = max_health * 0.25
 	add_to_group("allies")
 	remove_from_group("subjects")
+	_clear_element()
 	modulate = Color(0.2, 1.0, 0.4)
 
 	# First run to the tribune gate
@@ -304,3 +306,17 @@ func _ally_behavior() -> void:
 				attack_cooldown = attack_rate
 	else:
 		velocity = Vector2.ZERO
+
+func _setup_element_indicator(y_offset: float) -> void:
+	_elem_indicator = load("res://elem_indicator.gd").new()
+	_elem_indicator.position = Vector2(0, y_offset)
+	_elem_indicator.visible = false
+	add_child(_elem_indicator)
+
+func _set_element(elem: String) -> void:
+	if _elem_indicator != null:
+		_elem_indicator.set_element(elem)
+
+func _clear_element() -> void:
+	if _elem_indicator != null:
+		_elem_indicator.clear_element()

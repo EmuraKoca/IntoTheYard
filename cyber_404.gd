@@ -248,11 +248,14 @@ func apply_electrified() -> void:
 	if is_electrified:
 		return
 	is_electrified = true
-	modulate = Color(0.8, 1.0, 0.2)
+	var game := get_parent()
+	if game.has_method("update_boss_element"):
+		game.update_boss_element("electrified")
 	await get_tree().create_timer(5.0).timeout
 	if is_instance_valid(self):
 		is_electrified = false
-		modulate = Color(1, 1, 1)
+		if game.has_method("clear_boss_element"):
+			game.clear_boss_element()
 
 func apply_burn() -> void:
 	if is_burning:

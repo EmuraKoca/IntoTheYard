@@ -1991,3 +1991,60 @@ Top Fizik Düzeltmeleri:
 Hasmen NPC:
 ✅ sit klasörü doğru konuma taşındı (animations/sit/)
 ✅ git'e eklendi, artık her bilgisayarda çalışıyor
+
+────────────────────────────────────────────────────────────────────────────────
+
+0.0.8.2
+02.06.2026
+
+Nyx-09 The Quantum Widow (Yeni Boss):
+✅ nyx_09.gd — tamamen sıfırdan yazılmış 670 satırlık boss scripti
+✅ Giriş sekansı: havadan süzülerek iner, gölge büyür, sabit Y çizgisinde yüzer
+✅ 3 saldırı sistemi:
+   — Dönen lazer (3 kol, 4s süre, 9s cooldown)
+   — 5× elektrik çarpması (uyarı halkaları + zigzag bolt + flash)
+   — Teleport + beam (tp sonrası inceden kalına dalgalı huzme)
+✅ Sahaya girişte mevcut elektrik topları temizlenir, 3'erli seyrek spawn başlar
+✅ Boss bar: "NYX-09 // THE QUANTUM WIDOW"
+✅ Tüm animasyonlar: entry (6 frame) + walk (8 frame) + death (11 frame)
+✅ 8 yönlü rotasyon spriteleri eklendi
+
+Cyber 404 — Ölüm Animasyonu:
+✅ 9 frame ölüm animasyonu eklendi (artık küçülüp kaçmıyor)
+✅ Level 10'a taşındı — Nyx test için level 2
+
+Zap Effect:
+✅ zap_effect.gd — düşman ölümlerinde elektrik kıvılcım efekti
+
+Top & Fizik Düzeltmeleri:
+✅ collision_layer=2, mask=1 → toplar birbirine çarpmıyor
+✅ move_and_collide(motion) → tunneling (içinden geçme) düzeltmesi
+✅ Bariyer/duvar çarpışması normale göre sekiyor
+
+Diğer:
+✅ Player dash cooldown: 1.5s → 0.8s
+✅ show_boss_bar() boss ismi parametresi aldı
+
+────────────────────────────────────────────────────────────────────────────────
+
+0.0.8.3
+03.06.2026
+
+Element Göstergesi Sistemi:
+✅ elem_indicator.gd — yeni ortak script, _draw() ile vektörel ikon çizen Node2D
+✅ Tüm düşmanlardaki element modulate renk değişiklikleri kaldırıldı
+   (düşman renkleri artık element durumuna göre değişmiyor)
+✅ Normal düşmanlarda: kafanın üstünde 18×18px koyu kare + vektörel ikon
+✅ Boss düşmanlarda: can barının altında HUD'da aynı ikon
+
+Elementlerin görsel ikonları:
+   🔴 Burn        — alev üçgeni (iç oyuk + uç dili)
+   🔵 Frozen      — 3 eksenli kar tanesi (V çubukları + merkez)
+   💙 Wet         — su damlası (daire + sivri tepe + highlight)
+   🟣 Glitch      — tarama çizgileri (orta kesik + piksel kopukluk)
+   🟡 Electrified — şimşek cıvatası (iç çizgi detayı)
+   🩵 Slow        — kum saati (çubuklar + orta nokta)
+
+✅ Her ikon: dış parıltı (element rengi) + koyu arka plan + renkli kenarlık
+✅ Ally olunca element göstergesi otomatik temizleniyor
+✅ Düşman öldüğünde gösterge onunla birlikte kayboluyor

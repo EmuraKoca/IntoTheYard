@@ -627,44 +627,59 @@ func die() -> void:
 func apply_slow(amount: float) -> void:
 	if is_slowed: return
 	is_slowed = true; original_speed = speed; speed *= (1.0 - amount)
-	modulate = Color(0.7, 0.9, 1.0)
+	_boss_set_element("slow")
 	await get_tree().create_timer(3.0).timeout
 	if not is_instance_valid(self): return
-	speed = original_speed; is_slowed = false; modulate = Color(1,1,1)
+	speed = original_speed; is_slowed = false; _boss_clear_element()
 
 func apply_frozen() -> void:
-	is_frozen = true; is_wet = false; modulate = Color(0.5, 0.8, 1.0)
+	is_frozen = true; is_wet = false
+	_boss_set_element("frozen")
 	await get_tree().create_timer(3.0).timeout
 	if not is_instance_valid(self): return
-	is_frozen = false; modulate = Color(1,1,1)
+	is_frozen = false; _boss_clear_element()
 
 func apply_wet() -> void:
-	is_wet = true; modulate = Color(0.3, 0.6, 1.0)
+	is_wet = true
+	_boss_set_element("wet")
 	await get_tree().create_timer(5.0).timeout
 	if not is_instance_valid(self): return
-	is_wet = false; modulate = Color(1,1,1)
+	is_wet = false; _boss_clear_element()
 
 func apply_glitch() -> void:
 	if is_glitched: return
-	is_glitched = true; modulate = Color(0.8, 0.2, 1.0)
+	is_glitched = true
+	_boss_set_element("glitch")
 	await get_tree().create_timer(3.0).timeout
 	if not is_instance_valid(self): return
-	is_glitched = false; modulate = Color(1,1,1)
+	is_glitched = false; _boss_clear_element()
 
 func apply_electrified() -> void:
 	if is_electrified: return
-	is_electrified = true; modulate = Color(0.8, 1.0, 0.2)
+	is_electrified = true
+	_boss_set_element("electrified")
 	await get_tree().create_timer(5.0).timeout
 	if is_instance_valid(self):
-		is_electrified = false; modulate = Color(1,1,1)
+		is_electrified = false; _boss_clear_element()
 
 func apply_burn() -> void:
 	if is_burning: return
-	is_burning = true; modulate = Color(1.0, 0.4, 0.1)
+	is_burning = true
+	_boss_set_element("burn")
 	for i in range(3):
 		await get_tree().create_timer(1.0).timeout
 		if is_instance_valid(self) and health > 0:
 			health -= 2
 			if health <= 0: die()
 	if not is_instance_valid(self): return
-	is_burning = false; modulate = Color(1,1,1)
+	is_burning = false; _boss_clear_element()
+
+func _boss_set_element(elem: String) -> void:
+	var game := get_parent()
+	if game.has_method("update_boss_element"):
+		game.update_boss_element(elem)
+
+func _boss_clear_element() -> void:
+	var game := get_parent()
+	if game.has_method("clear_boss_element"):
+		game.clear_boss_element()

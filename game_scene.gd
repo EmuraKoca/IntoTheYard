@@ -29,6 +29,7 @@ var cyber_shotgun_scene = preload("res://cyber_shotgun.tscn")
 var cyber_rifle_scene = preload("res://cyber_rifle.tscn")
 var cyber_404_scene = preload("res://cyber_404.tscn")
 var boss_bar_canvas = null
+var _boss_elem_indicator = null
 var boss = null
 var boss_defeated = false
 var _crate_node = null
@@ -157,6 +158,21 @@ func hide_boss_bar() -> void:
 		boss_bar_canvas.queue_free()
 		boss_bar_canvas = null
 	boss = null
+	_boss_elem_indicator = null
+
+func update_boss_element(elem: String) -> void:
+	if boss_bar_canvas == null:
+		return
+	if _boss_elem_indicator == null:
+		_boss_elem_indicator = load("res://elem_indicator.gd").new()
+		# Can barının (y=75, yükseklik=20) hemen altına, soldan 9px içeride
+		_boss_elem_indicator.position = Vector2(769, 107)
+		boss_bar_canvas.add_child(_boss_elem_indicator)
+	_boss_elem_indicator.set_element(elem)
+
+func clear_boss_element() -> void:
+	if _boss_elem_indicator != null:
+		_boss_elem_indicator.clear_element()
 
 func _on_card_selected(index: int, _canvas: CanvasLayer, bg: ColorRect) -> void:
 	selected_upgrade_index = index

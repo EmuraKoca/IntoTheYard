@@ -16,6 +16,7 @@ var attack_cooldown = 0.0
 var attack_rate = 1.0
 var is_electrified = false
 var chip_duration = 15.0  # Ally chip charge duration — upgradeable via card
+var _elem_indicator = null
 var _ally_timer = 0.0
 var _is_exiting = false
 var _reached_living_area: bool = false
@@ -31,7 +32,7 @@ func apply_burn() -> void:
 	if is_burning:
 		return
 	is_burning = true
-	modulate = Color(1.0, 0.4, 0.1)
+	_set_element("burn")
 	for i in range(3):
 		await get_tree().create_timer(1.0).timeout
 		if is_instance_valid(self) and health > 0:
@@ -41,48 +42,47 @@ func apply_burn() -> void:
 	if not is_instance_valid(self):
 		return
 	is_burning = false
-	modulate = Color(1, 1, 1)
+	_clear_element()
 
 func apply_frozen() -> void:
 	is_frozen = true
 	is_wet = false
-	var tween = create_tween()
-	tween.tween_property(self, "modulate", Color(0.5, 0.8, 1.0), 0.2)
+	_set_element("frozen")
 	await get_tree().create_timer(3.0).timeout
 	if not is_instance_valid(self):
 		return
 	is_frozen = false
-	modulate = Color(1, 1, 1)
+	_clear_element()
 
 func apply_wet() -> void:
 	is_wet = true
-	modulate = Color(0.3, 0.6, 1.0)
+	_set_element("wet")
 	await get_tree().create_timer(5.0).timeout
 	if not is_instance_valid(self):
 		return
 	is_wet = false
-	modulate = Color(1, 1, 1)
+	_clear_element()
 
 func apply_glitch() -> void:
 	if is_glitched:
 		return
 	is_glitched = true
-	modulate = Color(0.8, 0.2, 1.0)
+	_set_element("glitch")
 	await get_tree().create_timer(3.0).timeout
 	if not is_instance_valid(self):
 		return
 	is_glitched = false
-	modulate = Color(1, 1, 1)
+	_clear_element()
 
 func apply_electrified() -> void:
 	if is_electrified:
 		return
 	is_electrified = true
-	modulate = Color(0.8, 1.0, 0.2)
+	_set_element("electrified")
 	await get_tree().create_timer(5.0).timeout
 	if is_instance_valid(self):
 		is_electrified = false
-		modulate = Color(1, 1, 1)
+		_clear_element()
 
 func apply_slow(amount) -> void:
 	if is_slowed:
@@ -90,17 +90,18 @@ func apply_slow(amount) -> void:
 	is_slowed = true
 	original_speed = speed
 	speed = speed * (1.0 - amount)
-	modulate = Color(0.7, 0.9, 1.0)
+	_set_element("slow")
 	await get_tree().create_timer(3.0).timeout
 	if not is_instance_valid(self):
 		return
 	speed = original_speed
 	is_slowed = false
-	modulate = Color(1, 1, 1)
+	_clear_element()
 
 func _ready() -> void:
 	z_index = 2
 	_setup_sprite()
+	_setup_element_indicator(-68.0)
 
 func _setup_sprite() -> void:
 	var sprite: AnimatedSprite2D = $FranticSprite
@@ -284,6 +285,7 @@ func _become_ally() -> void:
 
 	add_to_group("allies")
 	remove_from_group("subjects")
+	_clear_element()
 	modulate = Color(0.2, 1.0, 0.4)
 	# Use game-level chip duration if available (respects Chip Boost upgrade)
 	_ally_timer = game.ally_chip_duration if "ally_chip_duration" in game else chip_duration
@@ -382,3 +384,17 @@ func _ally_behavior() -> void:
 		move_and_slide()
 		_update_anim_dir_from_velocity()
 		_update_frantic_anim()
+
+func _setup_element_indicator(y_offset: float) -> void:
+	_elem_indicator = load("res://elem_indicator.gd").new()
+	_elem_indicator.position = Vector2(0, y_offset)
+	_elem_indicator.visible = false
+	add_child(_elem_indicator)
+
+func _set_element(elem: String) -> void:
+	if _elem_indicator != null:
+		_elem_indicator.set_element(elem)
+
+func _clear_element() -> void:
+	if _elem_indicator != null:
+		_elem_indicator.clear_element()
