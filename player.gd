@@ -217,7 +217,7 @@ func _physics_process(delta: float) -> void:
 
 	# Wall boundaries
 	global_position.x = clamp(global_position.x, 910, 1580)
-	global_position.y = clamp(global_position.y, 260, 1040)
+	global_position.y = clamp(global_position.y, 330, 1035)
 
 	# Chain constraint check
 	var dist_to_anchor = global_position.distance_to(chain_anchor)

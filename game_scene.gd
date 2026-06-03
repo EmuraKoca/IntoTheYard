@@ -1358,13 +1358,13 @@ func _process(_delta: float) -> void:
 		var minutes = int(elapsed_time / 60)
 		var seconds = int(elapsed_time) % 60
 		$UI/LabelTime.text = "⏱  %02d:%02d" % [minutes, seconds]
-	# Nyx-09 — test için level 2
-	if level >= 2 and not _nyx_spawned:
+	# Nyx-09 — Level 6 (test)
+	if level >= 6 and not _nyx_spawned:
 		_nyx_spawned = true
 		_spawn_nyx()
 
-	# Boss intro
-	if level >= 10 and boss == null and not boss_defeated and _crate_node == null:
+	# Boss intro — Cyber 404 Level 3 (test)
+	if level >= 3 and boss == null and not boss_defeated and _crate_node == null:
 		_start_boss_intro()
 
 func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:

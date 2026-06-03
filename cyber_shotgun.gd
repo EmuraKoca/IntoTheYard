@@ -1,4 +1,4 @@
-﻿extends CharacterBody2D
+extends CharacterBody2D
 
 var speed = 35.0
 var health = 20
@@ -150,7 +150,7 @@ func die() -> void:
 	is_dead = true
 	if is_in_group("allies"):
 		set_physics_process(false)
-		$CollisionShape2D.disabled = true
+		$CollisionShape2D.set_deferred("disabled", true)
 		var tween = create_tween()
 		tween.tween_property(self, "modulate", Color(1, 1, 1, 0), 1.0)
 		await get_tree().create_timer(1.0).timeout
@@ -163,7 +163,7 @@ func die() -> void:
 
 func _collapse() -> void:
 	set_physics_process(false)
-	$CollisionShape2D.disabled = true
+	$CollisionShape2D.set_deferred("disabled", true)
 	var tween = create_tween()
 	tween.tween_property(self, "scale", Vector2(0.8, 0.3), 0.3)
 	await get_tree().create_timer(1.0).timeout

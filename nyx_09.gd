@@ -64,10 +64,13 @@ var _tele_warn_t  : float   = 0.0
 var _tele_pos     : Vector2 = Vector2.ZERO
 
 # Beam saldirisi (tp sonrasi)
-const BEAM_LIFETIME := 0.55
+const BEAM_LIFETIME  := 0.55
+const BEAM_HIT_RADIUS := 48.0
 var _beam_active   : bool    = false
 var _beam_t        : float   = 0.0    # 0..1 yasam suresi
 var _beam_target   : Vector2 = Vector2.ZERO  # dunya uzayi
+var _beam_warn_t   : float   = 0.0    # uyari gostergesi (1→0)
+var _beam_warn_pos : Vector2 = Vector2.ZERO
 
 # Elektrik carpma state
 var _bolt_active   : bool    = false
@@ -189,6 +192,11 @@ func _physics_process(delta: float) -> void:
 			_beam_t = 0.0
 		queue_redraw()
 
+	# Beam uyari solma
+	if _beam_warn_t > 0.0:
+		_beam_warn_t = max(0.0, _beam_warn_t - delta / (0.25 + BEAM_LIFETIME * 0.75))
+		queue_redraw()
+
 	# Flash solma
 	if _bolt_flash > 0.0:
 		_bolt_flash = max(0.0, _bolt_flash - delta * 8.0)
@@ -222,8 +230,8 @@ func _physics_process(delta: float) -> void:
 			_check_laser_hit()
 		if _laser_dur_left <= 0:
 			_stop_laser()
-	elif not _bolt_active:
-		# Bolt aktifken laser zamanlayici durur
+	elif not _bolt_active and not _tele_active:
+		# Bolt veya TP aktifken laser zamanlayici durur
 		_laser_timer -= delta
 		if _laser_timer <= 1.0 and _laser_timer > 0:
 			_warn_flash = abs(sin(_laser_timer * 18.0))
@@ -273,90 +281,95 @@ func _start_teleport() -> void:
 		_tele_timer = TELE_COOLDOWN
 		return
 	_tele_active = true
+
+	# Ilk sarj
 	_sprite.play("charge")
-
-	# Hedef: player'in X pozisyonu, ayni Y
-	_tele_pos = Vector2(
-		clamp(player.global_position.x, 950.0, 1540.0),
-		_fixed_y
-	)
-
-	# Kisa sarj bekle
 	await get_tree().create_timer(0.45).timeout
 	if not is_instance_valid(self) or is_dead: return
 
-	# --- KAYBOLIS ---
-	# Mor patlama flash
-	_tele_flash = 1.0
-	queue_redraw()
-	# Sprite olcegi sifira
-	var vanish := create_tween()
-	vanish.set_parallel(true)
-	vanish.tween_property(_sprite, "scale", Vector2(0.0, 0.0), 0.28)\
-		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
-	vanish.tween_property(_sprite, "modulate", Color(0.2, 0.6, 2.0, 0.0), 0.28)
-	await vanish.finished
-	if not is_instance_valid(self) or is_dead: return
-	_sprite.visible  = false
-	_sprite.modulate = Color(1.0, 1.0, 1.0, 1.0)   # modulate'i sifirla
+	# 3 kez tp + beam, 1.5s arayla
+	for _strike in range(3):
+		if not is_instance_valid(self) or is_dead: return
 
-	# Pozisyona atla
-	position = _tele_pos
+		# Hedef: player'in anlık X pozisyonu
+		var pl := get_tree().get_first_node_in_group("player")
+		_tele_pos = Vector2(
+			clamp(pl.global_position.x if is_instance_valid(pl) else global_position.x, 950.0, 1540.0),
+			_fixed_y
+		)
 
-	# Hedef uyari gostergesi (0.5s)
-	_tele_warn_t = 1.0
-	queue_redraw()
-	await get_tree().create_timer(0.5).timeout
-	if not is_instance_valid(self) or is_dead: return
+		# --- KAYBOLIS ---
+		_tele_flash = 1.0
+		queue_redraw()
+		var vanish := create_tween()
+		vanish.set_parallel(true)
+		vanish.tween_property(_sprite, "scale",    Vector2(0.0, 0.0),         0.28)\
+			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+		vanish.tween_property(_sprite, "modulate", Color(0.2, 0.6, 2.0, 0.0), 0.28)
+		await vanish.finished
+		if not is_instance_valid(self) or is_dead: return
+		_sprite.visible  = false
+		_sprite.modulate = Color(1.0, 1.0, 1.0, 1.0)
+		position         = _tele_pos
 
-	# --- BELIRIS ---
-	_sprite.visible  = true
-	_sprite.modulate = Color(0.2, 0.6, 2.0, 1.0)   # mavi parlama ile belirir
-	_sprite.scale    = Vector2(0.0, 0.0)
-	_tele_flash      = 1.0
-	_tele_ring_r     = 5.0
-	queue_redraw()
+		# Uyari gostergesi (0.5s)
+		_tele_warn_t = 1.0
+		queue_redraw()
+		await get_tree().create_timer(0.5).timeout
+		if not is_instance_valid(self) or is_dead: return
 
-	var appear := create_tween()
-	appear.set_parallel(true)
-	appear.tween_property(_sprite, "scale",    Vector2(1.05, 1.05), 0.22)\
-		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	appear.tween_property(_sprite, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.22)
+		# --- BELIRIS ---
+		_sprite.visible  = true
+		_sprite.modulate = Color(0.2, 0.6, 2.0, 1.0)
+		_sprite.scale    = Vector2(0.0, 0.0)
+		_tele_flash      = 1.0
+		_tele_ring_r     = 5.0
+		queue_redraw()
 
-	var ring_tw := create_tween()
-	ring_tw.tween_method(
-		func(v: float): _tele_ring_r = v; queue_redraw(),
-		5.0, TELE_RADIUS * 1.6, 0.45
-	)
+		var appear := create_tween()
+		appear.set_parallel(true)
+		appear.tween_property(_sprite, "scale",    Vector2(1.05, 1.05),       0.22)\
+			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		appear.tween_property(_sprite, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.22)
+		var ring_tw := create_tween()
+		ring_tw.tween_method(
+			func(v: float): _tele_ring_r = v; queue_redraw(),
+			5.0, TELE_RADIUS * 1.6, 0.45
+		)
+		await appear.finished
+		if not is_instance_valid(self) or is_dead: return
+		_sprite.scale = Vector2(0.85, 0.85)
 
-	await appear.finished
-	if not is_instance_valid(self) or is_dead: return
-	_sprite.scale = Vector2(0.85, 0.85)
+		# Kisa sarj (0.25s) — hedef uyarisi goster
+		var pw := get_tree().get_first_node_in_group("player")
+		if is_instance_valid(pw):
+			_beam_warn_pos = pw.global_position
+			_beam_warn_t   = 1.0
+			queue_redraw()
+		await get_tree().create_timer(0.25).timeout
+		if not is_instance_valid(self) or is_dead: return
 
-	# Kisa sarj (0.25s) — beam genisliyor
-	await get_tree().create_timer(0.25).timeout
-	if not is_instance_valid(self) or is_dead: return
-
-	# BEAM ATIS — player'in anlık konumunu hedefle
-	var p := get_tree().get_first_node_in_group("player")
-	if is_instance_valid(p):
-		_beam_target = p.global_position
+		# BEAM ATIS — mark pozisyonuna ates, oradan kacabilirsin
+		_beam_target = _beam_warn_pos
 		_beam_active = true
 		_beam_t      = 0.0
+		await get_tree().create_timer(BEAM_LIFETIME * 0.75).timeout
+		if is_instance_valid(self) and not is_dead:
+			var p2 := get_tree().get_first_node_in_group("player")
+			if is_instance_valid(p2) and not p2.is_dashing:
+				if p2.global_position.distance_to(_beam_warn_pos) < BEAM_HIT_RADIUS:
+					p2.take_damage(TELE_DAMAGE)
 
-		# Hasar: beam hatti boyunca (oyuncu kacamazsa)
-		var to_p  : Vector2 = p.global_position - global_position
-		var b_dir : Vector2 = to_p.normalized()
-		var along : float   = to_p.dot(b_dir)
-		var perp  : float   = abs(to_p.dot(b_dir.rotated(PI * 0.5)))
-		if perp < 40.0 and along > 0 and not p.is_dashing:
-			p.take_damage(TELE_DAMAGE)
+		var game := get_parent()
+		if game.has_method("_screen_shake"):
+			game._screen_shake()
+		_tele_ring_r = 0.0
 
-	var game := get_parent()
-	if game.has_method("_screen_shake"):
-		game._screen_shake()
+		# Sonraki strike'a kadar 1.5s bekle (son strike'ta bekleme yok)
+		if _strike < 2:
+			await get_tree().create_timer(1.5).timeout
 
-	_tele_ring_r  = 0.0
+	# Sekans bitti
 	_tele_active  = false
 	_tele_timer   = TELE_COOLDOWN
 	if _laser_timer < 5.0: _laser_timer = 5.0
@@ -569,6 +582,17 @@ func _draw() -> void:
 			# Hedef noktasi carpma
 			draw_circle(tip_l, 20.0 * alpha, Color(0.1, 0.7, 1.0, alpha * 0.6))
 			draw_circle(tip_l, 9.0  * alpha, Color(0.8, 0.97, 1.0, alpha))
+
+	# --- BEAM HEDEF UYARISI ---
+	if _beam_warn_t > 0.0:
+		var wl    : Vector2 = to_local(_beam_warn_pos)
+		var pulse : float   = (sin(_bob_t * 16.0) + 1.0) * 0.5
+		var alpha : float   = _beam_warn_t
+		draw_circle(wl, 36.0, Color(0.8, 0.2, 1.0, alpha * (0.18 + pulse * 0.12)))
+		draw_arc(wl, 36.0, 0, TAU, 40, Color(0.9, 0.3, 1.0, alpha * (0.75 + pulse * 0.20)), 2.5)
+		var cs : float = 14.0
+		draw_line(wl + Vector2(-cs, 0), wl + Vector2(cs, 0), Color(1.0, 0.5, 1.0, alpha * (0.85 + pulse * 0.15)), 2.5)
+		draw_line(wl + Vector2(0, -cs), wl + Vector2(0, cs), Color(1.0, 0.5, 1.0, alpha * (0.85 + pulse * 0.15)), 2.5)
 
 	# --- BOLT UYARI ---
 	if _bolt_active and _bolt_pts.is_empty():

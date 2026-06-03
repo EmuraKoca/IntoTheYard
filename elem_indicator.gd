@@ -109,14 +109,14 @@ func _draw_icon(c: Vector2) -> void:
 			draw_rect(Rect2(c + Vector2( 6.0,  3.2), Vector2( 2.5, 2.8)), Color(0.9, 0.1, 1.0, 0.7), true)
 
 		"electrified":
-			# Şimşek cıvatası
+			# Şimşek cıvatası — saat yönünde, self-intersect yok
 			draw_colored_polygon(PackedVector2Array([
 				c + Vector2( 2.5, -7.5),
-				c + Vector2(-2.0, -0.5),
 				c + Vector2( 1.5, -0.5),
-				c + Vector2(-2.5,  7.5),
 				c + Vector2( 2.0,  0.5),
+				c + Vector2(-2.5,  7.5),
 				c + Vector2(-1.0,  0.5),
+				c + Vector2(-2.0, -0.5),
 			]), W)
 			# İnce iç çizgi (derinlik)
 			draw_line(

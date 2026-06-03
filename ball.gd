@@ -222,11 +222,8 @@ func _physics_process(delta: float) -> void:
 				move_direction = move_direction.bounce(collision.get_normal())
 				move_direction = move_direction.normalized()
 		else:
-			# Bariyer veya statik duvar — normal'e gore sektir
-			move_direction = move_direction.bounce(collision.get_normal())
-			if move_direction.length() > 0.01:
-				move_direction = move_direction.normalized()
-			_bounced = true
+			# Bariyer veya statik duvar — aninda geri don
+			_start_returning()
 
 	if is_fused and fusion_type == "phantom":
 		var subjects = get_tree().get_nodes_in_group("subjects")
@@ -319,10 +316,8 @@ func _process_returning(delta: float) -> void:
 		if collider.is_in_group("subjects"):
 			_hit_subject(collider)
 		elif not collider.is_in_group("player"):
-			# Bariyer veya statik duvar — sektir
-			move_direction = move_direction.bounce(collision.get_normal())
-			if move_direction.length() > 0.01:
-				move_direction = move_direction.normalized()
+			# Bariyer veya statik duvar — aninda geri don
+			_start_returning()
 
 # ── Defense helpers ───────────────────────────────────────────────────────────
 func _defense_hit(subject: Node2D) -> void:
@@ -786,6 +781,15 @@ func _hit_subject(subject: Node2D) -> void:
 	if subject in hit_subjects:
 		return
 	hit_subjects.append(subject)
+
+	# Hemen sekme — tüm await'lardan ÖNCE, top takılmasın
+	if not (is_fused and fusion_type == "phantom") and not can_pierce:
+		var _bn := (global_position - subject.global_position).normalized()
+		if _bn.length_squared() < 0.01:
+			_bn = -move_direction
+		move_direction = move_direction.bounce(_bn).normalized()
+		global_position += _bn * 8.0
+
 	# Mimic reverts after 5 hits
 	if mimic_done and not is_mimic:
 		mimic_hits += 1
@@ -1055,15 +1059,14 @@ func _hit_subject(subject: Node2D) -> void:
 			return
 
 	
+	# hit_subjects temizleme — tip bazlı cooldown
 	if is_fused and fusion_type == "phantom":
-		hit_subjects.erase(subject)
+		hit_subjects.erase(subject)  # anında geçer
 	elif can_pierce:
-		if is_instance_valid(subject) and subject.health > 0:
-			move_direction = move_direction.bounce(Vector2(0, 1))
-		hit_subjects.erase(subject)
+		await get_tree().create_timer(0.18).timeout
+		if subject in hit_subjects:
+			hit_subjects.erase(subject)
 	else:
-		var bounce_normal = (global_position - subject.global_position).normalized()
-		move_direction = move_direction.bounce(bounce_normal)
 		await get_tree().create_timer(0.5).timeout
 		if subject in hit_subjects:
 			hit_subjects.erase(subject)

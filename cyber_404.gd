@@ -204,7 +204,7 @@ func _armor_break() -> void:
 func die() -> void:
 	is_dead = true
 	set_physics_process(false)
-	$CollisionShape2D.disabled = true
+	$CollisionShape2D.set_deferred("disabled", true)
 	var game = get_parent()
 	if game.has_method("subject_died"):
 		game.subject_died()
