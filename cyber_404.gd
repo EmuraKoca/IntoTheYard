@@ -56,7 +56,7 @@ func _setup_sprite() -> void:
 	# Death animasyonu (tek tek frame'ler)
 	var death_base := "res://assets/enemys/cyber404/animations/death/"
 	frames.add_animation("death")
-	frames.set_animation_speed("death", 10.0)
+	frames.set_animation_speed("death", 5.0)
 	frames.set_animation_loop("death", false)
 	for i in range(9):
 		var t: Texture2D = load(death_base + "frame_%03d.png" % i)

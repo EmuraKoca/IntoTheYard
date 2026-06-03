@@ -123,7 +123,7 @@ func _setup_frames() -> void:
 
 	# Death
 	frames.add_animation("death")
-	frames.set_animation_speed("death", 10.0)
+	frames.set_animation_speed("death", 5.0)
 	frames.set_animation_loop("death", false)
 	for i in range(11):
 		frames.add_frame("death", load(BASE + "death/frame_%03d.png" % i))

@@ -37,6 +37,8 @@ var _processor_btn: Button = null
 var _hasmen_npc = null
 var _nyx_spawned: bool = false
 var _nyx_node = null
+var _smiler_spawned: bool = false
+var _smiler_node = null
 var data_collected: int = 0
 var total_subjects_killed: int = 0
 var ally_chip_duration: float = 15.0  # Upgradeable via card (index 23)
@@ -443,6 +445,25 @@ func _spawn_nyx() -> void:
 	add_child(nyx)
 	nyx.landed.connect(_on_nyx_landed)
 	nyx.play_entry(Vector2(1240, 380))
+
+func _spawn_smiler() -> void:
+	var smiler = load("res://s_miler_79.gd").new()
+	smiler.name = "SMiler79"
+	_smiler_node = smiler
+	add_child(smiler)
+	smiler.landed.connect(_on_smiler_landed)
+	smiler.play_entry(Vector2(1240, 300))
+
+func _on_smiler_landed() -> void:
+	# Sahayı temizle — normal düşmanları siler
+	var subjects := get_tree().get_nodes_in_group("subjects")
+	var delay    := 0.0
+	for s in subjects:
+		if not is_instance_valid(s): continue
+		if s == _smiler_node:        continue
+		_zap_and_kill(s, delay)
+		delay += 0.06
+	spawn_interval = 25.0   # S-Miler sırasında seyrek spawn
 
 func _on_nyx_landed() -> void:
 	var subjects := get_tree().get_nodes_in_group("subjects")
@@ -1320,16 +1341,20 @@ func _process(_delta: float) -> void:
 	spawn_timer += _delta
 	if spawn_timer >= spawn_interval:
 		spawn_timer = 0.0
-		var nyx_alive: bool = is_instance_valid(_nyx_node) and not _nyx_node.is_dead
-		if nyx_alive:
-			# Boss modunda: 3 dusman, aralik sabit kalir (20s)
+		var nyx_alive: bool    = is_instance_valid(_nyx_node)    and not _nyx_node.is_dead
+		var smiler_alive: bool = is_instance_valid(_smiler_node) and not _smiler_node.is_dead
+		if nyx_alive or smiler_alive:
+			# Boss modunda: 3 düşman, aralık sabit
 			for _si in 3:
 				_spawn_subject()
 		else:
 			_spawn_subject()
-			# Boss olunca normal araliga don
+			# Boss öldüyse normal aralığa dön
 			if _nyx_node != null and not is_instance_valid(_nyx_node):
 				_nyx_node = null
+				spawn_interval = max(spawn_interval, min_spawn_interval)
+			if _smiler_node != null and not is_instance_valid(_smiler_node):
+				_smiler_node = null
 				spawn_interval = max(spawn_interval, min_spawn_interval)
 	
 	if calamity_aiming and not calamity_slots.is_empty():
@@ -1358,13 +1383,18 @@ func _process(_delta: float) -> void:
 		var minutes = int(elapsed_time / 60)
 		var seconds = int(elapsed_time) % 60
 		$UI/LabelTime.text = "⏱  %02d:%02d" % [minutes, seconds]
-	# Nyx-09 — Level 6 (test)
-	if level >= 6 and not _nyx_spawned:
+	# Nyx-09 — Level 15
+	if level >= 15 and not _nyx_spawned:
 		_nyx_spawned = true
 		_spawn_nyx()
 
-	# Boss intro — Cyber 404 Level 3 (test)
-	if level >= 3 and boss == null and not boss_defeated and _crate_node == null:
+	# S-Miler 79 — Level 2 (test)
+	if level >= 2 and not _smiler_spawned:
+		_smiler_spawned = true
+		_spawn_smiler()
+
+	# Boss intro — Cyber 404 Level 10
+	if level >= 10 and boss == null and not boss_defeated and _crate_node == null:
 		_start_boss_intro()
 
 func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
