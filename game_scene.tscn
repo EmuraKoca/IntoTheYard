@@ -15,6 +15,7 @@
 [ext_resource type="Texture2D" uid="uid://cti5awflt8gw0" path="res://assets/backgrounds/8.png" id="16_3d2pr"]
 [ext_resource type="Texture2D" uid="uid://hm6kldh814yh" path="res://assets/devices/pikselLauncher.png" id="16_h5hfs"]
 [ext_resource type="Texture2D" uid="uid://cgctfiyheb17j" path="res://assets/devices/pikselProccessor.png" id="17_snaye"]
+[ext_resource type="Texture2D" uid="uid://c56kdqguck00l" path="res://assets/backgrounds/tile-B-01.png" id="18_snaye"]
 [ext_resource type="FontFile" uid="uid://bdbf1qeb2yg1s" path="res://assets/orbitronfont/Orbitron-Bold.ttf" id="font_bold"]
 [ext_resource type="FontFile" uid="uid://xo24eqnt6ct1" path="res://assets/orbitronfont/Orbitron-Regular.ttf" id="font_regular"]
 [ext_resource type="Script" uid="uid://bid3xvdmvsmpj" path="res://iso_effect.gd" id="iso_script"]
@@ -66,6 +67,17 @@ size = Vector2(360, 840)
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_daj04"]
 shader = ExtResource("12_ueiaa")
 
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_1wc4g"]
+texture = ExtResource("18_snaye")
+24:24/size_in_atlas = Vector2i(5, 12)
+24:24/0 = 0
+29:24/size_in_atlas = Vector2i(4, 12)
+29:24/0 = 0
+33:24/size_in_atlas = Vector2i(2, 12)
+33:24/0 = 0
+35:24/size_in_atlas = Vector2i(1, 12)
+35:24/0 = 0
+
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_opqoc"]
 texture = ExtResource("16_3d2pr")
 22:36/0 = 0
@@ -81,6 +93,7 @@ texture = ExtResource("16_3d2pr")
 
 [sub_resource type="TileSet" id="TileSet_1wc4g"]
 sources/9 = SubResource("TileSetAtlasSource_opqoc")
+sources/0 = SubResource("TileSetAtlasSource_1wc4g")
 
 [sub_resource type="Environment" id="Environment_glow01"]
 background_mode = 3
