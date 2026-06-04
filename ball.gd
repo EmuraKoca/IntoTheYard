@@ -157,7 +157,9 @@ func _physics_process(delta: float) -> void:
 				_fly_player.add_to_orbit(self)
 				return
 		else:
-			if $CollisionShape2D.disabled and catch_cooldown <= 0:
+			# catch_cooldown sadece orbit'e geri dönmeyi engeller,
+			# düşmana çarpmayı engellemez — her zaman aç
+			if $CollisionShape2D.disabled:
 				$CollisionShape2D.disabled = false
 
 	if catch_cooldown > 0:

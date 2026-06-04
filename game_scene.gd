@@ -1341,6 +1341,16 @@ func _process(_delta: float) -> void:
 	spawn_timer += _delta
 	if spawn_timer >= spawn_interval:
 		spawn_timer = 0.0
+		# Boss ölü ya da sahneden kaldırıldıysa referansı temizle ve aralığı sıfırla
+		if _nyx_node != null:
+			if not is_instance_valid(_nyx_node) or _nyx_node.is_dead:
+				_nyx_node = null
+				spawn_interval = min_spawn_interval
+		if _smiler_node != null:
+			if not is_instance_valid(_smiler_node) or _smiler_node.is_dead:
+				_smiler_node = null
+				spawn_interval = min_spawn_interval
+
 		var nyx_alive: bool    = is_instance_valid(_nyx_node)    and not _nyx_node.is_dead
 		var smiler_alive: bool = is_instance_valid(_smiler_node) and not _smiler_node.is_dead
 		if nyx_alive or smiler_alive:
@@ -1348,14 +1358,9 @@ func _process(_delta: float) -> void:
 			for _si in 3:
 				_spawn_subject()
 		else:
+			# Boss yokken daha yoğun spawn
 			_spawn_subject()
-			# Boss öldüyse normal aralığa dön
-			if _nyx_node != null and not is_instance_valid(_nyx_node):
-				_nyx_node = null
-				spawn_interval = max(spawn_interval, min_spawn_interval)
-			if _smiler_node != null and not is_instance_valid(_smiler_node):
-				_smiler_node = null
-				spawn_interval = max(spawn_interval, min_spawn_interval)
+			_spawn_subject()
 	
 	if calamity_aiming and not calamity_slots.is_empty():
 		var mouse_pos = get_viewport().get_mouse_position()
