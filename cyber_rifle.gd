@@ -275,7 +275,8 @@ func _become_ally() -> void:
 	add_to_group("allies")
 	remove_from_group("subjects")
 	_clear_element()
-	modulate = Color(0.2, 1.0, 0.4)
+	modulate = Color(1.0, 1.0, 1.0, 1.0)
+	scale    = Vector2(1.0, 1.0)
 
 	# First run to the tribune gate
 	var tween = create_tween()

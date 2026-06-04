@@ -287,7 +287,8 @@ func _become_ally() -> void:
 	add_to_group("allies")
 	remove_from_group("subjects")
 	_clear_element()
-	modulate = Color(0.2, 1.0, 0.4)
+	modulate = Color(1.0, 1.0, 1.0, 1.0)   # renk değişimi yok
+	scale    = Vector2(1.0, 1.0)            # collapse squish'i sıfırla
 	# Use game-level chip duration if available (respects Chip Boost upgrade)
 	_ally_timer = game.ally_chip_duration if "ally_chip_duration" in game else chip_duration
 	_is_exiting = false
@@ -317,10 +318,13 @@ func _ally_behavior() -> void:
 	if _is_exiting:
 		return
 
-	_ally_timer -= delta
-	if _ally_timer <= 0.0:
-		_start_exit()
-		return
+	# Timer sadece yaşam alanına ulaşıldıktan sonra tikler
+	# Böylece yolculuk sırasında süre dolup çıkış başlamaz
+	if _reached_living_area:
+		_ally_timer -= delta
+		if _ally_timer <= 0.0:
+			_start_exit()
+			return
 
 	# Use at least 150 px/s so even slow subjects move purposefully
 	var nav_speed = max(speed * 3.0, 150.0)
