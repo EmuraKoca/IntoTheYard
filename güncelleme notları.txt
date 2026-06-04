@@ -2048,3 +2048,40 @@ Elementlerin görsel ikonları:
 ✅ Her ikon: dış parıltı (element rengi) + koyu arka plan + renkli kenarlık
 ✅ Ally olunca element göstergesi otomatik temizleniyor
 ✅ Düşman öldüğünde gösterge onunla birlikte kayboluyor
+
+────────────────────────────────────────────────────────────────────────────────
+
+0.0.8.4
+04.06.2026
+
+S-Miler 79 (Yeni Boss) + Bug Düzeltmeleri:
+
+S-Miler 79 — Yeni Boss Eklendi:
+✅ s_miler_79.gd — tamamen sıfırdan yazılmış boss scripti
+✅ Yerde yürüyen boss (hover yok), player'ın X konumuna göre yatay hizalanır
+✅ Giriş sekansı: yukarıdan yere süzülür, gölge büyür, sabitlenen Y çizgisinde durur
+✅ 3 saldırı sistemi:
+   — Gatling (5 × 3 mermi salvosu, 10s cooldown)
+   — Swing Sword (uyarı halkası → TP player yanına → kılıç → TP geri, 18s cooldown)
+   — Missile (uyarı gölgesi → yukarıdan füze VFX düşer, 22s cooldown)
+✅ Tam asset seti: idle (9 frame), walk south/south-east/south-west (6 frame),
+   skillGatling (14 frame), skillMissile (9 frame + 28 frame VFX), skillSwingSword (4 frame),
+   death (9 frame), 8 yönlü rotasyon spriteleri
+✅ Tüm element debuffleri destekleniyor (slow, frozen, wet, glitch, electrified, burn)
+✅ Boss barı: "S-MILER  //  79"
+✅ Level 2'de spawn oluyor (Nyx-09 Level 10'a taşındı)
+
+Bug Düzeltmeleri (Test Sonrası):
+
+✅ Spawn pozisyonu düzeltildi — y=300 → y=500
+   (boss sahada çok geride duruyordu)
+
+✅ Gatling animasyon override hatası giderildi
+   — Kök neden: _start_gatling() çağrıldıktan sonra aynı frame'de
+     physics_process içindeki hareket kodu çalışmaya devam ediyordu
+     ve "walk_se" / "walk_sw" animasyonu "gatling"in üzerine yazıyordu
+   — Düzeltme: yetenek başladığı frame'de hareket koduna erken return
+
+✅ Missile impact gölgesi eklendi — VFX frame 10'a kadar küçülür, sonra yok olur
+   — Uyarı gölgesi (büyük → küçük) bitince impact shadow devreye giriyor
+   — ~0.56s (18fps × 10 frame) sürede 22px → 0px küçülüp tamamen kayboluyor
