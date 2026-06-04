@@ -29,6 +29,11 @@ var _shadow_alpha  : float  = 0.0
 
 var _sprite: AnimatedSprite2D = null
 
+# Missile VFX sırasında gölge — frame 10'a (≈0.56s) kadar küçülür, sonra yok olur
+var _missile_impact_shadow_t  : float  = 0.0
+var _missile_impact_shadow_pos: Vector2 = Vector2.ZERO
+const MISSILE_IMPACT_SHADOW_DUR := 0.556  # 10 frame @ 18 fps
+
 # ─────────────────────────────────────────────────────────
 # GATLING  — 3'lü mermi salvosu × 5 burst
 # ─────────────────────────────────────────────────────────
@@ -201,6 +206,9 @@ func _physics_process(delta: float) -> void:
 	if _missile_warn_t > 0.0:
 		_missile_warn_t = max(0.0, _missile_warn_t - delta / MISSILE_WARN)
 		queue_redraw()
+	if _missile_impact_shadow_t > 0.0:
+		_missile_impact_shadow_t = max(0.0, _missile_impact_shadow_t - delta / MISSILE_IMPACT_SHADOW_DUR)
+		queue_redraw()
 	if _swing_warn_t > 0.0:
 		_swing_warn_t = max(0.0, _swing_warn_t - delta / SWING_WARN)
 		queue_redraw()
@@ -217,6 +225,12 @@ func _physics_process(delta: float) -> void:
 			_start_missile()
 		elif _swing_t <= 0.0:
 			_start_swing()
+
+		# Yetenek bu frame'de başladıysa hareket kodunu atla
+		if _gatling_busy or _swing_busy or _missile_busy:
+			velocity = Vector2.ZERO
+			global_position.y = _fixed_y
+			return
 
 		# Yatay hareket — player'ın X konumuna hizalanır
 		var player := get_tree().get_first_node_in_group("player") as Node2D
@@ -364,6 +378,10 @@ func _start_missile() -> void:
 	_missile_warn_t = 0.0
 	queue_redraw()
 
+	# Impact gölgesini başlat — VFX frame 10'a kadar küçülür
+	_missile_impact_shadow_pos = _missile_warn_pos
+	_missile_impact_shadow_t   = 1.0
+
 	# VFX'i hedefe bırak (bağımsız coroutine)
 	_spawn_missile_vfx(_missile_warn_pos)
 
@@ -489,6 +507,14 @@ func _draw() -> void:
 		# Merkez nokta — tam isabet yeri
 		draw_circle(mloc, 5.0, Color(0.0, 0.0, 0.0,
 			clamp(_missile_warn_t * -1.5 + 1.0, 0.3, 0.9)))
+
+	# ── Missile çarptıktan sonra gölge VFX frame 10'a kadar küçülür ──
+	if _missile_impact_shadow_t > 0.0 and not _missile_impact_shadow_pos.is_equal_approx(Vector2.ZERO):
+		var mloc   := to_local(_missile_impact_shadow_pos)
+		# t=1.0: gölge 22px koyu   →   t=0.0: yok
+		var radius : float = lerp(0.0, 22.0, _missile_impact_shadow_t)
+		var alpha  : float = lerp(0.0, 0.78, _missile_impact_shadow_t)
+		draw_circle(mloc, radius, Color(0.0, 0.0, 0.0, alpha))
 
 # ══════════════════════════════════════════════════════════
 # ELEMENT ETKİLERİ  (boss barından gösterilir)

@@ -452,7 +452,7 @@ func _spawn_smiler() -> void:
 	_smiler_node = smiler
 	add_child(smiler)
 	smiler.landed.connect(_on_smiler_landed)
-	smiler.play_entry(Vector2(1240, 300))
+	smiler.play_entry(Vector2(1240, 500))
 
 func _on_smiler_landed() -> void:
 	# Sahayı temizle — normal düşmanları siler
