@@ -12,7 +12,8 @@ var is_glitched = false
 var is_wet = false
 var is_frozen = false
 var is_burning = false
-var _chip_t: float = 0.0
+var _chip_t:    float   = 0.0
+var _chip_node: Node2D  = null
 var attack_cooldown = 0.0
 var attack_rate = 1.0
 var is_electrified = false
@@ -109,6 +110,11 @@ func _ready() -> void:
 	z_index = 2
 	_setup_sprite()
 	_setup_element_indicator(-68.0)
+	_chip_node = Node2D.new()
+	_chip_node.z_as_relative = false
+	_chip_node.z_index = 10
+	add_child(_chip_node)
+	_chip_node.draw.connect(_draw_chip)
 
 func _setup_sprite() -> void:
 	var sprite: AnimatedSprite2D = $HeavySprite
@@ -180,7 +186,7 @@ func _physics_process(delta: float) -> void:
 		return
 	if not is_dead:
 		_chip_t += delta
-		queue_redraw()
+		_chip_node.queue_redraw()
 	if is_frozen:
 		return
 	var target
@@ -408,15 +414,15 @@ func _clear_element() -> void:
 	if _elem_indicator != null:
 		_elem_indicator.clear_element()
 
-func _draw() -> void:
+func _draw_chip() -> void:
 	if is_dead or is_in_group("allies"):
 		return
 	var pulse:   float = (sin(_chip_t * 5.5) + 1.0) * 0.5
 	var flicker: float = (sin(_chip_t * 31.0) + 1.0) * 0.5
 	var alpha:   float = 0.12 + pulse * 0.08 + flicker * 0.04
-	draw_arc(Vector2(0.0, -16.0), 6.0 + pulse * 2.0, 0.0, TAU, 10,
-			 Color(0.0, 0.85, 1.0, alpha), 1.2)
+	_chip_node.draw_arc(Vector2(0.0, -16.0), 6.0 + pulse * 2.0, 0.0, TAU, 10,
+			Color(0.0, 0.85, 1.0, alpha), 1.2)
 	if flicker > 0.87:
-		draw_line(Vector2(-5.0, -18.0 + sin(_chip_t * 7.0) * 8.0),
-				  Vector2( 5.0, -18.0 + sin(_chip_t * 7.0) * 8.0),
-				  Color(0.7, 1.0, 1.0, 0.18), 1.0)
+		_chip_node.draw_line(Vector2(-5.0, -18.0 + sin(_chip_t * 7.0) * 8.0),
+				Vector2( 5.0, -18.0 + sin(_chip_t * 7.0) * 8.0),
+				Color(0.7, 1.0, 1.0, 0.18), 1.0)
