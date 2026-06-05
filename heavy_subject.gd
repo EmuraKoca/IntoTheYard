@@ -294,17 +294,44 @@ func _become_ally() -> void:
 
 	# Disable collision — ally moves freely through tribune walls etc.
 	$CollisionShape2D.disabled = true
+	set_physics_process(false)
+
+	var nav_speed := max(speed * 3.0, 150.0)
+	var gate      := Vector2(global_position.x, 1000.0)
+	var door      := Vector2(850.0, 1000.0)
+	var inside    := Vector2(490.0, 1000.0)
+
+	var tw1 := create_tween()
+	tw1.tween_property(self, "global_position", gate,
+		max(abs(global_position.y - 1000.0) / nav_speed, 0.05))\
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	await tw1.finished
+	if not is_instance_valid(self): return
+
+	var tw2 := create_tween()
+	tw2.tween_property(self, "global_position", door,
+		max(abs(global_position.x - 850.0) / nav_speed, 0.05))\
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	await tw2.finished
+	if not is_instance_valid(self): return
+
+	var tw3 := create_tween()
+	tw3.tween_property(self, "global_position", inside, 360.0 / nav_speed)\
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	await tw3.finished
+	if not is_instance_valid(self): return
+
+	_reached_living_area = true
+	_wander_timer        = 0.0
 	set_physics_process(true)
 
 func _start_exit() -> void:
 	_is_exiting = true
 	set_physics_process(false)
-	# CollisionShape2D already disabled since _become_ally
 
 	var nav_speed = max(speed * 3.0, 200.0)
 	var exit_time = (global_position.x + 200.0) / nav_speed
 
-	# Run straight left from current position → off-screen → queue_free
 	var tween = create_tween()
 	tween.tween_property(self, "global_position", Vector2(-200, global_position.y), exit_time)
 	tween.tween_callback(queue_free)
@@ -320,28 +347,6 @@ func _ally_behavior() -> void:
 		if _ally_timer <= 0.0:
 			_start_exit()
 			return
-
-	# Use at least 150 px/s so even slow subjects move purposefully
-	var nav_speed = max(speed * 3.0, 150.0)
-
-	# Phase 1: Navigate through Surgery door into the living area
-	# Collision is disabled so we pass through everything freely
-	if not _reached_living_area:
-		if global_position.x >= 850.0:
-			# Still in game field — head toward Surgery door first
-			var dir = (SURGERY_EXIT - global_position).normalized()
-			velocity = dir * nav_speed
-		else:
-			# Passed Surgery door — go straight left to living area
-			velocity = Vector2(-nav_speed, 0)
-		move_and_slide()
-		_update_anim_dir_from_velocity()
-		_update_heavy_anim()
-		if global_position.x < 490.0:
-			_reached_living_area = true
-			_wander_timer = 0.0
-			velocity = Vector2.ZERO
-		return
 
 	# Phase 2: In living area — attack nearby enemies or wander upward
 	var subjects = get_tree().get_nodes_in_group("subjects")
