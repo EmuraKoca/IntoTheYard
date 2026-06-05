@@ -274,16 +274,22 @@ func _escape() -> void:
 		var game = get_parent()
 		if game.has_method("show_dialog"):
 			game.show_dialog(dialog, global_position)
-	$FranticSprite.play("run_SE")  # önce çapraz SE
+	var nav_speed: float = max(speed * 3.0, 150.0)
+	var se_target: Vector2 = Vector2(global_position.x + 200.0, 900.0)
+	var e_target:  Vector2 = Vector2(2000.0, 900.0)
+	$FranticSprite.play("run_SE")
 	var tween = create_tween()
-	tween.tween_property(self, "global_position",
-		Vector2(global_position.x + 200.0, 900.0), 0.45)
-	await get_tree().create_timer(0.40).timeout
+	tween.tween_property(self, "global_position", se_target,
+		global_position.distance_to(se_target) / nav_speed)
+	await get_tree().create_timer(
+		global_position.distance_to(se_target) / nav_speed).timeout
 	if not is_instance_valid(self): return
-	$FranticSprite.play("run_E")   # sonra düz E
+	$FranticSprite.play("run_E")
 	var tween2 = create_tween()
-	tween2.tween_property(self, "global_position", Vector2(2000.0, global_position.y), 0.7)
-	await get_tree().create_timer(0.7).timeout
+	tween2.tween_property(self, "global_position", e_target,
+		global_position.distance_to(e_target) / nav_speed)
+	await get_tree().create_timer(
+		global_position.distance_to(e_target) / nav_speed).timeout
 	if is_instance_valid(self): queue_free()
 
 func _become_ally() -> void:

@@ -2085,3 +2085,57 @@ Bug Düzeltmeleri (Test Sonrası):
 ✅ Missile impact gölgesi eklendi — VFX frame 10'a kadar küçülür, sonra yok olur
    — Uyarı gölgesi (büyük → küçük) bitince impact shadow devreye giriyor
    — ~0.56s (18fps × 10 frame) sürede 22px → 0px küçülüp tamamen kayboluyor
+
+────────────────────────────────────────────────────────────────────────────────
+
+0.0.8.5
+05.06.2026
+
+Genel Bug Düzeltmeleri:
+
+✅ Top düşmandan geçiyor hatası giderildi
+   — catch_cooldown sadece orbit'e geri dönmeyi engelliyordu, düşmana
+     çarpmayı da engelliyordu. Collision artık her zaman 80px dışında açık.
+
+✅ Boss öldükten sonra düşman spawn duruyordu
+   — is_dead kontrolü eklendi, boss ölür ölmez spawn_interval sıfırlanıyor
+
+✅ Boss yokken düşman spawn sıklığı artırıldı (1 → 2 per tick)
+
+Müttefik Sistemi:
+
+✅ Müttefik görseli düzeltildi — artık yeşile dönmüyor, scale squish yok
+
+✅ Tribune geçiş navigasyonu — tween bazlı 3 adımlı rota
+   (aşağı → kapı → yaşam alanı), move_and_slide diagonal yolunun
+   tribün duvarından geçmesi sorunu giderildi
+
+✅ Tribune z-index düzeltmesi — subject.tscn SubjectSprite'ın fazladan
+   z_index=2 satırı kaldırıldı, artık tribün arkasında görünüyor
+
+✅ Chip arıza efekti — vücuda yayılmış 6 noktalı elektrik kıvılcımları
+   (sarı-turuncu), müttefik olunca veya ölünce kaybolur
+
+✅ Collapse squish kaldırıldı — 7 düşman dosyasında _collapse() scale
+   tweeni silindi, düşmanlar artık küçülmeden çöküyor
+
+✅ Müttefik navigasyon animasyonu — SW ile kapıya çapraz gidiş, W ile içeri
+
+✅ Kaçan düşman animasyonu — SE ile çapraz kaçış, E ile sahadan çıkış
+
+✅ Kaçan düşman hızı müttefik hızıyla eşitlendi (nav_speed = max(hız×3, 150))
+
+Tab Tuşu — Tactical Mode:
+
+✅ Tab ile oyun 0.5× yavaşlar, amber kenarlık + "◈ TACTICAL MODE ×0.5" göstergesi
+✅ Tactical modda orbit'te top varsa en yakın düşmana otomatik ateş (0.3s aralık)
+
+Level Bazlı Spawn Sistemi:
+
+✅ Düşmanlar artık level'a göre kademeli giriyor:
+   Lv 1-3: Subject — Lv 4-7: +Frantic — Lv 8-11: +Armed
+   Lv 12-15: +Heavy — Lv 16-19: +CyberShooter
+   Lv 20-22: +CyberRifle — Lv 23+: +CyberShotgun
+
+✅ Boss sırası rastgele — Level 10/20/30'da havuzdan (Cyber404, Nyx-09,
+   S-Miler 79) rastgele seçilir, her boss bir kez gelir
