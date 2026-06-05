@@ -291,12 +291,12 @@ func _escape() -> void:
 	$ArmedSprite.play("walk_SE")  # önce çapraz SE
 	var tween = create_tween()
 	tween.tween_property(self, "global_position",
-		Vector2(global_position.x + 200.0, 900.0), 0.45)\n		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		Vector2(global_position.x + 200.0, 900.0), 0.45)
 	await get_tree().create_timer(0.40).timeout
 	if not is_instance_valid(self): return
 	$ArmedSprite.play("walk_E")   # sonra düz E
 	var tween2 = create_tween()
-	tween2.tween_property(self, "global_position", Vector2(2000.0, global_position.y), 0.7)\n		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tween2.tween_property(self, "global_position", Vector2(2000.0, global_position.y), 0.7)
 	await get_tree().create_timer(0.7).timeout
 	if is_instance_valid(self): queue_free()
 
