@@ -43,6 +43,16 @@ var data_collected: int = 0
 var total_subjects_killed: int = 0
 var ally_chip_duration: float = 15.0  # Upgradeable via card (index 23)
 
+# ── RTS / Tactical Mode ───────────────────────────────────────────────────────
+var _rts_mode:    bool        = false
+var _rts_overlay: CanvasLayer = null
+
+# ── Boss havuzu — Level 10 / 20 / 30'da rastgele seçilir ─────────────────────
+var _boss_pool:         Array[String] = ["cyber404", "nyx09", "smiler79"]
+var _bosses_used:       Array[String] = []
+var _boss_level_checks: Array[int]    = [10, 20, 30]
+var _boss_check_index:  int           = 0
+
 func _start_boss_intro() -> void:
 	var crate = load("res://crate_intro.gd").new()
 	crate.name   = "BossCrate"
@@ -437,6 +447,27 @@ func _update_processor_btn() -> void:
 		_processor_btn.add_theme_color_override("font_color",         Color(0.45, 0.45, 0.50))
 		_processor_btn.add_theme_color_override("font_hover_color",   Color(0.65, 0.65, 0.70))
 		_processor_btn.add_theme_color_override("font_pressed_color", Color(0.30, 0.30, 0.35))
+
+func _spawn_random_boss() -> void:
+	# Kullanılmamış boss'lardan rastgele seç; hepsi kullanıldıysa havuzu sıfırla
+	var available := _boss_pool.filter(func(b: String) -> bool: return b not in _bosses_used)
+	if available.is_empty():
+		_bosses_used.clear()
+		available = _boss_pool.duplicate()
+	var chosen: String = available[randi() % available.size()]
+	_bosses_used.append(chosen)
+	match chosen:
+		"cyber404":
+			if not boss_defeated and _crate_node == null:
+				_start_boss_intro()
+		"nyx09":
+			if not _nyx_spawned:
+				_nyx_spawned = true
+				_spawn_nyx()
+		"smiler79":
+			if not _smiler_spawned:
+				_smiler_spawned = true
+				_spawn_smiler()
 
 func _spawn_nyx() -> void:
 	var nyx = load("res://nyx_09.gd").new()
@@ -1048,10 +1079,64 @@ func _input(event: InputEvent) -> void:
 			calamity_index = clamp(calamity_index, 0, max(calamity_slots.size() - 1, 0))
 			update_ui()
 	
+	# Tab → Tactical Mode aç/kapat
+	if event is InputEventKey and event.keycode == KEY_TAB and event.pressed and not event.echo:
+		if not get_tree().paused:
+			_toggle_rts_mode()
+
 	if event is InputEventKey and event.keycode == KEY_ESCAPE and event.pressed:
 		if not upgrading:
 			_show_pause_menu()
 			
+func _toggle_rts_mode() -> void:
+	_rts_mode = not _rts_mode
+	Engine.time_scale = 0.5 if _rts_mode else 1.0
+	var player := get_node_or_null("Player")
+	if player:
+		player.rts_mode = _rts_mode
+	if _rts_mode:
+		_show_rts_overlay()
+	else:
+		_hide_rts_overlay()
+
+func _show_rts_overlay() -> void:
+	if _rts_overlay != null:
+		return
+	_rts_overlay = CanvasLayer.new()
+	_rts_overlay.layer = 20
+	add_child(_rts_overlay)
+
+	# Kenarlık — 4 ColorRect (üst / alt / sol / sağ)
+	var border_color := Color(1.0, 0.75, 0.0, 0.72)   # amber/altın
+	var thickness    := 4
+	for side in 4:
+		var bar := ColorRect.new()
+		bar.color = border_color
+		match side:
+			0: bar.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE);   bar.custom_minimum_size = Vector2(0, thickness)
+			1: bar.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE); bar.custom_minimum_size = Vector2(0, thickness); bar.offset_top = -thickness; bar.offset_bottom = 0
+			2: bar.set_anchors_and_offsets_preset(Control.PRESET_LEFT_WIDE);   bar.custom_minimum_size = Vector2(thickness, 0)
+			3: bar.set_anchors_and_offsets_preset(Control.PRESET_RIGHT_WIDE);  bar.custom_minimum_size = Vector2(thickness, 0); bar.offset_left = -thickness; bar.offset_right = 0
+		_rts_overlay.add_child(bar)
+
+	# Etiket — sol üst köşe
+	var lbl := Label.new()
+	lbl.text              = "◈  TACTICAL MODE  //  ×0.5"
+	lbl.add_theme_color_override("font_color",        Color(1.0, 0.82, 0.0, 1.0))
+	lbl.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.8))
+	lbl.add_theme_constant_override("shadow_offset_x", 2)
+	lbl.add_theme_constant_override("shadow_offset_y", 2)
+	lbl.add_theme_font_size_override("font_size", 18)
+	if _font_bold:
+		lbl.add_theme_font_override("font", _font_bold)
+	lbl.position = Vector2(16, 8)
+	_rts_overlay.add_child(lbl)
+
+func _hide_rts_overlay() -> void:
+	if _rts_overlay != null:
+		_rts_overlay.queue_free()
+		_rts_overlay = null
+
 func _show_pause_menu() -> void:
 	get_tree().paused = true
 	
@@ -1309,27 +1394,47 @@ func _make_gravity_gradient() -> Gradient:
 	return g
 
 func _spawn_subject() -> void:
-		
+	# Level bazlı ağırlıklı havuz — yeni tipler kademeli olarak eklenir
+	var pool: Array = []
+
+	# 1-3: Sadece Subject
+	for i in 5: pool.append("subject")
+
+	# 4-7: + FranticSubject
+	if level >= 4:
+		for i in 3: pool.append("frantic")
+
+	# 8-11: + ArmedSubject
+	if level >= 8:
+		for i in 2: pool.append("armed")
+
+	# 12-15: + HeavySubject
+	if level >= 12:
+		for i in 2: pool.append("heavy")
+
+	# 16-19: + CyberShooter
+	if level >= 16:
+		pool.append("cyber_shooter")
+
+	# 20-22: + CyberRifle
+	if level >= 20:
+		pool.append("cyber_rifle")
+
+	# 23+: + CyberShotgun
+	if level >= 23:
+		pool.append("cyber_shotgun")
+
 	var subject
-	var rand = randf()
-	
-	# TEST: tüm düşmanlar ilk safhada — sonra düzelteceğiz
-	if rand < 0.2:
-		subject = subject_scene.instantiate()
-	elif rand < 0.35:
-		subject = frantic_subject_scene.instantiate()
-	elif rand < 0.5:
-		subject = armed_subject_scene.instantiate()
-	elif rand < 0.65:
-		subject = heavy_subject_scene.instantiate()
-	elif rand < 0.78:
-		subject = cyber_shooter_scene.instantiate()
-	elif rand < 0.89:
-		subject = cyber_shotgun_scene.instantiate()
-	else:
-		subject = cyber_rifle_scene.instantiate()
-		
-	
+	match pool[randi() % pool.size()]:
+		"subject":       subject = subject_scene.instantiate()
+		"frantic":       subject = frantic_subject_scene.instantiate()
+		"armed":         subject = armed_subject_scene.instantiate()
+		"heavy":         subject = heavy_subject_scene.instantiate()
+		"cyber_shooter": subject = cyber_shooter_scene.instantiate()
+		"cyber_rifle":   subject = cyber_rifle_scene.instantiate()
+		"cyber_shotgun": subject = cyber_shotgun_scene.instantiate()
+		_:               subject = subject_scene.instantiate()
+
 	var rand_x = randf_range(50, 1600)
 	subject.position = Vector2(rand_x, -50)
 	add_child(subject)
@@ -1388,19 +1493,11 @@ func _process(_delta: float) -> void:
 		var minutes = int(elapsed_time / 60)
 		var seconds = int(elapsed_time) % 60
 		$UI/LabelTime.text = "⏱  %02d:%02d" % [minutes, seconds]
-	# Nyx-09 — Level 15
-	if level >= 15 and not _nyx_spawned:
-		_nyx_spawned = true
-		_spawn_nyx()
-
-	# S-Miler 79 — Level 2 (test)
-	if level >= 2 and not _smiler_spawned:
-		_smiler_spawned = true
-		_spawn_smiler()
-
-	# Boss intro — Cyber 404 Level 10
-	if level >= 10 and boss == null and not boss_defeated and _crate_node == null:
-		_start_boss_intro()
+	# Boss spawn — Level 10 / 20 / 30, rastgele sıra
+	if _boss_check_index < _boss_level_checks.size():
+		if level >= _boss_level_checks[_boss_check_index]:
+			_boss_check_index += 1
+			_spawn_random_boss()
 
 func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 	canvas.queue_free()

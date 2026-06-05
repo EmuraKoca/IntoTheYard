@@ -22,6 +22,11 @@ var dash_velocity = Vector2.ZERO
 var dash_duration = 0.12
 var dash_timer = 0.0
 
+# ── RTS / Tactical Mode ───────────────────────────────────────────────────────
+var rts_mode: bool = false
+const RTS_FIRE_INTERVAL := 0.30   # saniye (gerçek zaman; 0.5× scale'de ~0.6s görünür)
+var _rts_fire_timer: float = 0.0
+
 # ── Orbit sistemi ─────────────────────────────────────────────────────────────
 var orbit_balls: Array  = []
 const MAX_ORBIT: int    = 7
@@ -77,6 +82,21 @@ func remove_from_orbit(ball: Node2D) -> void:
 	orbit_balls.erase(ball)
 	if fire_index >= orbit_balls.size() and orbit_balls.size() > 0:
 		fire_index = 0
+
+func _rts_fire_at_nearest() -> void:
+	if orbit_balls.is_empty(): return
+	var subjects := get_tree().get_nodes_in_group("subjects")
+	var nearest: Node2D = null
+	var nearest_dist := INF
+	for s in subjects:
+		if not is_instance_valid(s): continue
+		var d := global_position.distance_to(s.global_position)
+		if d < nearest_dist:
+			nearest_dist = d
+			nearest = s
+	if nearest == null: return
+	aim_direction = (nearest.global_position - global_position).normalized()
+	_fire_ball()
 
 func _fire_ball() -> void:
 	if orbit_balls.is_empty(): return
@@ -190,6 +210,13 @@ func _dash() -> void:
 		dash_is_empty = true
 
 func _physics_process(delta: float) -> void:
+	# RTS modu — en yakın düşmana otomatik ateş
+	if rts_mode and not orbit_balls.is_empty():
+		_rts_fire_timer -= delta
+		if _rts_fire_timer <= 0.0:
+			_rts_fire_timer = RTS_FIRE_INTERVAL
+			_rts_fire_at_nearest()
+
 	var direction = Vector2.ZERO
 	if Input.is_key_pressed(KEY_W): direction.y = -1
 	if Input.is_key_pressed(KEY_S): direction.y = 1
