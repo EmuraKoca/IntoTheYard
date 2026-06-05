@@ -2139,3 +2139,38 @@ Level Bazlı Spawn Sistemi:
 
 ✅ Boss sırası rastgele — Level 10/20/30'da havuzdan (Cyber404, Nyx-09,
    S-Miler 79) rastgele seçilir, her boss bir kez gelir
+
+────────────────────────────────────────────────────────────────────────────────
+
+0.0.8.6
+06.06.2026
+
+Chip Arıza Efekti Güncelleme:
+
+✅ Chip kıvılcım efekti kalınlaştırıldı ve mor renk eklendi (7 düşman dosyası)
+   — Ana kıvılcım kalınlığı: 1.3px → 2.2px
+   — Kıvılcım uzunluğu büyütüldü (5.0/4.0 → 6.5/5.5px)
+   — Sarı-turuncu çizginin üzerine mor parıltı katmanı eklendi (Color 0.75, 0.1, 1.0)
+   — İkinci segment de kalınlaştı + mor ikinci segment eklendi
+   — Etkilenen: subject, frantic_subject, heavy_subject, armed_subject,
+     cyber_rifle, cyber_shooter, cyber_shotgun
+
+Müttefik Olma Oranı:
+
+✅ %60 → %10'a düşürüldü (7 düşman dosyası)
+   — Oyun dengesi için gerçekçi oran
+
+Bug Düzeltmeleri:
+
+✅ Orbit'e katılamayan top donup kalıyordu
+   — Kök neden: orbit dolu olduğunda add_to_orbit sessizce reddedip return yapıyordu,
+     top 40px içinde hareket edemez hale geliyordu
+   — Düzeltme: orbit doluyken top player etrafında küçük daire çizerek slot bekliyor,
+     yer açılınca otomatik katılıyor
+
+✅ S-Miler (ve tüm boss'lar) öldükten sonra düşman spawn duruyordu
+   — Kök neden: boss ölüm kontrolü spawn_timer gate'inin içindeydi;
+     spawn_interval=25.0 iken boss ölünce kontrol 25s boyunca çalışmıyordu
+   — Düzeltme: boss ölüm kontrolü _process'in en başına taşındı, her frame çalışıyor;
+     boss ölünce spawn_interval anında min_spawn_interval'e düşüyor,
+     spawn_timer sıfırlanarak bir sonraki tick hemen tetikleniyor

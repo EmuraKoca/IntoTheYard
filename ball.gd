@@ -286,7 +286,15 @@ func _process_returning(delta: float) -> void:
 	var dist = to_player.length()
 
 	if dist < 40:
-		player.add_to_orbit(self)
+		if player.orbit_balls.size() < player.MAX_ORBIT:
+			player.add_to_orbit(self)
+			return
+		# Orbit dolu — player etrafında küçük daire çizerek slot bekle
+		move_direction = move_direction.lerp(to_player.normalized().rotated(PI * 0.5), 0.20)
+		if move_direction.length() > 0.01:
+			move_direction = move_direction.normalized()
+		speed = 110.0
+		move_and_collide(move_direction * speed * delta)
 		return
 
 	# Homing — her frame biraz daha player'a döner

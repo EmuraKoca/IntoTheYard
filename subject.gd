@@ -259,7 +259,7 @@ func _collapse() -> void:
 		return
 
 	# 60% ally chance
-	if randf() < 0.60:
+	if randf() < 0.10:
 		_become_ally()
 	else:
 		_escape()
@@ -431,7 +431,7 @@ func _clear_element() -> void:
 func _draw_chip() -> void:
 	if is_dead or is_in_group("allies"):
 		return
-	# Vücuda yayılmış elektrik kıvılcımları
+	# Vücuda yayılmış elektrik kıvılcımları (sarı-turuncu + mor)
 	var t := _chip_t
 	var anchors := [
 		Vector2(-7.0, -22.0), Vector2( 7.0, -19.0),
@@ -443,11 +443,22 @@ func _draw_chip() -> void:
 		if flicker < 0.30:
 			continue
 		var p: Vector2  = anchors[i]
-		var ex: float   = sin(t * (9.0 + i * 3.1) + i) * 5.0
-		var ey: float   = cos(t * (7.0 + i * 2.5) + i) * 4.0
-		var a:  float   = flicker * 0.90
+		var ex: float   = sin(t * (9.0 + i * 3.1) + i) * 6.5
+		var ey: float   = cos(t * (7.0 + i * 2.5) + i) * 5.5
+		var a:  float   = flicker * 0.95
+		# Sarı-turuncu ana kıvılcım (kalın)
 		_chip_node.draw_line(p, p + Vector2(ex, ey),
-				Color(1.0, 1.0, 0.35, a), 1.3)
+				Color(1.0, 1.0, 0.35, a), 2.2)
+		# Mor parıltı — aynı yol üzerine bindirilmiş
+		_chip_node.draw_line(p, p + Vector2(ex, ey),
+				Color(0.75, 0.1, 1.0, a * 0.55), 1.2)
+		# Sarı-turuncu ikinci segment
+		var ex2: float = ex + sin(t * 11.0 + i) * 3.5
+		var ey2: float = ey + 2.5
 		_chip_node.draw_line(p + Vector2(ex, ey),
-				p + Vector2(ex + sin(t * 11.0 + i) * 3.0, ey + 2.0),
-				Color(1.0, 0.85, 0.1, a * 0.65), 1.0)
+				p + Vector2(ex2, ey2),
+				Color(1.0, 0.85, 0.1, a * 0.70), 1.8)
+		# Mor ikinci segment
+		_chip_node.draw_line(p + Vector2(ex, ey),
+				p + Vector2(ex2, ey2),
+				Color(0.6, 0.0, 1.0, a * 0.40), 1.0)

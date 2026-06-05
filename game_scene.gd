@@ -1443,19 +1443,21 @@ func _process(_delta: float) -> void:
 	
 	if upgrading:
 		return
+	# Boss ölüm kontrolü her frame çalışır — spawn_interval beklenmez
+	if _nyx_node != null:
+		if not is_instance_valid(_nyx_node) or _nyx_node.is_dead:
+			_nyx_node = null
+			spawn_interval = min_spawn_interval
+			spawn_timer    = spawn_interval  # Hemen spawn başlasın
+	if _smiler_node != null:
+		if not is_instance_valid(_smiler_node) or _smiler_node.is_dead:
+			_smiler_node = null
+			spawn_interval = min_spawn_interval
+			spawn_timer    = spawn_interval  # Hemen spawn başlasın
+
 	spawn_timer += _delta
 	if spawn_timer >= spawn_interval:
 		spawn_timer = 0.0
-		# Boss ölü ya da sahneden kaldırıldıysa referansı temizle ve aralığı sıfırla
-		if _nyx_node != null:
-			if not is_instance_valid(_nyx_node) or _nyx_node.is_dead:
-				_nyx_node = null
-				spawn_interval = min_spawn_interval
-		if _smiler_node != null:
-			if not is_instance_valid(_smiler_node) or _smiler_node.is_dead:
-				_smiler_node = null
-				spawn_interval = min_spawn_interval
-
 		var nyx_alive: bool    = is_instance_valid(_nyx_node)    and not _nyx_node.is_dead
 		var smiler_alive: bool = is_instance_valid(_smiler_node) and not _smiler_node.is_dead
 		if nyx_alive or smiler_alive:
