@@ -337,12 +337,18 @@ func _clear_element() -> void:
 func _draw_chip() -> void:
 	if is_dead or is_in_group("allies"):
 		return
-	var pulse:   float = (sin(_chip_t * 5.5) + 1.0) * 0.5
-	var flicker: float = (sin(_chip_t * 31.0) + 1.0) * 0.5
-	var alpha:   float = 0.12 + pulse * 0.08 + flicker * 0.04
-	_chip_node.draw_arc(Vector2(0.0, -16.0), 6.0 + pulse * 2.0, 0.0, TAU, 10,
-			Color(0.0, 0.85, 1.0, alpha), 1.2)
-	if flicker > 0.87:
-		_chip_node.draw_line(Vector2(-5.0, -18.0 + sin(_chip_t * 7.0) * 8.0),
-				Vector2( 5.0, -18.0 + sin(_chip_t * 7.0) * 8.0),
-				Color(0.7, 1.0, 1.0, 0.18), 1.0)
+	var pulse:   float = (sin(_chip_t * 6.0) + 1.0) * 0.5
+	var flicker: float = (sin(_chip_t * 23.0) + 1.0) * 0.5
+	# Parlak sarı nabız halkası
+	var alpha:  float = 0.45 + pulse * 0.40
+	var radius: float = 7.0  + pulse * 3.0
+	_chip_node.draw_arc(Vector2(0.0, -16.0), radius, 0.0, TAU, 12,
+			Color(1.0, 0.95, 0.15, alpha), 1.8)
+	# Elektrik kıvılcımı — her yarı titremede görünür
+	if flicker > 0.45:
+		var sx: float = sin(_chip_t * 13.0) * 5.0
+		var sy: float = -13.0 + cos(_chip_t * 9.0) * 4.0
+		_chip_node.draw_line(Vector2(sx - 3.0, sy - 4.0), Vector2(sx,       sy),
+				Color(1.0, 1.0, 0.5, 0.85), 1.2)
+		_chip_node.draw_line(Vector2(sx,       sy),        Vector2(sx + 3.0, sy + 3.0),
+				Color(1.0, 1.0, 0.5, 0.85), 1.2)
