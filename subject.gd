@@ -300,31 +300,37 @@ func _become_ally() -> void:
 	set_physics_process(false)
 
 	# Tween ile kapıdan giriş: aşağı → kapı → yaşam alanı
-	var nav_speed := max(speed * 3.0, 150.0)
-	var gate      := Vector2(global_position.x, 1000.0)  # önce aşağı in
-	var door      := Vector2(850.0, 1000.0)              # kapının önüne gel
-	var inside    := Vector2(490.0, 1000.0)              # yaşam alanına gir
+	var nav_speed: float = max(speed * 3.0, 150.0)
+	var gate:   Vector2  = Vector2(global_position.x, 1000.0)
+	var door:   Vector2  = Vector2(850.0, 1000.0)
+	var inside: Vector2  = Vector2(490.0, 1000.0)
 
-	var tw1 := create_tween()
+	# Kapıya yaklaşırken görünür kal
+	var tw1: Tween = create_tween()
 	tw1.tween_property(self, "global_position", gate,
 		max(abs(global_position.y - 1000.0) / nav_speed, 0.05))\
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	await tw1.finished
 	if not is_instance_valid(self): return
 
-	var tw2 := create_tween()
+	var tw2: Tween = create_tween()
 	tw2.tween_property(self, "global_position", door,
 		max(abs(global_position.x - 850.0) / nav_speed, 0.05))\
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	await tw2.finished
 	if not is_instance_valid(self): return
 
-	var tw3 := create_tween()
+	# Tribün içinde: BG_Tribune (z=3) arkasına geç
+	z_index = -1
+
+	var tw3: Tween = create_tween()
 	tw3.tween_property(self, "global_position", inside, 360.0 / nav_speed)\
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	await tw3.finished
 	if not is_instance_valid(self): return
 
+	# Yaşam alanına çıkınca normal z_index'e dön
+	z_index = 2
 	_reached_living_area = true
 	_wander_timer        = 0.0
 	set_physics_process(true)

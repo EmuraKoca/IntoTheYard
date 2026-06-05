@@ -296,31 +296,34 @@ func _become_ally() -> void:
 	$CollisionShape2D.disabled = true
 	set_physics_process(false)
 
-	var nav_speed := max(speed * 3.0, 150.0)
-	var gate      := Vector2(global_position.x, 1000.0)
-	var door      := Vector2(850.0, 1000.0)
-	var inside    := Vector2(490.0, 1000.0)
+	var nav_speed: float = max(speed * 3.0, 150.0)
+	var gate:   Vector2  = Vector2(global_position.x, 1000.0)
+	var door:   Vector2  = Vector2(850.0, 1000.0)
+	var inside: Vector2  = Vector2(490.0, 1000.0)
 
-	var tw1 := create_tween()
+	var tw1: Tween = create_tween()
 	tw1.tween_property(self, "global_position", gate,
 		max(abs(global_position.y - 1000.0) / nav_speed, 0.05))\
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	await tw1.finished
 	if not is_instance_valid(self): return
 
-	var tw2 := create_tween()
+	var tw2: Tween = create_tween()
 	tw2.tween_property(self, "global_position", door,
 		max(abs(global_position.x - 850.0) / nav_speed, 0.05))\
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	await tw2.finished
 	if not is_instance_valid(self): return
 
-	var tw3 := create_tween()
+	z_index = -1
+
+	var tw3: Tween = create_tween()
 	tw3.tween_property(self, "global_position", inside, 360.0 / nav_speed)\
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	await tw3.finished
 	if not is_instance_valid(self): return
 
+	z_index = 2
 	_reached_living_area = true
 	_wander_timer        = 0.0
 	set_physics_process(true)
