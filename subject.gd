@@ -275,10 +275,17 @@ func _escape() -> void:
 		var game = get_parent()
 		if game.has_method("show_dialog"):
 			game.show_dialog(dialog, global_position)
+	$SubjectSprite.play("walk_SE")  # önce çapraz SE
 	var tween = create_tween()
-	tween.tween_property(self, "position", Vector2(1700, 1100), 1.0)
-	await get_tree().create_timer(1.0).timeout
-	queue_free()
+	tween.tween_property(self, "global_position",
+		Vector2(global_position.x + 200.0, 900.0), 0.45)\n		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	await get_tree().create_timer(0.40).timeout
+	if not is_instance_valid(self): return
+	$SubjectSprite.play("walk_E")   # sonra düz E
+	var tween2 = create_tween()
+	tween2.tween_property(self, "global_position", Vector2(2000.0, global_position.y), 0.7)\n		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	await get_tree().create_timer(0.7).timeout
+	if is_instance_valid(self): queue_free()
 
 func _become_ally() -> void:
 	var game = get_parent()
@@ -294,6 +301,7 @@ func _become_ally() -> void:
 
 	add_to_group("allies")
 	remove_from_group("subjects")
+	if is_instance_valid(_chip_node): _chip_node.queue_redraw()
 	_clear_element()
 	modulate = Color(1.0, 1.0, 1.0, 1.0)   # renk değişimi yok
 	scale    = Vector2(1.0, 1.0)            # collapse squish'i sıfırla
@@ -307,32 +315,24 @@ func _become_ally() -> void:
 	$CollisionShape2D.disabled = true
 	set_physics_process(false)
 
-	# Tween ile kapıdan giriş: aşağı → kapı → yaşam alanı
+	# Çapraz SW ile kapıya git, sonra W ile yaşam alanına gir
 	var nav_speed: float = max(speed * 3.0, 150.0)
-	var gate:   Vector2  = Vector2(global_position.x, 1000.0)
 	var door:   Vector2  = Vector2(850.0, 1000.0)
 	var inside: Vector2  = Vector2(490.0, 1000.0)
 
-	$SubjectSprite.play("walk_S")   # aşağı inerken güneye bak
+	$SubjectSprite.play("walk_SW")
 	var tw1: Tween = create_tween()
-	tw1.tween_property(self, "global_position", gate,
-		max(abs(global_position.y - 1000.0) / nav_speed, 0.05))\
+	tw1.tween_property(self, "global_position", door,
+		max(global_position.distance_to(door) / nav_speed, 0.05))\
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	await tw1.finished
 	if not is_instance_valid(self): return
 
-	$SubjectSprite.play("walk_W")   # kapıya soldan yaklaşırken batıya bak
+	$SubjectSprite.play("walk_W")
 	var tw2: Tween = create_tween()
-	tw2.tween_property(self, "global_position", door,
-		max(abs(global_position.x - 850.0) / nav_speed, 0.05))\
+	tw2.tween_property(self, "global_position", inside, 360.0 / nav_speed)\
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	await tw2.finished
-	if not is_instance_valid(self): return
-
-	var tw3: Tween = create_tween()
-	tw3.tween_property(self, "global_position", inside, 360.0 / nav_speed)\
-		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	await tw3.finished
 	if not is_instance_valid(self): return
 
 	_reached_living_area = true
@@ -425,16 +425,23 @@ func _clear_element() -> void:
 func _draw_chip() -> void:
 	if is_dead or is_in_group("allies"):
 		return
-	var pulse:   float = (sin(_chip_t * 6.0) + 1.0) * 0.5
-	var flicker: float = (sin(_chip_t * 23.0) + 1.0) * 0.5
-	var alpha:  float = 0.45 + pulse * 0.40
-	var radius: float = 7.0  + pulse * 3.0
-	_chip_node.draw_arc(Vector2(0.0, -16.0), radius, 0.0, TAU, 12,
-			Color(1.0, 0.95, 0.15, alpha), 1.8)
-	if flicker > 0.45:
-		var sx: float = sin(_chip_t * 13.0) * 5.0
-		var sy: float = -13.0 + cos(_chip_t * 9.0) * 4.0
-		_chip_node.draw_line(Vector2(sx - 3.0, sy - 4.0), Vector2(sx,       sy),
-				Color(1.0, 1.0, 0.5, 0.85), 1.2)
-		_chip_node.draw_line(Vector2(sx,       sy),        Vector2(sx + 3.0, sy + 3.0),
-				Color(1.0, 1.0, 0.5, 0.85), 1.2)
+	# Vücuda yayılmış elektrik kıvılcımları
+	var t := _chip_t
+	var anchors := [
+		Vector2(-7.0, -22.0), Vector2( 7.0, -19.0),
+		Vector2(-5.0,  -8.0), Vector2( 6.0,  -5.0),
+		Vector2(-4.0,   6.0), Vector2( 5.0,   9.0),
+	]
+	for i in anchors.size():
+		var flicker: float = (sin(t * (14.0 + i * 6.7) + i * 1.3) + 1.0) * 0.5
+		if flicker < 0.30:
+			continue
+		var p: Vector2  = anchors[i]
+		var ex: float   = sin(t * (9.0 + i * 3.1) + i) * 5.0
+		var ey: float   = cos(t * (7.0 + i * 2.5) + i) * 4.0
+		var a:  float   = flicker * 0.90
+		_chip_node.draw_line(p, p + Vector2(ex, ey),
+				Color(1.0, 1.0, 0.35, a), 1.3)
+		_chip_node.draw_line(p + Vector2(ex, ey),
+				p + Vector2(ex + sin(t * 11.0 + i) * 3.0, ey + 2.0),
+				Color(1.0, 0.85, 0.1, a * 0.65), 1.0)

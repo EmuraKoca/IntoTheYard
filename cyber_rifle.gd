@@ -282,6 +282,7 @@ func _become_ally() -> void:
 	health = max_health * 0.25
 	add_to_group("allies")
 	remove_from_group("subjects")
+	if is_instance_valid(_chip_node): _chip_node.queue_redraw()
 	_clear_element()
 	modulate = Color(1.0, 1.0, 1.0, 1.0)
 	scale    = Vector2(1.0, 1.0)
@@ -337,18 +338,23 @@ func _clear_element() -> void:
 func _draw_chip() -> void:
 	if is_dead or is_in_group("allies"):
 		return
-	var pulse:   float = (sin(_chip_t * 6.0) + 1.0) * 0.5
-	var flicker: float = (sin(_chip_t * 23.0) + 1.0) * 0.5
-	# Parlak sarı nabız halkası
-	var alpha:  float = 0.45 + pulse * 0.40
-	var radius: float = 7.0  + pulse * 3.0
-	_chip_node.draw_arc(Vector2(0.0, -16.0), radius, 0.0, TAU, 12,
-			Color(1.0, 0.95, 0.15, alpha), 1.8)
-	# Elektrik kıvılcımı — her yarı titremede görünür
-	if flicker > 0.45:
-		var sx: float = sin(_chip_t * 13.0) * 5.0
-		var sy: float = -13.0 + cos(_chip_t * 9.0) * 4.0
-		_chip_node.draw_line(Vector2(sx - 3.0, sy - 4.0), Vector2(sx,       sy),
-				Color(1.0, 1.0, 0.5, 0.85), 1.2)
-		_chip_node.draw_line(Vector2(sx,       sy),        Vector2(sx + 3.0, sy + 3.0),
-				Color(1.0, 1.0, 0.5, 0.85), 1.2)
+	# Vücuda yayılmış elektrik kıvılcımları
+	var t := _chip_t
+	var anchors := [
+		Vector2(-7.0, -22.0), Vector2( 7.0, -19.0),
+		Vector2(-5.0,  -8.0), Vector2( 6.0,  -5.0),
+		Vector2(-4.0,   6.0), Vector2( 5.0,   9.0),
+	]
+	for i in anchors.size():
+		var flicker: float = (sin(t * (14.0 + i * 6.7) + i * 1.3) + 1.0) * 0.5
+		if flicker < 0.30:
+			continue
+		var p: Vector2  = anchors[i]
+		var ex: float   = sin(t * (9.0 + i * 3.1) + i) * 5.0
+		var ey: float   = cos(t * (7.0 + i * 2.5) + i) * 4.0
+		var a:  float   = flicker * 0.90
+		_chip_node.draw_line(p, p + Vector2(ex, ey),
+				Color(1.0, 1.0, 0.35, a), 1.3)
+		_chip_node.draw_line(p + Vector2(ex, ey),
+				p + Vector2(ex + sin(t * 11.0 + i) * 3.0, ey + 2.0),
+				Color(1.0, 0.85, 0.1, a * 0.65), 1.0)
