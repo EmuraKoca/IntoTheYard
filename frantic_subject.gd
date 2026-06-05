@@ -317,15 +317,12 @@ func _become_ally() -> void:
 	await tw2.finished
 	if not is_instance_valid(self): return
 
-	z_index = -1
-
 	var tw3: Tween = create_tween()
 	tw3.tween_property(self, "global_position", inside, 360.0 / nav_speed)\
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	await tw3.finished
 	if not is_instance_valid(self): return
 
-	z_index = 2
 	_reached_living_area = true
 	_wander_timer        = 0.0
 	set_physics_process(true)
