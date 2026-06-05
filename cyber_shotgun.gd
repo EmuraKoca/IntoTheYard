@@ -6,6 +6,7 @@ var is_dead = false
 var is_frozen = false
 var is_slowed = false
 var is_glitched = false
+var _chip_t: float = 0.0
 var is_wet = false
 var is_burning = false
 var original_speed = 50.0
@@ -87,6 +88,9 @@ func _physics_process(delta: float) -> void:
 	if is_in_group("allies"):
 		_ally_behavior()
 		return
+	if not is_dead:
+		_chip_t += delta
+		queue_redraw()
 	if is_frozen:
 		return
 
@@ -164,9 +168,7 @@ func die() -> void:
 func _collapse() -> void:
 	set_physics_process(false)
 	$CollisionShape2D.set_deferred("disabled", true)
-	var tween = create_tween()
-	tween.tween_property(self, "scale", Vector2(0.8, 0.3), 0.3)
-	await get_tree().create_timer(1.0).timeout
+	await get_tree().create_timer(0.4).timeout
 	if randf() < 0.60:
 		_become_ally()
 	else:
@@ -324,3 +326,16 @@ func _set_element(elem: String) -> void:
 func _clear_element() -> void:
 	if _elem_indicator != null:
 		_elem_indicator.clear_element()
+
+func _draw() -> void:
+	if is_dead or is_in_group("allies"):
+		return
+	var pulse:   float = (sin(_chip_t * 5.5) + 1.0) * 0.5
+	var flicker: float = (sin(_chip_t * 31.0) + 1.0) * 0.5
+	var alpha:   float = 0.12 + pulse * 0.08 + flicker * 0.04
+	draw_arc(Vector2(0.0, -16.0), 6.0 + pulse * 2.0, 0.0, TAU, 10,
+			 Color(0.0, 0.85, 1.0, alpha), 1.2)
+	if flicker > 0.87:
+		draw_line(Vector2(-5.0, -18.0 + sin(_chip_t * 7.0) * 8.0),
+				  Vector2( 5.0, -18.0 + sin(_chip_t * 7.0) * 8.0),
+				  Color(0.7, 1.0, 1.0, 0.18), 1.0)

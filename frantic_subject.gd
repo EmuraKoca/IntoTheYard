@@ -12,6 +12,7 @@ var is_glitched = false
 var is_wet = false
 var is_frozen = false
 var is_burning = false
+var _chip_t: float = 0.0
 var attack_cooldown = 0.0
 var attack_rate = 1.0
 var is_electrified = false
@@ -171,6 +172,9 @@ func _physics_process(delta: float) -> void:
 	if is_in_group("allies"):
 		_ally_behavior()
 		return
+	if not is_dead:
+		_chip_t += delta
+		queue_redraw()
 	if is_frozen:
 		return
 	var target
@@ -237,9 +241,7 @@ func die() -> void:
 func _collapse() -> void:
 	set_physics_process(false)
 	$CollisionShape2D.disabled = true
-	var tween = create_tween()
-	tween.tween_property(self, "scale", Vector2(0.8, 0.3), 0.3)
-	await get_tree().create_timer(1.0).timeout
+	await get_tree().create_timer(0.4).timeout
 	# Killed by an ally — just run left, never become an ally
 	if _killed_by_ally:
 		var tween2 = create_tween()
@@ -303,6 +305,7 @@ func _become_ally() -> void:
 	var door:   Vector2  = Vector2(850.0, 1000.0)
 	var inside: Vector2  = Vector2(490.0, 1000.0)
 
+	$FranticSprite.play("walk_S")
 	var tw1: Tween = create_tween()
 	tw1.tween_property(self, "global_position", gate,
 		max(abs(global_position.y - 1000.0) / nav_speed, 0.05))\
@@ -310,6 +313,7 @@ func _become_ally() -> void:
 	await tw1.finished
 	if not is_instance_valid(self): return
 
+	$FranticSprite.play("walk_W")
 	var tw2: Tween = create_tween()
 	tw2.tween_property(self, "global_position", door,
 		max(abs(global_position.x - 850.0) / nav_speed, 0.05))\
@@ -405,3 +409,16 @@ func _set_element(elem: String) -> void:
 func _clear_element() -> void:
 	if _elem_indicator != null:
 		_elem_indicator.clear_element()
+
+func _draw() -> void:
+	if is_dead or is_in_group("allies"):
+		return
+	var pulse:   float = (sin(_chip_t * 5.5) + 1.0) * 0.5
+	var flicker: float = (sin(_chip_t * 31.0) + 1.0) * 0.5
+	var alpha:   float = 0.12 + pulse * 0.08 + flicker * 0.04
+	draw_arc(Vector2(0.0, -16.0), 6.0 + pulse * 2.0, 0.0, TAU, 10,
+			 Color(0.0, 0.85, 1.0, alpha), 1.2)
+	if flicker > 0.87:
+		draw_line(Vector2(-5.0, -18.0 + sin(_chip_t * 7.0) * 8.0),
+				  Vector2( 5.0, -18.0 + sin(_chip_t * 7.0) * 8.0),
+				  Color(0.7, 1.0, 1.0, 0.18), 1.0)
