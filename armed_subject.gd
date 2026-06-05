@@ -288,13 +288,13 @@ func _escape() -> void:
 		var game = get_parent()
 		if game.has_method("show_dialog"):
 			game.show_dialog(dialog, global_position)
-	$ArmedSprite.play("walk_SE")  # önce çapraz SE
+	$ArmedSprite.play("run_SE")  # önce çapraz SE
 	var tween = create_tween()
 	tween.tween_property(self, "global_position",
 		Vector2(global_position.x + 200.0, 900.0), 0.45)
 	await get_tree().create_timer(0.40).timeout
 	if not is_instance_valid(self): return
-	$ArmedSprite.play("walk_E")   # sonra düz E
+	$ArmedSprite.play("run_E")   # sonra düz E
 	var tween2 = create_tween()
 	tween2.tween_property(self, "global_position", Vector2(2000.0, global_position.y), 0.7)
 	await get_tree().create_timer(0.7).timeout
@@ -332,7 +332,7 @@ func _become_ally() -> void:
 	var door:   Vector2  = Vector2(850.0, 1000.0)
 	var inside: Vector2  = Vector2(490.0, 1000.0)
 
-	$ArmedSprite.play("walk_SW")
+	$ArmedSprite.play("run_SW")
 	var tw1: Tween = create_tween()
 	tw1.tween_property(self, "global_position", door,
 		max(global_position.distance_to(door) / nav_speed, 0.05))\
@@ -340,7 +340,7 @@ func _become_ally() -> void:
 	await tw1.finished
 	if not is_instance_valid(self): return
 
-	$ArmedSprite.play("walk_W")
+	$ArmedSprite.play("run_W")
 	var tw2: Tween = create_tween()
 	tw2.tween_property(self, "global_position", inside, 360.0 / nav_speed)\
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
