@@ -106,6 +106,7 @@ func _absorb_ball(ball: Node2D) -> void:
 	sp_tw.tween_method(_spiral_to.bind(ball, sp_target, sp_dist), 0.0, 1.0, 0.45)
 
 	await get_tree().create_timer(0.50).timeout
+	sp_tw.kill()  # Tween durdurulur — freed ball referansına erişim engellenir
 	if is_instance_valid(ball):
 		ball.queue_free()
 	
@@ -157,16 +158,21 @@ func _spawn_fused_ball(type_a: String, type_b: String) -> void:
 		"cryo_water": "absolute_zero"
 	}
 	
+	# Aynı tip gelirse reddet — ikisi de iade edilir
+	if type_a == type_b:
+		_refund_balls(type_a, type_b)
+		return
+
 	var fusion_result = fusions.get(key, "")
 	if fusion_result == "":
 		_refund_balls(type_a, type_b)
 		return
-	
+
 	var player = get_tree().get_first_node_in_group("player")
 	var dir = Vector2(0, 1)
 	if player:
 		dir = (player.global_position - global_position).normalized()
-	
+
 	var new_ball = ball_scene.instantiate()
 	_apply_fusion_to_ball(new_ball, fusion_result)
 	new_ball.global_position = global_position + dir * 30
