@@ -10,8 +10,8 @@
 [ext_resource type="Texture2D" uid="uid://dg53t0cjyvhwe" path="res://assets/backgrounds/PixelBackgrounds/gamearea.png" id="8_e35lh"]
 [ext_resource type="Texture2D" uid="uid://c8bv8p2ks14ho" path="res://assets/backgrounds/PixelBackgrounds/tribune.png" id="9_udeyl"]
 [ext_resource type="Texture2D" uid="uid://dwac860uk0f5i" path="res://assets/backgrounds/PixelBackgrounds/street.png" id="10_miq82"]
-[ext_resource type="Texture2D" uid="uid://cfn26udeiopet" path="res://assets/backgrounds/PixelBackgrounds/livingArea.png" id="11_j5hk1"]
 [ext_resource type="Shader" uid="uid://8m6x8whvcd36" path="res://game_scene.gdshader" id="12_ueiaa"]
+[ext_resource type="Texture2D" uid="uid://5ro76entvbb4" path="res://assets/backgrounds/PixelBackgrounds/buildZoneLivingAreaNew.png" id="14_snaye"]
 [ext_resource type="Texture2D" uid="uid://cti5awflt8gw0" path="res://assets/backgrounds/8.png" id="16_3d2pr"]
 [ext_resource type="Texture2D" uid="uid://hm6kldh814yh" path="res://assets/devices/pikselLauncher.png" id="16_h5hfs"]
 [ext_resource type="Texture2D" uid="uid://cgctfiyheb17j" path="res://assets/devices/pikselProccessor.png" id="17_snaye"]
@@ -439,7 +439,7 @@ z_index = -1
 offset_top = 240.0
 offset_right = 490.0
 offset_bottom = 1080.0
-texture = ExtResource("11_j5hk1")
+texture = ExtResource("14_snaye")
 expand_mode = 1
 
 [node name="ShaderOverlay" type="ColorRect" parent="." unique_id=888945523]
