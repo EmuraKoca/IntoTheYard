@@ -1,4 +1,4 @@
-﻿extends CharacterBody2D
+extends CharacterBody2D
 
 const SURGERY_EXIT := Vector2(850, 1000)  # The only exit point from the living area
 
