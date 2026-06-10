@@ -6,10 +6,15 @@ func _ready() -> void:
 	$BtnQuit.pressed.connect(_on_quit)
 
 func _on_new_game() -> void:
+	# Kayıtı sıfırla — sadece Vector açık
+	GameData.unlocked_characters = ["vector"]
+	GameData.save_data()
 	get_tree().change_scene_to_file("res://character_select.tscn")
 
 func _on_load_game() -> void:
-	pass  # Load Game not yet implemented
+	# Mevcut kayıtı yükle, karakter seçimine git
+	GameData.load_data()
+	get_tree().change_scene_to_file("res://character_select.tscn")
 
 func _on_quit() -> void:
 	get_tree().quit()

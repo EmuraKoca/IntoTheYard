@@ -66,14 +66,49 @@ func _ready() -> void:
 
 	for card in cards:
 		card.set_meta("selected", false)
-		var sprite: AnimatedSprite2D = card.get_node("CharSprite")
-		sprite.modulate = Color(0.4, 0.4, 0.4)
+		var char_id := _card_to_id(card)
+		var locked  := not GameData.is_unlocked(char_id)
+		card.set_meta("locked", locked)
+		_apply_lock_visual(card, locked)
 		
 
+
+func _card_to_id(card: Panel) -> String:
+	match card.name:
+		"VectorCard":  return "vector"
+		"LeilaCard":   return "leila"
+		"CycloneCard": return "cyclone"
+	return ""
+
+func _apply_lock_visual(card: Panel, locked: bool) -> void:
+	var sprite: AnimatedSprite2D = card.get_node("CharSprite")
+	var name_lbl: Label = card.get_node("LabelName")
+	if locked:
+		sprite.modulate = Color(0.0, 0.0, 0.0, 1.0)
+		name_lbl.text = "???"
+		if not card.has_node("LockLabel"):
+			var lbl := Label.new()
+			lbl.name = "LockLabel"
+			lbl.text = "🔒  KİLİTLİ"
+			lbl.add_theme_font_size_override("font_size", 18)
+			lbl.add_theme_font_override("font", _font_bold)
+			lbl.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3, 1.0))
+			lbl.position = Vector2(90, 540)
+			lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			card.add_child(lbl)
+	else:
+		sprite.modulate = Color(0.4, 0.4, 0.4)
+		match card.name:
+			"LeilaCard":   name_lbl.text = "Name : Leila"
+			"CycloneCard": name_lbl.text = "Name : Cyclone"
+		if card.has_node("LockLabel"):
+			card.get_node("LockLabel").queue_free()
 
 func _on_hover(card) -> void:
 	if card.get_meta("selected", false):
 		return
+	if card.get_meta("locked", false):
+		return  # Kilitli karta hover efekti yok
 	var sprite: AnimatedSprite2D = card.get_node("CharSprite")
 	sprite.scale = Vector2(sprite.scale.x * 1.08, sprite.scale.y * 1.08)
 	sprite.modulate = Color(1.2, 1.2, 1.2)
@@ -83,8 +118,9 @@ func _on_hover(card) -> void:
 func _on_hover_exit(card) -> void:
 	if card.get_meta("selected", false):
 		return
+	if card.get_meta("locked", false):
+		return
 	var sprite: AnimatedSprite2D = card.get_node("CharSprite")
-	# Scale'i orijinaline döndür
 	var base_scale := _get_base_scale(card)
 	sprite.scale = Vector2(base_scale, base_scale)
 	sprite.modulate = Color(0.4, 0.4, 0.4)
@@ -103,40 +139,45 @@ func _select_card(selected) -> void:
 	for card in cards:
 		var sprite: AnimatedSprite2D = card.get_node("CharSprite")
 		var base_scale := _get_base_scale(card)
+		var locked: bool = card.get_meta("locked", false)
 		if card == selected:
 			card.set_meta("selected", true)
-			sprite.scale   = Vector2(base_scale * 1.1, base_scale * 1.1)
+			sprite.scale    = Vector2(base_scale * 1.1, base_scale * 1.1)
 			sprite.modulate = Color(1, 1, 1)
 			sprite.stop()
 			sprite.frame = 0
 		else:
 			card.set_meta("selected", false)
-			sprite.scale   = Vector2(base_scale, base_scale)
-			sprite.modulate = Color(0.4, 0.4, 0.4)
+			sprite.scale = Vector2(base_scale, base_scale)
+			sprite.modulate = Color(0.0, 0.0, 0.0, 1.0) if locked else Color(0.4, 0.4, 0.4)
 			sprite.stop()
 			sprite.frame = 0
 
 func _on_card_clicked(event: InputEvent, card) -> void:
 	if event is InputEventMouseButton and event.pressed:
+		if card.get_meta("locked", false):
+			_update_info("???", "???", "Bu karakter henüz kilitli.")
+			return
 		for c in cards:
 			_stop_matrix(c)
 		_select_card(card)
 		if card == vector_card:
 			selected_character = "vector"
-			_update_info("Vector", "Jai Alai", "Catch Master", "Caught balls are automatically empowered. Balls hit with the Cesta launch faster and deal more damage.")
+			_update_info("Vector", "Normal Toplarda ustadır. Kaba kuvvete bayılır.", "Normal Ball'lar aynı hedefe 5 kez vurursa kritik darbe oluşturur.")
 		elif card == leila_card:
 			selected_character = "leila"
-			_update_info("Leila", "Tennis", "Ball Bounce", "Dropped balls bounce once off the ground and return. Racket angle can add spin to balls.")
+			_update_info("Leila", "Elemental Ball'larda ustadır.", "Elemental Ball düşmana vurduğunda %20 ihtimalle ikinci bir elemental patlama oluşturur.")
 		elif card == cyclone_card:
 			selected_character = "cyclone"
-			_update_info("Cyclone", "Sepak Takraw", "Chaotic Strike", "Kicks balls instead of hitting them. Each kick sends balls in unpredictable angles — wild but powerful.")
+			_update_info("Cyclone", "Pierce, Glitch ve Mimic toplarında ustadır.", "Glitch etkisindeki düşman öldüğünde Glitch başka bir düşmana sıçrar.")
 
-func _update_info(char_name: String, talent: String, passive: String, description: String) -> void:
+func _update_info(char_name: String, passive_title: String, passive_desc: String) -> void:
 	var info = $InfoPanel
-	info.get_node("LabelName").text = "Name: " + char_name
-	info.get_node("LabelTalent").text = "Talent: " + talent
-	info.get_node("LabelPassive").text = "Passive: " + passive
-	info.get_node("LabelDescription").text = description
+	info.get_node("LabelName").text = "İsim: " + char_name
+	info.get_node("LabelPassive").text = "Pasif: " + passive_title
+	info.get_node("LabelDescription").text = passive_desc
+	if info.has_node("LabelTalent"):
+		info.get_node("LabelTalent").visible = false
 
 func _on_confirm() -> void:
 	GameData.selected_character = selected_character

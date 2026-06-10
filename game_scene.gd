@@ -1448,12 +1448,14 @@ func _process(_delta: float) -> void:
 		if not is_instance_valid(_nyx_node) or _nyx_node.is_dead:
 			_nyx_node = null
 			spawn_interval = min_spawn_interval
-			spawn_timer    = spawn_interval  # Hemen spawn başlasın
+			spawn_timer    = spawn_interval
+			GameData.unlock_character("leila")   # Nyx-09 → Leila'nın hücresi açılır
 	if _smiler_node != null:
 		if not is_instance_valid(_smiler_node) or _smiler_node.is_dead:
 			_smiler_node = null
 			spawn_interval = min_spawn_interval
-			spawn_timer    = spawn_interval  # Hemen spawn başlasın
+			spawn_timer    = spawn_interval
+			GameData.unlock_character("cyclone")  # S-Miler-79 → Cyclone açılır
 
 	spawn_timer += _delta
 	if spawn_timer >= spawn_interval:

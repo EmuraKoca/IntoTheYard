@@ -256,6 +256,7 @@ theme_override_font_sizes/font_size = 18
 text = "Name : Vector"
 
 [node name="LabelTalent" type="Label" parent="HBoxContainer/CharacterPanel/CardsContainer/VectorCard" unique_id=667916799]
+visible = false
 z_index = 2
 layout_mode = 0
 offset_left = 10.0
@@ -286,9 +287,10 @@ offset_bottom = 746.0
 theme_override_colors/font_color = Color(0, 0.95, 1, 1)
 theme_override_fonts/font = ExtResource("font_bold")
 theme_override_font_sizes/font_size = 18
-text = "Name : Leila"
+text = "???"
 
 [node name="LabelTalent" type="Label" parent="HBoxContainer/CharacterPanel/CardsContainer/LeilaCard" unique_id=1492451817]
+visible = false
 z_index = 2
 layout_mode = 0
 offset_left = 10.0
@@ -319,9 +321,10 @@ offset_bottom = 746.0
 theme_override_colors/font_color = Color(0, 0.95, 1, 1)
 theme_override_fonts/font = ExtResource("font_bold")
 theme_override_font_sizes/font_size = 18
-text = "Name : Cyclone"
+text = "???"
 
 [node name="LabelTalent" type="Label" parent="HBoxContainer/CharacterPanel/CardsContainer/CycloneCard" unique_id=97291653]
+visible = false
 z_index = 2
 layout_mode = 0
 offset_left = 10.0
