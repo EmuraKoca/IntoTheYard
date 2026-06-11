@@ -1,251 +1,308 @@
-﻿extends Control
+extends Control
 
 var _font_bold    = preload("res://assets/orbitronfont/Orbitron-Bold.ttf")
 var _font_regular = preload("res://assets/orbitronfont/Orbitron-Regular.ttf")
 
-var selected_character = "vector"
-var cards = []
+const CHARS: Array = [
+	{"id":"vector",  "name":"Vector",  "theme":"Kinetik",      "color":Color(0,0.75,1,1),    "passive":"Normal Ball +3 hasar",             "balls":["Normal Ball","Split Ball","Pierce Ball"],             "sheet":"res://assets/selectCharacters/vector_sheet.png",  "fw":208,"fc":8,"sc":1.65},
+	{"id":"leila",   "name":"Leila",   "theme":"Elemental",    "color":Color(1,0.18,0.47,1), "passive":"Elemental top %20 ekstra patlama", "balls":["Fire Ball","Water Ball","Cryo Ball","Electric Ball"], "sheet":"res://assets/selectCharacters/leila_sheet.png",   "fw":224,"fc":8,"sc":1.50},
+	{"id":"cyclone", "name":"Cyclone", "theme":"Manipülasyon", "color":Color(0.22,1,0.08,1), "passive":"Glitch ölünce başkasına sıçrar",   "balls":["Glitch Ball","Mimic Ball","Data Leech Ball"],         "sheet":"res://assets/selectCharacters/cyclone_sheet.png", "fw":224,"fc":8,"sc":1.50},
+	{"id":"???","name":"???","theme":"???","color":Color(0.4,0.4,0.4,1),"passive":"???","balls":[],"sheet":"","fw":0,"fc":0,"sc":1.0},
+	{"id":"???","name":"???","theme":"???","color":Color(0.4,0.4,0.4,1),"passive":"???","balls":[],"sheet":"","fw":0,"fc":0,"sc":1.0},
+	{"id":"???","name":"???","theme":"???","color":Color(0.4,0.4,0.4,1),"passive":"???","balls":[],"sheet":"","fw":0,"fc":0,"sc":1.0},
+	{"id":"???","name":"???","theme":"???","color":Color(0.4,0.4,0.4,1),"passive":"???","balls":[],"sheet":"","fw":0,"fc":0,"sc":1.0},
+]
 
-var vector_card
-var leila_card
-var cyclone_card
+var _cur: int = 0
+var _dots: Array = []
+var _prev_card: Panel = null
+var _center_card: Panel = null
+var _next_card: Panel = null
 
-# ── Matrix rain hover efekti ──────────────────────────────────────────────────
-var _matrix_drops: Dictionary = {}
-var _matrix_active: Dictionary = {}
-
-const _MATRIX_N: int = 24
-const _MATRIX_FONT: int = 14
-const _MATRIX_SPD_MIN: float = 90.0
-const _MATRIX_SPD_MAX: float = 210.0
-const _CARD_H: float = 800.0
-const _CARD_W: float = 400.0
-const _RAIN_Y: float = 400.0
-
-func _setup_char_sprite(card: Panel, sheet_path: String, frame_w: int, frame_count: int, sprite_scale: float) -> void:
-	var sprite: AnimatedSprite2D = card.get_node("CharSprite")
-	var frames := SpriteFrames.new()
-	if frames.has_animation("default"):
-		frames.remove_animation("default")
-
-	var tex: Texture2D = load(sheet_path)
-	frames.add_animation("spin")
-	frames.set_animation_speed("spin", 8.0)
-	frames.set_animation_loop("spin", true)
-	for i in range(frame_count):
-		var atlas := AtlasTexture.new()
-		atlas.atlas  = tex
-		atlas.region = Rect2(i * frame_w, 0, frame_w, frame_w)
-		frames.add_frame("spin", atlas)
-
-	sprite.sprite_frames  = frames
-	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	sprite.scale          = Vector2(sprite_scale, sprite_scale)
-	sprite.animation      = "spin"
-	sprite.frame          = 0
-	sprite.stop()
+var _matrix_drops: Array = []
+var _matrix_active: bool = false
+const _MATRIX_N:       int   = 28
+const _MATRIX_FONT:    int   = 13
+const _MATRIX_SPD_MIN: float = 80.0
+const _MATRIX_SPD_MAX: float = 200.0
 
 func _ready() -> void:
-	vector_card  = $HBoxContainer/CharacterPanel/CardsContainer/VectorCard
-	leila_card   = $HBoxContainer/CharacterPanel/CardsContainer/LeilaCard
-	cyclone_card = $HBoxContainer/CharacterPanel/CardsContainer/CycloneCard
-
-	cards = [vector_card, leila_card, cyclone_card]
-
-	_setup_char_sprite(vector_card,  "res://assets/selectCharacters/vector_sheet.png",  208, 8, 1.65)
-	_setup_char_sprite(leila_card,   "res://assets/selectCharacters/leila_sheet.png",   224, 8, 1.50)
-	_setup_char_sprite(cyclone_card, "res://assets/selectCharacters/cyclone_sheet.png", 224, 8, 1.50)
-
-	for card in cards:
-		card.mouse_entered.connect(_on_hover.bind(card))
-		card.mouse_exited.connect(_on_hover_exit.bind(card))
-		card.connect("gui_input", _on_card_clicked.bind(card))
+	var old := get_node_or_null("HBoxContainer")
+	if old: old.visible = false
 
 	$Button.pressed.connect(_on_back)
 	$Button2.pressed.connect(_on_confirm)
 
-	for card in cards:
-		card.set_meta("selected", false)
-		var char_id := _card_to_id(card)
-		var locked  := not GameData.is_unlocked(char_id)
-		card.set_meta("locked", locked)
-		_apply_lock_visual(card, locked)
-		
+	_build_ui()
+	_refresh()
 
+# ── UI inşası ─────────────────────────────────────────────────────────────────
+func _build_ui() -> void:
+	var root := Control.new()
+	root.name = "CarouselRoot"
+	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(root)
 
-func _card_to_id(card: Panel) -> String:
-	match card.name:
-		"VectorCard":  return "vector"
-		"LeilaCard":   return "leila"
-		"CycloneCard": return "cyclone"
-	return ""
+	var btn_l := _make_arrow("◀")
+	btn_l.position = Vector2(760, 420)
+	btn_l.pressed.connect(_slide.bind(-1))
+	root.add_child(btn_l)
 
-func _apply_lock_visual(card: Panel, locked: bool) -> void:
-	var sprite: AnimatedSprite2D = card.get_node("CharSprite")
-	var name_lbl: Label = card.get_node("LabelName")
-	if locked:
-		sprite.modulate = Color(0.0, 0.0, 0.0, 1.0)
-		name_lbl.text = "???"
-		if not card.has_node("LockLabel"):
-			var lbl := Label.new()
-			lbl.name = "LockLabel"
-			lbl.text = "🔒  KİLİTLİ"
-			lbl.add_theme_font_size_override("font_size", 18)
-			lbl.add_theme_font_override("font", _font_bold)
-			lbl.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3, 1.0))
-			lbl.position = Vector2(90, 540)
-			lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			card.add_child(lbl)
-	else:
-		sprite.modulate = Color(0.4, 0.4, 0.4)
-		match card.name:
-			"LeilaCard":   name_lbl.text = "Name : Leila"
-			"CycloneCard": name_lbl.text = "Name : Cyclone"
-		if card.has_node("LockLabel"):
-			card.get_node("LockLabel").queue_free()
+	var btn_r := _make_arrow("▶")
+	btn_r.position = Vector2(1640, 420)
+	btn_r.pressed.connect(_slide.bind(1))
+	root.add_child(btn_r)
 
-func _on_hover(card) -> void:
-	if card.get_meta("selected", false):
-		return
-	if card.get_meta("locked", false):
-		return  # Kilitli karta hover efekti yok
-	var sprite: AnimatedSprite2D = card.get_node("CharSprite")
-	sprite.scale = Vector2(sprite.scale.x * 1.08, sprite.scale.y * 1.08)
-	sprite.modulate = Color(1.2, 1.2, 1.2)
-	sprite.play("spin")
-	_start_matrix(card)
+	_prev_card   = _make_panel(Vector2(990,  210), Vector2(170, 400))
+	_center_card = _make_panel(Vector2(1180, 150), Vector2(260, 520))
+	_next_card   = _make_panel(Vector2(1460, 210), Vector2(170, 400))
+	root.add_child(_prev_card)
+	root.add_child(_center_card)
+	root.add_child(_next_card)
 
-func _on_hover_exit(card) -> void:
-	if card.get_meta("selected", false):
-		return
-	if card.get_meta("locked", false):
-		return
-	var sprite: AnimatedSprite2D = card.get_node("CharSprite")
-	var base_scale := _get_base_scale(card)
-	sprite.scale = Vector2(base_scale, base_scale)
-	sprite.modulate = Color(0.4, 0.4, 0.4)
-	sprite.stop()
-	sprite.frame = 0
-	_stop_matrix(card)
+	var dots_box := HBoxContainer.new()
+	dots_box.position = Vector2(1200, 700)
+	dots_box.add_theme_constant_override("separation", 8)
+	root.add_child(dots_box)
+	_dots.clear()
+	for i in CHARS.size():
+		var dot := ColorRect.new()
+		dot.custom_minimum_size = Vector2(8, 8)
+		dots_box.add_child(dot)
+		_dots.append(dot)
 
-func _get_base_scale(card: Panel) -> float:
-	match card.name:
-		"VectorCard":  return 1.65
-		"LeilaCard":   return 1.50
-		"CycloneCard": return 1.50
-	return 1.5
+func _make_arrow(txt: String) -> Button:
+	var b := Button.new()
+	b.text = txt
+	b.size = Vector2(60, 60)
+	b.add_theme_font_override("font", _font_bold)
+	b.add_theme_font_size_override("font_size", 26)
+	b.add_theme_color_override("font_color",       Color(0, 0.9, 1))
+	b.add_theme_color_override("font_hover_color", Color(1, 1,   1))
+	return b
 
-func _select_card(selected) -> void:
-	for card in cards:
-		var sprite: AnimatedSprite2D = card.get_node("CharSprite")
-		var base_scale := _get_base_scale(card)
-		var locked: bool = card.get_meta("locked", false)
-		if card == selected:
-			card.set_meta("selected", true)
-			sprite.scale    = Vector2(base_scale * 1.1, base_scale * 1.1)
-			sprite.modulate = Color(1, 1, 1)
-			sprite.stop()
-			sprite.frame = 0
+func _make_panel(pos: Vector2, sz: Vector2) -> Panel:
+	var p := Panel.new()
+	p.position = pos
+	p.size     = sz
+	return p
+
+# ── Güncelleme ────────────────────────────────────────────────────────────────
+func _slide(dir: int) -> void:
+	_cur = (_cur + dir + CHARS.size()) % CHARS.size()
+	_stop_matrix()
+	_refresh()
+
+func _refresh() -> void:
+	var prev_i := (_cur - 1 + CHARS.size()) % CHARS.size()
+	var next_i := (_cur + 1) % CHARS.size()
+	_fill_side(_prev_card,   CHARS[prev_i])
+	_fill_center(_center_card, CHARS[_cur])
+	_fill_side(_next_card,   CHARS[next_i])
+	_update_dots()
+	_update_info()
+	var c := CHARS[_cur]
+	if c["id"] != "???" and c["sheet"] != "":
+		_start_matrix(_center_card, c["color"])
+
+# ── Yan kart ─────────────────────────────────────────────────────────────────
+func _fill_side(card: Panel, c: Dictionary) -> void:
+	for ch in card.get_children(): ch.queue_free()
+	var locked: bool = _is_locked(c)
+	var col: Color   = c["color"]
+
+	var sb := StyleBoxFlat.new()
+	sb.bg_color     = Color(col.r*0.06, col.g*0.06, col.b*0.1, 0.55) if not locked else Color(0.02, 0.02, 0.05, 0.45)
+	sb.border_width_left = 1; sb.border_width_top = 1
+	sb.border_width_right = 1; sb.border_width_bottom = 1
+	sb.border_color = Color(col.r, col.g, col.b, 0.35) if not locked else Color(0.3, 0.3, 0.3, 0.25)
+	sb.corner_radius_top_left = 6; sb.corner_radius_top_right = 6
+	sb.corner_radius_bottom_right = 6; sb.corner_radius_bottom_left = 6
+	card.add_theme_stylebox_override("panel", sb)
+	card.modulate = Color(1, 1, 1, 0.55)
+
+	if not locked and c["sheet"] != "":
+		var sprite := AnimatedSprite2D.new()
+		sprite.position = card.size / 2 + Vector2(0, -30)
+		_setup_sprite(sprite, c["sheet"], c["fw"], c["fc"], c["sc"] * 0.52)
+		card.add_child(sprite)
+	elif locked:
+		var lk := Label.new()
+		lk.text = "🔒"
+		lk.position = Vector2(0, card.size.y / 2 - 18)
+		lk.size     = Vector2(card.size.x, 36)
+		lk.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lk.add_theme_font_size_override("font_size", 22)
+		card.add_child(lk)
+
+	var nm := Label.new()
+	nm.text = c["name"] if not locked else "???"
+	nm.position = Vector2(0, card.size.y - 46)
+	nm.size     = Vector2(card.size.x, 24)
+	nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	nm.add_theme_font_override("font", _font_bold)
+	nm.add_theme_font_size_override("font_size", 11)
+	nm.add_theme_color_override("font_color", Color(col.r, col.g, col.b, 0.65) if not locked else Color(0.4, 0.4, 0.4))
+	card.add_child(nm)
+
+# ── Orta kart ────────────────────────────────────────────────────────────────
+func _fill_center(card: Panel, c: Dictionary) -> void:
+	for ch in card.get_children(): ch.queue_free()
+	var locked: bool = _is_locked(c)
+	var col: Color   = c["color"]
+
+	var sb := StyleBoxFlat.new()
+	sb.bg_color     = Color(col.r*0.09, col.g*0.09, col.b*0.14, 0.92) if not locked else Color(0.03, 0.03, 0.08, 0.85)
+	sb.border_width_left = 2; sb.border_width_top = 2
+	sb.border_width_right = 2; sb.border_width_bottom = 2
+	sb.border_color  = col if not locked else Color(0.35, 0.35, 0.35)
+	sb.shadow_color  = Color(col.r, col.g, col.b, 0.38) if not locked else Color(0,0,0,0)
+	sb.shadow_size   = 12
+	sb.corner_radius_top_left = 8; sb.corner_radius_top_right = 8
+	sb.corner_radius_bottom_right = 8; sb.corner_radius_bottom_left = 8
+	card.add_theme_stylebox_override("panel", sb)
+	card.modulate = Color(1, 1, 1, 1)
+
+	if not locked and c["sheet"] != "":
+		var sprite := AnimatedSprite2D.new()
+		sprite.position = card.size / 2 + Vector2(0, -55)
+		_setup_sprite(sprite, c["sheet"], c["fw"], c["fc"], c["sc"] * 0.88)
+		sprite.play("spin")
+		card.add_child(sprite)
+	elif locked:
+		var lk := Label.new()
+		lk.text = "🔒"
+		lk.position = Vector2(0, card.size.y / 2 - 30)
+		lk.size     = Vector2(card.size.x, 60)
+		lk.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lk.add_theme_font_size_override("font_size", 40)
+		card.add_child(lk)
+
+	var nm := Label.new()
+	nm.text = c["name"] if not locked else "???"
+	nm.position = Vector2(0, card.size.y - 96)
+	nm.size     = Vector2(card.size.x, 34)
+	nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	nm.add_theme_font_override("font", _font_bold)
+	nm.add_theme_font_size_override("font_size", 17)
+	nm.add_theme_color_override("font_color", col if not locked else Color(0.5, 0.5, 0.5))
+	card.add_child(nm)
+
+	var th := Label.new()
+	th.text = c["theme"] if not locked else "???"
+	th.position = Vector2(0, card.size.y - 62)
+	th.size     = Vector2(card.size.x, 22)
+	th.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	th.add_theme_font_override("font", _font_regular)
+	th.add_theme_font_size_override("font_size", 12)
+	th.add_theme_color_override("font_color", Color(col.r, col.g, col.b, 0.6) if not locked else Color(0.4, 0.4, 0.4))
+	card.add_child(th)
+
+# ── Dots ──────────────────────────────────────────────────────────────────────
+func _update_dots() -> void:
+	var col: Color = CHARS[_cur]["color"]
+	for i in _dots.size():
+		var dot: ColorRect = _dots[i]
+		if i == _cur:
+			dot.color = col
+			dot.custom_minimum_size = Vector2(10, 10)
 		else:
-			card.set_meta("selected", false)
-			sprite.scale = Vector2(base_scale, base_scale)
-			sprite.modulate = Color(0.0, 0.0, 0.0, 1.0) if locked else Color(0.4, 0.4, 0.4)
-			sprite.stop()
-			sprite.frame = 0
+			dot.color = Color(0.3, 0.3, 0.3, 0.55)
+			dot.custom_minimum_size = Vector2(7, 7)
 
-func _on_card_clicked(event: InputEvent, card) -> void:
-	if event is InputEventMouseButton and event.pressed:
-		if card.get_meta("locked", false):
-			_update_info("???", "???", "Bu karakter henüz kilitli.")
-			return
-		for c in cards:
-			_stop_matrix(c)
-		_select_card(card)
-		if card == vector_card:
-			selected_character = "vector"
-			_update_info("Vector", "Normal Toplarda ustadır. Kaba kuvvete bayılır.", "Normal Ball'lar aynı hedefe 5 kez vurursa kritik darbe oluşturur.")
-		elif card == leila_card:
-			selected_character = "leila"
-			_update_info("Leila", "Elemental Ball'larda ustadır.", "Elemental Ball düşmana vurduğunda %20 ihtimalle ikinci bir elemental patlama oluşturur.")
-		elif card == cyclone_card:
-			selected_character = "cyclone"
-			_update_info("Cyclone", "Pierce, Glitch ve Mimic toplarında ustadır.", "Glitch etkisindeki düşman öldüğünde Glitch başka bir düşmana sıçrar.")
+# ── Info panel ────────────────────────────────────────────────────────────────
+func _update_info() -> void:
+	var c      := CHARS[_cur]
+	var locked := _is_locked(c)
+	var col: Color = c["color"]
 
-func _update_info(char_name: String, passive_title: String, passive_desc: String) -> void:
-	var info = $InfoPanel
-	info.get_node("LabelName").text = "İsim: " + char_name
-	info.get_node("LabelPassive").text = "Pasif: " + passive_title
-	info.get_node("LabelDescription").text = passive_desc
+	var info := $InfoPanel
+	var lbl_name: Label = info.get_node("LabelName")
+	lbl_name.text = "İsim: " + (c["name"] if not locked else "???")
+	lbl_name.add_theme_color_override("font_color", col if not locked else Color(0.5, 0.5, 0.5))
+
+	var lbl_pass: Label = info.get_node("LabelPassive")
+	lbl_pass.text = "Pasif: " + (c["passive"] if not locked else "???")
+
+	var lbl_desc: Label = info.get_node("LabelDescription")
+	if locked:
+		lbl_desc.text = "Bu karakter henüz kilitli."
+	elif c["balls"].size() > 0:
+		lbl_desc.text = "Toplar: " + ", ".join(c["balls"])
+	else:
+		lbl_desc.text = ""
+
 	if info.has_node("LabelTalent"):
 		info.get_node("LabelTalent").visible = false
 
-func _on_confirm() -> void:
-	GameData.selected_character = selected_character
-	get_tree().change_scene_to_file("res://game_scene.tscn")
+# ── Sprite kurulum ────────────────────────────────────────────────────────────
+func _setup_sprite(sprite: AnimatedSprite2D, sheet: String, fw: int, fc: int, sc: float) -> void:
+	var frames := SpriteFrames.new()
+	if frames.has_animation("default"):
+		frames.remove_animation("default")
+	var tex: Texture2D = load(sheet)
+	frames.add_animation("spin")
+	frames.set_animation_speed("spin", 8.0)
+	frames.set_animation_loop("spin", true)
+	for i in range(fc):
+		var atlas := AtlasTexture.new()
+		atlas.atlas  = tex
+		atlas.region = Rect2(i * fw, 0, fw, fw)
+		frames.add_frame("spin", atlas)
+	sprite.sprite_frames  = frames
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	sprite.scale          = Vector2(sc, sc)
+	sprite.animation      = "spin"
+	sprite.frame          = 0
 
-func _on_back() -> void:
-	get_tree().change_scene_to_file("res://main_menu.tscn")
-
-# ── Matrix Rain ───────────────────────────────────────────────────────────────
-
-func _get_matrix_color(card: Panel) -> Color:
-	match card.name:
-		"VectorCard":  return Color(0.0,  0.749, 1.0,   1.0)  # #00BFFF
-		"LeilaCard":   return Color(1.0,  0.176, 0.471, 1.0)  # #FF2D78
-		"CycloneCard": return Color(0.224, 1.0,  0.078, 1.0)  # #39FF14
-	return Color.WHITE
-
-func _start_matrix(card: Panel) -> void:
-	_matrix_active[card] = true
-	if _matrix_drops.has(card):
-		return  # Already created, just re-activate
-	var base: Color = _get_matrix_color(card)
-	var drops: Array = []
+# ── Matrix rain ───────────────────────────────────────────────────────────────
+func _start_matrix(card: Panel, base_color: Color) -> void:
+	_stop_matrix()
+	_matrix_active = true
 	for i in range(_MATRIX_N):
 		var lbl := Label.new()
 		lbl.text = str(randi() % 10)
 		lbl.add_theme_font_size_override("font_size", _MATRIX_FONT)
 		lbl.add_theme_font_override("font", _font_regular)
-		var c := base
-		c.a = randf_range(0.28, 0.72)
+		var c := base_color; c.a = randf_range(0.18, 0.55)
 		lbl.add_theme_color_override("font_color", c)
-		lbl.position = Vector2(
-			randf_range(4.0, _CARD_W - 12.0),
-			randf_range(_RAIN_Y, _CARD_H - 10.0)
-		)
+		lbl.position = Vector2(randf_range(4.0, card.size.x - 14.0), randf_range(card.size.y * 0.45, card.size.y - 10.0))
 		lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		card.add_child(lbl)
-		drops.append({ "label": lbl, "speed": randf_range(_MATRIX_SPD_MIN, _MATRIX_SPD_MAX) })
-	_matrix_drops[card] = drops
+		_matrix_drops.append({"label": lbl, "card": card, "speed": randf_range(_MATRIX_SPD_MIN, _MATRIX_SPD_MAX)})
 
-func _stop_matrix(card: Panel) -> void:
-	_matrix_active[card] = false
-	if not _matrix_drops.has(card):
-		return
-	for drop in _matrix_drops[card]:
-		if is_instance_valid(drop["label"]):
-			drop["label"].queue_free()
-	_matrix_drops.erase(card)
+func _stop_matrix() -> void:
+	_matrix_active = false
+	for drop in _matrix_drops:
+		if is_instance_valid(drop["label"]): drop["label"].queue_free()
+	_matrix_drops.clear()
 
 func _process(delta: float) -> void:
-	var active_cards: Array = _matrix_drops.keys()
-	for card in active_cards:
-		if not _matrix_active.get(card, false):
-			continue
-		var base: Color = _get_matrix_color(card)
-		for drop in _matrix_drops[card]:
-			var lbl: Label = drop["label"]
-			if not is_instance_valid(lbl):
-				continue
-			lbl.position.y += drop["speed"] * delta
-			# Random digit change (~12% chance per frame)
-			if randf() < 0.12:
-				lbl.text = str(randi() % 10)
-			# Reset to upper half when below lower bound
-			if lbl.position.y > _CARD_H:
-				lbl.position.y = _RAIN_Y
-				lbl.position.x  = randf_range(4.0, _CARD_W - 12.0)
-				var c := base
-				c.a = randf_range(0.28, 0.72)
-				lbl.add_theme_color_override("font_color", c)
-				drop["speed"] = randf_range(_MATRIX_SPD_MIN, _MATRIX_SPD_MAX)
+	if not _matrix_active: return
+	var col: Color = CHARS[_cur]["color"]
+	for drop in _matrix_drops:
+		var lbl: Label  = drop["label"]
+		var card: Panel = drop["card"]
+		if not is_instance_valid(lbl): continue
+		lbl.position.y += drop["speed"] * delta
+		if randf() < 0.09: lbl.text = str(randi() % 10)
+		if lbl.position.y > card.size.y:
+			lbl.position.y = card.size.y * 0.45
+			lbl.position.x = randf_range(4.0, card.size.x - 14.0)
+			var c := col; c.a = randf_range(0.18, 0.55)
+			lbl.add_theme_color_override("font_color", c)
+			drop["speed"] = randf_range(_MATRIX_SPD_MIN, _MATRIX_SPD_MAX)
+
+# ── Yardımcı ──────────────────────────────────────────────────────────────────
+func _is_locked(c: Dictionary) -> bool:
+	return c["id"] == "???" or not GameData.is_unlocked(c["id"])
+
+func _on_confirm() -> void:
+	var c := CHARS[_cur]
+	if _is_locked(c): return
+	GameData.selected_character = c["id"]
+	get_tree().change_scene_to_file("res://game_scene.tscn")
+
+func _on_back() -> void:
+	get_tree().change_scene_to_file("res://main_menu.tscn")
