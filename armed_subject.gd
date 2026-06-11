@@ -255,7 +255,7 @@ func die() -> void:
 		return
 	var game = get_parent()
 	if game.has_method("subject_died"):
-		game.subject_died()
+		game.subject_died(5)
 	_collapse()
 
 func _collapse() -> void:
@@ -278,45 +278,18 @@ func _collapse() -> void:
 		_escape()
 
 func _escape() -> void:
-	if randf() < 0.3:
-		var escape_dialogs = [
-			"Hasmen... what have you done to us.",
-			"I'm out of this, man.",
-			"Mommyyy!"
-		]
-		var dialog = escape_dialogs[randi() % escape_dialogs.size()]
-		var game = get_parent()
-		if game.has_method("show_dialog"):
-			game.show_dialog(dialog, global_position)
-	var nav_speed: float = max(speed * 3.0, 150.0)
-	var se_target: Vector2 = Vector2(global_position.x + 200.0, 900.0)
-	var e_target:  Vector2 = Vector2(2000.0, 900.0)
-	$ArmedSprite.play("run_SE")
-	var tween = create_tween()
-	tween.tween_property(self, "global_position", se_target,
-		global_position.distance_to(se_target) / nav_speed)
-	await get_tree().create_timer(
-		global_position.distance_to(se_target) / nav_speed).timeout
-	if not is_instance_valid(self): return
 	$ArmedSprite.play("run_E")
-	var tween2 = create_tween()
-	tween2.tween_property(self, "global_position", e_target,
-		global_position.distance_to(e_target) / nav_speed)
-	await get_tree().create_timer(
-		global_position.distance_to(e_target) / nav_speed).timeout
+	var tw := create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(self, "global_position", Vector2(2100.0, global_position.y), 1.2)
+	tw.tween_property(self, "modulate:a", 0.0, 0.8)
+	await tw.finished
 	if is_instance_valid(self): queue_free()
 
 func _become_ally() -> void:
 	var game = get_parent()
-	if randf() < 0.3:
-		var ally_dialogs = [
-			"Vec, we're with you brother!",
-			"Hasmen you rat, I'll finish these and come for you.",
-			"Leila, I'd never leave you alone."
-		]
-		var dialog = ally_dialogs[randi() % ally_dialogs.size()]
-		if game.has_method("show_dialog"):
-			game.show_dialog(dialog, global_position)
+	if game.has_method("subject_rescued"):
+		game.subject_rescued()
 
 	add_to_group("allies")
 	remove_from_group("subjects")
@@ -324,37 +297,26 @@ func _become_ally() -> void:
 	_clear_element()
 	modulate = Color(1.0, 1.0, 1.0, 1.0)
 	scale    = Vector2(1.0, 1.0)
-	# Use game-level chip duration if available (respects Chip Boost upgrade)
-	_ally_timer = game.ally_chip_duration if "ally_chip_duration" in game else chip_duration
 	_is_exiting = false
 	_reached_living_area = false
 	_wander_timer = 0.0
 
-	# Disable collision — ally moves freely through tribune walls etc.
 	$CollisionShape2D.disabled = true
 	set_physics_process(false)
 
 	var nav_speed: float = max(speed * 3.0, 150.0)
-	var door:   Vector2  = Vector2(850.0, 1000.0)
-	var inside: Vector2  = Vector2(490.0, 1000.0)
+	var inside: Vector2  = Vector2(randf_range(50.0, 720.0), randf_range(720.0, 1040.0))
 
 	$ArmedSprite.play("run_SW")
-	var tw1: Tween = create_tween()
-	tw1.tween_property(self, "global_position", door,
-		max(global_position.distance_to(door) / nav_speed, 0.05))\
+	var tw: Tween = create_tween()
+	tw.tween_property(self, "global_position", inside,
+		max(global_position.distance_to(inside) / nav_speed, 0.05))\
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	await tw1.finished
-	if not is_instance_valid(self): return
-
-	$ArmedSprite.play("run_W")
-	var tw2: Tween = create_tween()
-	tw2.tween_property(self, "global_position", inside, 360.0 / nav_speed)\
-		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	await tw2.finished
+	await tw.finished
 	if not is_instance_valid(self): return
 
 	_reached_living_area = true
-	_wander_timer        = 0.0
+	_wander_timer = 0.0
 	set_physics_process(true)
 
 func _start_exit() -> void:
@@ -374,53 +336,25 @@ func _ally_behavior() -> void:
 	if _is_exiting:
 		return
 
-	if _reached_living_area:
-		_ally_timer -= delta
-		if _ally_timer <= 0.0:
-			_start_exit()
-			return
+	if not _reached_living_area:
+		return
 
-	# Phase 2: In living area — attack nearby enemies or wander upward
-	var subjects = get_tree().get_nodes_in_group("subjects")
-	var closest = null
-	var closest_dist = INF
-	for s in subjects:
-		var d = global_position.distance_to(s.global_position)
-		if d < closest_dist:
-			closest_dist = d
-			closest = s
-
-	if closest != null and closest_dist < 400.0:
-		# Chase and attack
-		if closest_dist > 60.0:
-			var direction = (closest.global_position - global_position).normalized()
-			velocity = direction * speed
-			move_and_slide()
-			_update_anim_dir_from_velocity()
-			_update_armed_anim()
-		else:
-			velocity = Vector2.ZERO
-			attack_cooldown -= delta
-			if attack_cooldown <= 0:
-				closest.take_damage(5, true)
-				attack_cooldown = attack_rate
-				play_kick()
-	else:
-		# No enemies — wander upward toward the upper street
-		_wander_timer -= delta
-		if _wander_timer <= 0.0:
-			_wander_timer = randf_range(1.5, 3.0)
-			_wander_velocity = Vector2(randf_range(-speed * 0.3, speed * 0.3), -speed * 0.6)
-		if global_position.y < 150.0:
-			_wander_velocity.y = abs(_wander_velocity.y)
-		if global_position.x < 50.0:
-			_wander_velocity.x = abs(_wander_velocity.x)
-		elif global_position.x > 470.0:
-			_wander_velocity.x = -abs(_wander_velocity.x)
-		velocity = _wander_velocity
-		move_and_slide()
-		_update_anim_dir_from_velocity()
-		_update_armed_anim()
+	_wander_timer -= delta
+	if _wander_timer <= 0.0:
+		_wander_timer = randf_range(1.5, 3.5)
+		_wander_velocity = Vector2(randf_range(-speed * 0.6, speed * 0.6), randf_range(-speed * 0.5, speed * 0.5))
+	if global_position.x < 80.0:
+		_wander_velocity.x = abs(_wander_velocity.x)
+	elif global_position.x > 750.0:
+		_wander_velocity.x = -abs(_wander_velocity.x)
+	if global_position.y < 700.0:
+		_wander_velocity.y = abs(_wander_velocity.y)
+	elif global_position.y > 1050.0:
+		_wander_velocity.y = -abs(_wander_velocity.y)
+	velocity = _wander_velocity
+	move_and_slide()
+	_update_anim_dir_from_velocity()
+	_update_armed_anim()
 
 func _setup_element_indicator(y_offset: float) -> void:
 	_elem_indicator = load("res://elem_indicator.gd").new()

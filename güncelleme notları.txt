@@ -2169,6 +2169,24 @@ Bug Düzeltmeleri:
      yer açılınca otomatik katılıyor
 
 ✅ S-Miler (ve tüm boss'lar) öldükten sonra düşman spawn duruyordu
+
+────────────────────────────────────────────────────────────────────────────────
+
+YAPILACAKLAR — ÖNCELİKLİ
+
+Level Hızı Dengesi (üzerinde düşünülüp istişare edilmesi gerekiyor):
+
+Sorun: İlk 10 level çok hızlı geçiyor (upgrade'ler seri seri geliyor),
+10. level sonrası ise spawn az olduğu için aşırı yavaşlıyor.
+Bir boss run'ı yaklaşık 5-6 dakika sürmeli. Şu an Smiler'a kadar
+~2.5 dk, Smiler ölene kadar ~3 dk — toplam çok kısa ve level eğrisi
+tutarsız. Çözüm: Level başına gereken kill sayısı yeniden ayarlanmalı,
+ilk levellar daha yavaş, ortalar daha akıcı, boss aşaması yeterince
+uzun hissettirmeli. Spawn yoğunluğu da levela göre daha iyi kalibre edilmeli.
+
+────────────────────────────────────────────────────────────────────────────────
+
+✅ S-Miler (ve tüm boss'lar) öldükten sonra düşman spawn duruyordu
    — Kök neden: boss ölüm kontrolü spawn_timer gate'inin içindeydi;
      spawn_interval=25.0 iken boss ölünce kontrol 25s boyunca çalışmıyordu
    — Düzeltme: boss ölüm kontrolü _process'in en başına taşındı, her frame çalışıyor;

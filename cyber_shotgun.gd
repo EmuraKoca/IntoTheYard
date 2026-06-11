@@ -168,7 +168,7 @@ func die() -> void:
 		return
 	var game = get_parent()
 	if game.has_method("subject_died"):
-		game.subject_died()
+		game.subject_died(5)
 	_collapse()
 
 func _collapse() -> void:

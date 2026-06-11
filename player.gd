@@ -180,11 +180,10 @@ func _process(_delta: float) -> void:
 		# Frame'i anında 0'a ayarla — play() iç gecikmesi olmadan
 		sprite.set_frame_and_progress(0, 0.0)
 
-func _input(event: InputEvent) -> void:
+func _unhandled_input(event: InputEvent) -> void:
 	# Sol tık → orbit'teki sıradaki topu fırlat
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		if not get_viewport().is_input_handled():
-			_fire_ball()
+		_fire_ball()
 
 	# Sağ tık → dash
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:

@@ -6,8 +6,8 @@ func _ready() -> void:
 	$BtnQuit.pressed.connect(_on_quit)
 
 func _on_new_game() -> void:
-	# Kayıtı sıfırla — sadece Vector açık
 	GameData.unlocked_characters = ["vector"]
+	GameData.char_xp = {"vector": 0, "leila": 0, "cyclone": 0}
 	GameData.save_data()
 	get_tree().change_scene_to_file("res://character_select.tscn")
 

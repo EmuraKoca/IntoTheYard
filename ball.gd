@@ -219,6 +219,8 @@ func _physics_process(delta: float) -> void:
 		if collider.is_in_group("subjects"):
 			_wall_bounce_count = 0
 			_hit_subject(collider)
+			if can_pierce:
+				move_and_collide(collision.get_remainder())
 		elif collider.is_in_group("player"):
 			if not collider.is_dashing:
 				move_direction = move_direction.bounce(collision.get_normal())
@@ -325,6 +327,8 @@ func _process_returning(delta: float) -> void:
 		var collider = collision.get_collider()
 		if collider.is_in_group("subjects"):
 			_hit_subject(collider)
+			if can_pierce:
+				move_and_collide(collision.get_remainder())
 		elif not collider.is_in_group("player"):
 			# Bariyer veya statik duvar — aninda geri don
 			_start_returning()

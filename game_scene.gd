@@ -47,11 +47,11 @@ var ally_chip_duration: float = 15.0  # Upgradeable via card (index 23)
 var _rts_mode:    bool        = false
 var _rts_overlay: CanvasLayer = null
 
-# ── Boss havuzu — Level 10 / 20 / 30'da rastgele seçilir ─────────────────────
-var _boss_pool:         Array[String] = ["cyber404", "nyx09", "smiler79"]
-var _bosses_used:       Array[String] = []
-var _boss_level_checks: Array[int]    = [10, 20, 30]
-var _boss_check_index:  int           = 0
+# ── Boss sırası — Level 10 = Smiler, Level 20 = Cyber404, Level 30 = Nyx ──────
+var _boss_level_checks: Array[int] = [10, 20, 30]
+var _boss_check_index:  int        = 0
+var _cyber404_node = null
+var _cyber404_spawned: bool = false
 
 func _start_boss_intro() -> void:
 	var crate = load("res://crate_intro.gd").new()
@@ -80,6 +80,7 @@ func _spawn_boss_at(spawn_pos: Vector2) -> void:
 	b.scale    = Vector2(0.4, 0.4)
 	add_child(b)
 	boss = b
+	_cyber404_node = b
 	b.get_node("CollisionShape2D").disabled = true
 
 	var tw := create_tween()
@@ -171,6 +172,51 @@ func hide_boss_bar() -> void:
 		boss_bar_canvas = null
 	boss = null
 	_boss_elem_indicator = null
+
+func _show_run_end_screen() -> void:
+	get_tree().paused = true
+	var canvas := CanvasLayer.new()
+	canvas.layer = 100
+	canvas.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(canvas)
+
+	var bg := ColorRect.new()
+	bg.color = Color(0.02, 0.02, 0.06, 0.95)
+	bg.size  = Vector2(1920, 1080)
+	canvas.add_child(bg)
+
+	var minutes := int(elapsed_time / 60)
+	var seconds  := int(elapsed_time) % 60
+
+	var title := Label.new()
+	title.text = "RUN TAMAMLANDI"
+	title.add_theme_font_size_override("font_size", 52)
+	title.add_theme_font_override("font", _font_bold)
+	title.modulate = Color(0.2, 1.0, 0.6)
+	title.position = Vector2(660, 200)
+	canvas.add_child(title)
+
+	var stats_text := "⏱  %02d:%02d\n\n💀  Düşman: %d\n\n🤝  Kurtarılan: %d" % [
+		minutes, seconds, total_subjects_killed, get_tree().get_nodes_in_group("allies").size()
+	]
+	var stats := Label.new()
+	stats.text = stats_text
+	stats.add_theme_font_size_override("font_size", 28)
+	stats.add_theme_font_override("font", _font_bold)
+	stats.modulate = Color(0.85, 0.85, 0.9)
+	stats.position = Vector2(760, 340)
+	canvas.add_child(stats)
+
+	var btn := Button.new()
+	btn.text = "ANA MENÜYE DÖN"
+	btn.add_theme_font_size_override("font_size", 26)
+	btn.position = Vector2(760, 620)
+	btn.size     = Vector2(400, 60)
+	canvas.add_child(btn)
+	btn.pressed.connect(func() -> void:
+		get_tree().paused = false
+		get_tree().change_scene_to_file("res://main_menu.tscn")
+	)
 
 func update_boss_element(elem: String) -> void:
 	if boss_bar_canvas == null:
@@ -448,26 +494,20 @@ func _update_processor_btn() -> void:
 		_processor_btn.add_theme_color_override("font_hover_color",   Color(0.65, 0.65, 0.70))
 		_processor_btn.add_theme_color_override("font_pressed_color", Color(0.30, 0.30, 0.35))
 
-func _spawn_random_boss() -> void:
-	# Kullanılmamış boss'lardan rastgele seç; hepsi kullanıldıysa havuzu sıfırla
-	var available := _boss_pool.filter(func(b: String) -> bool: return b not in _bosses_used)
-	if available.is_empty():
-		_bosses_used.clear()
-		available = _boss_pool.duplicate()
-	var chosen: String = available[randi() % available.size()]
-	_bosses_used.append(chosen)
-	match chosen:
-		"cyber404":
-			if not boss_defeated and _crate_node == null:
-				_start_boss_intro()
-		"nyx09":
-			if not _nyx_spawned:
-				_nyx_spawned = true
-				_spawn_nyx()
-		"smiler79":
+func _spawn_section_boss() -> void:
+	match _boss_check_index - 1:
+		0:  # Bölüm 1 — Smiler
 			if not _smiler_spawned:
 				_smiler_spawned = true
 				_spawn_smiler()
+		1:  # Bölüm 2 — Cyber404
+			if not _cyber404_spawned and _crate_node == null:
+				_cyber404_spawned = true
+				_start_boss_intro()
+		2:  # Bölüm 3 — Nyx
+			if not _nyx_spawned:
+				_nyx_spawned = true
+				_spawn_nyx()
 
 func _spawn_nyx() -> void:
 	var nyx = load("res://nyx_09.gd").new()
@@ -613,9 +653,10 @@ func update_ui() -> void:
 	$UI/LabelCalamity.text = calamity_text
 	_update_processor_btn()
 
-func subject_died() -> void:
+func subject_died(xp_reward: int = 1) -> void:
 	subjects_killed += 1
 	total_subjects_killed += 1
+	GameData.add_xp(GameData.selected_character, xp_reward)
 	update_ui()
 	if subjects_killed >= kills_to_level:
 		subjects_killed = 0
@@ -623,6 +664,9 @@ func subject_died() -> void:
 		spawn_interval = max(spawn_interval - 0.2, min_spawn_interval)
 		get_tree().paused = true
 		show_upgrade_menu()
+
+func subject_rescued() -> void:
+	GameData.add_xp(GameData.selected_character, 2)
 
 func player_damaged(amount: int = 1) -> void:
 	player_hp -= amount
@@ -1440,7 +1484,7 @@ func _spawn_subject() -> void:
 		"cyber_shotgun": subject = cyber_shotgun_scene.instantiate()
 		_:               subject = subject_scene.instantiate()
 
-	var rand_x = randf_range(50, 1600)
+	var rand_x = randf_range(950, 1820)
 	subject.position = Vector2(rand_x, -50)
 	add_child(subject)
 
@@ -1449,25 +1493,31 @@ func _process(_delta: float) -> void:
 	if upgrading:
 		return
 	# Boss ölüm kontrolü her frame çalışır — spawn_interval beklenmez
-	if _nyx_node != null:
-		if not is_instance_valid(_nyx_node) or _nyx_node.is_dead:
-			_nyx_node = null
-			spawn_interval = min_spawn_interval
-			spawn_timer    = spawn_interval
-			GameData.unlock_character("leila")   # Nyx-09 → Leila'nın hücresi açılır
 	if _smiler_node != null:
 		if not is_instance_valid(_smiler_node) or _smiler_node.is_dead:
 			_smiler_node = null
-			spawn_interval = min_spawn_interval
-			spawn_timer    = spawn_interval
-			GameData.unlock_character("cyclone")  # S-Miler-79 → Cyclone açılır
+			GameData.unlock_character("leila")
+			GameData.add_xp(GameData.selected_character, 30)
+			_show_run_end_screen()
+	if _cyber404_node != null:
+		if not is_instance_valid(_cyber404_node) or _cyber404_node.is_dead:
+			_cyber404_node = null
+			GameData.unlock_character("cyclone")
+			GameData.add_xp(GameData.selected_character, 30)
+			_show_run_end_screen()
+	if _nyx_node != null:
+		if not is_instance_valid(_nyx_node) or _nyx_node.is_dead:
+			_nyx_node = null
+			GameData.add_xp(GameData.selected_character, 30)
+			_show_run_end_screen()
 
 	spawn_timer += _delta
 	if spawn_timer >= spawn_interval:
 		spawn_timer = 0.0
-		var nyx_alive: bool    = is_instance_valid(_nyx_node)    and not _nyx_node.is_dead
-		var smiler_alive: bool = is_instance_valid(_smiler_node) and not _smiler_node.is_dead
-		if nyx_alive or smiler_alive:
+		var nyx_alive: bool     = is_instance_valid(_nyx_node)      and not _nyx_node.is_dead
+		var smiler_alive: bool  = is_instance_valid(_smiler_node)  and not _smiler_node.is_dead
+		var cyber_alive: bool   = is_instance_valid(_cyber404_node) and not _cyber404_node.is_dead
+		if nyx_alive or smiler_alive or cyber_alive:
 			# Boss modunda: 3 düşman, aralık sabit
 			for _si in 3:
 				_spawn_subject()
@@ -1502,11 +1552,11 @@ func _process(_delta: float) -> void:
 		var minutes = int(elapsed_time / 60)
 		var seconds = int(elapsed_time) % 60
 		$UI/LabelTime.text = "⏱  %02d:%02d" % [minutes, seconds]
-	# Boss spawn — Level 10 / 20 / 30, rastgele sıra
+	# Boss spawn — Level 10 = Smiler, 20 = Cyber404, 30 = Nyx
 	if _boss_check_index < _boss_level_checks.size():
 		if level >= _boss_level_checks[_boss_check_index]:
 			_boss_check_index += 1
-			_spawn_random_boss()
+			_spawn_section_boss()
 
 func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 	canvas.queue_free()

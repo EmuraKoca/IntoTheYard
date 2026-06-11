@@ -199,6 +199,38 @@ func _fill_center(card: Panel, c: Dictionary) -> void:
 	th.add_theme_color_override("font_color", Color(col.r, col.g, col.b, 0.6) if not locked else Color(0.4, 0.4, 0.4))
 	card.add_child(th)
 
+	if not locked:
+		var char_id: String = c["id"]
+		var lv: int = GameData.get_level(char_id)
+		var xp_cur: int = GameData.xp_in_current_level(char_id)
+		var xp_need: int = GameData.xp_needed_for_level(char_id)
+
+		# Level badge
+		var lv_lbl := Label.new()
+		lv_lbl.text = "LV %d" % lv
+		lv_lbl.position = Vector2(4, 6)
+		lv_lbl.size     = Vector2(card.size.x - 8, 22)
+		lv_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		lv_lbl.add_theme_font_override("font", _font_bold)
+		lv_lbl.add_theme_font_size_override("font_size", 13)
+		lv_lbl.add_theme_color_override("font_color", col)
+		card.add_child(lv_lbl)
+
+		# XP bar arkaplan
+		var xp_bg := ColorRect.new()
+		xp_bg.size     = Vector2(card.size.x - 16, 6)
+		xp_bg.position = Vector2(8, card.size.y - 14)
+		xp_bg.color    = Color(0.15, 0.15, 0.15, 0.8)
+		card.add_child(xp_bg)
+
+		# XP bar doluluk
+		var fill_ratio: float = float(xp_cur) / float(max(xp_need, 1))
+		var xp_fill := ColorRect.new()
+		xp_fill.size     = Vector2((card.size.x - 16) * fill_ratio, 6)
+		xp_fill.position = Vector2(8, card.size.y - 14)
+		xp_fill.color    = Color(col.r, col.g, col.b, 0.85)
+		card.add_child(xp_fill)
+
 # ── Dots ──────────────────────────────────────────────────────────────────────
 func _update_dots() -> void:
 	var col: Color = CHARS[_cur]["color"]
@@ -228,10 +260,20 @@ func _update_info() -> void:
 	var lbl_desc: Label = info.get_node("LabelDescription")
 	if locked:
 		lbl_desc.text = "Bu karakter henüz kilitli."
-	elif c["balls"].size() > 0:
-		lbl_desc.text = "Toplar: " + ", ".join(c["balls"])
 	else:
-		lbl_desc.text = ""
+		var char_id: String = c["id"]
+		var lv: int      = GameData.get_level(char_id)
+		var xp_cur: int  = GameData.xp_in_current_level(char_id)
+		var xp_need: int = GameData.xp_needed_for_level(char_id)
+		var unlock_str := ""
+		if lv < 6:
+			var next_unlock: String = GameData.get_unlock_for_level(char_id, lv + 1)
+			if next_unlock != "":
+				unlock_str = "\nSonraki: " + next_unlock + " (Lv%d)" % (lv + 1)
+		var balls_str := ""
+		if c["balls"].size() > 0:
+			balls_str = "Toplar: " + ", ".join(c["balls"]) + "\n"
+		lbl_desc.text = balls_str + "LV %d  —  %d / %d XP%s" % [lv, xp_cur, xp_need, unlock_str]
 
 	if info.has_node("LabelTalent"):
 		info.get_node("LabelTalent").visible = false
