@@ -2169,6 +2169,65 @@ Bug Düzeltmeleri:
      yer açılınca otomatik katılıyor
 
 ✅ S-Miler (ve tüm boss'lar) öldükten sonra düşman spawn duruyordu
+   — Kök neden: boss ölüm kontrolü spawn_timer gate'inin içindeydi;
+     spawn_interval=25.0 iken boss ölünce kontrol 25s boyunca çalışmıyordu
+   — Düzeltme: boss ölüm kontrolü _process'in en başına taşındı, her frame çalışıyor;
+     boss ölünce spawn_interval anında min_spawn_interval'e düşüyor,
+     spawn_timer sıfırlanarak bir sonraki tick hemen tetikleniyor
+
+────────────────────────────────────────────────────────────────────────────────
+
+0.0.9.0
+12.06.2026
+
+Kalıcı Karakter & İlerleme Sistemi:
+
+✅ GameData singleton sıfırdan yazıldı — ConfigFile ile kalıcı kayıt (user://ity_save.cfg)
+✅ Her karaktere bağımsız XP sistemi eklendi (Vector, Leila, Cyclone)
+✅ XP eşikleri: [0, 600, 1500, 2750, 4250, 6250] — 6 level
+✅ Her levelde açılan içerik tablosu (top, fusion) eklendi
+✅ New Game: tüm XP ve unlock sıfırlanır; Load Game: kayıt yüklenir
+✅ Load Game butonu aktif hale getirildi (önceden "Soon" yazıp gri görünüyordu)
+
+Karakter Kilit Sistemi:
+
+✅ Leila ve Cyclone başlangıçta kilitli — boss öldürünce açılıyor
+✅ Karakter seçim ekranı carousel sisteme geçirildi
+✅ Kilitli karakterler "???" ismiyle görünüyor, Talent bilgisi gizli
+✅ Kilitli karaktere tıklanınca onay engellenip uyarı gösteriliyor
+✅ Level rozeti (LV X) ve XP barı karakter kartına eklendi
+✅ Sonraki unlock bilgisi info panelinde gösteriliyor
+
+Boss Sırası — Sabit İlerleme:
+
+✅ Rastgele boss sistemi kaldırıldı
+✅ Sabit sıra: Level 10 = Smiler → Leila açılır
+                Level 20 = Cyber404 → Cyclone açılır
+                Level 30 = Nyx → Run biter
+✅ Her boss ölümünde run biter — istatistik ekranı gelir (süre, kill, kurtarılan)
+✅ "Ana Menüye Dön" butonu ile çıkış
+
+Müttefik Sistemi Revizyonu:
+
+✅ Müttefikler artık asla saldırmıyor — sadece yaşam alanında dolanıyor
+✅ Tüm müttefik diyalogları kaldırıldı
+✅ Müttefik yaşam alanı spawn aralığı genişletildi (50–720 x, 720–1040 y)
+✅ Wander hızı artırıldı (speed×0.4/0.3 → speed×0.6/0.5) — daha aktif görünüm
+✅ _reached_living_area flag'i tüm düşman dosyalarına eklendi
+   — Flag false iken _ally_behavior çalışmıyor, yaşam alanına tween bitmeden hareket yok
+✅ 4 düşman dosyası güncellendi: subject, heavy_subject, frantic_subject, armed_subject
+
+Düşman Spawn & Escape:
+
+✅ Düşmanlar artık sadece sahanın sağ tarafından geliyor (x: 950–1820)
+✅ Escape animasyonu yenilendi — hızlı sağa kaybolma (1.2s hareket + 0.8s alpha fade)
+
+Bug Düzeltmeleri:
+
+✅ Pierce topu düşmana yapışıp gecikmeli geçiyordu
+   — Düzeltme: move_and_collide(collision.get_remainder()) ile kalan mesafe anında tamamlanıyor
+✅ UI tıklaması (Processor kapatma vb.) aynı zamanda top fırlatıyordu
+   — Düzeltme: _input → _unhandled_input; UI'ın tükettiği event'lar oyuna ulaşmıyor
 
 ────────────────────────────────────────────────────────────────────────────────
 
@@ -2183,12 +2242,3 @@ Bir boss run'ı yaklaşık 5-6 dakika sürmeli. Şu an Smiler'a kadar
 tutarsız. Çözüm: Level başına gereken kill sayısı yeniden ayarlanmalı,
 ilk levellar daha yavaş, ortalar daha akıcı, boss aşaması yeterince
 uzun hissettirmeli. Spawn yoğunluğu da levela göre daha iyi kalibre edilmeli.
-
-────────────────────────────────────────────────────────────────────────────────
-
-✅ S-Miler (ve tüm boss'lar) öldükten sonra düşman spawn duruyordu
-   — Kök neden: boss ölüm kontrolü spawn_timer gate'inin içindeydi;
-     spawn_interval=25.0 iken boss ölünce kontrol 25s boyunca çalışmıyordu
-   — Düzeltme: boss ölüm kontrolü _process'in en başına taşındı, her frame çalışıyor;
-     boss ölünce spawn_interval anında min_spawn_interval'e düşüyor,
-     spawn_timer sıfırlanarak bir sonraki tick hemen tetikleniyor
