@@ -102,7 +102,7 @@ func _refresh() -> void:
 	_fill_side(_next_card,   CHARS[next_i])
 	_update_dots()
 	_update_info()
-	var c := CHARS[_cur]
+	var c: Dictionary = CHARS[_cur]
 	if c["id"] != "???" and c["sheet"] != "":
 		_start_matrix(_center_card, c["color"])
 
@@ -213,8 +213,8 @@ func _update_dots() -> void:
 
 # ── Info panel ────────────────────────────────────────────────────────────────
 func _update_info() -> void:
-	var c      := CHARS[_cur]
-	var locked := _is_locked(c)
+	var c:      Dictionary = CHARS[_cur]
+	var locked: bool       = _is_locked(c)
 	var col: Color = c["color"]
 
 	var info := $InfoPanel
@@ -299,7 +299,7 @@ func _is_locked(c: Dictionary) -> bool:
 	return c["id"] == "???" or not GameData.is_unlocked(c["id"])
 
 func _on_confirm() -> void:
-	var c := CHARS[_cur]
+	var c: Dictionary = CHARS[_cur]
 	if _is_locked(c): return
 	GameData.selected_character = c["id"]
 	get_tree().change_scene_to_file("res://game_scene.tscn")
