@@ -76,9 +76,11 @@ func _get_character_start_type() -> String:
 	if _startup_fired < 2:
 		return ""   # normal
 	match player.character_type:
-		"vector":  return "electric"
-		"leila":   return "glitch"
-		"cyclone": return "cryo"
+		"vector":  return ""  # 3 Normal Ball
+		"leila":
+			var pool := ["fire", "water", "cryo", "electric"]
+			return pool[randi() % pool.size()]
+		"cyclone": return "glitch"
 	return ""
 
 func queue_upgrade_ball(ball_type: String) -> void:
@@ -153,7 +155,8 @@ func _launch_typed_ball(ball_type: String) -> void:
 	var player_node = get_parent().get_node("Player")
 
 	var ball = ball_scene.instantiate()
-	ball.max_damage = 5 + player_node.ball_mastery
+	var vector_bonus: int = 3 if player_node.character_type == "vector" else 0
+	ball.max_damage = 5 + player_node.ball_mastery + vector_bonus
 
 	match ball_type:
 		"split":

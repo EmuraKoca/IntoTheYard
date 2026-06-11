@@ -183,7 +183,8 @@ func _process(_delta: float) -> void:
 func _input(event: InputEvent) -> void:
 	# Sol tık → orbit'teki sıradaki topu fırlat
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		_fire_ball()
+		if not get_viewport().is_input_handled():
+			_fire_ball()
 
 	# Sağ tık → dash
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
