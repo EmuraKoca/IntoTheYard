@@ -680,13 +680,8 @@ func subject_died(xp_reward: int = 1, death_pos: Vector2 = Vector2.ZERO) -> void
 	_spawn_data_particles(death_pos, float(xp_reward) * 10.0, particle_count)
 
 func _setup_data_bar() -> void:
-	_data_particle_canvas = CanvasLayer.new()
-	_data_particle_canvas.layer = 0
-	add_child(_data_particle_canvas)
-
-	_data_bar_canvas = CanvasLayer.new()
-	_data_bar_canvas.layer = 0
-	add_child(_data_bar_canvas)
+	_data_particle_canvas = $UI
+	_data_bar_canvas      = $UI
 
 	# Arka plan
 	var border := ColorRect.new()
