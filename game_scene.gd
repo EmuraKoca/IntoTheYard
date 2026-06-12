@@ -58,9 +58,10 @@ const _DATA_BAR_POS  := Vector2(1640, 698)
 const _DATA_BAR_H    := 14.0
 const _DATA_BAR_W    := 272.0
 
-# ── Boss sırası — Level 10 = Smiler, Level 20 = Cyber404, Level 30 = Nyx ──────
-var _boss_level_checks: Array[int] = [10, 20, 30]
-var _boss_check_index:  int        = 0
+# ── Boss sırası — her bölümde 10. dakikada boss gelir ────────────────────────
+const BOSS_SPAWN_TIME: float = 600.0
+var _boss_check_index:  int  = 0
+var _boss_spawned:      bool = false
 var _cyber404_node = null
 var _cyber404_spawned: bool = false
 
@@ -976,20 +977,20 @@ func show_upgrade_menu() -> void:
 	var char_id: String = get_node("Player").character_type
 	var upgrades = [
 	# ── Vector (Kinetik) ──────────────────────────────────────────────────────
-	{"name": "Split Ball",          "category": "Utility",       "color": Color(0.2, 0.8, 0.2), "desc": "Ball splits into 3",                        "index": 0,  "weight": 3,  "rarity": "rare",   "chars": ["vector"]},
-	{"name": "Pierce Ball",         "category": "Utility",       "color": Color(1.0, 0.8, 0.0), "desc": "Ball pierces through",                      "index": 2,  "weight": 3,  "rarity": "rare",   "chars": ["vector"]},
+	{"name": "Split Ball",          "category": "Utility",       "color": Color(0.2, 0.8, 0.2), "desc": "Ball splits into 3",                        "index": 0,  "weight": 7,  "rarity": "rare",   "chars": ["vector"]},
+	{"name": "Pierce Ball",         "category": "Utility",       "color": Color(1.0, 0.8, 0.0), "desc": "Ball pierces through",                      "index": 2,  "weight": 7,  "rarity": "rare",   "chars": ["vector"]},
 	{"name": "Pierce Sharpness",    "category": "Utility",       "color": Color(1.0, 0.8, 0.0), "desc": "Pierce ball +2 damage",                     "index": 12, "weight": 10, "rarity": "common", "chars": ["vector"]},
 	{"name": "Split Amp",           "category": "Utility",       "color": Color(1.0, 0.2, 0.2), "desc": "Split ball +2 damage",                      "index": 14, "weight": 10, "rarity": "common", "chars": ["vector"]},
 	# ── Leila (Elemental) ─────────────────────────────────────────────────────
-	{"name": "Electric Ball",       "category": "Utility",       "color": Color(0.2, 0.5, 1.0), "desc": "Ball gains electricity",                    "index": 1,  "weight": 3,  "rarity": "rare",   "chars": ["leila"]},
-	{"name": "Cryo Ball",           "category": "Utility",       "color": Color(0.5, 0.8, 1.0), "desc": "Slows subject by 25%",                      "index": 15, "weight": 3,  "rarity": "rare",   "chars": ["leila"]},
-	{"name": "Water Ball",          "category": "Utility",       "color": Color(0.0, 0.5, 1.0), "desc": "Applies wet, single hit",                   "index": 17, "weight": 3,  "rarity": "rare",   "chars": ["leila"]},
-	{"name": "Fire Ball",           "category": "Utility",       "color": Color(1.0, 0.3, 0.0), "desc": "Applies burn to subject",                   "index": 18, "weight": 3,  "rarity": "rare",   "chars": ["leila"]},
+	{"name": "Electric Ball",       "category": "Utility",       "color": Color(0.2, 0.5, 1.0), "desc": "Ball gains electricity",                    "index": 1,  "weight": 7,  "rarity": "rare",   "chars": ["leila"]},
+	{"name": "Cryo Ball",           "category": "Utility",       "color": Color(0.5, 0.8, 1.0), "desc": "Slows subject by 25%",                      "index": 15, "weight": 7,  "rarity": "rare",   "chars": ["leila"]},
+	{"name": "Water Ball",          "category": "Utility",       "color": Color(0.0, 0.5, 1.0), "desc": "Applies wet, single hit",                   "index": 17, "weight": 7,  "rarity": "rare",   "chars": ["leila"]},
+	{"name": "Fire Ball",           "category": "Utility",       "color": Color(1.0, 0.3, 0.0), "desc": "Applies burn to subject",                   "index": 18, "weight": 7,  "rarity": "rare",   "chars": ["leila"]},
 	{"name": "Thunder Amp",         "category": "Utility",       "color": Color(0.2, 0.5, 1.0), "desc": "Electric ball +2 damage",                   "index": 13, "weight": 10, "rarity": "common", "chars": ["leila"]},
 	# ── Cyclone (Manipülasyon) ────────────────────────────────────────────────
-	{"name": "Glitch Ball",         "category": "Utility",       "color": Color(0.8, 0.0, 0.8), "desc": "Disorients subject for 3s",                 "index": 16, "weight": 3,  "rarity": "rare",   "chars": ["cyclone"]},
+	{"name": "Glitch Ball",         "category": "Utility",       "color": Color(0.8, 0.0, 0.8), "desc": "Disorients subject for 3s",                 "index": 16, "weight": 7,  "rarity": "rare",   "chars": ["cyclone"]},
 	{"name": "Mimic Ball",          "category": "Utility",       "color": Color(0.5, 0.5, 1.0), "desc": "Copies the nearest powered-up ball",       "index": 19, "weight": 1,  "rarity": "epic",   "chars": ["cyclone"]},
-	{"name": "Data Leech Ball",     "category": "Utility",       "color": Color(0.6, 0.0, 0.2), "desc": "+2 Integrity on hit",                       "index": 22, "weight": 2,  "rarity": "rare",   "chars": ["cyclone"]},
+	{"name": "Data Leech Ball",     "category": "Utility",       "color": Color(0.6, 0.0, 0.2), "desc": "+2 Integrity on hit",                       "index": 22, "weight": 7,  "rarity": "rare",   "chars": ["cyclone"]},
 	# ── Herkese açık ─────────────────────────────────────────────────────────
 	{"name": "Ball Mastery",        "category": "Utility",       "color": Color(0.2, 0.8, 0.2), "desc": "+1 damage to all balls",                    "index": 11, "weight": 10, "rarity": "common", "chars": []},
 	{"name": "Speed Upgrade",       "category": "Individuality", "color": Color(0.6, 0.2, 0.8), "desc": "Movement speed increases",                  "index": 4,  "weight": 10, "rarity": "common", "chars": []},
@@ -1722,11 +1723,11 @@ func _process(_delta: float) -> void:
 		var minutes = int(elapsed_time / 60)
 		var seconds = int(elapsed_time) % 60
 		$UI/LabelTime.text = "⏱  %02d:%02d" % [minutes, seconds]
-	# Boss spawn — Level 10 = Smiler, 20 = Cyber404, 30 = Nyx
-	if _boss_check_index < _boss_level_checks.size():
-		if level >= _boss_level_checks[_boss_check_index]:
-			_boss_check_index += 1
-			_spawn_section_boss()
+	# Boss spawn — 10. dakikada bu bölümün boss'u gelir
+	if not _boss_spawned and elapsed_time >= BOSS_SPAWN_TIME:
+		_boss_spawned = true
+		_boss_check_index += 1
+		_spawn_section_boss()
 
 func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 	canvas.queue_free()
