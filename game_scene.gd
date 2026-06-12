@@ -17,7 +17,7 @@ var max_calamity_slots = 3
 var calamity_index = 0
 var calamity_aiming = false
 var subjects_killed = 0
-var kills_to_level = 3
+var kills_to_level = 7
 var spawn_timer = 0.0
 var spawn_interval = 2.0
 var min_spawn_interval = 0.6
@@ -46,6 +46,17 @@ var ally_chip_duration: float = 15.0  # Upgradeable via card (index 23)
 # ── RTS / Tactical Mode ───────────────────────────────────────────────────────
 var _rts_mode:    bool        = false
 var _rts_overlay: CanvasLayer = null
+
+# ── Veri Barı ─────────────────────────────────────────────────────────────────
+var _data_current:    float      = 0.0
+var _data_max:        float      = 40.0
+var _data_bar_canvas: CanvasLayer = null
+var _data_bar_fill:   ColorRect   = null
+var _data_bar_label:  Label       = null
+var _data_particle_canvas: CanvasLayer = null
+const _DATA_BAR_POS  := Vector2(1840, 100)
+const _DATA_BAR_H    := 460.0
+const _DATA_BAR_W    := 22.0
 
 # ── Boss sırası — Level 10 = Smiler, Level 20 = Cyber404, Level 30 = Nyx ──────
 var _boss_level_checks: Array[int] = [10, 20, 30]
@@ -607,6 +618,7 @@ func _ready() -> void:
 		fusion_zone.visible = false
 		fusion_zone.set_physics_process(false)
 	
+	_setup_data_bar()
 	get_tree().paused = true
 	_show_hasmen_selection()
 	
@@ -653,17 +665,100 @@ func update_ui() -> void:
 	$UI/LabelCalamity.text = calamity_text
 	_update_processor_btn()
 
-func subject_died(xp_reward: int = 1) -> void:
+func subject_died(xp_reward: int = 1, death_pos: Vector2 = Vector2.ZERO) -> void:
 	subjects_killed += 1
 	total_subjects_killed += 1
 	GameData.add_xp(GameData.selected_character, xp_reward)
 	update_ui()
+	# Level sayacı boss kontrolü için devam ediyor
 	if subjects_killed >= kills_to_level:
 		subjects_killed = 0
-		kills_to_level = int(kills_to_level * 1.5)
-		spawn_interval = max(spawn_interval - 0.2, min_spawn_interval)
-		get_tree().paused = true
-		show_upgrade_menu()
+		kills_to_level = int(kills_to_level * 1.3)
+		spawn_interval = max(spawn_interval - 0.1, min_spawn_interval)
+	# Veri parçacıkları: hasar miktarına göre 3-7 parçacık
+	var particle_count := clampi(xp_reward + 2, 3, 7)
+	_spawn_data_particles(death_pos, float(xp_reward) * 10.0, particle_count)
+
+func _setup_data_bar() -> void:
+	_data_particle_canvas = CanvasLayer.new()
+	_data_particle_canvas.layer = 5
+	add_child(_data_particle_canvas)
+
+	_data_bar_canvas = CanvasLayer.new()
+	_data_bar_canvas.layer = 6
+	add_child(_data_bar_canvas)
+
+	# Arka plan
+	var border := ColorRect.new()
+	border.size     = Vector2(_DATA_BAR_W + 4, _DATA_BAR_H + 4)
+	border.position = _DATA_BAR_POS - Vector2(2, 2)
+	border.color    = Color(0.0, 0.55, 0.2, 0.7)
+	_data_bar_canvas.add_child(border)
+
+	var bg := ColorRect.new()
+	bg.size     = Vector2(_DATA_BAR_W, _DATA_BAR_H)
+	bg.position = _DATA_BAR_POS
+	bg.color    = Color(0.01, 0.04, 0.01, 0.88)
+	_data_bar_canvas.add_child(bg)
+
+	# Dolum
+	_data_bar_fill = ColorRect.new()
+	_data_bar_fill.size     = Vector2(_DATA_BAR_W, 0)
+	_data_bar_fill.position = _DATA_BAR_POS + Vector2(0, _DATA_BAR_H)
+	_data_bar_fill.color    = Color(0.0, 1.0, 0.35, 0.9)
+	_data_bar_canvas.add_child(_data_bar_fill)
+
+	# Etiket
+	_data_bar_label = Label.new()
+	_data_bar_label.text = "DATA"
+	_data_bar_label.position = _DATA_BAR_POS + Vector2(-6, _DATA_BAR_H + 8)
+	_data_bar_label.add_theme_font_override("font", _font_bold)
+	_data_bar_label.add_theme_font_size_override("font_size", 11)
+	_data_bar_label.add_theme_color_override("font_color", Color(0.0, 1.0, 0.35))
+	_data_bar_canvas.add_child(_data_bar_label)
+
+func _update_data_bar() -> void:
+	if _data_bar_fill == null: return
+	var ratio := clampf(_data_current / _data_max, 0.0, 1.0)
+	var fill_h := _DATA_BAR_H * ratio
+	_data_bar_fill.size     = Vector2(_DATA_BAR_W, fill_h)
+	_data_bar_fill.position = _DATA_BAR_POS + Vector2(0, _DATA_BAR_H - fill_h)
+	_data_bar_fill.color    = Color(0.0, 1.0 - ratio * 0.2, 0.2 + ratio * 0.5, 0.9)
+
+func _spawn_data_particles(world_pos: Vector2, amount: float, count: int) -> void:
+	var canvas_tf: Transform2D = get_viewport().get_canvas_transform()
+	var screen_pos: Vector2    = canvas_tf * world_pos
+	var bar_target: Vector2    = _DATA_BAR_POS + Vector2(_DATA_BAR_W * 0.5, _DATA_BAR_H * 0.5)
+	var chars := ["0","1","▓","▒","░","#","@","$","%","&","■","▲"]
+	var per_particle := amount / float(count)
+
+	for i in count:
+		var lbl := Label.new()
+		lbl.text = chars[randi() % chars.size()]
+		lbl.add_theme_font_override("font", _font_regular)
+		lbl.add_theme_font_size_override("font_size", 13)
+		lbl.add_theme_color_override("font_color", Color(0.0, 1.0, 0.35, 0.9))
+		lbl.position = screen_pos + Vector2(randf_range(-18, 18), randf_range(-18, 18))
+		_data_particle_canvas.add_child(lbl)
+
+		var delay := i * 0.06
+		var duration := randf_range(0.45, 0.75)
+		var tw := create_tween()
+		tw.tween_interval(delay)
+		tw.tween_property(lbl, "position", bar_target, duration)\
+			.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		tw.parallel().tween_property(lbl, "modulate:a", 0.0, duration * 0.4)\
+			.set_delay(duration * 0.7)
+		tw.tween_callback(func() -> void:
+			_data_current += per_particle
+			_update_data_bar()
+			if _data_current >= _data_max:
+				_data_current = 0.0
+				_data_max     = _data_max * 1.35
+				get_tree().paused = true
+				show_upgrade_menu()
+			lbl.queue_free()
+		)
 
 func subject_rescued() -> void:
 	GameData.add_xp(GameData.selected_character, 2)

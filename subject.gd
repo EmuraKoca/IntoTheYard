@@ -241,7 +241,7 @@ func die() -> void:
 		return
 	var game = get_parent()
 	if game.has_method("subject_died"):
-		game.subject_died()
+		game.subject_died(1, global_position)
 	_collapse()
 
 func _collapse() -> void:
