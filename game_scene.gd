@@ -977,20 +977,20 @@ func show_upgrade_menu() -> void:
 	var char_id: String = get_node("Player").character_type
 	var upgrades = [
 	# ── Vector (Kinetik) ──────────────────────────────────────────────────────
-	{"name": "Split Ball",          "category": "Utility",       "color": Color(0.2, 0.8, 0.2), "desc": "Ball splits into 3",                        "index": 0,  "weight": 7,  "rarity": "rare",   "chars": ["vector"]},
-	{"name": "Pierce Ball",         "category": "Utility",       "color": Color(1.0, 0.8, 0.0), "desc": "Ball pierces through",                      "index": 2,  "weight": 7,  "rarity": "rare",   "chars": ["vector"]},
+	{"name": "Split Ball",          "category": "Utility",       "color": Color(0.2, 0.8, 0.2), "desc": "Ball splits into 3",                        "index": 0,  "weight": 10, "rarity": "common", "chars": ["vector"]},
+	{"name": "Pierce Ball",         "category": "Utility",       "color": Color(1.0, 0.8, 0.0), "desc": "Ball pierces through",                      "index": 2,  "weight": 10, "rarity": "common", "chars": ["vector"]},
 	{"name": "Pierce Sharpness",    "category": "Utility",       "color": Color(1.0, 0.8, 0.0), "desc": "Pierce ball +2 damage",                     "index": 12, "weight": 10, "rarity": "common", "chars": ["vector"]},
 	{"name": "Split Amp",           "category": "Utility",       "color": Color(1.0, 0.2, 0.2), "desc": "Split ball +2 damage",                      "index": 14, "weight": 10, "rarity": "common", "chars": ["vector"]},
 	# ── Leila (Elemental) ─────────────────────────────────────────────────────
-	{"name": "Electric Ball",       "category": "Utility",       "color": Color(0.2, 0.5, 1.0), "desc": "Ball gains electricity",                    "index": 1,  "weight": 7,  "rarity": "rare",   "chars": ["leila"]},
-	{"name": "Cryo Ball",           "category": "Utility",       "color": Color(0.5, 0.8, 1.0), "desc": "Slows subject by 25%",                      "index": 15, "weight": 7,  "rarity": "rare",   "chars": ["leila"]},
-	{"name": "Water Ball",          "category": "Utility",       "color": Color(0.0, 0.5, 1.0), "desc": "Applies wet, single hit",                   "index": 17, "weight": 7,  "rarity": "rare",   "chars": ["leila"]},
-	{"name": "Fire Ball",           "category": "Utility",       "color": Color(1.0, 0.3, 0.0), "desc": "Applies burn to subject",                   "index": 18, "weight": 7,  "rarity": "rare",   "chars": ["leila"]},
+	{"name": "Electric Ball",       "category": "Utility",       "color": Color(0.2, 0.5, 1.0), "desc": "Ball gains electricity",                    "index": 1,  "weight": 10, "rarity": "common", "chars": ["leila"]},
+	{"name": "Cryo Ball",           "category": "Utility",       "color": Color(0.5, 0.8, 1.0), "desc": "Slows subject by 25%",                      "index": 15, "weight": 10, "rarity": "common", "chars": ["leila"]},
+	{"name": "Water Ball",          "category": "Utility",       "color": Color(0.0, 0.5, 1.0), "desc": "Applies wet, single hit",                   "index": 17, "weight": 10, "rarity": "common", "chars": ["leila"]},
+	{"name": "Fire Ball",           "category": "Utility",       "color": Color(1.0, 0.3, 0.0), "desc": "Applies burn to subject",                   "index": 18, "weight": 10, "rarity": "common", "chars": ["leila"]},
 	{"name": "Thunder Amp",         "category": "Utility",       "color": Color(0.2, 0.5, 1.0), "desc": "Electric ball +2 damage",                   "index": 13, "weight": 10, "rarity": "common", "chars": ["leila"]},
 	# ── Cyclone (Manipülasyon) ────────────────────────────────────────────────
-	{"name": "Glitch Ball",         "category": "Utility",       "color": Color(0.8, 0.0, 0.8), "desc": "Disorients subject for 3s",                 "index": 16, "weight": 7,  "rarity": "rare",   "chars": ["cyclone"]},
+	{"name": "Glitch Ball",         "category": "Utility",       "color": Color(0.8, 0.0, 0.8), "desc": "Disorients subject for 3s",                 "index": 16, "weight": 10, "rarity": "common", "chars": ["cyclone"]},
 	{"name": "Mimic Ball",          "category": "Utility",       "color": Color(0.5, 0.5, 1.0), "desc": "Copies the nearest powered-up ball",       "index": 19, "weight": 1,  "rarity": "epic",   "chars": ["cyclone"]},
-	{"name": "Data Leech Ball",     "category": "Utility",       "color": Color(0.6, 0.0, 0.2), "desc": "+2 Integrity on hit",                       "index": 22, "weight": 7,  "rarity": "rare",   "chars": ["cyclone"]},
+	{"name": "Data Leech Ball",     "category": "Utility",       "color": Color(0.6, 0.0, 0.2), "desc": "+2 Integrity on hit",                       "index": 22, "weight": 10, "rarity": "common", "chars": ["cyclone"]},
 	# ── Herkese açık ─────────────────────────────────────────────────────────
 	{"name": "Ball Mastery",        "category": "Utility",       "color": Color(0.2, 0.8, 0.2), "desc": "+1 damage to all balls",                    "index": 11, "weight": 10, "rarity": "common", "chars": []},
 	{"name": "Speed Upgrade",       "category": "Individuality", "color": Color(0.6, 0.2, 0.8), "desc": "Movement speed increases",                  "index": 4,  "weight": 10, "rarity": "common", "chars": []},
