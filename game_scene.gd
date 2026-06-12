@@ -1583,7 +1583,10 @@ func _spawn_subject() -> void:
 	add_child(subject)
 
 func _process(_delta: float) -> void:
-	
+	if _data_bar_canvas:
+		_data_bar_canvas.visible   = not get_tree().paused
+		_data_particle_canvas.visible = not get_tree().paused
+
 	if upgrading:
 		return
 	# Boss ölüm kontrolü her frame çalışır — spawn_interval beklenmez
