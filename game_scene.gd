@@ -696,6 +696,7 @@ func _setup_auto_toggle() -> void:
 		if player.auto_mode:
 			btn.text = "AUTO  ON"
 			btn.add_theme_color_override("font_color", Color(0.0, 1.0, 0.45))
+			player._fire_all_balls()
 		else:
 			btn.text = "AUTO  OFF"
 			btn.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
@@ -1599,7 +1600,66 @@ func _spawn_subject() -> void:
 	subject.position = Vector2(rand_x, -50)
 	add_child(subject)
 
+func _draw() -> void:
+	var player := get_node_or_null("Player")
+	if player == null: return
+	var auto_on: bool  = player.auto_mode
+	var lmb_held: bool = Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
+	if not auto_on and not lmb_held: return
+	var start: Vector2 = player.global_position
+	var mouse: Vector2 = get_global_mouse_position()
+	var dir: Vector2   = (mouse - start).normalized()
+	if dir == Vector2.ZERO: return
+	var pts := _calc_traj(start, dir, 900.0, 3)
+	var alpha := 0.65
+	for i in pts.size() - 1:
+		var a := maxf(alpha - i * 0.18, 0.12)
+		_draw_dashed_line(pts[i], pts[i + 1], Color(0.0, 0.9, 1.0, a), 1.5)
+
+func _calc_traj(start: Vector2, dir: Vector2, max_len: float, bounces: int) -> Array:
+	var pts := [start]
+	var pos  := start
+	var d    := dir.normalized()
+	const XMIN := 910.0; const XMAX := 1580.0
+	const YMIN := 260.0; const YMAX := 1040.0
+	var remaining := max_len
+	for _b in bounces:
+		var t_vals: Array[float] = []
+		if d.x > 0.0001:  t_vals.append((XMAX - pos.x) / d.x)
+		elif d.x < -0.0001: t_vals.append((XMIN - pos.x) / d.x)
+		if d.y > 0.0001:  t_vals.append((YMAX - pos.y) / d.y)
+		elif d.y < -0.0001: t_vals.append((YMIN - pos.y) / d.y)
+		if t_vals.is_empty(): break
+		var t: float = t_vals.min()
+		if t <= 0.01 or t > remaining:
+			pts.append(pos + d * remaining)
+			remaining = 0.0
+			break
+		var hit := pos + d * t
+		pts.append(hit)
+		remaining -= t
+		if absf(hit.x - XMIN) < 2.0 or absf(hit.x - XMAX) < 2.0: d.x = -d.x
+		if absf(hit.y - YMIN) < 2.0 or absf(hit.y - YMAX) < 2.0: d.y = -d.y
+		pos = hit
+		if remaining <= 0.0: break
+	if remaining > 0.0:
+		pts.append(pos + d * remaining)
+	return pts
+
+func _draw_dashed_line(from: Vector2, to: Vector2, color: Color, width: float) -> void:
+	var total := from.distance_to(to)
+	if total < 1.0: return
+	var dir   := (to - from) / total
+	var dash  := 9.0
+	var gap   := 5.0
+	var p     := 0.0
+	while p < total:
+		var e := minf(p + dash, total)
+		draw_line(from + dir * p, from + dir * e, color, width)
+		p += dash + gap
+
 func _process(_delta: float) -> void:
+	queue_redraw()
 	if upgrading:
 		return
 	# Boss ölüm kontrolü her frame çalışır — spawn_interval beklenmez
