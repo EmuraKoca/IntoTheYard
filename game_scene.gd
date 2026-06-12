@@ -684,7 +684,7 @@ func _setup_auto_toggle() -> void:
 	var btn := Button.new()
 	btn.name = "BtnAutoMode"
 	btn.text = "AUTO  OFF"
-	btn.position = Vector2(1640, 135)
+	btn.position = Vector2(1640, 168)
 	btn.size     = Vector2(180, 28)
 	btn.add_theme_font_override("font", _font_bold)
 	btn.add_theme_font_size_override("font_size", 11)
