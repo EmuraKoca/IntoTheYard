@@ -684,10 +684,10 @@ func _setup_auto_toggle() -> void:
 	var btn := Button.new()
 	btn.name = "BtnAutoMode"
 	btn.text = "AUTO  OFF"
-	btn.position = Vector2(1700, 14)
-	btn.size     = Vector2(150, 42)
+	btn.position = Vector2(1762, 22)
+	btn.size     = Vector2(88, 28)
 	btn.add_theme_font_override("font", _font_bold)
-	btn.add_theme_font_size_override("font_size", 11)
+	btn.add_theme_font_size_override("font_size", 10)
 	btn.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
 	$UI.add_child(btn)
 	btn.pressed.connect(func() -> void:
