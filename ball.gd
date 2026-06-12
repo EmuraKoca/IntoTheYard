@@ -146,7 +146,7 @@ func _physics_process(delta: float) -> void:
 	# ── state == "flying" ─────────────────────────────────────────────────────
 	if not moving:
 		_stuck_timer += delta
-		if _stuck_timer > 1.5:
+		if _stuck_timer > 0.5:
 			_stuck_timer = 0.0
 			_start_returning()
 		return
