@@ -13,6 +13,7 @@ var target_scale = 1.0
 var can_pierce = false
 var hit_subjects = []
 var catch_cooldown = 0.0
+var _stuck_timer: float = 0.0
 var is_active = false
 var max_damage = 5
 var crit_multiplier = 2.0
@@ -144,7 +145,12 @@ func _physics_process(delta: float) -> void:
 
 	# ── state == "flying" ─────────────────────────────────────────────────────
 	if not moving:
+		_stuck_timer += delta
+		if _stuck_timer > 1.5:
+			_stuck_timer = 0.0
+			_start_returning()
 		return
+	_stuck_timer = 0.0
 
 	# Player yakınında iken collision kapat — itme engeli
 	var _fly_player := _get_player()
