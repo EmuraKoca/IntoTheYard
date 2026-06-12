@@ -2231,6 +2231,51 @@ Bug Düzeltmeleri:
 
 ────────────────────────────────────────────────────────────────────────────────
 
+0.0.9.1
+12.06.2026
+
+Karakter Top Havuzları:
+
+✅ Her karakterin başlangıç topları artık kendine özgü
+   — Vector: 3 Normal top + tüm upgrade'ler +3 hasar pasifi
+   — Leila: başlangıçta rastgele element (Fire/Water/Cryo/Electric)
+   — Cyclone: başlangıçta Glitch top
+✅ Upgrade kartları karakter filtresine göre gösteriliyor (chars alanı)
+
+Veri Barı Sistemi (Bullet Hell tarzı):
+
+✅ Kill bazlı upgrade tetiklemesi kaldırıldı
+✅ Düşman ölünce sağdaki UI alanında matrix parçacıkları oluşuyor
+✅ Parçacıklar veri barına akarak dolduruyor
+✅ Bar dolunca upgrade ekranı açılıyor
+✅ Her dolmada gereken veri miktarı ×1.35 artıyor
+✅ Level sayacı hâlâ çalışıyor (boss kontrolleri için)
+
+Auto Mode:
+
+✅ Sağ üstte AUTO toggle butonu eklendi (pause butonunun soluna)
+✅ Açıkken: orbit'e giren top anında mouse yönüne fırlatılıyor
+✅ Kapalıyken: tek tık ile orbitteki tüm toplar sırayla fırlatılıyor (0.12s aralıkla)
+✅ Auto açılınca mevcut orbit topları da hemen fırlatılıyor
+
+Yönlendirici Çizgi:
+
+✅ Top fırlatmadan önce bilardo tarzı sekme hesaplı yörünge çizgisi gösteriliyor
+✅ Duvar sınırlarını (x:910–1580, y:260–1040) hesaba katarak 3 sekmeye kadar gösteriyor
+✅ Her sek noktasında çizgi alpha değeri azalıyor (sönen efekt)
+✅ Auto Mode açıkken ve sol tık basılıyken gösteriliyor
+
+Top Takılma Watchdog:
+
+✅ Uçuş halindeyken 0.5 saniye hareketsiz kalan top otomatik geri dönüyor
+✅ _stuck_timer ile durum takibi yapılıyor
+
+Düzeltmeler:
+
+✅ UI tıklaması top fırlatmıyordu — _input → _unhandled_input düzeltmesi
+
+────────────────────────────────────────────────────────────────────────────────
+
 YAPILACAKLAR — ÖNCELİKLİ
 
 Level Hızı Dengesi (üzerinde düşünülüp istişare edilmesi gerekiyor):
