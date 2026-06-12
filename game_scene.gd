@@ -681,11 +681,11 @@ func subject_died(xp_reward: int = 1, death_pos: Vector2 = Vector2.ZERO) -> void
 
 func _setup_data_bar() -> void:
 	_data_particle_canvas = CanvasLayer.new()
-	_data_particle_canvas.layer = 5
+	_data_particle_canvas.layer = 0
 	add_child(_data_particle_canvas)
 
 	_data_bar_canvas = CanvasLayer.new()
-	_data_bar_canvas.layer = 6
+	_data_bar_canvas.layer = 0
 	add_child(_data_bar_canvas)
 
 	# Arka plan
@@ -1583,10 +1583,6 @@ func _spawn_subject() -> void:
 	add_child(subject)
 
 func _process(_delta: float) -> void:
-	if _data_bar_canvas:
-		_data_bar_canvas.visible   = not get_tree().paused
-		_data_particle_canvas.visible = not get_tree().paused
-
 	if upgrading:
 		return
 	# Boss ölüm kontrolü her frame çalışır — spawn_interval beklenmez
