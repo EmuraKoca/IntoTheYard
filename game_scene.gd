@@ -54,9 +54,9 @@ var _data_bar_canvas: CanvasLayer = null
 var _data_bar_fill:   ColorRect   = null
 var _data_bar_label:  Label       = null
 var _data_particle_canvas: CanvasLayer = null
-const _DATA_BAR_POS  := Vector2(1840, 100)
-const _DATA_BAR_H    := 460.0
-const _DATA_BAR_W    := 22.0
+const _DATA_BAR_POS  := Vector2(1640, 698)
+const _DATA_BAR_H    := 14.0
+const _DATA_BAR_W    := 272.0
 
 # ── Boss sırası — Level 10 = Smiler, Level 20 = Cyber404, Level 30 = Nyx ──────
 var _boss_level_checks: Array[int] = [10, 20, 30]
@@ -690,9 +690,9 @@ func _setup_data_bar() -> void:
 
 	# Arka plan
 	var border := ColorRect.new()
-	border.size     = Vector2(_DATA_BAR_W + 4, _DATA_BAR_H + 4)
-	border.position = _DATA_BAR_POS - Vector2(2, 2)
-	border.color    = Color(0.0, 0.55, 0.2, 0.7)
+	border.size     = Vector2(_DATA_BAR_W + 2, _DATA_BAR_H + 2)
+	border.position = _DATA_BAR_POS - Vector2(1, 1)
+	border.color    = Color(0.0, 0.45, 0.18, 0.6)
 	_data_bar_canvas.add_child(border)
 
 	var bg := ColorRect.new()
@@ -701,34 +701,33 @@ func _setup_data_bar() -> void:
 	bg.color    = Color(0.01, 0.04, 0.01, 0.88)
 	_data_bar_canvas.add_child(bg)
 
-	# Dolum
+	# Dolum (sola sıfır, sağa doğru büyür)
 	_data_bar_fill = ColorRect.new()
-	_data_bar_fill.size     = Vector2(_DATA_BAR_W, 0)
-	_data_bar_fill.position = _DATA_BAR_POS + Vector2(0, _DATA_BAR_H)
+	_data_bar_fill.size     = Vector2(0, _DATA_BAR_H)
+	_data_bar_fill.position = _DATA_BAR_POS
 	_data_bar_fill.color    = Color(0.0, 1.0, 0.35, 0.9)
 	_data_bar_canvas.add_child(_data_bar_fill)
 
-	# Etiket
+	# "UPGRADE" etiketi — bar dolunca yanıp söner (başta gizli)
 	_data_bar_label = Label.new()
-	_data_bar_label.text = "DATA"
-	_data_bar_label.position = _DATA_BAR_POS + Vector2(-6, _DATA_BAR_H + 8)
+	_data_bar_label.text = "UPGRADE READY"
+	_data_bar_label.visible = false
+	_data_bar_label.position = _DATA_BAR_POS + Vector2(50, -18)
 	_data_bar_label.add_theme_font_override("font", _font_bold)
-	_data_bar_label.add_theme_font_size_override("font_size", 11)
-	_data_bar_label.add_theme_color_override("font_color", Color(0.0, 1.0, 0.35))
+	_data_bar_label.add_theme_font_size_override("font_size", 10)
+	_data_bar_label.add_theme_color_override("font_color", Color(0.0, 1.0, 0.55))
 	_data_bar_canvas.add_child(_data_bar_label)
 
 func _update_data_bar() -> void:
 	if _data_bar_fill == null: return
 	var ratio := clampf(_data_current / _data_max, 0.0, 1.0)
-	var fill_h := _DATA_BAR_H * ratio
-	_data_bar_fill.size     = Vector2(_DATA_BAR_W, fill_h)
-	_data_bar_fill.position = _DATA_BAR_POS + Vector2(0, _DATA_BAR_H - fill_h)
-	_data_bar_fill.color    = Color(0.0, 1.0 - ratio * 0.2, 0.2 + ratio * 0.5, 0.9)
+	_data_bar_fill.size  = Vector2(_DATA_BAR_W * ratio, _DATA_BAR_H)
+	_data_bar_fill.color = Color(0.0, 1.0 - ratio * 0.2, 0.2 + ratio * 0.5, 0.9)
 
 func _spawn_data_particles(world_pos: Vector2, amount: float, count: int) -> void:
 	var canvas_tf: Transform2D = get_viewport().get_canvas_transform()
 	var screen_pos: Vector2    = canvas_tf * world_pos
-	var bar_target: Vector2    = _DATA_BAR_POS + Vector2(_DATA_BAR_W * 0.5, _DATA_BAR_H * 0.5)
+	var bar_target: Vector2    = _DATA_BAR_POS + Vector2(_DATA_BAR_W * 0.5, _DATA_BAR_H * 0.5) + Vector2(0, 7)
 	var chars := ["0","1","▓","▒","░","#","@","$","%","&","■","▲"]
 	var per_particle := amount / float(count)
 
