@@ -619,6 +619,7 @@ func _ready() -> void:
 		fusion_zone.set_physics_process(false)
 	
 	_setup_data_bar()
+	_setup_auto_toggle()
 	get_tree().paused = true
 	_show_hasmen_selection()
 	
@@ -678,6 +679,27 @@ func subject_died(xp_reward: int = 1, death_pos: Vector2 = Vector2.ZERO) -> void
 	# Veri parçacıkları: hasar miktarına göre 3-7 parçacık
 	var particle_count := clampi(xp_reward + 2, 3, 7)
 	_spawn_data_particles(death_pos, float(xp_reward) * 10.0, particle_count)
+
+func _setup_auto_toggle() -> void:
+	var btn := Button.new()
+	btn.name = "BtnAutoMode"
+	btn.text = "AUTO  OFF"
+	btn.position = Vector2(1640, 135)
+	btn.size     = Vector2(180, 28)
+	btn.add_theme_font_override("font", _font_bold)
+	btn.add_theme_font_size_override("font_size", 11)
+	btn.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
+	$UI.add_child(btn)
+	btn.pressed.connect(func() -> void:
+		var player = get_node("Player")
+		player.auto_mode = not player.auto_mode
+		if player.auto_mode:
+			btn.text = "AUTO  ON"
+			btn.add_theme_color_override("font_color", Color(0.0, 1.0, 0.45))
+		else:
+			btn.text = "AUTO  OFF"
+			btn.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
+	)
 
 func _setup_data_bar() -> void:
 	_data_particle_canvas = $UI

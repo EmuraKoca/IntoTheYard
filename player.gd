@@ -24,8 +24,12 @@ var dash_timer = 0.0
 
 # ── RTS / Tactical Mode ───────────────────────────────────────────────────────
 var rts_mode: bool = false
-const RTS_FIRE_INTERVAL := 0.30   # saniye (gerçek zaman; 0.5× scale'de ~0.6s görünür)
+const RTS_FIRE_INTERVAL := 0.30
 var _rts_fire_timer: float = 0.0
+
+# ── Auto Mode ─────────────────────────────────────────────────────────────────
+var auto_mode: bool = false
+var _firing_all: bool = false
 
 # ── Orbit sistemi ─────────────────────────────────────────────────────────────
 var orbit_balls: Array  = []
@@ -77,6 +81,9 @@ func add_to_orbit(ball: Node2D) -> void:
 	ball._is_striking  = false
 	ball.get_node("CollisionShape2D").disabled = true
 	ball._reset_defense_life()
+	# Auto mode: orbit'e giren top hemen fırlatılır
+	if auto_mode:
+		_fire_ball()
 
 func remove_from_orbit(ball: Node2D) -> void:
 	orbit_balls.erase(ball)
@@ -139,6 +146,16 @@ func _fire_ball() -> void:
 	if is_instance_valid(ball):
 		ball.get_node("CollisionShape2D").disabled = false
 
+func _fire_all_balls() -> void:
+	if orbit_balls.is_empty() or _firing_all: return
+	_firing_all = true
+	var count := orbit_balls.size()
+	for i in count:
+		if orbit_balls.is_empty(): break
+		_fire_ball()
+		await get_tree().create_timer(0.12).timeout
+	_firing_all = false
+
 # Legacy uyumluluk
 func catch_ball(_ball: Node2D) -> void:
 	pass
@@ -181,9 +198,10 @@ func _process(_delta: float) -> void:
 		sprite.set_frame_and_progress(0, 0.0)
 
 func _unhandled_input(event: InputEvent) -> void:
-	# Sol tık → orbit'teki sıradaki topu fırlat
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		_fire_ball()
+		if auto_mode:
+			return  # auto mode'da tık devre dışı
+		_fire_all_balls()
 
 	# Sağ tık → dash
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
