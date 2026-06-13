@@ -979,7 +979,6 @@ func show_upgrade_menu() -> void:
 	# ── Vector (Kinetik) ──────────────────────────────────────────────────────
 	{"name": "Split Ball",          "category": "Utility",       "color": Color(0.2, 0.8, 0.2), "desc": "Ball splits into 3",                        "index": 0,  "weight": 10, "rarity": "common", "chars": ["vector"]},
 	{"name": "Pierce Ball",         "category": "Utility",       "color": Color(1.0, 0.8, 0.0), "desc": "Ball pierces through",                      "index": 2,  "weight": 10, "rarity": "common", "chars": ["vector"]},
-	{"name": "Pierce Sharpness",    "category": "Utility",       "color": Color(1.0, 0.8, 0.0), "desc": "Pierce ball +2 damage",                     "index": 12, "weight": 10, "rarity": "common", "chars": ["vector"]},
 	{"name": "Split Amp",           "category": "Utility",       "color": Color(1.0, 0.2, 0.2), "desc": "Split ball +2 damage",                      "index": 14, "weight": 10, "rarity": "common", "chars": ["vector"]},
 	# ── Leila (Elemental) ─────────────────────────────────────────────────────
 	{"name": "Electric Ball",       "category": "Utility",       "color": Color(0.2, 0.5, 1.0), "desc": "Ball gains electricity",                    "index": 1,  "weight": 10, "rarity": "common", "chars": ["leila"]},
@@ -994,14 +993,11 @@ func show_upgrade_menu() -> void:
 	# ── Herkese açık ─────────────────────────────────────────────────────────
 	{"name": "Ball Mastery",        "category": "Utility",       "color": Color(0.2, 0.8, 0.2), "desc": "+1 damage to all balls",                    "index": 11, "weight": 10, "rarity": "common", "chars": []},
 	{"name": "Speed Upgrade",       "category": "Individuality", "color": Color(0.6, 0.2, 0.8), "desc": "Movement speed increases",                  "index": 4,  "weight": 10, "rarity": "common", "chars": []},
-	{"name": "Catch +1",            "category": "Connectivity",  "color": Color(1.0, 0.5, 0.0), "desc": "Orbit'e +1 top eklenir",                    "index": 5,  "weight": 10, "rarity": "common", "chars": []},
-	{"name": "Next One",            "category": "Connectivity",  "color": Color(1.0, 0.5, 0.0), "desc": "Throw balls in any order",                  "index": 6,  "weight": 10, "rarity": "common", "chars": []},
 	{"name": "Lightning",           "category": "Calamity",      "color": Color(1.0, 1.0, 0.0), "desc": "Lightning strikes selected point",          "index": 7,  "weight": 8,  "rarity": "common", "chars": []},
 	{"name": "Flame Zone",          "category": "Calamity",      "color": Color(1.0, 0.3, 0.0), "desc": "Continuous damage in selected area",        "index": 8,  "weight": 8,  "rarity": "common", "chars": []},
 	{"name": "Gravitational Force", "category": "Calamity",      "color": Color(0.5, 0.0, 1.0), "desc": "Pulls subjects for 5s",                     "index": 9,  "weight": 8,  "rarity": "common", "chars": []},
 	{"name": "Medkit",              "category": "Individuality", "color": Color(0.9, 0.1, 0.1), "desc": "+10 HP restored",                           "index": 20, "weight": 10, "rarity": "common", "chars": []},
 	{"name": "Max Health Up",       "category": "Individuality", "color": Color(0.8, 0.2, 0.2), "desc": "Maximum HP +5",                             "index": 21, "weight": 10, "rarity": "common", "chars": []},
-	{"name": "Chip Boost",          "category": "Connectivity",  "color": Color(0.2, 1.0, 0.4), "desc": "Ally chip duration +5 seconds",             "index": 23, "weight": 10, "rarity": "common", "chars": []},
 ]
 	upgrades = upgrades.filter(func(u): return u["chars"].is_empty() or char_id in u["chars"])
 	
