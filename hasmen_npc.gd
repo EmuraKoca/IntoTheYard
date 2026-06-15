@@ -14,7 +14,7 @@ var _sprite: AnimatedSprite2D = null
 
 # ─────────────────────────────────────────────────────────────────────────────
 func _ready() -> void:
-	z_index = 4
+	z_index = 20
 
 	_sprite = AnimatedSprite2D.new()
 	_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
