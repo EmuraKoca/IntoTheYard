@@ -2276,6 +2276,54 @@ Düzeltmeler:
 
 ────────────────────────────────────────────────────────────────────────────────
 
+────────────────────────────────────────────────────────────────────────────────
+
+0.1.0.0
+17.06.2026
+
+Fused Ball Sprite Sistemi:
+
+✅ 21 fused top için draw() tabanlı görsel kaldırıldı, sprite sisteme geçildi
+   — assets/fusedBalls/ klasörüne her fusion tipi için 17 frame'lik animasyonlar eklendi
+   — ball.gd _setup_ball_sprite() içine fusion_type → klasör eşleştirme tablosu yazıldı
+   — _draw() zaten is_instance_valid(_sprite) kontrolüyle başlıyor; sprite yüklenince
+     draw kodu otomatik devre dışı kalıyor (eski "draw çakışması" sorunu ortadan kalktı)
+   — firework_piece ve wet_split_piece draw ile kalmaya devam ediyor (anlık parçacık, klasör yok)
+
+Top Görselleri Yenilendi:
+
+✅ draw() ile çizilen tüm normal toplar sprite'a geçirildi (önceki oturumda)
+   — cryoBall, dataLeechBall ve diğerleri artık pixel art sprite kullanıyor
+
+Top Kart Ağırlığı Düzenlendi:
+
+✅ Tüm top tipi upgrade kartları weight 3 (rare) → weight 10 (common) yapıldı
+   — Mimic Ball epic (weight 1) olarak kaldı
+   — Top bulmak artık çok daha kolay; oyun dengesi için gerekli değişiklik
+
+Boss Sırası ve Zamanlaması:
+
+✅ Boss spawn level bazlıdan zaman bazlıya geçirildi
+   — 10. dakikada (600 saniye) ilk boss spawn oluyor
+   — Sabit sıra: Bölüm 1 = Smiler → Leila açılır
+                  Bölüm 2 = Cyber404 → Cyclone açılır
+                  Bölüm 3 = Nyx → Run biter
+✅ Her boss ölümünde run end ekranı açılıyor
+
+XP Eşikleri ×5 Artırıldı:
+
+✅ [0, 120, 300, 550, 850, 1250] → [0, 600, 1500, 2750, 4250, 6250]
+   — Level çok hızlı atlanıyordu, daha uzun ve anlamlı ilerleme için
+
+Sahne & Görsel:
+
+✅ Yaşam alanı ve tribün için placeholder asset'ler yerleştirildi
+   — Cyberpunk furniture: PC kurulumları, monitörler, sandalyeler
+   — "iTY Corp." logosu ve neon tabela eklendi
+   — LabRoof görselleri eklendi (çatı placeholder)
+
+────────────────────────────────────────────────────────────────────────────────
+
 YAPILACAKLAR — ÖNCELİKLİ
 
 Level Hızı Dengesi (üzerinde düşünülüp istişare edilmesi gerekiyor):

@@ -75,7 +75,51 @@ func _setup_ball_sprite() -> void:
 	var folder: String
 	var frame_count: int
 
-	if is_fused or is_mimic:
+	if is_mimic:
+		return
+	if is_fused:
+		var fused_folders := {
+			"absolute_zero":   ["absoluteZero",    17],
+			"blue_screen":     ["blueScreen",       17],
+			"conductive":      ["conductive",       17],
+			"cryostatic":      ["cryoStatic",       17],
+			"deep_freeze":     ["deepFreeze",       17],
+			"electric_split":  ["electrifiedSplit", 17],
+			"firework":        ["fireWork",         17],
+			"frozen_split":    ["frozenSplit",      17],
+			"glacier_spike":   ["glacierSpike",     17],
+			"glitched_split":  ["glitchedSplit",    17],
+			"hydro_jet":       ["hydroJet",         17],
+			"meltdown":        ["meltDown",         17],
+			"overclock":       ["overClock",        17],
+			"phantom":         ["phantom",          17],
+			"piercing_split":  ["piercingSplit",    17],
+			"plasma_discharge":["plasmaDischarge",  17],
+			"railgun":         ["railGun",          17],
+			"steam_pressure":  ["steamPressure",    17],
+			"thermal_shock":   ["thermalShock",     17],
+			"thermite":        ["thermite",         17],
+			"wet_split":       ["wetSplitBall",     17],
+		}
+		if fused_folders.has(fusion_type):
+			var info = fused_folders[fusion_type]
+			var fused_folder: String = info[0]
+			var fused_count:  int    = info[1]
+			var frames := SpriteFrames.new()
+			if frames.has_animation("default"):
+				frames.remove_animation("default")
+			frames.add_animation("spin")
+			frames.set_animation_speed("spin", 12.0)
+			frames.set_animation_loop("spin", true)
+			for i in range(fused_count):
+				var tex: Texture2D = load("res://assets/fusedBalls/%s/frame_%03d.png" % [fused_folder, i])
+				frames.add_frame("spin", tex)
+			_sprite = AnimatedSprite2D.new()
+			_sprite.sprite_frames  = frames
+			_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			_sprite.scale          = Vector2(0.35, 0.35)
+			_sprite.play("spin")
+			add_child(_sprite)
 		return
 	elif can_electric:
 		folder = "electricBall";  frame_count = 17
