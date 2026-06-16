@@ -621,6 +621,7 @@ func _ready() -> void:
 	
 	_setup_data_bar()
 	_setup_auto_toggle()
+	_setup_neon_sign()
 	get_tree().paused = true
 	_show_hasmen_selection()
 	
@@ -680,6 +681,13 @@ func subject_died(xp_reward: int = 1, death_pos: Vector2 = Vector2.ZERO) -> void
 	# Veri parçacıkları: hasar miktarına göre 3-7 parçacık
 	var particle_count := clampi(xp_reward + 2, 3, 7)
 	_spawn_data_particles(death_pos, float(xp_reward) * 10.0, particle_count)
+
+func _setup_neon_sign() -> void:
+	var sign: Node2D = load("res://neon_sign.gd").new()
+	# Oyun alanı ortası, üst duvara monte: x=1240, y=248 (duvarın hemen altı)
+	# Tribün sağ duvarına monte, cadde şeridinde dikey tabela
+	sign.position = Vector2(930, 120)
+	add_child(sign)
 
 func _setup_auto_toggle() -> void:
 	var btn := Button.new()

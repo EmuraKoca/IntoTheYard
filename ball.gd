@@ -59,16 +59,59 @@ var _is_striking: bool     = false
 # Önbellek — her frame grup sorgusu yerine bir kez alınır
 var _cached_player: Node2D = null
 
+var _sprite: AnimatedSprite2D = null
+
 func _ready() -> void:
 	z_index = 2
 	$CollisionShape2D.disabled = false
 	_setup_trail()
+	_setup_ball_sprite()
 	_update_modulate()
 	_cached_player = get_tree().get_first_node_in_group("player")
-	# Layer 2 = toplar; mask=1 → sadece katman-1 (dusman, player, bariyer) algilanir
-	# Toplar birbirini algılamaz
 	collision_layer = 2
 	collision_mask  = 1
+
+func _setup_ball_sprite() -> void:
+	var folder: String
+	var frame_count: int
+
+	if is_fused or is_mimic:
+		return
+	elif can_electric:
+		folder = "electricBall";  frame_count = 17
+	elif can_fire:
+		folder = "fireBall";      frame_count = 16
+	elif can_leech:
+		folder = "dataLeechBall"; frame_count = 15
+	elif can_split:
+		folder = "splitBall";     frame_count = 11
+	elif can_cryo:
+		folder = "cryoBall";      frame_count = 9
+	elif can_glitch:
+		folder = "glitchBall";    frame_count = 9
+	elif can_pierce:
+		folder = "pierceBall";    frame_count = 9
+	elif can_water:
+		folder = "waterBall";     frame_count = 9
+	else:
+		folder = "normalBall";    frame_count = 9
+
+	var frames := SpriteFrames.new()
+	if frames.has_animation("default"):
+		frames.remove_animation("default")
+	frames.add_animation("spin")
+	frames.set_animation_speed("spin", 12.0)
+	frames.set_animation_loop("spin", true)
+	for i in range(frame_count):
+		var tex: Texture2D = load("res://assets/balls/%s/frame_%03d.png" % [folder, i])
+		frames.add_frame("spin", tex)
+
+	_sprite = AnimatedSprite2D.new()
+	_sprite.sprite_frames  = frames
+	_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_sprite.scale          = Vector2(0.35, 0.35)
+	_sprite.play("spin")
+	add_child(_sprite)
 
 func _get_player() -> Node2D:
 	if not is_instance_valid(_cached_player):
@@ -554,6 +597,8 @@ func _apply_fusion(ball: Node2D, fusion: String) -> void:
 			ball.max_damage = 12
 	ball.queue_redraw()
 func _draw() -> void:
+	if is_instance_valid(_sprite):
+		return
 	# Mimic RGB halka
 	if mimic_done and not is_mimic:
 		var r = (sin(mimic_ring_time * 2.0) + 1.0) / 2.0
