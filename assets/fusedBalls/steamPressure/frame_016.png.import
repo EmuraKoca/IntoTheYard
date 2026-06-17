@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://4ljmy0ymf1ab"
-path="res://.godot/imported/frame_016.png-fe122b9bdf32f8c8df45baf41af0164b.ctex"
+path="res://.godot/imported/frame_016.png-07ba79eec6c681c0155fc412cc8d14d7.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/fusedBalls/steamPressureBall/frame_016.png"
-dest_files=["res://.godot/imported/frame_016.png-fe122b9bdf32f8c8df45baf41af0164b.ctex"]
+source_file="res://assets/fusedBalls/steamPressure/frame_016.png"
+dest_files=["res://.godot/imported/frame_016.png-07ba79eec6c681c0155fc412cc8d14d7.ctex"]
 
 [params]
 

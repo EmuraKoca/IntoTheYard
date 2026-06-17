@@ -21,6 +21,17 @@ var _arc_lines: Array = []            # Active lightning Line2D nodes
 var _arc_targets: Array = []          # Target ball reference for each Line2D
 var _idle_angle: float = 0.0          # Plasma vortex rotation angle (radians)
 var _flash_intensity: float = 0.0     # Fusion explosion brightness (0.0 - 1.0)
+var _icon_sprites: Array = []         # AnimatedSprite2D icons for balls inside processor
+
+const _BALL_SPRITE_MAP := {
+	"split":    ["splitBall",    11],
+	"electric": ["electricBall", 17],
+	"pierce":   ["pierceBall",   9],
+	"cryo":     ["cryoBall",     9],
+	"glitch":   ["glitchBall",   9],
+	"water":    ["waterBall",    9],
+	"fire":     ["fireBall",     16],
+}
 
 func _ready() -> void:
 	_sprite = get_parent().get_node_or_null("ProcessorSprite") as Sprite2D
@@ -52,9 +63,22 @@ func _physics_process(delta: float) -> void:
 		_update_energy_bar()
 		queue_redraw()
 	
+	# Update icon sprite positions
+	if _icon_sprites.size() > 0:
+		var center: Vector2 = _sprite_local
+		var sprite_rot: float = _sprite.rotation if _sprite else 0.0
+		var side_dir: Vector2 = Vector2(1.0, 0.0).rotated(sprite_rot)
+		if _icon_sprites.size() == 1:
+			_icon_sprites[0].position = center
+		elif _icon_sprites.size() >= 2:
+			var progress: float = load_timer / load_duration if loading else 0.0
+			var offset: float = lerp(22.0, 0.0, progress)
+			_icon_sprites[0].position = center - side_dir * offset
+			_icon_sprites[1].position = center + side_dir * offset
+
 	if not is_active:
 		return
-	
+
 	if not loading and pending_types.size() < 2:
 		var balls = get_tree().get_nodes_in_group("balls")
 		for ball in balls:
@@ -84,6 +108,7 @@ func _physics_process(delta: float) -> void:
 				var type_b = pending_types[1]
 				pending_types.clear()
 				display_types.clear()
+				_clear_icon_sprites()
 				queue_redraw()
 				await _spawn_fused_ball(type_a, type_b)
 				is_processing = false
@@ -94,6 +119,10 @@ func _absorb_ball(ball: Node2D) -> void:
 	var ball_type = ball._get_type()
 	pending_types.append(ball_type)
 	display_types.append(ball_type)
+	var icon_spr := _make_icon_sprite(ball_type)
+	if icon_spr:
+		add_child(icon_spr)
+		_icon_sprites.append(icon_spr)
 	
 	ball.absorb()
 	# (absorb() collision ve state'i temizler)
@@ -121,6 +150,7 @@ func _absorb_ball(ball: Node2D) -> void:
 			var type_b = pending_types[1]
 			pending_types.clear()
 			display_types.clear()
+			_clear_icon_sprites()
 			queue_redraw()
 			is_processing = false
 			_refund_balls(type_a, type_b)
@@ -193,24 +223,9 @@ func _draw() -> void:
 	if _flash_intensity > 0.0:
 		_draw_fusion_flash()
 
-	# ── Ball icons: aligned to sprite center, rotation-aware ────────────────
-	var center: Vector2    = _sprite_local
-	var sprite_rot: float  = _sprite.rotation if _sprite else 0.0
-	var side_dir: Vector2  = Vector2(1.0, 0.0).rotated(sprite_rot)
-
-	var positions: Array = []
-	if display_types.size() == 1:
-		positions = [center]
-	elif display_types.size() == 2:
-		# When fuse starts (loading = true) two balls move toward each other
-		var progress: float = load_timer / load_duration if loading else 0.0
-		var offset: float   = lerp(22.0, 0.0, progress)
-		positions = [center - side_dir * offset, center + side_dir * offset]
-
-	for i in range(display_types.size()):
-		_draw_ball_icon(positions[i], display_types[i])
-
 	# ── Loading bar: aligned with sprite rotation, below visual ─────────────
+	var center: Vector2   = _sprite_local
+	var sprite_rot: float = _sprite.rotation if _sprite else 0.0
 	if loading:
 		var down_dir: Vector2  = Vector2(0.0, 1.0).rotated(sprite_rot)
 		var bar_center: Vector2 = center + down_dir * 38.0
@@ -233,31 +248,33 @@ func _draw() -> void:
 			draw_line(arc_s, arc_e, Color(0.0, 1.0, 1.0, 0.8), 1.5)
 			draw_line(arc_s, arc_m, Color(1.0, 1.0, 1.0, 0.5), 1.0)
 
-func _draw_ball_icon(p: Vector2, t: String) -> void:
-	match t:
-		"split":
-			draw_circle(p, 8, Color(1.0, 0.2, 0.2))
-			for j in range(8):
-				var angle = j * TAU / 8
-				draw_line(p + Vector2(cos(angle), sin(angle)) * 8, p + Vector2(cos(angle), sin(angle)) * 12, Color(1.0, 0.4, 0.0), 2)
-		"electric":
-			draw_circle(p, 8, Color(0.2, 0.5, 1.0))
-			draw_arc(p, 10, 0, TAU, 32, Color(0.5, 0.8, 1.0), 2)
-		"pierce":
-			var pts = PackedVector2Array([p + Vector2(-10, 0), p + Vector2(0, -6), p + Vector2(10, 0), p + Vector2(0, 6)])
-			draw_colored_polygon(pts, Color(1.0, 0.8, 0.0))
-		"cryo":
-			var pts = PackedVector2Array([p + Vector2(0, -8), p + Vector2(5, -4), p + Vector2(5, 4), p + Vector2(0, 8), p + Vector2(-5, 4), p + Vector2(-5, -4)])
-			draw_colored_polygon(pts, Color(0.5, 0.8, 1.0))
-		"glitch":
-			draw_circle(p, 8, Color(0.8, 0.0, 0.8))
-			draw_arc(p, 10, 0, TAU, 32, Color(1.0, 0.0, 1.0), 2)
-		"water":
-			draw_circle(p, 10, Color(0.0, 0.5, 1.0, 0.8))
-			draw_circle(p, 7, Color(0.3, 0.7, 1.0, 0.6))
-		"fire":
-			draw_circle(p, 8, Color(1.0, 0.3, 0.0))
-			draw_arc(p, 10, 0, TAU, 32, Color(1.0, 0.6, 0.0), 2)
+func _make_icon_sprite(ball_type: String) -> AnimatedSprite2D:
+	if not _BALL_SPRITE_MAP.has(ball_type):
+		return null
+	var info: Array = _BALL_SPRITE_MAP[ball_type]
+	var folder: String = info[0]
+	var count: int = info[1]
+	var frames := SpriteFrames.new()
+	if frames.has_animation("default"):
+		frames.remove_animation("default")
+	frames.add_animation("spin")
+	frames.set_animation_speed("spin", 12.0)
+	frames.set_animation_loop("spin", true)
+	for i in range(count):
+		var tex: Texture2D = load("res://assets/balls/%s/frame_%03d.png" % [folder, i])
+		frames.add_frame("spin", tex)
+	var spr := AnimatedSprite2D.new()
+	spr.sprite_frames = frames
+	spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	spr.scale = Vector2(0.35, 0.35)
+	spr.play("spin")
+	return spr
+
+func _clear_icon_sprites() -> void:
+	for spr in _icon_sprites:
+		if is_instance_valid(spr):
+			spr.queue_free()
+	_icon_sprites.clear()
 
 func _apply_fusion_to_ball(ball: Node2D, fusion_type: String) -> void:
 	ball.is_fused = true

@@ -244,12 +244,12 @@ func clear_boss_element() -> void:
 	if _boss_elem_indicator != null:
 		_boss_elem_indicator.clear_element()
 
-func _on_card_selected(index: int, _canvas: CanvasLayer, bg: ColorRect) -> void:
+func _on_card_selected(index: int, _canvas: CanvasLayer, bg: TextureRect) -> void:
 	selected_upgrade_index = index
 	if selected_card_bg:
-		selected_card_bg.color = Color(0.1, 0.1, 0.15)
+		selected_card_bg.modulate = Color(1.0, 1.0, 1.0)
 	selected_card_bg = bg
-	bg.color = Color(0.3, 0.3, 0.5)
+	bg.modulate = Color(1.3, 1.3, 1.6)
 
 func _on_confirm(canvas: CanvasLayer) -> void:
 	if selected_upgrade_index == -1:
@@ -996,7 +996,7 @@ func show_upgrade_menu() -> void:
 	{"name": "Thunder Amp",         "category": "Utility",       "color": Color(0.2, 0.5, 1.0), "desc": "Electric ball +2 damage",                   "index": 13, "weight": 10, "rarity": "common", "chars": ["leila"]},
 	# ── Cyclone (Manipülasyon) ────────────────────────────────────────────────
 	{"name": "Glitch Ball",         "category": "Utility",       "color": Color(0.8, 0.0, 0.8), "desc": "Disorients subject for 3s",                 "index": 16, "weight": 10, "rarity": "common", "chars": ["cyclone"]},
-	{"name": "Mimic Ball",          "category": "Utility",       "color": Color(0.5, 0.5, 1.0), "desc": "Copies the nearest powered-up ball",       "index": 19, "weight": 1,  "rarity": "epic",   "chars": ["cyclone"]},
+	{"name": "Mimic Ball",          "category": "Utility",       "color": Color(0.5, 0.5, 1.0), "desc": "Copies the nearest powered-up ball",        "index": 19, "weight": 1,  "rarity": "epic",   "chars": ["cyclone"]},
 	{"name": "Data Leech Ball",     "category": "Utility",       "color": Color(0.6, 0.0, 0.2), "desc": "+2 Integrity on hit",                       "index": 22, "weight": 10, "rarity": "common", "chars": ["cyclone"]},
 	# ── Herkese açık ─────────────────────────────────────────────────────────
 	{"name": "Ball Mastery",        "category": "Utility",       "color": Color(0.2, 0.8, 0.2), "desc": "+1 damage to all balls",                    "index": 11, "weight": 10, "rarity": "common", "chars": []},
@@ -1051,59 +1051,46 @@ func show_upgrade_menu() -> void:
 		var ty = 300
 		var rarity: String = upgrade.get("rarity", "common")
 
-		# Kartın arka planı — epic için hafif mor parıltı
-		var bg = ColorRect.new()
-		bg.size = Vector2(card_width, card_height)
-		bg.color = Color(0.1, 0.1, 0.15) if rarity == "common" else \
-				   Color(0.12, 0.08, 0.18) if rarity == "rare"   else \
-				   Color(0.10, 0.06, 0.22)
-		bg.position = Vector2(tx, ty)
-		canvas.add_child(bg)
+		# ── Kart PNG çerçevesi ───────────────────────────────────────────────
+		var rarity_prefix: String = ({"common": "001_common", "uncommon": "002_uncommon",
+			"rare": "003_rare", "epic": "004_epic", "legendary": "005_legendary"} as Dictionary).get(rarity, "001_common")
+		var char_folder: String = ({"vector": "vectorUpgradeCards", "leila": "leilaUpgradeCards",
+			"cyclone": "cycloneUpgradeCards"} as Dictionary).get(char_id, "vectorUpgradeCards")
+		var char_suffix: String = ({"vector": "VectorCard", "leila": "LeilaCard",
+			"cyclone": "CycloneCard"} as Dictionary).get(char_id, "VectorCard")
+		# Cyclone uncommon dosyası farklı isimde
+		var card_filename: String
+		if char_id == "cyclone" and rarity == "uncommon":
+			card_filename = "002_uncommonCyclone.png"
+		else:
+			card_filename = "%s%s.png" % [rarity_prefix, char_suffix]
+		var card_tex: Texture2D = load("res://assets/upgradeCardsLabel/%s/%s" % [char_folder, card_filename])
+		var card_sprite := TextureRect.new()
+		card_sprite.texture = card_tex
+		card_sprite.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		card_sprite.size = Vector2(card_width, card_height)
+		card_sprite.position = Vector2(tx, ty)
+		canvas.add_child(card_sprite)
 
-		var cat_strip = ColorRect.new()
-		cat_strip.size = Vector2(card_width, 40)
-		cat_strip.color = upgrade["color"]
-		cat_strip.position = Vector2(tx, ty)
-		canvas.add_child(cat_strip)
-
-		var cat_label = Label.new()
-		cat_label.text = upgrade["category"]
-		cat_label.position = Vector2(tx + 10, ty + 8)
-		cat_label.add_theme_font_size_override("font_size", 18)
-		cat_label.add_theme_font_override("font", _font_bold)
-		canvas.add_child(cat_label)
-
-		# Rarity rozeti (sağ üst — strip içinde)
-		if rarity != "common":
-			var rarity_lbl = Label.new()
-			rarity_lbl.add_theme_font_override("font", _font_bold)
-			if rarity == "rare":
-				rarity_lbl.text = "★ RARE"
-				rarity_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.1))
-				rarity_lbl.add_theme_font_size_override("font_size", 11)
-			else:  # epic
-				rarity_lbl.text = "✦ EPIC"
-				rarity_lbl.add_theme_color_override("font_color", Color(0.85, 0.4, 1.0))
-				rarity_lbl.add_theme_font_size_override("font_size", 11)
-			rarity_lbl.position = Vector2(tx + card_width - 58, ty + 13)
-			canvas.add_child(rarity_lbl)
-
+		# ── Kart ismi ────────────────────────────────────────────────────────
 		var name_label = Label.new()
 		name_label.text = upgrade["name"]
-		name_label.size = Vector2(260, 40)
-		name_label.position = Vector2(tx + 10, ty + card_height - 90)
-		name_label.add_theme_font_size_override("font_size", 18)
+		name_label.size = Vector2(card_width - 30, 40)
+		name_label.position = Vector2(tx + 15, ty + card_height - 110)
+		name_label.add_theme_font_size_override("font_size", 17)
 		name_label.add_theme_font_override("font", _font_bold)
+		name_label.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0))
 		canvas.add_child(name_label)
 
+		# ── Kart açıklaması ──────────────────────────────────────────────────
 		var desc_label = Label.new()
 		desc_label.text = upgrade["desc"]
-		desc_label.size = Vector2(260, 46)
-		desc_label.position = Vector2(tx + 10, ty + card_height - 48)
+		desc_label.size = Vector2(card_width - 30, 60)
+		desc_label.position = Vector2(tx + 15, ty + card_height - 72)
 		desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD
-		desc_label.add_theme_font_size_override("font_size", 14)
+		desc_label.add_theme_font_size_override("font_size", 13)
 		desc_label.add_theme_font_override("font", _font_regular)
-		desc_label.modulate = Color(0.8, 0.8, 0.8)
+		desc_label.add_theme_color_override("font_color", Color(0.85, 0.85, 0.85))
 		canvas.add_child(desc_label)
 		
 		# Confirm ve Skip ortada
@@ -1125,51 +1112,42 @@ func show_upgrade_menu() -> void:
 		skip_btn.pressed.connect(_on_skip.bind(canvas))
 		canvas.add_child(skip_btn)
 		
-		bg.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-		var click_area = Button.new()
+		card_sprite.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		var click_area := Button.new()
 		click_area.size = Vector2(card_width, card_height)
 		click_area.position = Vector2(tx, ty)
 		click_area.modulate = Color(1, 1, 1, 0)
 		click_area.mouse_entered.connect(func():
-			if selected_card_bg != bg:
-				bg.color = Color(0.2, 0.2, 0.3)
-			# Enlarge card
-			var tween = create_tween()
-			tween.tween_property(bg, "scale", Vector2(1.05, 1.05), 0.1)
-			tween.parallel().tween_property(bg, "position", Vector2(tx - 7, ty - 7), 0.1)
+			var tween := create_tween()
+			tween.tween_property(card_sprite, "scale", Vector2(1.05, 1.05), 0.1)
+			tween.parallel().tween_property(card_sprite, "position", Vector2(tx - 7, ty - 7), 0.1)
 		)
 		click_area.mouse_exited.connect(func():
-			if selected_card_bg != bg:
-				bg.color = Color(0.1, 0.1, 0.15)
-			# Shrink card
-			var tween = create_tween()
-			tween.tween_property(bg, "scale", Vector2(1.0, 1.0), 0.1)
-			tween.parallel().tween_property(bg, "position", Vector2(tx, ty), 0.1)
+			var tween := create_tween()
+			tween.tween_property(card_sprite, "scale", Vector2(1.0, 1.0), 0.1)
+			tween.parallel().tween_property(card_sprite, "position", Vector2(tx, ty), 0.1)
 		)
-		click_area.pressed.connect(_on_card_selected.bind(upgrade["index"], canvas, bg))
+		click_area.pressed.connect(_on_card_selected.bind(upgrade["index"], canvas, card_sprite))
 		canvas.add_child(click_area)
 
 		# ── Card entry animation: bottom to top, staggered ─────────────────────
-		var card_anim_nodes = [bg, cat_strip, cat_label, name_label, desc_label, click_area]
+		var card_anim_nodes: Array = [card_sprite, name_label, desc_label, click_area]
 		var card_target_ys: Array = []
 		for anim_node in card_anim_nodes:
 			card_target_ys.append(anim_node.position.y)
 			anim_node.position.y += 160.0
-		# Only visual elements start transparent (click_area is already invisible)
-		for anim_node in [bg, cat_strip, cat_label, name_label, desc_label]:
+		for anim_node in [card_sprite, name_label, desc_label]:
 			anim_node.modulate.a = 0.0
 
-		var slide_tw = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+		var slide_tw := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 		slide_tw.tween_interval(i * 0.13)
-		# bg is first step — all subsequent steps are chained parallel to this
-		slide_tw.tween_property(bg, "position:y", card_target_ys[0], 0.40)\
+		slide_tw.tween_property(card_sprite, "position:y", card_target_ys[0], 0.40)\
 			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-		slide_tw.parallel().tween_property(bg, "modulate:a", 1.0, 0.24)
+		slide_tw.parallel().tween_property(card_sprite, "modulate:a", 1.0, 0.24)
 		for ci in range(1, card_anim_nodes.size()):
-			var anim_node = card_anim_nodes[ci]
+			var anim_node: Node = card_anim_nodes[ci]
 			slide_tw.parallel().tween_property(anim_node, "position:y", card_target_ys[ci], 0.40)\
 				.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-			# click_area (last element) has no alpha tween — must stay invisible
 			if ci < card_anim_nodes.size() - 1:
 				slide_tw.parallel().tween_property(anim_node, "modulate:a", 1.0, 0.24)
 

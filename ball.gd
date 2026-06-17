@@ -75,8 +75,6 @@ func _setup_ball_sprite() -> void:
 	var folder: String
 	var frame_count: int
 
-	if is_mimic:
-		return
 	if is_fused:
 		var fused_folders := {
 			"absolute_zero":   ["absoluteZero",    17],
@@ -117,7 +115,7 @@ func _setup_ball_sprite() -> void:
 			_sprite = AnimatedSprite2D.new()
 			_sprite.sprite_frames  = frames
 			_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-			_sprite.scale          = Vector2(0.35, 0.35)
+			_sprite.scale          = Vector2(0.675, 0.675)
 			_sprite.play("spin")
 			add_child(_sprite)
 		return
@@ -137,6 +135,8 @@ func _setup_ball_sprite() -> void:
 		folder = "pierceBall";    frame_count = 9
 	elif can_water:
 		folder = "waterBall";     frame_count = 9
+	elif is_mimic:
+		folder = "echoBall";      frame_count = 17
 	else:
 		folder = "normalBall";    frame_count = 9
 
@@ -153,7 +153,7 @@ func _setup_ball_sprite() -> void:
 	_sprite = AnimatedSprite2D.new()
 	_sprite.sprite_frames  = frames
 	_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	_sprite.scale          = Vector2(0.35, 0.35)
+	_sprite.scale          = Vector2(0.675, 0.675)
 	_sprite.play("spin")
 	add_child(_sprite)
 
@@ -640,6 +640,14 @@ func _apply_fusion(ball: Node2D, fusion: String) -> void:
 			ball.can_glitch = true
 			ball.max_damage = 12
 	ball.queue_redraw()
+	ball._refresh_sprite()
+
+func _refresh_sprite() -> void:
+	if is_instance_valid(_sprite):
+		_sprite.queue_free()
+		_sprite = null
+	_setup_ball_sprite()
+
 func _draw() -> void:
 	if is_instance_valid(_sprite):
 		return

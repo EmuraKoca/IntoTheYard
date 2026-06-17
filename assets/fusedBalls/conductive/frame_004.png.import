@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b8ynhnqfdcuwn"
-path="res://.godot/imported/frame_004.png-675586ca0e59e05c81911a3d83f8538e.ctex"
+path="res://.godot/imported/frame_004.png-0f1685574943356897256466291c414a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/fusedBalls/conductiveBall/frame_004.png"
-dest_files=["res://.godot/imported/frame_004.png-675586ca0e59e05c81911a3d83f8538e.ctex"]
+source_file="res://assets/fusedBalls/conductive/frame_004.png"
+dest_files=["res://.godot/imported/frame_004.png-0f1685574943356897256466291c414a.ctex"]
 
 [params]
 
