@@ -48,6 +48,15 @@ var has_next_one: bool  = false
 # Vector animation
 var _anim_dir: String = "N"
 var _vector_oneshot: bool = false
+
+# ── Pranga sistemi ────────────────────────────────────────────────────────────
+var _ankle_sprite: Sprite2D
+var _chain_links: Array[Sprite2D] = []
+const _CHAIN_DIR_NAMES: Array[String] = ["east","south-east","south","south-west","west","north-west","north","north-east"]
+const _LINK_SPACING: float = 14.0
+const _MAX_LINKS: int = 26
+var _ankle_textures: Dictionary = {}
+var _link_textures: Dictionary = {}
 var _vector_dead: bool = false
 var _lmb_was_pressed: bool = false  # melee sadece tıklama anında tetiklensin
 
@@ -178,6 +187,44 @@ func _ready() -> void:
 		"cyclone":
 			$CycloneSprite.visible = true
 			_setup_cyclone_sprite()
+	_setup_pranga()
+
+func _setup_pranga() -> void:
+	for d in _CHAIN_DIR_NAMES:
+		_ankle_textures[d] = load("res://assets/chain/ironAnkle/%s.png" % d)
+		_link_textures[d]  = load("res://assets/chain/chainLink/%s.png" % d)
+	_ankle_sprite = Sprite2D.new()
+	_ankle_sprite.position = Vector2(0, 18)
+	_ankle_sprite.z_index = 3
+	add_child(_ankle_sprite)
+	for i in range(_MAX_LINKS):
+		var lnk := Sprite2D.new()
+		lnk.visible = false
+		lnk.z_index = 1
+		add_child(lnk)
+		_chain_links.append(lnk)
+
+func _update_pranga() -> void:
+	var anchor_local: Vector2 = to_local(chain_anchor)
+	var ankle_pos := Vector2(0, 18)
+	var diff: Vector2 = anchor_local - ankle_pos
+	var dist: float = diff.length()
+	var dir_vec: Vector2 = diff.normalized() if dist > 1.0 else Vector2.DOWN
+	var dir_name: String = _angle_to_chain_dir(dir_vec.angle())
+	_ankle_sprite.texture = _ankle_textures[dir_name]
+	var num_links: int = min(_MAX_LINKS, int(dist / _LINK_SPACING))
+	for i in range(_MAX_LINKS):
+		if i < num_links:
+			_chain_links[i].visible = true
+			_chain_links[i].position = ankle_pos + dir_vec * (_LINK_SPACING * (float(i) + 0.5))
+			_chain_links[i].texture = _link_textures[dir_name]
+		else:
+			_chain_links[i].visible = false
+
+func _angle_to_chain_dir(angle: float) -> String:
+	var deg: float = fmod(rad_to_deg(angle) + 360.0, 360.0)
+	var sector: int = int((deg + 22.5) / 45.0) % 8
+	return _CHAIN_DIR_NAMES[sector]
 
 func _process(_delta: float) -> void:
 	if character_type != "vector" or _vector_dead:
@@ -271,6 +318,8 @@ func _physics_process(delta: float) -> void:
 		global_position = chain_anchor - dir_to_anchor * chain_length
 
 	aim_direction = (get_global_mouse_position() - global_position).normalized()
+
+	_update_pranga()
 
 	# ── Orbit pozisyonlama ────────────────────────────────────────────────────
 	orbit_angle += ORBIT_SPEED * delta
