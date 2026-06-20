@@ -50,13 +50,17 @@ var _anim_dir: String = "N"
 var _vector_oneshot: bool = false
 
 # ── Pranga sistemi ────────────────────────────────────────────────────────────
-var _ankle_sprite: Sprite2D
 var _chain_links: Array[Sprite2D] = []
 const _CHAIN_DIR_NAMES: Array[String] = ["east","south-east","south","south-west","west","north-west","north","north-east"]
 const _LINK_SPACING: float = 14.0
-const _MAX_LINKS: int = 26
-var _ankle_textures: Dictionary = {}
+const _MAX_LINKS: int = 21
 var _link_textures: Dictionary = {}
+# Catenary simülasyonu — her halkanın fizik pozisyonu
+var _chain_positions: Array[Vector2] = []
+const _CHAIN_GRAVITY: float = 0.0
+const _CHAIN_DAMPING: float = 8.0
+const _CHAIN_TENSION: float = 120.0
+var _chain_velocities: Array[Vector2] = []
 var _vector_dead: bool = false
 var _lmb_was_pressed: bool = false  # melee sadece tıklama anında tetiklensin
 
@@ -85,7 +89,7 @@ func add_to_orbit(ball: Node2D) -> void:
 	ball.state         = "orbiting"
 	ball.moving        = false
 	ball.scale         = Vector2(1.0, 1.0)
-	ball.z_index       = 2
+	ball.z_index       = 5
 	ball.strike_offset = Vector2.ZERO
 	ball._is_striking  = false
 	ball.get_node("CollisionShape2D").disabled = true
@@ -148,7 +152,7 @@ func _fire_ball() -> void:
 	ball.state          = "flying"
 	ball.catch_cooldown = 0.5
 	ball.scale          = Vector2(1.0, 1.0)
-	ball.z_index        = 2
+	ball.z_index        = 5
 
 	# ~0.09s sonra collision aç (70 px uzakta olur)
 	await get_tree().create_timer(0.09).timeout
@@ -191,35 +195,69 @@ func _ready() -> void:
 
 func _setup_pranga() -> void:
 	for d in _CHAIN_DIR_NAMES:
-		_ankle_textures[d] = load("res://assets/chain/ironAnkle/%s.png" % d)
-		_link_textures[d]  = load("res://assets/chain/chainLink/%s.png" % d)
-	_ankle_sprite = Sprite2D.new()
-	_ankle_sprite.position = Vector2(0, 18)
-	_ankle_sprite.z_index = 3
-	add_child(_ankle_sprite)
+		_link_textures[d] = load("res://assets/chain/chainLink/%s.png" % d)
 	for i in range(_MAX_LINKS):
 		var lnk := Sprite2D.new()
 		lnk.visible = false
 		lnk.z_index = 1
+		lnk.scale = Vector2(0.50, 0.50)
 		add_child(lnk)
 		_chain_links.append(lnk)
+		_chain_positions.append(Vector2.ZERO)
+		_chain_velocities.append(Vector2.ZERO)
 
-func _update_pranga() -> void:
-	var anchor_local: Vector2 = to_local(chain_anchor)
-	var ankle_pos := Vector2(0, 18)
-	var diff: Vector2 = anchor_local - ankle_pos
-	var dist: float = diff.length()
-	var dir_vec: Vector2 = diff.normalized() if dist > 1.0 else Vector2.DOWN
-	var dir_name: String = _angle_to_chain_dir(dir_vec.angle())
-	_ankle_sprite.texture = _ankle_textures[dir_name]
-	var num_links: int = min(_MAX_LINKS, int(dist / _LINK_SPACING))
+func _update_pranga(delta: float) -> void:
+	# Anchor ve player pozisyonları global koordinatlarda
+	var anchor_g: Vector2 = chain_anchor
+	var player_g: Vector2 = global_position + Vector2(0, 18)
+
+	# Zincir uzunluğu — her halka arası mesafe
+	var seg_len: float = _LINK_SPACING
+
+	# Başlangıçta pozisyonları başlat (sıfırsa)
+	if _chain_positions[0] == Vector2.ZERO:
+		for i in range(_MAX_LINKS):
+			var t: float = float(i) / float(_MAX_LINKS - 1)
+			_chain_positions[i] = anchor_g.lerp(player_g, t)
+
+	# Verlet entegrasyonu — yer çekimi yok, sadece atalet + sönümleme
+	for i in range(1, _MAX_LINKS - 1):
+		_chain_velocities[i] *= (1.0 - _CHAIN_DAMPING * delta)
+		_chain_positions[i] += _chain_velocities[i] * delta
+
+	# Kısıt: anchor sabit, player ucu player'a bağlı
+	_chain_positions[0] = anchor_g
+	_chain_positions[_MAX_LINKS - 1] = player_g
+
+	# Kısıt iterasyonu — halka mesafelerini koru, hız güncelle
+	for _iter in range(12):
+		for i in range(_MAX_LINKS - 1):
+			var diff: Vector2 = _chain_positions[i + 1] - _chain_positions[i]
+			var d: float = diff.length()
+			if d > 0.001:
+				var correction: Vector2 = diff * ((d - seg_len) / d) * 0.5
+				if i > 0:
+					_chain_positions[i] += correction
+					_chain_velocities[i] += correction / delta * 0.05
+				if i + 1 < _MAX_LINKS - 1:
+					_chain_positions[i + 1] -= correction
+					_chain_velocities[i + 1] -= correction / delta * 0.05
+		_chain_positions[0] = anchor_g
+		_chain_positions[_MAX_LINKS - 1] = player_g
+
+	# Sprite'ları pozisyonlara yerleştir
 	for i in range(_MAX_LINKS):
-		if i < num_links:
-			_chain_links[i].visible = true
-			_chain_links[i].position = ankle_pos + dir_vec * (_LINK_SPACING * (float(i) + 0.5))
-			_chain_links[i].texture = _link_textures[dir_name]
-		else:
-			_chain_links[i].visible = false
+		var pos_local: Vector2 = to_local(_chain_positions[i])
+		# Yön hesapla
+		var dir_vec: Vector2 = Vector2.DOWN
+		if i < _MAX_LINKS - 1:
+			dir_vec = (_chain_positions[i + 1] - _chain_positions[i]).normalized()
+		elif i > 0:
+			dir_vec = (_chain_positions[i] - _chain_positions[i - 1]).normalized()
+		var dir_name: String = _angle_to_chain_dir(dir_vec.angle())
+		_chain_links[i].visible = true
+		_chain_links[i].global_position = _chain_positions[i]
+		_chain_links[i].texture = _link_textures[dir_name]
 
 func _angle_to_chain_dir(angle: float) -> String:
 	var deg: float = fmod(rad_to_deg(angle) + 360.0, 360.0)
@@ -312,14 +350,15 @@ func _physics_process(delta: float) -> void:
 	global_position.y = clamp(global_position.y, 330, 1035)
 
 	# Chain constraint check
+
+	aim_direction = (get_global_mouse_position() - global_position).normalized()
+
 	var dist_to_anchor = global_position.distance_to(chain_anchor)
 	if dist_to_anchor > chain_length:
 		var dir_to_anchor = (chain_anchor - global_position).normalized()
 		global_position = chain_anchor - dir_to_anchor * chain_length
 
-	aim_direction = (get_global_mouse_position() - global_position).normalized()
-
-	_update_pranga()
+	_update_pranga(delta)
 
 	# ── Orbit pozisyonlama ────────────────────────────────────────────────────
 	orbit_angle += ORBIT_SPEED * delta

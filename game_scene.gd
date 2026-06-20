@@ -601,8 +601,8 @@ func _spawn_hasmen_entrance() -> void:
 	# chair_pos : sandalye — doğuya bakıyor, oyunu izliyor
 	npc.play_entrance(
 		Vector2(820, 1260),   # giriş — güney (ekran altı)
-		Vector2(820, 750),    # kuzey sonu
-		Vector2(725, 750)     # sandalye
+		Vector2(820, 865),    # kuzey sonu
+		Vector2(745, 850)     # sandalye
 	)
 
 func _ready() -> void:

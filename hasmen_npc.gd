@@ -3,7 +3,8 @@ extends Node2D
 # Kullanım: play_entrance(start_pos, mid_pos, chair_pos)
 
 const WALK_BASE := "res://assets/npcs/mrHasmen/animations/animation-eb40b4de/"
-const SIT_BASE  := "res://assets/npcs/mrHasmen/animations/sit/"
+const SIT_BASE      := "res://assets/npcs/mrHasmen/animations/sit/"
+const SIT_IDLE_BASE := "res://assets/npcs/mrHasmen/animations/sitIdle/"
 const WALK_SPEED := 72.0   # px/s
 
 # Oturma animasyonu frame aralıkları (saniye)
@@ -55,12 +56,12 @@ func _setup_frames() -> void:
 		var tex: Texture2D = load(SIT_BASE + "frame_%03d.png" % i)
 		frames.add_frame("sit_intro", tex)
 
-	# sit_idle: frame 005-007 — aralıklı oynuyor (nefes/hareket)
+	# sit_idle: sitIdle klasöründen — aralıklı oynuyor (nefes/hareket)
 	frames.add_animation("sit_idle")
 	frames.set_animation_speed("sit_idle", 8.0)
 	frames.set_animation_loop("sit_idle", false)
-	for i in range(6, 9):
-		var tex: Texture2D = load(SIT_BASE + "frame_%03d.png" % i)
+	for i in range(6, 17):
+		var tex: Texture2D = load(SIT_IDLE_BASE + "frame_%03d.png" % i)
 		frames.add_frame("sit_idle", tex)
 
 	_sprite.sprite_frames = frames

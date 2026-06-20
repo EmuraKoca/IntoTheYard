@@ -62,7 +62,7 @@ var _cached_player: Node2D = null
 var _sprite: AnimatedSprite2D = null
 
 func _ready() -> void:
-	z_index = 2
+	z_index = 5
 	$CollisionShape2D.disabled = false
 	_setup_trail()
 	_setup_ball_sprite()
@@ -170,7 +170,7 @@ func launch(direction: Vector2, spd: float = 600.0) -> void:
 	catch_cooldown = 0.5
 	$CollisionShape2D.disabled = false
 	scale = Vector2(1.0, 1.0)
-	z_index = 2
+	z_index = 5
 	_wall_bounce_count = 0
 
 func launch_with_speed(direction: Vector2, spd: float) -> void:
@@ -181,7 +181,7 @@ func launch_with_speed(direction: Vector2, spd: float) -> void:
 	catch_cooldown = 0.5
 	$CollisionShape2D.disabled = false
 	scale = Vector2(1.0, 1.0)
-	z_index = 2
+	z_index = 5
 	_wall_bounce_count = 0
 
 func caught() -> void:
