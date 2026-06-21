@@ -48,18 +48,18 @@ func _setup_frames() -> void:
 			var tex: Texture2D = load(path + "frame_%03d.png" % i)
 			frames.add_frame(anim, tex)
 
-	# sit_intro: frame 000-004 — bir kez oynuyor (oturma eylemi)
+	# sit_intro: frame 000-008 — bir kez oynuyor (oturma eylemi)
 	frames.add_animation("sit_intro")
 	frames.set_animation_speed("sit_intro", 8.0)
 	frames.set_animation_loop("sit_intro", false)
-	for i in range(5):
+	for i in range(9):
 		var tex: Texture2D = load(SIT_BASE + "frame_%03d.png" % i)
 		frames.add_frame("sit_intro", tex)
 
 	# sit_idle: sitIdle klasöründen — aralıklı oynuyor (nefes/hareket)
 	frames.add_animation("sit_idle")
-	frames.set_animation_speed("sit_idle", 8.0)
-	frames.set_animation_loop("sit_idle", false)
+	frames.set_animation_speed("sit_idle", 5.0)
+	frames.set_animation_loop("sit_idle", true)
 	for i in range(6, 17):
 		var tex: Texture2D = load(SIT_IDLE_BASE + "frame_%03d.png" % i)
 		frames.add_frame("sit_idle", tex)
@@ -97,19 +97,5 @@ func play_entrance(start_pos: Vector2, mid_pos: Vector2, chair_pos: Vector2) -> 
 	_sprite.play("sit_intro")
 	await _sprite.animation_finished
 
-	# 4 ── Son frame'de bekle ve aralıklı sit_idle oyna
-	_sit_idle_loop()
-
-# ─────────────────────────────────────────────────────────────────────────────
-func _sit_idle_loop() -> void:
-	while is_instance_valid(self):
-		# Rastgele aralıkta bekle
-		var wait: float = randf_range(SIT_IDLE_INTERVAL_MIN, SIT_IDLE_INTERVAL_MAX)
-		await get_tree().create_timer(wait).timeout
-
-		if not is_instance_valid(self):
-			return
-
-		# 3 frame'lik idle hareketi — bir kez oynat
-		_sprite.play("sit_idle")
-		await _sprite.animation_finished
+	# 4 ── sit_idle döngüsüne gir
+	_sprite.play("sit_idle")
