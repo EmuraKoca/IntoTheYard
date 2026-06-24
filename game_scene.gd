@@ -613,17 +613,10 @@ func _ready() -> void:
 	$UI/IntegrityBar.max_value = player_max_hp
 	$UI/IntegrityBar.value = player_hp
 	$UI/IntegrityBar/LabelIntegrity.text = str(player_hp) + " / " + str(player_max_hp)
-			# Fusion Zone hidden at start
-	var fusion_zone = get_tree().get_first_node_in_group("fusion_zone")
-	if fusion_zone:
-		fusion_zone.visible = false
-		fusion_zone.set_physics_process(false)
-	
+	_activate_fusion_zone()
 	_setup_data_bar()
 	_setup_auto_toggle()
 	_setup_neon_sign()
-	get_tree().paused = true
-	_show_hasmen_selection()
 	
 
 
@@ -985,19 +978,19 @@ func show_upgrade_menu() -> void:
 	var char_id: String = get_node("Player").character_type
 	var upgrades = [
 	# ── Vector (Kinetik) ──────────────────────────────────────────────────────
-	{"name": "Split Core",          "category": "Utility",       "color": Color(0.2, 0.8, 0.2), "desc": "Core splits into 3",                        "index": 0,  "weight": 10, "rarity": "common", "chars": ["vector"]},
-	{"name": "Pierce Core",         "category": "Utility",       "color": Color(1.0, 0.8, 0.0), "desc": "Core pierces through",                      "index": 2,  "weight": 10, "rarity": "common", "chars": ["vector"]},
+	{"name": "Split Core",          "category": "Identity",      "color": Color(0.2, 0.8, 0.2), "desc": "Core splits into 3",                        "index": 0,  "weight": 10, "rarity": "common", "chars": ["vector"]},
+	{"name": "Pierce Core",         "category": "Identity",      "color": Color(1.0, 0.8, 0.0), "desc": "Core pierces through",                      "index": 2,  "weight": 10, "rarity": "common", "chars": ["vector"]},
 	{"name": "Split Amp",           "category": "Utility",       "color": Color(1.0, 0.2, 0.2), "desc": "Split core +2 damage",                      "index": 14, "weight": 10, "rarity": "common", "chars": ["vector"]},
 	# ── Leila (Elemental) ─────────────────────────────────────────────────────
-	{"name": "Electric Core",       "category": "Utility",       "color": Color(0.2, 0.5, 1.0), "desc": "Core gains electricity",                    "index": 1,  "weight": 10, "rarity": "common", "chars": ["leila"]},
-	{"name": "Cryo Core",           "category": "Utility",       "color": Color(0.5, 0.8, 1.0), "desc": "Slows subject by 25%",                      "index": 15, "weight": 10, "rarity": "common", "chars": ["leila"]},
-	{"name": "Water Core",          "category": "Utility",       "color": Color(0.0, 0.5, 1.0), "desc": "Applies wet, single hit",                   "index": 17, "weight": 10, "rarity": "common", "chars": ["leila"]},
-	{"name": "Fire Core",           "category": "Utility",       "color": Color(1.0, 0.3, 0.0), "desc": "Applies burn to subject",                   "index": 18, "weight": 10, "rarity": "common", "chars": ["leila"]},
+	{"name": "Electric Core",       "category": "Identity",      "color": Color(0.2, 0.5, 1.0), "desc": "Core gains electricity",                    "index": 1,  "weight": 10, "rarity": "common", "chars": ["leila"]},
+	{"name": "Cryo Core",           "category": "Identity",      "color": Color(0.5, 0.8, 1.0), "desc": "Slows subject by 25%",                      "index": 15, "weight": 10, "rarity": "common", "chars": ["leila"]},
+	{"name": "Water Core",          "category": "Identity",      "color": Color(0.0, 0.5, 1.0), "desc": "Applies wet, single hit",                   "index": 17, "weight": 10, "rarity": "common", "chars": ["leila"]},
+	{"name": "Fire Core",           "category": "Identity",      "color": Color(1.0, 0.3, 0.0), "desc": "Applies burn to subject",                   "index": 18, "weight": 10, "rarity": "common", "chars": ["leila"]},
 	{"name": "Thunder Amp",         "category": "Utility",       "color": Color(0.2, 0.5, 1.0), "desc": "Electric core +2 damage",                   "index": 13, "weight": 10, "rarity": "common", "chars": ["leila"]},
 	# ── Cyclone (Manipülasyon) ────────────────────────────────────────────────
-	{"name": "Glitch Core",         "category": "Utility",       "color": Color(0.8, 0.0, 0.8), "desc": "Disorients subject for 3s",                 "index": 16, "weight": 10, "rarity": "common", "chars": ["cyclone"]},
-	{"name": "Echo Core",           "category": "Utility",       "color": Color(0.5, 0.5, 1.0), "desc": "Copies the nearest powered-up core",        "index": 19, "weight": 1,  "rarity": "epic",   "chars": ["cyclone"]},
-	{"name": "Data Leech Core",     "category": "Utility",       "color": Color(0.6, 0.0, 0.2), "desc": "+2 Integrity on hit",                       "index": 22, "weight": 10, "rarity": "common", "chars": ["cyclone"]},
+	{"name": "Glitch Core",         "category": "Identity",      "color": Color(0.8, 0.0, 0.8), "desc": "Disorients subject for 3s",                 "index": 16, "weight": 10, "rarity": "common", "chars": ["cyclone"]},
+	{"name": "Echo Core",           "category": "Identity",      "color": Color(0.5, 0.5, 1.0), "desc": "Copies the nearest powered-up core",        "index": 19, "weight": 1,  "rarity": "epic",   "chars": ["cyclone"]},
+	{"name": "Data Leech Core",     "category": "Identity",      "color": Color(0.6, 0.0, 0.2), "desc": "+2 Integrity on hit",                       "index": 22, "weight": 10, "rarity": "common", "chars": ["cyclone"]},
 	# ── Herkese açık ─────────────────────────────────────────────────────────
 	{"name": "Core Mastery",        "category": "Utility",       "color": Color(0.2, 0.8, 0.2), "desc": "+1 damage to all cores",                    "index": 11, "weight": 10, "rarity": "common", "chars": []},
 	{"name": "Speed Upgrade",       "category": "Individuality", "color": Color(0.6, 0.2, 0.8), "desc": "Movement speed increases",                  "index": 4,  "weight": 10, "rarity": "common", "chars": []},

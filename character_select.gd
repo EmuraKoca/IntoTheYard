@@ -7,10 +7,6 @@ const CHARS: Array = [
 	{"id":"vector",  "name":"Vector",  "theme":"Kinetik",      "color":Color(0,0.75,1,1),    "passive":"Normal Ball +3 hasar",             "balls":["Normal Ball","Split Ball","Pierce Ball"],             "sheet":"res://assets/selectCharacters/vector_sheet.png",  "fw":208,"fc":8,"sc":1.65},
 	{"id":"leila",   "name":"Leila",   "theme":"Elemental",    "color":Color(1,0.18,0.47,1), "passive":"Elemental top %20 ekstra patlama", "balls":["Fire Ball","Water Ball","Cryo Ball","Electric Ball"], "sheet":"res://assets/selectCharacters/leila_sheet.png",   "fw":224,"fc":8,"sc":1.50},
 	{"id":"cyclone", "name":"Cyclone", "theme":"Manipülasyon", "color":Color(0.22,1,0.08,1), "passive":"Glitch ölünce başkasına sıçrar",   "balls":["Glitch Ball","Mimic Ball","Data Leech Ball"],         "sheet":"res://assets/selectCharacters/cyclone_sheet.png", "fw":224,"fc":8,"sc":1.50},
-	{"id":"???","name":"???","theme":"???","color":Color(0.4,0.4,0.4,1),"passive":"???","balls":[],"sheet":"","fw":0,"fc":0,"sc":1.0},
-	{"id":"???","name":"???","theme":"???","color":Color(0.4,0.4,0.4,1),"passive":"???","balls":[],"sheet":"","fw":0,"fc":0,"sc":1.0},
-	{"id":"???","name":"???","theme":"???","color":Color(0.4,0.4,0.4,1),"passive":"???","balls":[],"sheet":"","fw":0,"fc":0,"sc":1.0},
-	{"id":"???","name":"???","theme":"???","color":Color(0.4,0.4,0.4,1),"passive":"???","balls":[],"sheet":"","fw":0,"fc":0,"sc":1.0},
 ]
 
 var _cur: int = 0
@@ -103,8 +99,10 @@ func _refresh() -> void:
 	_update_dots()
 	_update_info()
 	var c: Dictionary = CHARS[_cur]
-	if c["id"] != "???" and c["sheet"] != "":
+	if not _is_locked(c) and c["sheet"] != "":
 		_start_matrix(_center_card, c["color"])
+	else:
+		_stop_matrix()
 
 # ── Yan kart ─────────────────────────────────────────────────────────────────
 func _fill_side(card: Panel, c: Dictionary) -> void:

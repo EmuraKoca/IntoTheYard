@@ -207,6 +207,7 @@ func _setup_pranga() -> void:
 		_chain_velocities.append(Vector2.ZERO)
 
 func _update_pranga(delta: float) -> void:
+	queue_redraw()
 	# Anchor ve player pozisyonları global koordinatlarda
 	var anchor_g: Vector2 = chain_anchor
 	var player_g: Vector2 = global_position + Vector2(0, 18)
@@ -715,6 +716,28 @@ func _draw() -> void:
 		var a: float = (float(i) / 32.0) * TAU
 		shadow_pts.append(Vector2(cos(a) * s_rx, s_cy + sin(a) * s_ry))
 	draw_colored_polygon(shadow_pts, Color(0.0, 0.0, 0.0, 0.38))
+
+	# ── Zincir elektrik efekti ───────────────────────────────────────────────
+	if _chain_positions.size() >= 2:
+		var t := Time.get_ticks_msec() * 0.001
+		for i in range(_chain_positions.size() - 1):
+			var a := to_local(_chain_positions[i])
+			var b := to_local(_chain_positions[i + 1])
+			var gap := a.distance_to(b)
+			if gap < 6.0:
+				continue
+			var intensity: float = clamp((gap - 6.0) / 18.0, 0.0, 1.0)
+			var mid: Vector2 = (a + b) * 0.5
+			var perp: Vector2 = (b - a).normalized().rotated(PI * 0.5)
+			# Ark sapması — zaman + halka indeksine göre titreşir
+			var wobble: float = sin(t * 9.0 + float(i) * 1.3) * gap * 0.22 * intensity
+			var ctrl: Vector2 = mid + perp * wobble
+			# Dış sarı ark (parlak)
+			draw_line(a, ctrl, Color(1.0, 0.9, 0.1, 0.55 * intensity), 1.8)
+			draw_line(ctrl, b,  Color(1.0, 0.9, 0.1, 0.55 * intensity), 1.8)
+			# İç mavi-beyaz ark (sıcak merkez)
+			draw_line(a, ctrl, Color(0.6, 0.9, 1.0, 0.85 * intensity), 0.8)
+			draw_line(ctrl, b,  Color(0.6, 0.9, 1.0, 0.85 * intensity), 0.8)
 
 	# Orbit halkası — soluk gösterge
 	if orbit_balls.size() > 0:

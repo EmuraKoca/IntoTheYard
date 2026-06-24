@@ -58,6 +58,8 @@ var _is_striking: bool     = false
 
 # Önbellek — her frame grup sorgusu yerine bir kez alınır
 var _cached_player: Node2D = null
+var _last_position: Vector2 = Vector2.ZERO
+var _pos_stuck_timer: float = 0.0
 
 var _sprite: AnimatedSprite2D = null
 
@@ -239,41 +241,52 @@ func _physics_process(delta: float) -> void:
 		return
 	_stuck_timer = 0.0
 
+	# Pozisyon tabanlı stuck detection — fiziksel olarak hiç yer değiştirmiyorsa kurtar
+	if global_position.distance_to(_last_position) < 0.5:
+		_pos_stuck_timer += delta
+		if _pos_stuck_timer > 0.3:
+			_pos_stuck_timer = 0.0
+			move_direction = Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)).normalized()
+			global_position += move_direction * 4.0
+			_start_returning()
+			return
+	else:
+		_pos_stuck_timer = 0.0
+	_last_position = global_position
+
+	if catch_cooldown > 0:
+		catch_cooldown -= delta
+
 	# Player yakınında iken collision kapat — itme engeli
 	var _fly_player := _get_player()
 	if is_instance_valid(_fly_player):
 		var _fly_dist := global_position.distance_to(_fly_player.global_position)
 		if _fly_dist < 80:
 			$CollisionShape2D.disabled = true
-			# Orbit'e katılmaya hazırsa katıl
-			if catch_cooldown <= 0 and _fly_dist < 55:
+			if _fly_dist < 55:
+				# catch_cooldown bitmemiş olsa bile bu kadar yakınsa orbit'e al
 				_fly_player.add_to_orbit(self)
 				return
 		else:
-			# catch_cooldown sadece orbit'e geri dönmeyi engeller,
-			# düşmana çarpmayı engellemez — her zaman aç
 			if $CollisionShape2D.disabled:
 				$CollisionShape2D.disabled = false
-
-	if catch_cooldown > 0:
-		catch_cooldown -= delta
 
 	# Duvar sınırları + sonsuz sekme koruması
 	var _bounced := false
 	if global_position.x <= 910:
-		global_position.x = 910
+		global_position.x = 912
 		move_direction.x = abs(move_direction.x)
 		_bounced = true
 	if global_position.x >= 1580:
-		global_position.x = 1580
+		global_position.x = 1578
 		move_direction.x = -abs(move_direction.x)
 		_bounced = true
 	if global_position.y <= 260:
-		global_position.y = 260
+		global_position.y = 262
 		move_direction.y = abs(move_direction.y)
 		_bounced = true
 	if global_position.y >= 1040:
-		global_position.y = 1040
+		global_position.y = 1038
 		move_direction.y = -abs(move_direction.y)
 		_start_returning()
 		return
@@ -312,8 +325,8 @@ func _physics_process(delta: float) -> void:
 		if collider.is_in_group("subjects"):
 			_wall_bounce_count = 0
 			_hit_subject(collider)
-			if can_pierce:
-				move_and_collide(collision.get_remainder())
+			# Remainder her zaman işle — subject içinde takılma önlemi
+			move_and_collide(collision.get_remainder())
 		elif collider.is_in_group("player"):
 			if not collider.is_dashing:
 				move_direction = move_direction.bounce(collision.get_normal())
@@ -381,6 +394,7 @@ func _process_returning(delta: float) -> void:
 	var dist = to_player.length()
 
 	if dist < 40:
+		$CollisionShape2D.disabled = true
 		if player.orbit_balls.size() < player.MAX_ORBIT:
 			player.add_to_orbit(self)
 			return
@@ -402,16 +416,16 @@ func _process_returning(delta: float) -> void:
 
 	# Duvar sekme
 	if global_position.x <= 910:
-		global_position.x = 910
+		global_position.x = 912
 		move_direction.x = abs(move_direction.x)
 	if global_position.x >= 1580:
-		global_position.x = 1580
+		global_position.x = 1578
 		move_direction.x = -abs(move_direction.x)
 	if global_position.y <= 260:
-		global_position.y = 260
+		global_position.y = 262
 		move_direction.y = abs(move_direction.y)
 	if global_position.y >= 1040:
-		global_position.y = 1040
+		global_position.y = 1038
 		move_direction.y = -abs(move_direction.y)
 
 	# Dönerken de düşmana çarpar (tam hasar)

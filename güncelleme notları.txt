@@ -1,35 +1,4 @@
-0.1.1.0
-24.06.2026
 
-İsim Değişiklikleri:
-
-✅ Oyun içi tüm UI metinlerinde "Ball" → "Core" olarak değiştirildi
-   — Upgrade kart isimleri: Split Core, Pierce Core, Electric Core, Cryo Core,
-     Water Core, Fire Core, Glitch Core, Echo Core, Data Leech Core, Core Mastery
-   — Kart açıklamaları da buna göre güncellendi
-   — Kod değişkenleri (ball, orbit_balls vb.) olduğu gibi kaldı — sadece UI güncellendi
-✅ "Mimic Ball" → "Echo Core" olarak yeniden adlandırıldı (UI'da)
-
-Pranga Sistemi:
-
-✅ Player ayağında pranga (demir bilezik + zincir) sprite sistemi eklendi
-   — assets/chain/ironAnkle/ ve assets/chain/chainLink/ klasörlerine 8 yönlü sprite'lar eklendi
-   — Zincir halkaları player'dan chain_anchor noktasına dinamik olarak uzanıyor
-   — Player hareket ettikçe zincir yön ve uzunluğunu gerçek zamanlı güncelliyor
-   — Catenary simülasyonu: zincir sarkma fiziği, atalet ve sönümleme ile
-
-Hasmen NPC:
-
-✅ sitIdle animasyonu genişletildi (frame 6-16 eklendi, toplam 17 frame)
-✅ Sit → sitIdle animasyon geçiş sırası düzeltildi, döngü doğru çalışıyor
-
-Kod Temizliği:
-
-✅ ball.gd _draw() içindeki tüm gereksiz procedural core/fused ball çizimleri kaldırıldı
-   — Tüm core'lar ve fusion core'lar zaten sprite kullandığı için bu kod hiç çalışmıyordu
-   — _draw() artık sadece Echo Core'un üstündeki RGB halka efektini çiziyor
-
-────────────────────────────────────────────────────────────────────────────────
 
 0.0.0.1
 20.03.2026
@@ -2311,7 +2280,7 @@ Düzeltmeler:
 
 ────────────────────────────────────────────────────────────────────────────────
 
-0.1.0.0
+0.0.9.2
 17.06.2026
 
 Fused Ball Sprite Sistemi:
@@ -2354,6 +2323,39 @@ Sahne & Görsel:
    — Cyberpunk furniture: PC kurulumları, monitörler, sandalyeler
    — "iTY Corp." logosu ve neon tabela eklendi
    — LabRoof görselleri eklendi (çatı placeholder)
+
+0.0.9.3
+24.06.2026
+
+İsim Değişiklikleri:
+
+✅ Oyun içi tüm UI metinlerinde "Ball" → "Core" olarak değiştirildi
+   — Upgrade kart isimleri: Split Core, Pierce Core, Electric Core, Cryo Core,
+     Water Core, Fire Core, Glitch Core, Echo Core, Data Leech Core, Core Mastery
+   — Kart açıklamaları da buna göre güncellendi
+   — Kod değişkenleri (ball, orbit_balls vb.) olduğu gibi kaldı — sadece UI güncellendi
+✅ "Mimic Ball" → "Echo Core" olarak yeniden adlandırıldı (UI'da)
+
+Pranga Sistemi:
+
+✅ Player ayağında pranga (demir bilezik + zincir) sprite sistemi eklendi
+   — assets/chain/ironAnkle/ ve assets/chain/chainLink/ klasörlerine 8 yönlü sprite'lar eklendi
+   — Zincir halkaları player'dan chain_anchor noktasına dinamik olarak uzanıyor
+   — Player hareket ettikçe zincir yön ve uzunluğunu gerçek zamanlı güncelliyor
+   — Catenary simülasyonu: zincir sarkma fiziği, atalet ve sönümleme ile
+
+Hasmen NPC:
+
+✅ sitIdle animasyonu genişletildi (frame 6-16 eklendi, toplam 17 frame)
+✅ Sit → sitIdle animasyon geçiş sırası düzeltildi, döngü doğru çalışıyor
+
+Kod Temizliği:
+
+✅ ball.gd _draw() içindeki tüm gereksiz procedural core/fused ball çizimleri kaldırıldı
+   — Tüm core'lar ve fusion core'lar zaten sprite kullandığı için bu kod hiç çalışmıyordu
+   — _draw() artık sadece Echo Core'un üstündeki RGB halka efektini çiziyor
+
+────────────────────────────────────────────────────────────────────────────────
 
 ────────────────────────────────────────────────────────────────────────────────
 

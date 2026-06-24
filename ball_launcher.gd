@@ -1,4 +1,4 @@
-﻿extends Node2D
+extends Node2D
 
 var ball_scene = preload("res://ball.tscn")
 var player = null
@@ -32,6 +32,21 @@ var flash_color  := Color(2.0, 2.0, 3.5, 1.0)
 var _last_launch_type := ""
 var _shake_tween: Tween = null
 
+# ── Preview sprite ────────────────────────────────────────────────────────────
+var _preview_sprite: AnimatedSprite2D = null
+var _preview_shown_type: String = ""
+const _PREVIEW_FOLDER_MAP: Dictionary = {
+	"electric": ["electricBall",   9],
+	"pierce":   ["pierceBall",     9],
+	"split":    ["splitBall",      9],
+	"cryo":     ["cryoBall",       9],
+	"glitch":   ["glitchBall",     9],
+	"water":    ["waterBall",      9],
+	"fire":     ["fireBall",       9],
+	"leech":    ["dataLeechBall",  9],
+	"mimic":    ["echoBall",       9],
+}
+
 # Muzzle tip in sprite-local space (tune Y to match the visual barrel tip)
 const MUZZLE_SPRITE_LOCAL := Vector2(0.0, 60.0)
 
@@ -56,6 +71,13 @@ func _ready() -> void:
 	_sprite = get_parent().get_node_or_null("BallLauncherSprite") as Sprite2D
 	if _sprite:
 		_sprite_rest_pos = _sprite.position
+
+	_preview_sprite = AnimatedSprite2D.new()
+	_preview_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_preview_sprite.scale = Vector2(0.55, 0.55)
+	_preview_sprite.position = Vector2(0, 30)
+	_preview_sprite.visible = false
+	add_child(_preview_sprite)
 
 	# Başlangıç sekansı: ilk top hemen, sonrakiler 2s arayla
 	_startup_balls_left = 2      # ilkini hemen fırlatacağız, kalan 2
@@ -88,8 +110,33 @@ func queue_upgrade_ball(ball_type: String) -> void:
 	if _pending_upgrades.size() == 1:
 		_upgrade_timer = 2.0   # ilk upgrade bekleme
 
+func _update_preview_sprite() -> void:
+	var next_type: String = game.next_ball_upgrade if game else ""
+	if next_type == _preview_shown_type:
+		return
+	_preview_shown_type = next_type
+	if next_type == "" or not _PREVIEW_FOLDER_MAP.has(next_type):
+		_preview_sprite.visible = false
+		return
+	var info: Array = _PREVIEW_FOLDER_MAP[next_type]
+	var folder: String = info[0]
+	var frame_count: int = info[1]
+	var frames := SpriteFrames.new()
+	if frames.has_animation("default"):
+		frames.remove_animation("default")
+	frames.add_animation("spin")
+	frames.set_animation_speed("spin", 12.0)
+	frames.set_animation_loop("spin", true)
+	for i in range(frame_count):
+		frames.add_frame("spin", load("res://assets/balls/%s/frame_%03d.png" % [folder, i]))
+	_preview_sprite.sprite_frames = frames
+	_preview_sprite.play("spin")
+	_preview_sprite.visible = true
+
 # ─────────────────────────────────────────────────────────────────────────────
 func _process(delta: float) -> void:
+	_update_preview_sprite()
+
 	# ── Başlangıç sekansı ─────────────────────────────────────────────────────
 	if _startup_active and _startup_balls_left > 0:
 		_startup_timer -= delta
@@ -301,62 +348,3 @@ func _draw() -> void:
 			var ray_end := muzzle + Vector2(cos(angle), sin(angle)) * r * 2.1
 			draw_line(muzzle, ray_end,
 				Color(c.r, c.g, c.b, a * 0.42), 1.5)
-
-	# ── 3) Ball type preview ────────────────────────────────────────────────
-	if game == null or game.next_ball_upgrade == "":
-		return
-
-	var preview_pos = Vector2(0, 30)
-
-	if game.next_ball_upgrade == "electric":
-		draw_circle(preview_pos, 8, Color(0.2, 0.5, 1.0))
-		draw_arc(preview_pos, 10, 0, TAU, 32, Color(0.5, 0.8, 1.0), 2)
-	elif game.next_ball_upgrade == "pierce":
-		var points = PackedVector2Array([
-			preview_pos + Vector2(-10, 0),
-			preview_pos + Vector2(0, -6),
-			preview_pos + Vector2(10, 0),
-			preview_pos + Vector2(0, 6)
-		])
-		draw_colored_polygon(points, Color(1.0, 0.8, 0.0))
-	elif game.next_ball_upgrade == "split":
-		draw_circle(preview_pos, 8, Color(1.0, 0.2, 0.2))
-		for i in range(8):
-			var angle = i * TAU / 8
-			var start = preview_pos + Vector2(cos(angle), sin(angle)) * 8
-			var end   = preview_pos + Vector2(cos(angle), sin(angle)) * 13
-			draw_line(start, end, Color(1.0, 0.4, 0.0), 2)
-	elif game.next_ball_upgrade == "cryo":
-		var pts = PackedVector2Array([
-			preview_pos + Vector2(0, -8),
-			preview_pos + Vector2(5, -4),
-			preview_pos + Vector2(5, 4),
-			preview_pos + Vector2(0, 8),
-			preview_pos + Vector2(-5, 4),
-			preview_pos + Vector2(-5, -4)
-		])
-		draw_colored_polygon(pts, Color(0.5, 0.8, 1.0))
-		draw_line(preview_pos + Vector2(0, -8),  preview_pos + Vector2(0, 8),   Color(0.8, 1.0, 1.0, 0.8), 1.5)
-		draw_line(preview_pos + Vector2(-5, -4), preview_pos + Vector2(5, 4),   Color(0.8, 1.0, 1.0, 0.8), 1.5)
-		draw_line(preview_pos + Vector2(5, -4),  preview_pos + Vector2(-5, 4),  Color(0.8, 1.0, 1.0, 0.8), 1.5)
-	elif game.next_ball_upgrade == "glitch":
-		draw_circle(preview_pos, 8, Color(0.8, 0.0, 0.8))
-		draw_arc(preview_pos, 10, 0, TAU, 32, Color(1.0, 0.0, 1.0), 2)
-		draw_line(preview_pos + Vector2(-6, -4), preview_pos + Vector2(6, 4),  Color(1.0, 0.5, 1.0, 0.8), 2)
-		draw_line(preview_pos + Vector2(-6, 4),  preview_pos + Vector2(6, -4), Color(1.0, 0.5, 1.0, 0.8), 2)
-	elif game.next_ball_upgrade == "water":
-		draw_circle(preview_pos, 10, Color(0.0, 0.5, 1.0, 0.8))
-		draw_circle(preview_pos, 7,  Color(0.3, 0.7, 1.0, 0.6))
-		draw_circle(preview_pos + Vector2(3, -3), 3, Color(0.8, 0.9, 1.0, 0.5))
-	elif game.next_ball_upgrade == "fire":
-		draw_circle(preview_pos, 8, Color(1.0, 0.3, 0.0))
-		draw_arc(preview_pos, 10, 0, TAU, 32, Color(1.0, 0.6, 0.0), 2)
-	elif game.next_ball_upgrade == "leech":
-		draw_circle(preview_pos, 8, Color(0.0, 0.8, 0.0, 0.9))
-		draw_arc(preview_pos, 10, 0, TAU, 32, Color(0.0, 1.0, 0.0), 2)
-		for i in range(6):
-			var angle = i * TAU / 6
-			var start = preview_pos + Vector2(cos(angle), sin(angle)) * 10
-			var end   = preview_pos + Vector2(cos(angle), sin(angle)) * 15
-			draw_line(start, end, Color(0.0, 1.0, 0.2), 2)
-		draw_circle(preview_pos, 3, Color(0.5, 1.0, 0.5))
