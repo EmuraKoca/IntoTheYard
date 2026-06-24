@@ -1,0 +1,93 @@
+════════════════════════════════════════════════════════════════════════════════
+INTO THE YARD — YAPILACAKLAR LİSTESİ
+════════════════════════════════════════════════════════════════════════════════
+
+[ ] = Yapılmadı
+[✓] = Tamamlandı
+[X] = İptal / Ertelendi
+
+────────────────────────────────────────────────────────────────────────────────
+1. VECTOR BUILD SİSTEMİ (BUGÜN)
+────────────────────────────────────────────────────────────────────────────────
+
+[ ] Vector'a özel upgrade kartları tasarlanıp koda eklenmesi
+[ ] Leila'ya özel upgrade kartları tasarlanıp koda eklenmesi
+[ ] Cyclone'a özel upgrade kartları tasarlanıp koda eklenmesi
+[ ] Ortak upgrade kartları havuzu genişletilmesi
+[ ] Anti-Virus Core (Cyclone yeni top tipi) eklenmesi
+      — Per-second purification damage debuff
+      — Protocol sinerjisi: ölünce zincir atlama
+      — Override sinerjisi: enfekte düşmana bonus hasar
+
+────────────────────────────────────────────────────────────────────────────────
+2. OYUN DENGESİ
+────────────────────────────────────────────────────────────────────────────────
+
+[ ] Level hızı dengesi
+      — İlk 10 level çok hızlı, 10 sonrası çok yavaş
+      — Hedef: 5-6 dakikalık boss run
+      — Kill eşikleri ve spawn yoğunluğu yeniden kalibre edilmeli
+
+────────────────────────────────────────────────────────────────────────────────
+3. KARAKTER & NPC
+────────────────────────────────────────────────────────────────────────────────
+
+[ ] Elite NPC sistemi
+      — 7+ dakikada özel karakter sahaya giriyor
+      — Yenilirse garantili müttefik oluyor
+      — Yaşam alanında looping idle rutini (PC'de otur → yürü → ekrana bak → geri dön)
+
+[ ] Mr. Hasmen idle animasyonu sitIdle döngüsü — test ve ince ayar
+[ ] Karakter sprite'ları (Vector, Leila, Cyclone) finalize edilmesi
+      — Şu an placeholder görseller var
+
+────────────────────────────────────────────────────────────────────────────────
+4. GÖRSEL & EFEKTLER
+────────────────────────────────────────────────────────────────────────────────
+
+[✓] Fused Core sprite sistemi (21 fusion tipi)
+[✓] Element göstergesi PNG sprite sistemine geçiş
+[✓] Chip arıza efekti (mavi-mor elektrik kıvılcımları)
+[✓] Zincir Verlet fiziği (catenary sarkma)
+[✓] Zincire manyetik elektriklenme efekti
+[ ] Zincir görseli ince ayarı (gerekirse)
+[ ] Kamera takibi — izometrik açıyla birlikte tekrar denenecek
+
+────────────────────────────────────────────────────────────────────────────────
+5. SES EFEKTLERİ
+────────────────────────────────────────────────────────────────────────────────
+
+[ ] Ses efekti asset'leri bulunması (.wav / .ogg)
+      — Vuruş, fırlatma, fusion, düşman ölümü, boss giriş vb.
+[ ] AudioStreamPlayer node'larının koda bağlanması
+[ ] Arka plan müziği entegrasyonu
+
+────────────────────────────────────────────────────────────────────────────────
+6. SAHNE & GÖRSEL VARLIK
+────────────────────────────────────────────────────────────────────────────────
+
+[ ] Yaşam alanı ve tribün final asset'leri (placeholder'lar yerleştirildi)
+[ ] İzometrik açı deneyi (kamera + sahne perspektifi)
+
+────────────────────────────────────────────────────────────────────────────────
+7. BOSS & DÜŞMAN
+────────────────────────────────────────────────────────────────────────────────
+
+[✓] S-Miler 79
+[✓] Cyber 404
+[✓] Nyx-09 The Quantum Widow
+[ ] Boss geçiş ekranı / cutscene iyileştirmesi
+[ ] Düşman çeşitliliği genişletilmesi (gerekirse)
+
+────────────────────────────────────────────────────────────────────────────────
+8. UI & KALİTE
+────────────────────────────────────────────────────────────────────────────────
+
+[✓] Orbitron font entegrasyonu
+[✓] Cyberpunk UI paneli
+[✓] Karakter seçim ekranı matrix rain efekti
+[ ] Oyun sonu istatistik ekranı iyileştirmesi
+[ ] Ayarlar menüsü (ses, çözünürlük vb.)
+[ ] Versiyon numarası güncel tutulması
+
+════════════════════════════════════════════════════════════════════════════════

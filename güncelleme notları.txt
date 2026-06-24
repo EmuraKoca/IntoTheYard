@@ -2392,14 +2392,4 @@ Hasmen Seçim Ekranı Kaldırıldı:
 
 ────────────────────────────────────────────────────────────────────────────────
 
-YAPILACAKLAR — ÖNCELİKLİ
-
-Level Hızı Dengesi (üzerinde düşünülüp istişare edilmesi gerekiyor):
-
-Sorun: İlk 10 level çok hızlı geçiyor (upgrade'ler seri seri geliyor),
-10. level sonrası ise spawn az olduğu için aşırı yavaşlıyor.
-Bir boss run'ı yaklaşık 5-6 dakika sürmeli. Şu an Smiler'a kadar
-~2.5 dk, Smiler ölene kadar ~3 dk — toplam çok kısa ve level eğrisi
-tutarsız. Çözüm: Level başına gereken kill sayısı yeniden ayarlanmalı,
-ilk levellar daha yavaş, ortalar daha akıcı, boss aşaması yeterince
-uzun hissettirmeli. Spawn yoğunluğu da levela göre daha iyi kalibre edilmeli.
+Yapılacaklar için bkz. toDoList.txt
