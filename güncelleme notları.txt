@@ -2359,6 +2359,39 @@ Kod Temizliği:
 
 ────────────────────────────────────────────────────────────────────────────────
 
+0.0.9.4
+24.06.2026
+
+Element Göstergesi — PNG Sprite Sistemi:
+
+✅ elem_indicator.gd artık _draw() ile vektörel ikon çizmiyor
+   — Her element için hazır .png sprite'lar eklendi (assets/elemIndicators/)
+   — burn.png, electrified.png, frozen.png, glitch.png, slow.png, wet.png
+   — elem_indicator.gd sprite tabanlı görüntülemeye geçirildi
+
+Core Fizik & Tutarsızlık Düzeltmeleri:
+
+✅ Core'ların (ball.gd) zaman zaman takılması ve tutarsız davranışı gözden geçirildi
+   — Fizik ve state machine yeniden düzenlendi, takılma senaryoları kapatıldı
+
+BallLauncher Önizlemesi:
+
+✅ Fırlatma önizlemesi artık draw() ile çizilmiyor
+   — Önizleme görseli doğrudan ball sprite klasörlerinden yükleniyor
+   — Görsel tutarlılık sağlandı (launcher'daki top ile orbit'teki top aynı sprite)
+
+Zincire Manyetik Elektriklenme Efekti:
+
+✅ Player'ı tutan zincir halkalarına elektrik efekti eklendi
+   — Zincir boyunca manyetik kıvılcım animasyonu
+
+Hasmen Seçim Ekranı Kaldırıldı:
+
+✅ Oyun başlangıcındaki Hasmen seçim ekranı tamamen kaldırıldı
+   — FusionZone artık her oyunda varsayılan olarak sahaya iniyor
+
+────────────────────────────────────────────────────────────────────────────────
+
 YAPILACAKLAR — ÖNCELİKLİ
 
 Level Hızı Dengesi (üzerinde düşünülüp istişare edilmesi gerekiyor):
