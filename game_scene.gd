@@ -1103,6 +1103,15 @@ func show_upgrade_menu() -> void:
 	{"name": "Impact Feedback",     "category": "Utility",       "color": Color(0.5, 0.3, 0.9), "desc": "Every 10 hits:\n+1 Armor Gain (max 10)",                     "index": 36, "weight": 2, "rarity": "epic",     "chars": ["vector"]},
 	{"name": "Chain Density",       "category": "Utility",       "color": Color(0.0, 0.9, 0.5), "desc": "New enemy hit mid-flight:\n+dmg ramp, resets on return",      "index": 37, "weight": 4, "rarity": "rare",     "chars": ["vector"]},
 	{"name": "Last Stand",          "category": "Utility",       "color": Color(1.0, 0.6, 0.0), "desc": "Low HP → bonus Core Speed\n& Armor Gain efficiency",          "index": 38, "weight": 2, "rarity": "epic",     "chars": ["vector"]},
+	# ── Vector — Identity (yeni core'lar) ────────────────────────────────────
+	{"name": "Armor Core",    "category": "Identity", "color": Color(0.5, 0.6, 0.8), "desc": "Hit → gain Armor",                         "index": 40, "weight": 8,  "rarity": "uncommon", "chars": ["vector"]},
+	{"name": "Anchor Core",   "category": "Identity", "color": Color(0.3, 0.4, 0.6), "desc": "Hit → slow enemy 60% (3s)",                "index": 41, "weight": 6,  "rarity": "rare",     "chars": ["vector"]},
+	{"name": "Crusher Core",  "category": "Identity", "color": Color(0.6, 0.3, 0.1), "desc": "High damage, breaks Armor",               "index": 42, "weight": 4,  "rarity": "rare",     "chars": ["vector"]},
+	{"name": "Kinetic Core",  "category": "Identity", "color": Color(0.2, 0.8, 0.6), "desc": "Each wall bounce → +dmg",                 "index": 43, "weight": 6,  "rarity": "rare",     "chars": ["vector"]},
+	{"name": "Bulwark Core",  "category": "Identity", "color": Color(0.4, 0.5, 0.7), "desc": "Hit → +2 Armor",                          "index": 44, "weight": 6,  "rarity": "rare",     "chars": ["vector"]},
+	{"name": "Siege Core",    "category": "Identity", "color": Color(0.8, 0.4, 0.1), "desc": "Highest damage core",                     "index": 45, "weight": 2,  "rarity": "epic",     "chars": ["vector"]},
+	{"name": "Bloodbound Core","category": "Identity", "color": Color(0.7, 0.0, 0.1), "desc": "Missing HP → bonus dmg",                 "index": 46, "weight": 3,  "rarity": "epic",     "chars": ["vector"]},
+	{"name": "Tempered Core", "category": "Identity", "color": Color(0.9, 0.7, 0.2), "desc": "Armor active → +3 dmg",                   "index": 47, "weight": 4,  "rarity": "rare",     "chars": ["vector"]},
 ]
 	upgrades = upgrades.filter(func(u): return u["chars"].is_empty() or char_id in u["chars"])
 	
@@ -1952,6 +1961,23 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 	elif index == 38:  # Last Stand
 		var p := get_node("Player")
 		p.has_last_stand = true
+	# ── Vector — Identity yeni core'lar ──────────────────────────────────────
+	elif index == 40:
+		$BallLauncher.queue_upgrade_ball("armor")
+	elif index == 41:
+		$BallLauncher.queue_upgrade_ball("anchor")
+	elif index == 42:
+		$BallLauncher.queue_upgrade_ball("crusher")
+	elif index == 43:
+		$BallLauncher.queue_upgrade_ball("kinetic")
+	elif index == 44:
+		$BallLauncher.queue_upgrade_ball("bulwark")
+	elif index == 45:
+		$BallLauncher.queue_upgrade_ball("siege")
+	elif index == 46:
+		$BallLauncher.queue_upgrade_ball("bloodbound")
+	elif index == 47:
+		$BallLauncher.queue_upgrade_ball("tempered")
 
 	update_ui()
 	$BallLauncher.queue_redraw()

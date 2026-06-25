@@ -36,15 +36,23 @@ var _shake_tween: Tween = null
 var _preview_sprite: AnimatedSprite2D = null
 var _preview_shown_type: String = ""
 const _PREVIEW_FOLDER_MAP: Dictionary = {
-	"electric": ["electricBall",   9],
-	"pierce":   ["pierceBall",     9],
-	"split":    ["splitBall",      9],
-	"cryo":     ["cryoBall",       9],
-	"glitch":   ["glitchBall",     9],
-	"water":    ["waterBall",      9],
-	"fire":     ["fireBall",       9],
-	"leech":    ["dataLeechBall",  9],
-	"mimic":    ["echoBall",       9],
+	"electric":   ["electricBall",    9],
+	"pierce":     ["pierceBall",      9],
+	"split":      ["splitBall",       9],
+	"cryo":       ["cryoBall",        9],
+	"glitch":     ["glitchBall",      9],
+	"water":      ["waterBall",       9],
+	"fire":       ["fireBall",        9],
+	"leech":      ["dataLeechBall",   9],
+	"mimic":      ["echoBall",        9],
+	"armor":      ["armorCore",       9],
+	"anchor":     ["anchorCore",      9],
+	"crusher":    ["crusherCore",     9],
+	"kinetic":    ["kineticCore",     9],
+	"bulwark":    ["bulwarkCore",     9],
+	"siege":      ["siegeCore",       9],
+	"bloodbound": ["bloodboundCore",  9],
+	"tempered":   ["temperedCore",    9],
 }
 
 # Muzzle tip in sprite-local space (tune Y to match the visual barrel tip)
@@ -232,6 +240,31 @@ func _launch_typed_ball(ball_type: String) -> void:
 			ball.max_damage   = 2
 		"mimic":
 			ball.is_mimic     = true
+		# ── Vector yeni core'lar ──────────────────────────────────────────────
+		"armor":
+			ball.can_armor    = true
+			ball.max_damage   = 5 + player_node.ball_mastery
+		"anchor":
+			ball.can_anchor   = true
+			ball.max_damage   = 8 + player_node.ball_mastery
+		"crusher":
+			ball.can_crusher  = true
+			ball.max_damage   = 12 + player_node.ball_mastery
+		"kinetic":
+			ball.can_kinetic  = true
+			ball.max_damage   = 7 + player_node.ball_mastery
+		"bulwark":
+			ball.can_bulwark  = true
+			ball.max_damage   = 6 + player_node.ball_mastery
+		"siege":
+			ball.can_siege    = true
+			ball.max_damage   = 15 + player_node.ball_mastery
+		"bloodbound":
+			ball.can_bloodbound = true
+			ball.max_damage   = 8 + player_node.ball_mastery
+		"tempered":
+			ball.can_tempered = true
+			ball.max_damage   = 9 + player_node.ball_mastery
 
 	var direction  = (player.global_position - global_position).normalized()
 	var spawn_pos  = _get_muzzle_global()

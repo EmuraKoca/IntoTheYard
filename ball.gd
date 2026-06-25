@@ -36,6 +36,15 @@ var max_mimic_hits = 5
 var mimic_ring_time = 0.0
 var hit_type = ""
 var can_leech = false
+# ── Vector yeni core flag'leri ────────────────────────────────────────────────
+var can_armor: bool = false
+var can_anchor: bool = false
+var can_crusher: bool = false
+var can_kinetic: bool = false
+var can_bulwark: bool = false
+var can_siege: bool = false
+var can_bloodbound: bool = false
+var can_tempered: bool = false
 var trail: Line2D = null
 var _wall_bounce_count: int = 0  # sonsuz sekme önlemi
 var trail_positions: Array = []
@@ -139,9 +148,25 @@ func _setup_ball_sprite() -> void:
 	elif can_water:
 		folder = "waterBall";     frame_count = 9
 	elif is_mimic:
-		folder = "echoBall";      frame_count = 17
+		folder = "echoBall";        frame_count = 17
+	elif can_armor:
+		folder = "armorCore";       frame_count = 9
+	elif can_anchor:
+		folder = "anchorCore";      frame_count = 9
+	elif can_crusher:
+		folder = "crusherCore";     frame_count = 9
+	elif can_kinetic:
+		folder = "kineticCore";     frame_count = 9
+	elif can_bulwark:
+		folder = "bulwarkCore";     frame_count = 9
+	elif can_siege:
+		folder = "siegeCore";       frame_count = 9
+	elif can_bloodbound:
+		folder = "bloodboundCore";  frame_count = 9
+	elif can_tempered:
+		folder = "temperedCore";    frame_count = 9
 	else:
-		folder = "normalBall";    frame_count = 9
+		folder = "normalBall";      frame_count = 9
 
 	var frames := SpriteFrames.new()
 	if frames.has_animation("default"):
@@ -721,6 +746,22 @@ func _hit_subject(subject: Node2D) -> void:
 		base_damage = 6
 	elif can_leech:
 		base_damage = 2
+	elif can_armor:
+		base_damage = 5
+	elif can_anchor:
+		base_damage = 8
+	elif can_crusher:
+		base_damage = 12
+	elif can_kinetic:
+		base_damage = 7
+	elif can_bulwark:
+		base_damage = 6
+	elif can_siege:
+		base_damage = 15
+	elif can_bloodbound:
+		base_damage = 8
+	elif can_tempered:
+		base_damage = 9
 	var total_damage = base_damage
 
 	# Chain Density: yeni düşmana çarpınca hasar artar
@@ -736,13 +777,29 @@ func _hit_subject(subject: Node2D) -> void:
 
 	subject.take_damage(total_damage)
 
-	# ── Vector Armor & Stack tetikleyicileri ─────────────────────────────────
+	# ── Vector yeni core efektleri + Armor & Stack tetikleyicileri ──────────
 	var player_node := _get_player()
+	var game_node_fx := get_tree().get_first_node_in_group("game")
+	if can_armor and is_instance_valid(player_node) and game_node_fx:
+		game_node_fx.gain_armor(1)
+	if can_bulwark and is_instance_valid(player_node) and game_node_fx:
+		game_node_fx.gain_armor(2)
+	if can_bloodbound and game_node_fx:
+		var missing: int = game_node_fx.player_max_hp - game_node_fx.player_hp
+		var bonus: int = missing / 5
+		if bonus > 0:
+			subject.take_damage(bonus)
+	if can_tempered and game_node_fx:
+		if game_node_fx.player_armor > 0:
+			subject.take_damage(3)
+	if can_anchor and is_instance_valid(subject) and subject.has_method("apply_slow"):
+		subject.apply_slow(0.6, 3.0)
+	if can_kinetic and _wall_bounce_count > 0:
+		subject.take_damage(_wall_bounce_count)
 	if is_instance_valid(player_node):
-		var game_node := get_tree().get_first_node_in_group("game")
-		# Armor Core — isabet başına armor kazan
-		if player_node.has_armor_core and game_node:
-			game_node.gain_armor(player_node.armor_gain_per_hit)
+		# Armor Core upgrade (ayrı flag) — isabet başına armor kazan
+		if player_node.has_armor_core and game_node_fx:
+			game_node_fx.gain_armor(player_node.armor_gain_per_hit)
 		# Momentum Engine — isabet başına +1 stack
 		if player_node.has_momentum_engine:
 			player_node.momentum_stacks = min(player_node.momentum_stacks + 1, player_node.MOMENTUM_MAX)
