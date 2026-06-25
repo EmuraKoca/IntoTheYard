@@ -2393,3 +2393,93 @@ Hasmen Seçim Ekranı Kaldırıldı:
 ────────────────────────────────────────────────────────────────────────────────
 
 Yapılacaklar için bkz. toDoList.txt
+
+────────────────────────────────────────────────────────────────────────────────
+
+0.0.9.5
+25.06.2026
+
+Vector Karakter — Armor Sistemi:
+
+✅ Armor değişkenleri eklendi (player_armor, player_armor_cap, armor_regen_rate)
+   — Vector oyuna 40 HP / 20 Armor ile başlar
+   — Armor, HP barının üzerine gri overlay olarak gösterilir
+   — Hasar önce Armor'ı tüketir, sıfırlanınca HP düşer
+
+✅ gain_armor() fonksiyonu — Pain Converter, boost çarpanı, yeni kart çarpanları destekli
+✅ Armor Bar UI — IntegrityBar üstünde ColorRect overlay (orantılı genişlik)
+✅ Armor Label — mevcut / cap gösterimi
+
+Core (Identity) Sistemi Genişletmesi:
+
+✅ 8 yeni Vector core tipi eklendi (PNG sprite'larla):
+   — Armor Core: isabet → Armor kazan
+   — Bulwark Core: isabet → +2 Armor
+   — Anchor Core: isabet → düşman %60 yavaşlar (3 sn)
+   — Kinetic Core: duvar sekme sayısı kadar bonus hasar
+   — Crusher Core: yüksek hasar, Armor delme
+   — Siege Core: en yüksek hasarlı core
+   — Bloodbound Core: eksik HP → bonus hasar
+   — Tempered Core: Armor aktifken +3 hasar
+
+✅ Sprite boyut normalizasyonu — 0.675 × (48 / texture_width) dinamik scale
+✅ MAX_ORBIT 7 → 8 olarak güncellendi
+
+Core Envanter Paneli (UI):
+
+✅ Sağ panelde yatay 4×2 grid — mevcut core'lar her zaman görünür
+✅ Hücre boyutu 40px, CORES başlığı altında, UISep4 üst sınır çizgisi
+✅ UISep5 (panel üzerinden geçen çizgi) silindi
+✅ Her frame güncellenir (deferred add_child zamanlaması için)
+
+Core Discard (Atma) Sistemi:
+
+✅ 8 core doluyken yeni core seçilirse "Release a Core" overlay'i açılır
+✅ 4×2 grid'de mevcut core'lar gösterilir, hover'da kırmızı highlight
+✅ Seçilen core küçülüp düşme animasyonuyla sahadan kalkar
+✅ Yeni core sıraya alınır ve fırlatılır
+
+Upgrade Kart Sistemi Yeniden Yapılandırması:
+
+✅ Identity kartlar — sınırsız çıkar
+✅ Individuality kartlar — tek kopya; seçilince havuzdan kalkar
+✅ Utility kartlar — Lv.1 / Lv.2 / Lv.3; kart adında seviye gösterilir, 3'ten sonra çıkmaz
+✅ Calamity kartlar — sınırsız çıkar
+
+Utility Kart Seviyelendirmesi:
+
+✅ Momentum Engine — Lv1: %3/stack | Lv2: %5 | Lv3: %7 + max stack 30
+✅ Impact Feedback  — Lv1: her 10 isabet | Lv2: 7 | Lv3: 5
+✅ Chain Density    — Lv1: +1 hasar/düşman | Lv2: +2 | Lv3: +3
+✅ Last Stand       — Lv1: hız bonusu | Lv2: + pasif armor | Lv3: daha güçlü
+
+Stack & Sinerjiler (Vector):
+
+✅ Momentum Engine — isabet → stack, stack → orbit hız bonusu
+✅ Impact Feedback — N isabet → +1 Impact Stack → +1 Armor Gain/isabet
+✅ Chain Density    — yeni düşman → hasar artar
+✅ Last Stand      — eksik HP → orbit hız & armor bonusu (Lv2-3)
+✅ Adrenal Surge   — HP <%30 → Momentum bonusu x2
+✅ Risk Engine     — alınan hasar = Momentum stack kazanımı
+
+Yeni Individuality Kartlar (13 adet, index 48-60):
+
+✅ Reinforced Frame       — +20 Max Armor / Core Speed -%10
+✅ Iron Constitution      — Armor Gain +%25 (kalıcı)
+✅ Fortified Core System  — Armor Cap +15 / Momentum Gain -%20
+✅ Blood Circuit          — HP ≤%70: Core Speed lineer olarak +%0→%50
+✅ Fractured Frame        — Core Hasar ×1.4 / Max HP -15
+✅ Glass Engine           — HP<%50: Armor +%50 | HP>%70: Armor -%30
+✅ Overclocked Reflex     — Core Speed +%20 / Armor Gain -%15
+✅ Kinetic Nervous System — Momentum dönüşte reset olmaz / Max Armor -10
+✅ Hyper Recovery Loop    — Dönüş hızı ×1.5 / Core hasar = 0
+✅ Magnetic Weight        — Knockback ×2 / Core Speed -%10
+✅ Battlefield Anchor     — Slow süresi ×2 / Player Speed -%10
+✅ Adrenal Armor System   — HP<%50: Armor +%40 | HP>%70: Core Speed +%10
+✅ Risk Engine            — Hasar alınınca Momentum stack / Armor Gain -%30
+
+Orbit Hata Düzeltmeleri:
+
+✅ Topların yörüngeden çıkıp anında geri girmesi düzeltildi (catch_cooldown kontrolü)
+✅ Kart metin taşması düzeltildi (Panel + PRESET_FULL_RECT autowrap)
+
