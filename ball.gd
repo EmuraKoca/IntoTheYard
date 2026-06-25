@@ -181,7 +181,10 @@ func _setup_ball_sprite() -> void:
 	_sprite = AnimatedSprite2D.new()
 	_sprite.sprite_frames  = frames
 	_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	_sprite.scale          = Vector2(0.675, 0.675)
+	# 48px referans boyut — 32px PNG'ler için scale orantılı büyütülür
+	var _base_px: float = 48.0
+	var _tex_size: float = float(frames.get_frame_texture("spin", 0).get_width())
+	_sprite.scale = Vector2.ONE * (0.675 * (_base_px / _tex_size))
 	_sprite.play("spin")
 	add_child(_sprite)
 
