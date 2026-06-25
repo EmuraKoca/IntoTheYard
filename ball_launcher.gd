@@ -273,6 +273,7 @@ func _launch_typed_ball(ball_type: String) -> void:
 		spawn_pos += direction * (t + 2.0)
 
 	ball.global_position = spawn_pos
+	ball.add_to_group("player_balls")
 	get_parent().add_child.call_deferred(ball)
 	ball.queue_redraw()
 	ball.launch(direction)

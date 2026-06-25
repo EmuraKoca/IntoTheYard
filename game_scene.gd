@@ -18,6 +18,32 @@ var _armor_bar: ColorRect = null
 var _armor_label: Label = null
 var _armor_gain_boost: float = 1.0    # Pain Converter / Emergency Protocol çarpanı
 var _armor_gain_boost_timer: float = 0.0
+
+# ── Core Envanter sistemi ──────────────────────────────────────────────────────
+var _core_panel: Control = null
+var _core_cells: Array = []
+var _pending_core_type: String = ""
+
+const _CORE_FOLDER_MAP: Dictionary = {
+	"normal":     "normalBall",    "electric": "electricBall",
+	"pierce":     "pierceBall",    "split":    "splitBall",
+	"cryo":       "cryoBall",      "glitch":   "glitchBall",
+	"water":      "waterBall",     "fire":     "fireBall",
+	"leech":      "dataLeechBall", "mimic":    "echoBall",
+	"armor":      "armorCore",     "anchor":   "anchorCore",
+	"crusher":    "crusherCore",   "kinetic":  "kineticCore",
+	"bulwark":    "bulwarkCore",   "siege":    "siegeCore",
+	"bloodbound": "bloodboundCore","tempered": "temperedCore",
+}
+
+const _CORE_INDEX_MAP: Dictionary = {
+	0: "split",  1: "electric", 2: "pierce",  15: "cryo",
+	16: "glitch", 17: "water",  18: "fire",   19: "mimic",
+	22: "leech",  40: "armor",  41: "anchor", 42: "crusher",
+	43: "kinetic",44: "bulwark",45: "siege",  46: "bloodbound",
+	47: "tempered",
+}
+
 var subject_scene = preload("res://subject.tscn")
 var upgrading = false
 var heavy_subject_scene = preload("res://heavy_subject.tscn")
@@ -635,12 +661,14 @@ func _ready() -> void:
 	_setup_auto_toggle()
 	_setup_neon_sign()
 	_setup_armor_bar()
+	_setup_core_panel()
 	update_ui()
 	_update_armor_ui()
 	
 
 
 func update_ui() -> void:
+	_update_core_panel()
 	$UI/LabelLevel.text = "◈  LEVEL " + str(level)
 	$UI/IntegrityBar.max_value = player_max_hp
 	$UI/IntegrityBar.value = player_hp
@@ -759,6 +787,260 @@ func gain_armor(amount: int) -> void:
 	player_armor = min(player_armor + boosted, player_armor_cap)
 	player_max_armor = max(player_max_armor, player_armor_cap)
 	_update_armor_ui()
+
+func _get_ball_core_type(ball) -> String:
+	if not is_instance_valid(ball): return "normal"
+	if ball.get("can_armor"):      return "armor"
+	if ball.get("can_anchor"):     return "anchor"
+	if ball.get("can_crusher"):    return "crusher"
+	if ball.get("can_kinetic"):    return "kinetic"
+	if ball.get("can_bulwark"):    return "bulwark"
+	if ball.get("can_siege"):      return "siege"
+	if ball.get("can_bloodbound"): return "bloodbound"
+	if ball.get("can_tempered"):   return "tempered"
+	if ball.get("can_electric"):   return "electric"
+	if ball.get("can_pierce"):     return "pierce"
+	if ball.get("can_split"):      return "split"
+	if ball.get("can_cryo"):       return "cryo"
+	if ball.get("can_glitch"):     return "glitch"
+	if ball.get("can_water"):      return "water"
+	if ball.get("can_fire"):       return "fire"
+	if ball.get("can_leech"):      return "leech"
+	if ball.get("is_mimic"):       return "mimic"
+	return "normal"
+
+func _get_core_icon_texture(core_type: String) -> Texture2D:
+	var folder: String = _CORE_FOLDER_MAP.get(core_type, "normalBall")
+	return load("res://assets/balls/%s/frame_000.png" % folder)
+
+func _setup_core_panel() -> void:
+	const CELL := 50
+	const GAP  := 5
+	const PAD  := 8
+	const COLS := 2
+	const ROWS := 4
+	var pw: float = COLS * CELL + (COLS - 1) * GAP + PAD * 2
+	var ph: float = ROWS * CELL + (ROWS - 1) * GAP + PAD * 2 + 22.0
+
+	var panel := Panel.new()
+	panel.name = "CoreInventoryPanel"
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.04, 0.04, 0.1, 0.85)
+	sb.corner_radius_top_left = 6; sb.corner_radius_top_right = 6
+	sb.corner_radius_bottom_right = 6; sb.corner_radius_bottom_left = 6
+	sb.border_width_top = 1; sb.border_width_bottom = 1
+	sb.border_width_left = 1; sb.border_width_right = 1
+	sb.border_color = Color(0.25, 0.4, 0.65, 0.9)
+	panel.add_theme_stylebox_override("panel", sb)
+	panel.size = Vector2(pw, ph)
+	panel.position = Vector2(30.0, 600.0)
+	$UI.add_child(panel)
+
+	var title := Label.new()
+	title.text = "◈ CORES"
+	title.size = Vector2(pw, 20.0)
+	title.position = Vector2(0.0, 3.0)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_override("font", _font_bold)
+	title.add_theme_font_size_override("font_size", 11)
+	title.add_theme_color_override("font_color", Color(0.55, 0.8, 1.0))
+	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.add_child(title)
+
+	_core_cells = []
+	for r in range(ROWS):
+		for c in range(COLS):
+			var cell := Panel.new()
+			var csb := StyleBoxFlat.new()
+			csb.bg_color = Color(0.07, 0.07, 0.15, 0.95)
+			csb.corner_radius_top_left = 3; csb.corner_radius_top_right = 3
+			csb.corner_radius_bottom_right = 3; csb.corner_radius_bottom_left = 3
+			csb.border_width_top = 1; csb.border_width_bottom = 1
+			csb.border_width_left = 1; csb.border_width_right = 1
+			csb.border_color = Color(0.2, 0.3, 0.5, 0.5)
+			cell.add_theme_stylebox_override("panel", csb)
+			cell.size = Vector2(CELL, CELL)
+			cell.position = Vector2(PAD + c * (CELL + GAP), 22.0 + PAD + r * (CELL + GAP))
+			panel.add_child(cell)
+
+			var icon := TextureRect.new()
+			icon.name = "Icon"
+			icon.size = Vector2(CELL - 8, CELL - 8)
+			icon.position = Vector2(4.0, 4.0)
+			icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+			icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			cell.add_child(icon)
+			_core_cells.append(cell)
+
+	_core_panel = panel
+
+func _update_core_panel() -> void:
+	if _core_panel == null:
+		return
+	var balls := get_tree().get_nodes_in_group("player_balls")
+	# Geçersiz node'ları temizle
+	balls = balls.filter(func(b): return is_instance_valid(b))
+	for i in range(_core_cells.size()):
+		var cell: Panel = _core_cells[i]
+		var icon: TextureRect = cell.get_node("Icon")
+		if i < balls.size():
+			var btype := _get_ball_core_type(balls[i])
+			icon.texture = _get_core_icon_texture(btype)
+		else:
+			icon.texture = null
+
+func _show_discard_overlay(new_core_name: String) -> void:
+	var canvas := CanvasLayer.new()
+	canvas.name = "DiscardOverlay"
+	canvas.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(canvas)
+	get_tree().paused = true
+	upgrading = true
+
+	# Karartma
+	var bg := ColorRect.new()
+	bg.size = Vector2(1920.0, 1080.0)
+	bg.color = Color(0.0, 0.0, 0.0, 0.72)
+	canvas.add_child(bg)
+
+	# Başlık
+	var title := Label.new()
+	title.text = "RELEASE A CORE"
+	title.position = Vector2(760.0, 200.0)
+	title.size = Vector2(400.0, 60.0)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_override("font", _font_bold)
+	title.add_theme_font_size_override("font_size", 36)
+	title.add_theme_color_override("font_color", Color(1.0, 0.35, 0.2))
+	canvas.add_child(title)
+
+	# Alt yazı
+	var sub := Label.new()
+	sub.text = "Incoming: %s  —  Select a core to release" % new_core_name.capitalize()
+	sub.position = Vector2(560.0, 270.0)
+	sub.size = Vector2(800.0, 36.0)
+	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sub.add_theme_font_override("font", _font_regular)
+	sub.add_theme_font_size_override("font_size", 18)
+	sub.add_theme_color_override("font_color", Color(0.8, 0.8, 0.9))
+	canvas.add_child(sub)
+
+	# 4×2 grid (daha büyük, tıklanabilir)
+	const CELL := 90
+	const GAP  := 14
+	const COLS := 4
+	var balls := get_tree().get_nodes_in_group("player_balls")
+	balls = balls.filter(func(b): return is_instance_valid(b))
+	var grid_w: float = COLS * CELL + (COLS - 1) * GAP
+	var start_x: float = (1920.0 - grid_w) / 2.0
+	var start_y: float = 340.0
+
+	for i in range(balls.size()):
+		var ball = balls[i]
+		var col := i % COLS
+		var row := i / COLS
+		var cx: float = start_x + col * (CELL + GAP)
+		var cy: float = start_y + row * (CELL + GAP + 24)
+
+		# Hücre arka planı
+		var cell_bg := Panel.new()
+		var csb := StyleBoxFlat.new()
+		csb.bg_color = Color(0.08, 0.08, 0.18, 0.95)
+		csb.corner_radius_top_left = 6; csb.corner_radius_top_right = 6
+		csb.corner_radius_bottom_right = 6; csb.corner_radius_bottom_left = 6
+		csb.border_width_top = 2; csb.border_width_bottom = 2
+		csb.border_width_left = 2; csb.border_width_right = 2
+		csb.border_color = Color(0.3, 0.4, 0.6, 0.8)
+		cell_bg.add_theme_stylebox_override("panel", csb)
+		cell_bg.size = Vector2(CELL, CELL + 24)
+		cell_bg.position = Vector2(cx, cy)
+		canvas.add_child(cell_bg)
+
+		# Core ikonu
+		var btype := _get_ball_core_type(ball)
+		var icon := TextureRect.new()
+		icon.texture = _get_core_icon_texture(btype)
+		icon.size = Vector2(CELL - 8, CELL - 8)
+		icon.position = Vector2(4.0, 4.0)
+		icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		cell_bg.add_child(icon)
+
+		# Core isim etiketi
+		var name_lbl := Label.new()
+		name_lbl.text = btype.capitalize()
+		name_lbl.size = Vector2(CELL, 20.0)
+		name_lbl.position = Vector2(0.0, float(CELL) + 2.0)
+		name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		name_lbl.add_theme_font_override("font", _font_regular)
+		name_lbl.add_theme_font_size_override("font_size", 10)
+		name_lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.85))
+		name_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		cell_bg.add_child(name_lbl)
+
+		# Tıklama alanı (şeffaf Button)
+		var btn := Button.new()
+		btn.size = Vector2(CELL, CELL + 24)
+		btn.position = Vector2(0.0, 0.0)
+		btn.modulate = Color(1.0, 1.0, 1.0, 0.0)
+		btn.process_mode = Node.PROCESS_MODE_ALWAYS
+		# Hover: kırmızı border highlight
+		btn.mouse_entered.connect(func():
+			csb.border_color = Color(1.0, 0.3, 0.2, 1.0)
+			csb.bg_color = Color(0.2, 0.05, 0.05, 0.95)
+		)
+		btn.mouse_exited.connect(func():
+			csb.border_color = Color(0.3, 0.4, 0.6, 0.8)
+			csb.bg_color = Color(0.08, 0.08, 0.18, 0.95)
+		)
+		btn.pressed.connect(_discard_ball.bind(ball, canvas))
+		cell_bg.add_child(btn)
+
+	# İptal butonu
+	var cancel_btn := Button.new()
+	cancel_btn.text = "Cancel"
+	cancel_btn.size = Vector2(160.0, 48.0)
+	cancel_btn.position = Vector2(880.0, 800.0)
+	cancel_btn.process_mode = Node.PROCESS_MODE_ALWAYS
+	cancel_btn.add_theme_font_override("font", _font_bold)
+	cancel_btn.pressed.connect(func():
+		canvas.queue_free()
+		get_tree().paused = false
+		upgrading = false
+		_pending_core_type = ""
+	)
+	canvas.add_child(cancel_btn)
+
+func _discard_ball(ball_node, canvas: CanvasLayer) -> void:
+	canvas.queue_free()
+	get_tree().paused = false
+	upgrading = false
+
+	# Orbit'ten çıkar
+	var player := get_node("Player")
+	if ball_node in player.orbit_balls:
+		player.remove_from_orbit(ball_node)
+	ball_node.remove_from_group("player_balls")
+
+	# Shrink + düşme animasyonu
+	var fall_pos: Vector2 = ball_node.global_position + Vector2(0.0, 90.0)
+	var tw := create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(ball_node, "scale", Vector2.ZERO, 0.35)\
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+	tw.tween_property(ball_node, "global_position", fall_pos, 0.35)\
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.chain().tween_callback(func():
+		if is_instance_valid(ball_node):
+			ball_node.queue_free()
+		$BallLauncher.queue_upgrade_ball(_pending_core_type)
+		_pending_core_type = ""
+		update_ui()
+	)
 
 func _setup_neon_sign() -> void:
 	var sign: Node2D = load("res://neon_sign.gd").new()
@@ -1862,7 +2144,18 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 	upgrading = false
 	get_tree().paused = false
 	level += 1
-	
+
+	# ── Core upgrade + MAX_ORBIT dolu → discard overlay ───────────────────────
+	if _CORE_INDEX_MAP.has(index):
+		var balls := get_tree().get_nodes_in_group("player_balls")
+		balls = balls.filter(func(b): return is_instance_valid(b))
+		var max_orbit: int = get_node("Player").MAX_ORBIT
+		if balls.size() >= max_orbit:
+			_pending_core_type = _CORE_INDEX_MAP[index]
+			update_ui()
+			_show_discard_overlay(_pending_core_type)
+			return
+
 	if index == 0:
 		$BallLauncher.queue_upgrade_ball("split")
 	elif index == 1:
