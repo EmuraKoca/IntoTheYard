@@ -668,7 +668,6 @@ func _ready() -> void:
 
 
 func update_ui() -> void:
-	_update_core_panel()
 	$UI/LabelLevel.text = "◈  LEVEL " + str(level)
 	$UI/IntegrityBar.max_value = player_max_hp
 	$UI/IntegrityBar.value = player_hp
@@ -814,59 +813,59 @@ func _get_core_icon_texture(core_type: String) -> Texture2D:
 	return load("res://assets/balls/%s/frame_000.png" % folder)
 
 func _setup_core_panel() -> void:
-	const CELL := 50
-	const GAP  := 5
-	const PAD  := 8
-	const COLS := 2
-	const ROWS := 4
-	var pw: float = COLS * CELL + (COLS - 1) * GAP + PAD * 2
-	var ph: float = ROWS * CELL + (ROWS - 1) * GAP + PAD * 2 + 22.0
+	# Sağ panel, LabelUpgrades (y=338) altına yatay 4×2 grid
+	const CELL := 30
+	const GAP  := 4
+	const COLS := 4
+	const ROWS := 2
+	const PX   := 1640.0   # sağ panel x başlangıcı
+	const PY   := 342.0    # LabelUpgrades bitişi
+	const PW   := 272.0    # sağ panel genişliği (1912-1640)
+	var grid_w: float = COLS * CELL + (COLS - 1) * GAP
+	var grid_h: float = ROWS * CELL + (ROWS - 1) * GAP
 
-	var panel := Panel.new()
-	panel.name = "CoreInventoryPanel"
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.04, 0.04, 0.1, 0.85)
-	sb.corner_radius_top_left = 6; sb.corner_radius_top_right = 6
-	sb.corner_radius_bottom_right = 6; sb.corner_radius_bottom_left = 6
-	sb.border_width_top = 1; sb.border_width_bottom = 1
-	sb.border_width_left = 1; sb.border_width_right = 1
-	sb.border_color = Color(0.25, 0.4, 0.65, 0.9)
-	panel.add_theme_stylebox_override("panel", sb)
-	panel.size = Vector2(pw, ph)
-	panel.position = Vector2(30.0, 600.0)
-	$UI.add_child(panel)
-
+	# Başlık
 	var title := Label.new()
-	title.text = "◈ CORES"
-	title.size = Vector2(pw, 20.0)
-	title.position = Vector2(0.0, 3.0)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.text = "— CORES —"
+	title.size = Vector2(PW, 16.0)
+	title.position = Vector2(PX, PY)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	title.add_theme_font_override("font", _font_bold)
 	title.add_theme_font_size_override("font_size", 11)
-	title.add_theme_color_override("font_color", Color(0.55, 0.8, 1.0))
+	title.add_theme_color_override("font_color", Color(0.55, 0.8, 1.0, 0.9))
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	panel.add_child(title)
+	$UI.add_child(title)
+
+	# Grid container (şeffaf arka plan)
+	var panel := Panel.new()
+	panel.name = "CoreInventoryPanel"
+	var sb := StyleBoxEmpty.new()
+	panel.add_theme_stylebox_override("panel", sb)
+	panel.size = Vector2(grid_w, grid_h)
+	panel.position = Vector2(PX, PY + 18.0)
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	$UI.add_child(panel)
 
 	_core_cells = []
 	for r in range(ROWS):
 		for c in range(COLS):
 			var cell := Panel.new()
 			var csb := StyleBoxFlat.new()
-			csb.bg_color = Color(0.07, 0.07, 0.15, 0.95)
+			csb.bg_color = Color(0.07, 0.07, 0.15, 0.9)
 			csb.corner_radius_top_left = 3; csb.corner_radius_top_right = 3
 			csb.corner_radius_bottom_right = 3; csb.corner_radius_bottom_left = 3
 			csb.border_width_top = 1; csb.border_width_bottom = 1
 			csb.border_width_left = 1; csb.border_width_right = 1
-			csb.border_color = Color(0.2, 0.3, 0.5, 0.5)
+			csb.border_color = Color(0.2, 0.3, 0.55, 0.55)
 			cell.add_theme_stylebox_override("panel", csb)
 			cell.size = Vector2(CELL, CELL)
-			cell.position = Vector2(PAD + c * (CELL + GAP), 22.0 + PAD + r * (CELL + GAP))
+			cell.position = Vector2(c * (CELL + GAP), r * (CELL + GAP))
 			panel.add_child(cell)
 
 			var icon := TextureRect.new()
 			icon.name = "Icon"
-			icon.size = Vector2(CELL - 8, CELL - 8)
-			icon.position = Vector2(4.0, 4.0)
+			icon.size = Vector2(CELL - 4, CELL - 4)
+			icon.position = Vector2(2.0, 2.0)
 			icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 			icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 			icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -2056,6 +2055,7 @@ func _draw_dashed_line(from: Vector2, to: Vector2, color: Color, width: float) -
 
 func _process(delta: float) -> void:
 	queue_redraw()
+	_update_core_panel()   # her frame güncelle — deferred add_child'ı yakala
 
 	# ── Armor regen ───────────────────────────────────────────────────────────
 	if player_armor_regen_rate > 0.0 and player_armor < player_armor_cap:
