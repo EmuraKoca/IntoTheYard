@@ -711,7 +711,10 @@ func update_ui() -> void:
 	$UI/LabelBalls.text = "⬤  BALLS   " + str(get_node("Player").orbit_balls.size()) + " / " + str(get_node("Player").MAX_ORBIT)
 	$UI/IntegrityBar.max_value = player_max_hp
 	$UI/IntegrityBar.value = player_hp
-	$UI/IntegrityBar/LabelIntegrity.text = "♥  " + str(player_hp) + " / " + str(player_max_hp)
+	if player_armor > 0:
+		$UI/IntegrityBar/LabelIntegrity.text = "♥ " + str(player_hp) + "/" + str(player_max_hp) + "   ⬡ " + str(player_armor)
+	else:
+		$UI/IntegrityBar/LabelIntegrity.text = "♥  " + str(player_hp) + " / " + str(player_max_hp)
 
 	# Aktif upgrade'ler
 	var upgrade_text = "— UPGRADES —\n"
@@ -809,8 +812,8 @@ func _update_armor_ui() -> void:
 	(_armor_bar as ColorRect).size = Vector2(overlay_w, bar_h)
 	(_armor_bar as ColorRect).position = integrity_bar.position
 	_armor_bar.visible = true
-	_armor_label.visible = true
-	_armor_label.text = "⬡ " + str(player_armor)
+	_armor_label.visible = false
+	$UI/IntegrityBar/LabelIntegrity.text = "♥ " + str(player_hp) + "/" + str(player_max_hp) + "   ⬡ " + str(player_armor)
 
 func gain_armor(amount: int) -> void:
 	var mult := _armor_gain_boost
@@ -1405,65 +1408,69 @@ func show_upgrade_menu() -> void:
 	# weight: seçilme ağırlığı — düşük = nadir
 	# rarity: "common" | "rare" | "epic"
 	var char_id: String = get_node("Player").character_type
+	var char_level: int = GameData.get_level(char_id)
 	var upgrades = [
-	# ── Vector (Kinetik) ──────────────────────────────────────────────────────
-	{"name": "Split Core",          "category": "Identity",      "color": Color(0.2, 0.8, 0.2), "desc": "Core splits into 3",                        "index": 0,  "weight": 10, "rarity": "common", "chars": ["vector"]},
-	{"name": "Pierce Core",         "category": "Identity",      "color": Color(1.0, 0.8, 0.0), "desc": "Core pierces through",                      "index": 2,  "weight": 10, "rarity": "common", "chars": ["vector"]},
-	{"name": "Split Amp",           "category": "Utility",       "color": Color(1.0, 0.2, 0.2), "desc": "Split core +2 damage",                      "index": 14, "weight": 10, "rarity": "common", "chars": ["vector"]},
+	# ── Vector (Kinetik) — min_level: öğrenme eğrisi ─────────────────────────
+	# Lv0: Vector nedir?
+	{"name": "Split Core",          "category": "Identity",      "color": Color(0.2, 0.8, 0.2), "desc": "Core splits into 3",                        "index": 0,  "weight": 10, "rarity": "common",   "chars": ["vector"], "min_level": 0},
+	{"name": "Pierce Core",         "category": "Identity",      "color": Color(1.0, 0.8, 0.0), "desc": "Core pierces through",                      "index": 2,  "weight": 10, "rarity": "common",   "chars": ["vector"], "min_level": 0},
+	{"name": "Armor Core",          "category": "Identity",      "color": Color(0.5, 0.6, 0.8), "desc": "Hit → gain Armor",                          "index": 40, "weight": 10, "rarity": "common",   "chars": ["vector"], "min_level": 0},
+	{"name": "Anchor Core",         "category": "Identity",      "color": Color(0.3, 0.4, 0.6), "desc": "Hit → slow enemy 60% (3s)",                 "index": 41, "weight": 10, "rarity": "common",   "chars": ["vector"], "min_level": 0},
+	{"name": "Crusher Core",        "category": "Identity",      "color": Color(0.6, 0.3, 0.1), "desc": "High damage, breaks Armor",                 "index": 42, "weight": 10, "rarity": "common",   "chars": ["vector"], "min_level": 0},
+	{"name": "Momentum Engine",     "category": "Utility",       "color": Color(0.0, 0.7, 1.0), "desc": "Hit → +1 Stack\n+3% Core Speed per stack\n(max 20 stacks)", "index": 35, "weight": 8, "rarity": "common", "chars": ["vector"], "min_level": 0},
+	{"name": "Chain Density",       "category": "Utility",       "color": Color(0.0, 0.9, 0.5), "desc": "New enemy hit mid-flight:\n+dmg ramp, resets on return",     "index": 37, "weight": 8, "rarity": "common", "chars": ["vector"], "min_level": 0},
+	{"name": "Reinforced Frame",    "category": "Individuality", "color": Color(0.5, 0.7, 0.5), "desc": "+20 Max Armor / Core Speed -%10",           "index": 48, "weight": 8, "rarity": "common",   "chars": ["vector"], "min_level": 0},
+	{"name": "Iron Constitution",   "category": "Individuality", "color": Color(0.7, 0.8, 0.6), "desc": "Armor gain efficiency +%25",                 "index": 49, "weight": 8, "rarity": "common",   "chars": ["vector"], "min_level": 0},
+	{"name": "Speed Upgrade",       "category": "Individuality", "color": Color(0.6, 0.2, 0.8), "desc": "Movement speed increases",                  "index": 4,  "weight": 8, "rarity": "common",   "chars": [],         "min_level": 0},
+	{"name": "Max Health Up",       "category": "Individuality", "color": Color(0.8, 0.2, 0.2), "desc": "Maximum HP +5",                             "index": 21, "weight": 8, "rarity": "common",   "chars": [],         "min_level": 0},
+	{"name": "Medkit",              "category": "Individuality", "color": Color(0.9, 0.1, 0.1), "desc": "+10 HP restored",                           "index": 20, "weight": 8, "rarity": "common",   "chars": [],         "min_level": 0},
+	{"name": "Gravitational Force", "category": "Calamity",      "color": Color(0.5, 0.0, 1.0), "desc": "Pulls subjects for 5s",                     "index": 9,  "weight": 8, "rarity": "common",   "chars": [],         "min_level": 0},
+	{"name": "Hyper Recovery Loop", "category": "Individuality", "color": Color(0.3, 0.7, 1.0), "desc": "Return speed ×1.5 / Core deals 0 damage",   "index": 56, "weight": 8, "rarity": "common",   "chars": ["vector"], "min_level": 0},
+	# Lv1: Core davranışlarını öğretir
+	{"name": "Kinetic Core",        "category": "Identity",      "color": Color(0.2, 0.8, 0.6), "desc": "Each wall bounce → +dmg",                   "index": 43, "weight": 8, "rarity": "uncommon", "chars": ["vector"], "min_level": 1},
+	{"name": "Bulwark Core",        "category": "Identity",      "color": Color(0.4, 0.5, 0.7), "desc": "Hit → +2 Armor",                            "index": 44, "weight": 8, "rarity": "uncommon", "chars": ["vector"], "min_level": 1},
+	{"name": "Impact Feedback",     "category": "Utility",       "color": Color(0.5, 0.3, 0.9), "desc": "Every 10 hits:\n+1 Armor Gain (max 10)",    "index": 36, "weight": 6, "rarity": "uncommon", "chars": ["vector"], "min_level": 1},
+	{"name": "Magnetic Weight",     "category": "Individuality", "color": Color(0.6, 0.4, 0.9), "desc": "Knockback ×2 / Core Speed -%10",             "index": 57, "weight": 6, "rarity": "uncommon", "chars": ["vector"], "min_level": 1},
+	{"name": "Battlefield Anchor",  "category": "Individuality", "color": Color(0.3, 0.5, 0.7), "desc": "Slow duration ×2 / Player Speed -%10",       "index": 58, "weight": 6, "rarity": "uncommon", "chars": ["vector"], "min_level": 1},
+	{"name": "Blood for Steel",     "category": "Individuality", "color": Color(0.7, 0.1, 0.1), "desc": "-10 HP  |  +10 Max Armor",                   "index": 30, "weight": 6, "rarity": "uncommon", "chars": ["vector"], "min_level": 1},
+	{"name": "Overclocked Reflex",  "category": "Individuality", "color": Color(0.9, 0.9, 0.2), "desc": "Core Speed +%20 / Armor Gain -%15",          "index": 54, "weight": 6, "rarity": "uncommon", "chars": ["vector"], "min_level": 1},
+	# Lv2: Armor ekonomisi
+	{"name": "Last Stand",          "category": "Utility",       "color": Color(1.0, 0.6, 0.0), "desc": "Low HP → bonus Core Speed\n& Armor Gain efficiency", "index": 38, "weight": 5, "rarity": "rare", "chars": ["vector"], "min_level": 2},
+	{"name": "Pain Converter",      "category": "Individuality", "color": Color(0.8, 0.2, 0.3), "desc": "HP <50%  →  Armor Gain +50%",                "index": 31, "weight": 5, "rarity": "rare",     "chars": ["vector"], "min_level": 2},
+	{"name": "Scar Tissue",         "category": "Individuality", "color": Color(0.6, 0.1, 0.1), "desc": "-5 HP  |  +Armor Cap  |  +Armor Regen",      "index": 33, "weight": 5, "rarity": "rare",     "chars": ["vector"], "min_level": 2},
+	{"name": "Blood Circuit",       "category": "Individuality", "color": Color(0.8, 0.1, 0.1), "desc": "HP <= %70: Core Speed scales up to +%50",    "index": 51, "weight": 5, "rarity": "rare",     "chars": ["vector"], "min_level": 2},
+	{"name": "Kinetic Nervous System","category":"Individuality", "color": Color(0.2, 0.9, 0.6), "desc": "Momentum doesn't reset on return / Max Armor -10", "index": 55, "weight": 4, "rarity": "rare", "chars": ["vector"], "min_level": 2},
+	# Lv3: Risk / Ödül
+	{"name": "Tempered Core",       "category": "Identity",      "color": Color(0.9, 0.7, 0.2), "desc": "Armor active → +3 dmg",                      "index": 47, "weight": 5, "rarity": "rare",     "chars": ["vector"], "min_level": 3},
+	{"name": "Glass Engine",        "category": "Individuality", "color": Color(0.5, 0.8, 0.9), "desc": "Low HP: Armor +%50 | High HP: Armor -%30",   "index": 53, "weight": 4, "rarity": "rare",     "chars": ["vector"], "min_level": 3},
+	{"name": "Fortified Core System","category":"Individuality",  "color": Color(0.4, 0.6, 0.8), "desc": "Armor Cap +15 / Momentum gain -%20",          "index": 50, "weight": 4, "rarity": "rare",     "chars": ["vector"], "min_level": 3},
+	{"name": "Adrenal Armor System", "category":"Individuality",  "color": Color(0.9, 0.3, 0.5), "desc": "Low HP: Armor +%40 | High HP: Core Speed +%10", "index": 59, "weight": 4, "rarity": "rare",  "chars": ["vector"], "min_level": 3},
+	# Lv4: Build specialization
+	{"name": "Bloodbound Core",     "category": "Identity",      "color": Color(0.7, 0.0, 0.1), "desc": "Missing HP → bonus dmg",                     "index": 46, "weight": 4, "rarity": "epic",     "chars": ["vector"], "min_level": 4},
+	{"name": "Siege Core",          "category": "Identity",      "color": Color(0.8, 0.4, 0.1), "desc": "Highest damage core",                        "index": 45, "weight": 3, "rarity": "epic",     "chars": ["vector"], "min_level": 4},
+	{"name": "Adrenal Surge",       "category": "Individuality", "color": Color(1.0, 0.4, 0.1), "desc": "HP <30%  →  Momentum Engine x2",             "index": 32, "weight": 3, "rarity": "epic",     "chars": ["vector"], "min_level": 4},
+	# Lv5: Run breaker
+	{"name": "Emergency Protocol",  "category": "Individuality", "color": Color(1.0, 0.9, 0.0), "desc": "Take 15 dmg →\n+100% Armor Gain (10s)",       "index": 34, "weight": 2, "rarity": "legendary","chars": ["vector"], "min_level": 5},
+	{"name": "Risk Engine",         "category": "Individuality", "color": Color(0.8, 0.1, 0.3), "desc": "Damage taken → Momentum stacks / Armor Gain -%30", "index": 60, "weight": 2, "rarity": "epic", "chars": ["vector"], "min_level": 5},
+	{"name": "Fractured Frame",     "category": "Individuality", "color": Color(0.9, 0.4, 0.1), "desc": "Core Damage ×1.4 / Max HP -15",               "index": 52, "weight": 2, "rarity": "epic",     "chars": ["vector"], "min_level": 5},
 	# ── Leila (Elemental) ─────────────────────────────────────────────────────
-	{"name": "Electric Core",       "category": "Identity",      "color": Color(0.2, 0.5, 1.0), "desc": "Core gains electricity",                    "index": 1,  "weight": 10, "rarity": "common", "chars": ["leila"]},
-	{"name": "Cryo Core",           "category": "Identity",      "color": Color(0.5, 0.8, 1.0), "desc": "Slows subject by 25%",                      "index": 15, "weight": 10, "rarity": "common", "chars": ["leila"]},
-	{"name": "Water Core",          "category": "Identity",      "color": Color(0.0, 0.5, 1.0), "desc": "Applies wet, single hit",                   "index": 17, "weight": 10, "rarity": "common", "chars": ["leila"]},
-	{"name": "Fire Core",           "category": "Identity",      "color": Color(1.0, 0.3, 0.0), "desc": "Applies burn to subject",                   "index": 18, "weight": 10, "rarity": "common", "chars": ["leila"]},
-	{"name": "Thunder Amp",         "category": "Utility",       "color": Color(0.2, 0.5, 1.0), "desc": "Electric core +2 damage",                   "index": 13, "weight": 10, "rarity": "common", "chars": ["leila"]},
+	{"name": "Electric Core",       "category": "Identity",      "color": Color(0.2, 0.5, 1.0), "desc": "Core gains electricity",                    "index": 1,  "weight": 10, "rarity": "common", "chars": ["leila"], "min_level": 0},
+	{"name": "Cryo Core",           "category": "Identity",      "color": Color(0.5, 0.8, 1.0), "desc": "Slows subject by 25%",                      "index": 15, "weight": 10, "rarity": "common", "chars": ["leila"], "min_level": 0},
+	{"name": "Water Core",          "category": "Identity",      "color": Color(0.0, 0.5, 1.0), "desc": "Applies wet, single hit",                   "index": 17, "weight": 10, "rarity": "common", "chars": ["leila"], "min_level": 0},
+	{"name": "Fire Core",           "category": "Identity",      "color": Color(1.0, 0.3, 0.0), "desc": "Applies burn to subject",                   "index": 18, "weight": 10, "rarity": "common", "chars": ["leila"], "min_level": 0},
+	{"name": "Thunder Amp",         "category": "Utility",       "color": Color(0.2, 0.5, 1.0), "desc": "Electric core +2 damage",                   "index": 13, "weight": 10, "rarity": "common", "chars": ["leila"], "min_level": 0},
 	# ── Cyclone (Manipülasyon) ────────────────────────────────────────────────
-	{"name": "Glitch Core",         "category": "Identity",      "color": Color(0.8, 0.0, 0.8), "desc": "Disorients subject for 3s",                 "index": 16, "weight": 10, "rarity": "common", "chars": ["cyclone"]},
-	{"name": "Echo Core",           "category": "Identity",      "color": Color(0.5, 0.5, 1.0), "desc": "Copies the nearest powered-up core",        "index": 19, "weight": 1,  "rarity": "epic",   "chars": ["cyclone"]},
-	{"name": "Data Leech Core",     "category": "Identity",      "color": Color(0.6, 0.0, 0.2), "desc": "+2 Integrity on hit",                       "index": 22, "weight": 10, "rarity": "common", "chars": ["cyclone"]},
+	{"name": "Glitch Core",         "category": "Identity",      "color": Color(0.8, 0.0, 0.8), "desc": "Disorients subject for 3s",                 "index": 16, "weight": 10, "rarity": "common", "chars": ["cyclone"], "min_level": 0},
+	{"name": "Echo Core",           "category": "Identity",      "color": Color(0.5, 0.5, 1.0), "desc": "Copies the nearest powered-up core",        "index": 19, "weight": 1,  "rarity": "epic",   "chars": ["cyclone"], "min_level": 0},
+	{"name": "Data Leech Core",     "category": "Identity",      "color": Color(0.6, 0.0, 0.2), "desc": "+2 Integrity on hit",                       "index": 22, "weight": 10, "rarity": "common", "chars": ["cyclone"], "min_level": 0},
 	# ── Herkese açık ─────────────────────────────────────────────────────────
-	{"name": "Core Mastery",        "category": "Utility",       "color": Color(0.2, 0.8, 0.2), "desc": "+1 damage to all cores",                    "index": 11, "weight": 10, "rarity": "common", "chars": []},
-	{"name": "Speed Upgrade",       "category": "Individuality", "color": Color(0.6, 0.2, 0.8), "desc": "Movement speed increases",                  "index": 4,  "weight": 10, "rarity": "common", "chars": []},
-	{"name": "Lightning",           "category": "Calamity",      "color": Color(1.0, 1.0, 0.0), "desc": "Lightning strikes selected point",          "index": 7,  "weight": 8,  "rarity": "common", "chars": []},
-	{"name": "Flame Zone",          "category": "Calamity",      "color": Color(1.0, 0.3, 0.0), "desc": "Continuous damage in selected area",        "index": 8,  "weight": 8,  "rarity": "common", "chars": []},
-	{"name": "Gravitational Force", "category": "Calamity",      "color": Color(0.5, 0.0, 1.0), "desc": "Pulls subjects for 5s",                     "index": 9,  "weight": 8,  "rarity": "common", "chars": []},
-	{"name": "Medkit",              "category": "Individuality", "color": Color(0.9, 0.1, 0.1), "desc": "+10 HP restored",                           "index": 20, "weight": 10, "rarity": "common",    "chars": []},
-	{"name": "Max Health Up",       "category": "Individuality", "color": Color(0.8, 0.2, 0.2), "desc": "Maximum HP +5",                             "index": 21, "weight": 10, "rarity": "common",    "chars": []},
-	# ── Vector — Armor Individuality ─────────────────────────────────────────
-	{"name": "Blood for Steel",     "category": "Individuality", "color": Color(0.7, 0.1, 0.1), "desc": "-10 HP  |  +10 Max Armor",                  "index": 30, "weight": 6,  "rarity": "rare",      "chars": ["vector"]},
-	{"name": "Pain Converter",      "category": "Individuality", "color": Color(0.8, 0.2, 0.3), "desc": "HP <50%  →  Armor Gain +50%",               "index": 31, "weight": 2,  "rarity": "epic",      "chars": ["vector"]},
-	{"name": "Adrenal Surge",       "category": "Individuality", "color": Color(1.0, 0.4, 0.1), "desc": "HP <30%  →  Momentum Engine x2",            "index": 32, "weight": 2,  "rarity": "epic",      "chars": ["vector"]},
-	{"name": "Scar Tissue",         "category": "Individuality", "color": Color(0.6, 0.1, 0.1), "desc": "-5 HP  |  +Armor Cap  |  +Armor Regen",     "index": 33, "weight": 6,  "rarity": "rare",      "chars": ["vector"]},
-	{"name": "Emergency Protocol",  "category": "Individuality", "color": Color(1.0, 0.9, 0.0), "desc": "Take 15 dmg →\n+100% Armor Gain (10s)",      "index": 34, "weight": 1,  "rarity": "legendary", "chars": ["vector"]},
-	# ── Vector — Armor Utility ────────────────────────────────────────────────
-	{"name": "Momentum Engine",     "category": "Utility",       "color": Color(0.0, 0.7, 1.0), "desc": "Hit → +1 Stack\n+3% Core Speed per stack\n(max 20 stacks)",    "index": 35, "weight": 8, "rarity": "uncommon", "chars": ["vector"]},
-	{"name": "Impact Feedback",     "category": "Utility",       "color": Color(0.5, 0.3, 0.9), "desc": "Every 10 hits:\n+1 Armor Gain (max 10)",                     "index": 36, "weight": 2, "rarity": "epic",     "chars": ["vector"]},
-	{"name": "Chain Density",       "category": "Utility",       "color": Color(0.0, 0.9, 0.5), "desc": "New enemy hit mid-flight:\n+dmg ramp, resets on return",      "index": 37, "weight": 4, "rarity": "rare",     "chars": ["vector"]},
-	{"name": "Last Stand",          "category": "Utility",       "color": Color(1.0, 0.6, 0.0), "desc": "Low HP → bonus Core Speed\n& Armor Gain efficiency",          "index": 38, "weight": 2, "rarity": "epic",     "chars": ["vector"]},
-	# ── Vector — Identity (yeni core'lar) ────────────────────────────────────
-	{"name": "Armor Core",    "category": "Identity", "color": Color(0.5, 0.6, 0.8), "desc": "Hit → gain Armor",                         "index": 40, "weight": 8,  "rarity": "uncommon", "chars": ["vector"]},
-	{"name": "Anchor Core",   "category": "Identity", "color": Color(0.3, 0.4, 0.6), "desc": "Hit → slow enemy 60% (3s)",                "index": 41, "weight": 6,  "rarity": "rare",     "chars": ["vector"]},
-	{"name": "Crusher Core",  "category": "Identity", "color": Color(0.6, 0.3, 0.1), "desc": "High damage, breaks Armor",               "index": 42, "weight": 4,  "rarity": "rare",     "chars": ["vector"]},
-	{"name": "Kinetic Core",  "category": "Identity", "color": Color(0.2, 0.8, 0.6), "desc": "Each wall bounce → +dmg",                 "index": 43, "weight": 6,  "rarity": "rare",     "chars": ["vector"]},
-	{"name": "Bulwark Core",  "category": "Identity", "color": Color(0.4, 0.5, 0.7), "desc": "Hit → +2 Armor",                          "index": 44, "weight": 6,  "rarity": "rare",     "chars": ["vector"]},
-	{"name": "Siege Core",    "category": "Identity", "color": Color(0.8, 0.4, 0.1), "desc": "Highest damage core",                     "index": 45, "weight": 2,  "rarity": "epic",     "chars": ["vector"]},
-	{"name": "Bloodbound Core","category": "Identity", "color": Color(0.7, 0.0, 0.1), "desc": "Missing HP → bonus dmg",                 "index": 46, "weight": 3,  "rarity": "epic",     "chars": ["vector"]},
-	{"name": "Tempered Core", "category": "Identity", "color": Color(0.9, 0.7, 0.2), "desc": "Armor active → +3 dmg",                   "index": 47, "weight": 4,  "rarity": "rare",     "chars": ["vector"]},
-	# ── Vector — Yeni Individuality kartlar ──────────────────────────────────────
-	{"name": "Reinforced Frame",        "category": "Individuality", "color": Color(0.5, 0.7, 0.5), "desc": "+20 Max Armor / Core Speed -%10",                   "index": 48, "weight": 5, "rarity": "uncommon", "chars": ["vector"]},
-	{"name": "Iron Constitution",       "category": "Individuality", "color": Color(0.7, 0.8, 0.6), "desc": "Armor gain efficiency +%25",                         "index": 49, "weight": 6, "rarity": "uncommon", "chars": ["vector"]},
-	{"name": "Fortified Core System",   "category": "Individuality", "color": Color(0.4, 0.6, 0.8), "desc": "Armor Cap +15 / Momentum gain -%20",                 "index": 50, "weight": 5, "rarity": "rare",     "chars": ["vector"]},
-	{"name": "Blood Circuit",           "category": "Individuality", "color": Color(0.8, 0.1, 0.1), "desc": "HP <= %70: Core Speed scales up to +%50",            "index": 51, "weight": 5, "rarity": "rare",     "chars": ["vector"]},
-	{"name": "Fractured Frame",         "category": "Individuality", "color": Color(0.9, 0.4, 0.1), "desc": "Core Damage ×1.4 / Max HP -15",                      "index": 52, "weight": 4, "rarity": "rare",     "chars": ["vector"]},
-	{"name": "Glass Engine",            "category": "Individuality", "color": Color(0.5, 0.8, 0.9), "desc": "Low HP: Armor +%50 | High HP: Armor -%30",           "index": 53, "weight": 5, "rarity": "rare",     "chars": ["vector"]},
-	{"name": "Overclocked Reflex",      "category": "Individuality", "color": Color(0.9, 0.9, 0.2), "desc": "Core Speed +%20 / Armor Gain -%15",                  "index": 54, "weight": 5, "rarity": "uncommon", "chars": ["vector"]},
-	{"name": "Kinetic Nervous System",  "category": "Individuality", "color": Color(0.2, 0.9, 0.6), "desc": "Momentum doesn't reset on return / Max Armor -10",   "index": 55, "weight": 4, "rarity": "rare",     "chars": ["vector"]},
-	{"name": "Hyper Recovery Loop",     "category": "Individuality", "color": Color(0.3, 0.7, 1.0), "desc": "Return speed ×1.5 / Core deals 0 damage",            "index": 56, "weight": 3, "rarity": "epic",     "chars": ["vector"]},
-	{"name": "Magnetic Weight",         "category": "Individuality", "color": Color(0.6, 0.4, 0.9), "desc": "Knockback ×2 / Core Speed -%10",                     "index": 57, "weight": 5, "rarity": "uncommon", "chars": ["vector"]},
-	{"name": "Battlefield Anchor",      "category": "Individuality", "color": Color(0.3, 0.5, 0.7), "desc": "Slow duration ×2 / Player Speed -%10",               "index": 58, "weight": 4, "rarity": "rare",     "chars": ["vector"]},
-	{"name": "Adrenal Armor System",    "category": "Individuality", "color": Color(0.9, 0.3, 0.5), "desc": "Low HP: Armor +%40 | High HP: Core Speed +%10",      "index": 59, "weight": 5, "rarity": "rare",     "chars": ["vector"]},
-	{"name": "Risk Engine",             "category": "Individuality", "color": Color(0.8, 0.1, 0.3), "desc": "Damage taken → Momentum stacks / Armor Gain -%30",   "index": 60, "weight": 4, "rarity": "epic",     "chars": ["vector"]},
+	{"name": "Core Mastery",        "category": "Utility",       "color": Color(0.2, 0.8, 0.2), "desc": "+1 damage to all cores",                    "index": 11, "weight": 10, "rarity": "common", "chars": [], "min_level": 0},
+	{"name": "Lightning",           "category": "Calamity",      "color": Color(1.0, 1.0, 0.0), "desc": "Lightning strikes selected point",          "index": 7,  "weight": 8,  "rarity": "common", "chars": [], "min_level": 0},
+	{"name": "Flame Zone",          "category": "Calamity",      "color": Color(1.0, 0.3, 0.0), "desc": "Continuous damage in selected area",        "index": 8,  "weight": 8,  "rarity": "common", "chars": [], "min_level": 0},
 ]
 	upgrades = upgrades.filter(func(u): return u["chars"].is_empty() or char_id in u["chars"])
+	# Karakter level'ına göre filtrele
+	upgrades = upgrades.filter(func(u): return u.get("min_level", 0) <= char_level)
 	# Individuality: bir kez seçilince bir daha çıkmaz
 	upgrades = upgrades.filter(func(u):
 		if u["category"] == "Individuality":

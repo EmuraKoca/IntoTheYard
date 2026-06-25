@@ -10,7 +10,8 @@ INTO THE YARD — YAPILACAKLAR LİSTESİ
 1. VECTOR BUILD SİSTEMİ (BUGÜN)
 ────────────────────────────────────────────────────────────────────────────────
 
-[ ] Vector'a özel upgrade kartları tasarlanıp koda eklenmesi
+[✓] Vector'a özel upgrade kartları tasarlanıp koda eklenmesi — 25.06.2026
+[✓] Vector upgrade kartlarına level bazlı kilit sistemi (min_level) eklenmesi — 25.06.2026
 [ ] Leila'ya özel upgrade kartları tasarlanıp koda eklenmesi
 [ ] Cyclone'a özel upgrade kartları tasarlanıp koda eklenmesi
 [ ] Ortak upgrade kartları havuzu genişletilmesi

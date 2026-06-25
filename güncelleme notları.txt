@@ -2483,3 +2483,25 @@ Orbit Hata Düzeltmeleri:
 ✅ Topların yörüngeden çıkıp anında geri girmesi düzeltildi (catch_cooldown kontrolü)
 ✅ Kart metin taşması düzeltildi (Panel + PRESET_FULL_RECT autowrap)
 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+0.0.9.6
+26.06.2026
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Vector Upgrade Kartları — Level Bazlı Kilit Sistemi:
+
+✅ Her Vector kartına min_level alanı eklendi (0–5 arası)
+✅ show_upgrade_menu() içinde GameData.get_level(char_id) ile karakter level'ı okunuyor
+✅ min_level > char_level olan kartlar upgrade havuzundan çıkarılıyor
+✅ Level 0 (15 kart): Split Core, Pierce Core, Armor Core, Anchor Core, Crusher Core,
+      Momentum Engine, Chain Density, Reinforced Frame, Iron Constitution,
+      Speed Upgrade, Max Health Up, Medkit, Gravitational Force, Hyper Recovery Loop
+✅ Level 1 (7 kart): Kinetic Core, Bulwark Core, Impact Feedback,
+      Magnetic Weight, Battlefield Anchor, Blood for Steel, Overclocked Reflex
+✅ Level 2 (5 kart): Last Stand, Pain Converter, Scar Tissue,
+      Blood Circuit, Kinetic Nervous System
+✅ Level 3 (4 kart): Tempered Core, Glass Engine,
+      Fortified Core System, Adrenal Armor System
+✅ Level 4 (3 kart): Bloodbound Core, Siege Core, Adrenal Surge
+✅ Level 5 (3 kart): Emergency Protocol, Risk Engine, Fractured Frame
+
