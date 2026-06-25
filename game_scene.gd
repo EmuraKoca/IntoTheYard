@@ -14,7 +14,7 @@ var player_armor_gain: int = 1        # Armor Core başına kazanılan armor
 var player_armor_cap: int = 20        # Armor üst sınırı
 var player_armor_regen_rate: float = 0.0
 var _armor_regen_acc: float = 0.0
-var _armor_bar: ProgressBar = null
+var _armor_bar: ColorRect = null
 var _armor_label: Label = null
 var _armor_gain_boost: float = 1.0    # Pain Converter / Emergency Protocol çarpanı
 var _armor_gain_boost_timer: float = 0.0
@@ -618,18 +618,25 @@ func _spawn_hasmen_entrance() -> void:
 	)
 
 func _ready() -> void:
-	update_ui()
+	# Karakter bazlı başlangıç değerleri
+	var char_type: String = get_node("Player").character_type
+	if char_type == "vector":
+		player_hp = 40
+		player_max_hp = 40
+		player_armor = 20
+		player_armor_cap = 20
+		player_max_armor = 20
+
 	$UI/BtnPause.pressed.connect(_show_pause_menu)
 	$UI/FusionEnergyBar.max_value = 50
 	$UI/FusionEnergyBar.value = 0
-	$UI/IntegrityBar.max_value = player_max_hp
-	$UI/IntegrityBar.value = player_hp
-	$UI/IntegrityBar/LabelIntegrity.text = str(player_hp) + " / " + str(player_max_hp)
 	_activate_fusion_zone()
 	_setup_data_bar()
 	_setup_auto_toggle()
 	_setup_neon_sign()
 	_setup_armor_bar()
+	update_ui()
+	_update_armor_ui()
 	
 
 
@@ -689,54 +696,57 @@ func subject_died(xp_reward: int = 1, death_pos: Vector2 = Vector2.ZERO) -> void
 	_spawn_data_particles(death_pos, float(xp_reward) * 10.0, particle_count)
 
 func _setup_armor_bar() -> void:
-	# IntegrityBar'ın hemen altına, aynı hizada
+	# IntegrityBar'ın üzerine binen gri zırh overlay'i
+	# Armor, can barının ÜZERİNDE gri katman olarak gösterilir.
+	# Örnek: 40 HP / 20 Armor → barın sağ yarısı gri.
 	var integrity_bar: ProgressBar = $UI/IntegrityBar
-	var ab := ProgressBar.new()
-	ab.name = "ArmorBar"
-	ab.min_value = 0
-	ab.max_value = 1
-	ab.value = 0
-	ab.show_percentage = false
-	ab.size = integrity_bar.size
-	ab.position = integrity_bar.position + Vector2(0, integrity_bar.size.y + 4)
-	# Stil — metalik gri/mavi
-	var sb_bg := StyleBoxFlat.new()
-	sb_bg.bg_color = Color(0.08, 0.08, 0.12, 0.85)
-	sb_bg.corner_radius_top_left = 3; sb_bg.corner_radius_top_right = 3
-	sb_bg.corner_radius_bottom_right = 3; sb_bg.corner_radius_bottom_left = 3
-	var sb_fill := StyleBoxFlat.new()
-	sb_fill.bg_color = Color(0.45, 0.65, 0.9, 0.92)
-	sb_fill.corner_radius_top_left = 3; sb_fill.corner_radius_top_right = 3
-	sb_fill.corner_radius_bottom_right = 3; sb_fill.corner_radius_bottom_left = 3
-	ab.add_theme_stylebox_override("background", sb_bg)
-	ab.add_theme_stylebox_override("fill", sb_fill)
-	ab.visible = false  # Armor yokken gizli
+	var ab := ColorRect.new()
+	ab.name = "ArmorOverlay"
+	ab.color = Color(0.55, 0.55, 0.6, 0.88)
+	ab.size = Vector2(0.0, integrity_bar.size.y)
+	ab.position = integrity_bar.position  # sola hizalı, genişlik 0 başlangıçta
+	ab.visible = false
+	ab.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# HP barının z_index'inden bir üste çıksın
+	ab.z_index = integrity_bar.z_index + 1
 	$UI.add_child(ab)
 	_armor_bar = ab
-	# Label
+	# Label: IntegrityBar label'ının üzerinde göster
 	var lbl := Label.new()
 	lbl.name = "LabelArmor"
-	lbl.size = Vector2(ab.size.x, ab.size.y + 4)
-	lbl.position = Vector2(0, 0)
+	lbl.size = Vector2(integrity_bar.size.x, integrity_bar.size.y)
+	lbl.position = integrity_bar.position
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	lbl.add_theme_font_override("font", _font_bold)
 	lbl.add_theme_font_size_override("font_size", 10)
-	lbl.add_theme_color_override("font_color", Color(0.85, 0.95, 1.0))
+	lbl.add_theme_color_override("font_color", Color(0.9, 0.95, 1.0))
 	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	ab.add_child(lbl)
+	lbl.z_index = ab.z_index + 1
+	lbl.visible = false
+	$UI.add_child(lbl)
 	_armor_label = lbl
 
 func _update_armor_ui() -> void:
 	if _armor_bar == null:
 		return
-	if player_max_armor <= 0:
+	var integrity_bar: ProgressBar = $UI/IntegrityBar
+	if player_max_armor <= 0 or player_armor <= 0:
 		_armor_bar.visible = false
+		_armor_label.visible = false
 		return
+	# Armor, max_hp üzerinden oran hesaplanır
+	# Örnek: max_hp=40, armor=20 → oran=0.5 → barın %50'si gri
+	var bar_w: float = integrity_bar.size.x
+	var bar_h: float = integrity_bar.size.y
+	var ratio: float = clampf(float(player_armor) / float(max(player_max_hp, 1)), 0.0, 1.0)
+	var overlay_w: float = bar_w * ratio
+	# Gri overlay soldan başlar (armor, canın üzerinde oturur)
+	(_armor_bar as ColorRect).size = Vector2(overlay_w, bar_h)
+	(_armor_bar as ColorRect).position = integrity_bar.position
 	_armor_bar.visible = true
-	_armor_bar.max_value = player_max_armor
-	_armor_bar.value = player_armor
-	_armor_label.text = "⬡  " + str(player_armor) + " / " + str(player_max_armor)
+	_armor_label.visible = true
+	_armor_label.text = "⬡ " + str(player_armor)
 
 func gain_armor(amount: int) -> void:
 	var mult := _armor_gain_boost
