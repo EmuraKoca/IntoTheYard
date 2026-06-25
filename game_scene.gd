@@ -814,12 +814,12 @@ func _get_core_icon_texture(core_type: String) -> Texture2D:
 
 func _setup_core_panel() -> void:
 	# Sağ panel, LabelUpgrades (y=338) altına yatay 4×2 grid
-	const CELL := 30
-	const GAP  := 4
+	const CELL := 40
+	const GAP  := 5
 	const COLS := 4
 	const ROWS := 2
 	const PX   := 1640.0   # sağ panel x başlangıcı
-	const PY   := 342.0    # LabelUpgrades bitişi
+	const PY   := 344.0    # UISep4 separator altı
 	const PW   := 272.0    # sağ panel genişliği (1912-1640)
 	var grid_w: float = COLS * CELL + (COLS - 1) * GAP
 	var grid_h: float = ROWS * CELL + (ROWS - 1) * GAP
@@ -864,8 +864,8 @@ func _setup_core_panel() -> void:
 
 			var icon := TextureRect.new()
 			icon.name = "Icon"
-			icon.size = Vector2(CELL - 4, CELL - 4)
-			icon.position = Vector2(2.0, 2.0)
+			icon.size = Vector2(CELL - 6, CELL - 6)
+			icon.position = Vector2(3.0, 3.0)
 			icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 			icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 			icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST

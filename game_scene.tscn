@@ -3692,19 +3692,11 @@ color = Color(0, 0.5, 0.6, 0.7)
 
 [node name="UISep4" type="ColorRect" parent="UI" unique_id=701010705]
 offset_left = 1640.0
-offset_top = 343.0
+offset_top = 338.0
 offset_right = 1912.0
-offset_bottom = 345.0
+offset_bottom = 341.0
 mouse_filter = 2
-color = Color(0, 0.5, 0.6, 0.7)
-
-[node name="UISep5" type="ColorRect" parent="UI" unique_id=701010706]
-offset_left = 1640.0
-offset_top = 387.0
-offset_right = 1912.0
-offset_bottom = 389.0
-mouse_filter = 2
-color = Color(0, 0.5, 0.6, 0.7)
+color = Color(0, 0.85, 1, 0.9)
 
 [node name="UISep6" type="ColorRect" parent="UI" unique_id=701010707]
 offset_left = 1640.0
