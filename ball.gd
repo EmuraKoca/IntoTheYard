@@ -771,7 +771,7 @@ func _hit_subject(subject: Node2D) -> void:
 	var _cd_player := _get_player()
 	if _cd_player and _cd_player.has_chain_density and not (subject in hit_subjects):
 		chain_density_unique_hits += 1
-		total_damage += chain_density_unique_hits
+		total_damage += chain_density_unique_hits * _cd_player.chain_density_bonus_per_hit
 
 # Crit check
 	var is_crit = randf() < crit_chance
@@ -805,11 +805,11 @@ func _hit_subject(subject: Node2D) -> void:
 			game_node_fx.gain_armor(player_node.armor_gain_per_hit)
 		# Momentum Engine — isabet başına +1 stack
 		if player_node.has_momentum_engine:
-			player_node.momentum_stacks = min(player_node.momentum_stacks + 1, player_node.MOMENTUM_MAX)
-		# Impact Feedback — her 10 isabette +1 Impact Stack → +1 Armor Gain
+			player_node.momentum_stacks = min(player_node.momentum_stacks + 1, player_node.momentum_max)
+		# Impact Feedback — threshold'a göre +1 Impact Stack → +1 Armor Gain
 		if player_node.has_impact_feedback:
 			player_node.impact_hit_count += 1
-			if player_node.impact_hit_count >= 10:
+			if player_node.impact_hit_count >= player_node.impact_feedback_threshold:
 				player_node.impact_hit_count = 0
 				if player_node.impact_stacks < player_node.IMPACT_STACK_MAX:
 					player_node.impact_stacks += 1

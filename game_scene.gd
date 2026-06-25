@@ -24,6 +24,10 @@ var _core_panel: Control = null
 var _core_cells: Array = []
 var _pending_core_type: String = ""
 
+# ── Upgrade kart takip sistemi ─────────────────────────────────────────────────
+var _seen_individualities: Array = []   # seçilen Individuality kart isimleri
+var _utility_levels: Dictionary = {}    # {kart_adı: int}  0-3
+
 const _CORE_FOLDER_MAP: Dictionary = {
 	"normal":     "normalBall",    "electric": "electricBall",
 	"pierce":     "pierceBall",    "split":    "splitBall",
@@ -42,6 +46,26 @@ const _CORE_INDEX_MAP: Dictionary = {
 	22: "leech",  40: "armor",  41: "anchor", 42: "crusher",
 	43: "kinetic",44: "bulwark",45: "siege",  46: "bloodbound",
 	47: "tempered",
+}
+
+# index → {name, category}  (Identity kart izleme gerekmez, sadece Individuality+Utility)
+const _UPGRADE_META: Dictionary = {
+	4:  {"name": "Speed Upgrade",       "category": "Individuality"},
+	5:  {"name": "Orbit +1",            "category": "Individuality"},
+	11: {"name": "Core Mastery",        "category": "Utility"},
+	13: {"name": "Thunder Amp",         "category": "Utility"},
+	14: {"name": "Split Amp",           "category": "Utility"},
+	20: {"name": "Medkit",              "category": "Individuality"},
+	21: {"name": "Max Health Up",       "category": "Individuality"},
+	30: {"name": "Blood for Steel",     "category": "Individuality"},
+	31: {"name": "Pain Converter",      "category": "Individuality"},
+	32: {"name": "Adrenal Surge",       "category": "Individuality"},
+	33: {"name": "Scar Tissue",         "category": "Individuality"},
+	34: {"name": "Emergency Protocol",  "category": "Individuality"},
+	35: {"name": "Momentum Engine",     "category": "Utility"},
+	36: {"name": "Impact Feedback",     "category": "Utility"},
+	37: {"name": "Chain Density",       "category": "Utility"},
+	38: {"name": "Last Stand",          "category": "Utility"},
 }
 
 var subject_scene = preload("res://subject.tscn")
@@ -1395,6 +1419,18 @@ func show_upgrade_menu() -> void:
 	{"name": "Tempered Core", "category": "Identity", "color": Color(0.9, 0.7, 0.2), "desc": "Armor active → +3 dmg",                   "index": 47, "weight": 4,  "rarity": "rare",     "chars": ["vector"]},
 ]
 	upgrades = upgrades.filter(func(u): return u["chars"].is_empty() or char_id in u["chars"])
+	# Individuality: bir kez seçilince bir daha çıkmaz
+	upgrades = upgrades.filter(func(u):
+		if u["category"] == "Individuality":
+			return not (u["name"] in _seen_individualities)
+		return true
+	)
+	# Utility: max 3 seviye, 3'ü dolunca çıkmaz
+	upgrades = upgrades.filter(func(u):
+		if u["category"] == "Utility":
+			return _utility_levels.get(u["name"], 0) < 3
+		return true
+	)
 	
 	var canvas = CanvasLayer.new()
 	canvas.process_mode = Node.PROCESS_MODE_ALWAYS
@@ -1468,7 +1504,11 @@ func show_upgrade_menu() -> void:
 		canvas.add_child(name_panel)
 
 		var name_label = Label.new()
-		name_label.text = upgrade["name"]
+		var _card_display_name: String = upgrade["name"]
+		if upgrade["category"] == "Utility":
+			var _lv: int = _utility_levels.get(upgrade["name"], 0) + 1
+			_card_display_name += "  Lv.%d" % _lv
+		name_label.text = _card_display_name
 		name_label.set_anchors_preset(Control.PRESET_FULL_RECT)
 		name_label.autowrap_mode = TextServer.AUTOWRAP_WORD
 		name_label.clip_contents = true
@@ -2057,6 +2097,17 @@ func _process(delta: float) -> void:
 	queue_redraw()
 	_update_core_panel()   # her frame güncelle — deferred add_child'ı yakala
 
+	# ── Last Stand Lv2-3: eksik HP → pasif armor kazanımı ─────────────────────
+	var _ls_player := get_node_or_null("Player")
+	if _ls_player and _ls_player.has_last_stand and _ls_player.last_stand_armor_mult > 0.0:
+		var _missing := float(player_max_hp - player_hp)
+		if _missing > 0.0:
+			_armor_regen_acc += delta * (_missing * _ls_player.last_stand_armor_mult)
+			var _ls_regen := int(_armor_regen_acc)
+			if _ls_regen > 0:
+				_armor_regen_acc -= float(_ls_regen)
+				gain_armor(_ls_regen)
+
 	# ── Armor regen ───────────────────────────────────────────────────────────
 	if player_armor_regen_rate > 0.0 and player_armor < player_armor_cap:
 		_armor_regen_acc += delta
@@ -2144,6 +2195,17 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 	upgrading = false
 	get_tree().paused = false
 	level += 1
+
+	# ── Kart takibi ───────────────────────────────────────────────────────────
+	if _UPGRADE_META.has(index):
+		var _meta: Dictionary = _UPGRADE_META[index]
+		var _cat: String  = _meta["category"]
+		var _uname: String = _meta["name"]
+		if _cat == "Individuality" and not (_uname in _seen_individualities):
+			_seen_individualities.append(_uname)
+		elif _cat == "Utility":
+			_utility_levels[_uname] = _utility_levels.get(_uname, 0) + 1
+			_apply_utility_level(index, _utility_levels[_uname])
 
 	# ── Core upgrade + MAX_ORBIT dolu → discard overlay ───────────────────────
 	if _CORE_INDEX_MAP.has(index):
@@ -2275,6 +2337,36 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 	update_ui()
 	$BallLauncher.queue_redraw()
 	
+func _apply_utility_level(index: int, level: int) -> void:
+	var p := get_node("Player")
+	match index:
+		11:  # Core Mastery — her seviye +1 ball_mastery (kümülatif, no-op here, handled in elif)
+			pass
+		13:  # Thunder Amp — her seviye +2 electric_bonus (no-op, handled in elif)
+			pass
+		14:  # Split Amp — her seviye +2 split_bonus (no-op, handled in elif)
+			pass
+		35:  # Momentum Engine
+			match level:
+				1: p.momentum_speed_bonus = 0.03; p.momentum_max = 20
+				2: p.momentum_speed_bonus = 0.05; p.momentum_max = 20
+				3: p.momentum_speed_bonus = 0.07; p.momentum_max = 30
+		36:  # Impact Feedback
+			match level:
+				1: p.impact_feedback_threshold = 10
+				2: p.impact_feedback_threshold = 7
+				3: p.impact_feedback_threshold = 5
+		37:  # Chain Density
+			match level:
+				1: p.chain_density_bonus_per_hit = 1
+				2: p.chain_density_bonus_per_hit = 2
+				3: p.chain_density_bonus_per_hit = 3
+		38:  # Last Stand
+			match level:
+				1: p.last_stand_hp_mult = 0.005; p.last_stand_armor_mult = 0.0
+				2: p.last_stand_hp_mult = 0.008; p.last_stand_armor_mult = 0.003
+				3: p.last_stand_hp_mult = 0.012; p.last_stand_armor_mult = 0.005
+
 func show_dialog(text: String, pos: Vector2) -> void:
 	var label = Label.new()
 	label.text = text
