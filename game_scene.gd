@@ -1097,12 +1097,12 @@ func show_upgrade_menu() -> void:
 	{"name": "Pain Converter",      "category": "Individuality", "color": Color(0.8, 0.2, 0.3), "desc": "HP <50%  →  Armor Gain +50%",               "index": 31, "weight": 2,  "rarity": "epic",      "chars": ["vector"]},
 	{"name": "Adrenal Surge",       "category": "Individuality", "color": Color(1.0, 0.4, 0.1), "desc": "HP <30%  →  Momentum Engine x2",            "index": 32, "weight": 2,  "rarity": "epic",      "chars": ["vector"]},
 	{"name": "Scar Tissue",         "category": "Individuality", "color": Color(0.6, 0.1, 0.1), "desc": "-5 HP  |  +Armor Cap  |  +Armor Regen",     "index": 33, "weight": 6,  "rarity": "rare",      "chars": ["vector"]},
-	{"name": "Emergency Protocol",  "category": "Individuality", "color": Color(1.0, 0.9, 0.0), "desc": "Take 15 dmg  →  +100% Armor Gain (10s)",    "index": 34, "weight": 1,  "rarity": "legendary", "chars": ["vector"]},
+	{"name": "Emergency Protocol",  "category": "Individuality", "color": Color(1.0, 0.9, 0.0), "desc": "Take 15 dmg →\n+100% Armor Gain (10s)",      "index": 34, "weight": 1,  "rarity": "legendary", "chars": ["vector"]},
 	# ── Vector — Armor Utility ────────────────────────────────────────────────
-	{"name": "Momentum Engine",     "category": "Utility",       "color": Color(0.0, 0.7, 1.0), "desc": "Hit → +1 Momentum Stack → +3% Core Speed (max 20)", "index": 35, "weight": 8, "rarity": "uncommon", "chars": ["vector"]},
-	{"name": "Impact Feedback",     "category": "Utility",       "color": Color(0.5, 0.3, 0.9), "desc": "Per 10 hits → +1 Impact Stack → +1 Armor Gain (max 10)", "index": 36, "weight": 2, "rarity": "epic", "chars": ["vector"]},
-	{"name": "Chain Density",       "category": "Utility",       "color": Color(0.0, 0.9, 0.5), "desc": "Each new enemy hit mid-flight → +dmg, resets on return", "index": 37, "weight": 4, "rarity": "rare", "chars": ["vector"]},
-	{"name": "Last Stand",          "category": "Utility",       "color": Color(1.0, 0.6, 0.0), "desc": "Missing HP → +% Core Speed  |  +Armor Gain efficiency", "index": 38, "weight": 2, "rarity": "epic", "chars": ["vector"]},
+	{"name": "Momentum Engine",     "category": "Utility",       "color": Color(0.0, 0.7, 1.0), "desc": "Hit → +1 Stack\n+3% Core Speed per stack\n(max 20 stacks)",    "index": 35, "weight": 8, "rarity": "uncommon", "chars": ["vector"]},
+	{"name": "Impact Feedback",     "category": "Utility",       "color": Color(0.5, 0.3, 0.9), "desc": "Every 10 hits:\n+1 Armor Gain (max 10)",                     "index": 36, "weight": 2, "rarity": "epic",     "chars": ["vector"]},
+	{"name": "Chain Density",       "category": "Utility",       "color": Color(0.0, 0.9, 0.5), "desc": "New enemy hit mid-flight:\n+dmg ramp, resets on return",      "index": 37, "weight": 4, "rarity": "rare",     "chars": ["vector"]},
+	{"name": "Last Stand",          "category": "Utility",       "color": Color(1.0, 0.6, 0.0), "desc": "Low HP → bonus Core Speed\n& Armor Gain efficiency",          "index": 38, "weight": 2, "rarity": "epic",     "chars": ["vector"]},
 ]
 	upgrades = upgrades.filter(func(u): return u["chars"].is_empty() or char_id in u["chars"])
 	
@@ -1170,10 +1170,16 @@ func show_upgrade_menu() -> void:
 		canvas.add_child(card_sprite)
 
 		# ── Kart ismi ────────────────────────────────────────────────────────
+		var name_panel := Panel.new()
+		name_panel.size = Vector2(card_width - 30, 44)
+		name_panel.position = Vector2(tx + 15, ty + card_height - 116)
+		name_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		name_panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+		canvas.add_child(name_panel)
+
 		var name_label = Label.new()
 		name_label.text = upgrade["name"]
-		name_label.size = Vector2(card_width - 30, 44)
-		name_label.position = Vector2(tx + 15, ty + card_height - 116)
+		name_label.set_anchors_preset(Control.PRESET_FULL_RECT)
 		name_label.autowrap_mode = TextServer.AUTOWRAP_WORD
 		name_label.clip_contents = true
 		var name_font_size: int = 17
@@ -1182,16 +1188,23 @@ func show_upgrade_menu() -> void:
 		name_label.add_theme_font_size_override("font_size", name_font_size)
 		name_label.add_theme_font_override("font", _font_bold)
 		name_label.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0))
-		canvas.add_child(name_label)
+		name_panel.add_child(name_label)
 
 		# ── Kart açıklaması ──────────────────────────────────────────────────
+		# Panel içine Label — Panel sabit width verir, autowrap çalışır
+		var desc_panel := Panel.new()
+		desc_panel.size = Vector2(card_width - 30, 80)
+		desc_panel.position = Vector2(tx + 15, ty + card_height - 88)
+		desc_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var empty_sb := StyleBoxEmpty.new()
+		desc_panel.add_theme_stylebox_override("panel", empty_sb)
+		canvas.add_child(desc_panel)
+
 		var desc_label = Label.new()
 		desc_label.text = upgrade["desc"]
-		desc_label.size = Vector2(card_width - 30, 80)
-		desc_label.position = Vector2(tx + 15, ty + card_height - 88)
+		desc_label.set_anchors_preset(Control.PRESET_FULL_RECT)
 		desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD
 		desc_label.clip_contents = true
-		# Uzun metinlerde font küçülsün
 		var desc_font_size: int = 13
 		if upgrade["desc"].length() > 40:
 			desc_font_size = 11
@@ -1200,7 +1213,7 @@ func show_upgrade_menu() -> void:
 		desc_label.add_theme_font_size_override("font_size", desc_font_size)
 		desc_label.add_theme_font_override("font", _font_regular)
 		desc_label.add_theme_color_override("font_color", Color(0.85, 0.85, 0.85))
-		canvas.add_child(desc_label)
+		desc_panel.add_child(desc_label)
 		
 		# Confirm ve Skip ortada
 		var confirm_btn = Button.new()
