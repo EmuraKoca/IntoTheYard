@@ -33,7 +33,7 @@ var _firing_all: bool = false
 
 # ── Orbit sistemi ─────────────────────────────────────────────────────────────
 var orbit_balls: Array  = []
-const MAX_ORBIT: int    = 7
+const MAX_ORBIT: int    = 8
 const ORBIT_RADIUS: float = 65.0
 const ORBIT_SPEED: float  = 2.2   # rad/s
 var orbit_angle: float  = 0.0
