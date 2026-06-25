@@ -49,6 +49,25 @@ var has_next_one: bool  = false
 var _anim_dir: String = "N"
 var _vector_oneshot: bool = false
 
+# ── Vector Armor & Stack sistemi ─────────────────────────────────────────────
+var has_armor_core: bool = false
+var armor_gain_per_hit: int = 1
+var has_pain_converter: bool = false
+
+var has_momentum_engine: bool = false
+var momentum_stacks: int = 0
+const MOMENTUM_MAX: int = 20
+const MOMENTUM_SPEED_BONUS: float = 0.03  # her stack +%3
+
+var has_impact_feedback: bool = false
+var impact_hit_count: int = 0
+var impact_stacks: int = 0
+const IMPACT_STACK_MAX: int = 10
+
+var has_chain_density: bool = false
+var has_last_stand: bool = false
+var has_adrenal_surge: bool = false
+
 # ── Pranga sistemi ────────────────────────────────────────────────────────────
 var _chain_links: Array[Sprite2D] = []
 const _CHAIN_DIR_NAMES: Array[String] = ["east","south-east","south","south-west","west","north-west","north","north-east"]
@@ -362,7 +381,20 @@ func _physics_process(delta: float) -> void:
 	_update_pranga(delta)
 
 	# ── Orbit pozisyonlama ────────────────────────────────────────────────────
-	orbit_angle += ORBIT_SPEED * delta
+	var _effective_orbit_speed: float = ORBIT_SPEED
+	if has_momentum_engine and momentum_stacks > 0:
+		var game := get_tree().get_first_node_in_group("game")
+		# Last Stand: eksik HP başına ekstra bonus
+		var last_stand_bonus: float = 0.0
+		if has_last_stand and game:
+			var missing_hp: float = float(game.player_max_hp - game.player_hp)
+			last_stand_bonus = missing_hp * 0.005
+		# Adrenal Surge: HP %30 altında Momentum x2
+		var stack_mult: float = 1.0
+		if has_adrenal_surge and game and float(game.player_hp) / float(max(game.player_max_hp, 1)) < 0.3:
+			stack_mult = 2.0
+		_effective_orbit_speed = ORBIT_SPEED * (1.0 + float(momentum_stacks) * MOMENTUM_SPEED_BONUS * stack_mult + last_stand_bonus)
+	orbit_angle += _effective_orbit_speed * delta
 	var n := orbit_balls.size()
 	for i in range(n - 1, -1, -1):
 		if not is_instance_valid(orbit_balls[i]):

@@ -6,6 +6,18 @@ var _font_regular = preload("res://assets/orbitronfont/Orbitron-Regular.ttf")
 var level = 1
 var player_hp = 50
 var player_max_hp = 50
+
+# ── Armor sistemi ─────────────────────────────────────────────────────────────
+var player_armor: int = 0
+var player_max_armor: int = 0
+var player_armor_gain: int = 1        # Armor Core başına kazanılan armor
+var player_armor_cap: int = 20        # Armor üst sınırı
+var player_armor_regen_rate: float = 0.0
+var _armor_regen_acc: float = 0.0
+var _armor_bar: ProgressBar = null
+var _armor_label: Label = null
+var _armor_gain_boost: float = 1.0    # Pain Converter / Emergency Protocol çarpanı
+var _armor_gain_boost_timer: float = 0.0
 var subject_scene = preload("res://subject.tscn")
 var upgrading = false
 var heavy_subject_scene = preload("res://heavy_subject.tscn")
@@ -617,6 +629,7 @@ func _ready() -> void:
 	_setup_data_bar()
 	_setup_auto_toggle()
 	_setup_neon_sign()
+	_setup_armor_bar()
 	
 
 
@@ -674,6 +687,68 @@ func subject_died(xp_reward: int = 1, death_pos: Vector2 = Vector2.ZERO) -> void
 	# Veri parçacıkları: hasar miktarına göre 3-7 parçacık
 	var particle_count := clampi(xp_reward + 2, 3, 7)
 	_spawn_data_particles(death_pos, float(xp_reward) * 10.0, particle_count)
+
+func _setup_armor_bar() -> void:
+	# IntegrityBar'ın hemen altına, aynı hizada
+	var integrity_bar: ProgressBar = $UI/IntegrityBar
+	var ab := ProgressBar.new()
+	ab.name = "ArmorBar"
+	ab.min_value = 0
+	ab.max_value = 1
+	ab.value = 0
+	ab.show_percentage = false
+	ab.size = integrity_bar.size
+	ab.position = integrity_bar.position + Vector2(0, integrity_bar.size.y + 4)
+	# Stil — metalik gri/mavi
+	var sb_bg := StyleBoxFlat.new()
+	sb_bg.bg_color = Color(0.08, 0.08, 0.12, 0.85)
+	sb_bg.corner_radius_top_left = 3; sb_bg.corner_radius_top_right = 3
+	sb_bg.corner_radius_bottom_right = 3; sb_bg.corner_radius_bottom_left = 3
+	var sb_fill := StyleBoxFlat.new()
+	sb_fill.bg_color = Color(0.45, 0.65, 0.9, 0.92)
+	sb_fill.corner_radius_top_left = 3; sb_fill.corner_radius_top_right = 3
+	sb_fill.corner_radius_bottom_right = 3; sb_fill.corner_radius_bottom_left = 3
+	ab.add_theme_stylebox_override("background", sb_bg)
+	ab.add_theme_stylebox_override("fill", sb_fill)
+	ab.visible = false  # Armor yokken gizli
+	$UI.add_child(ab)
+	_armor_bar = ab
+	# Label
+	var lbl := Label.new()
+	lbl.name = "LabelArmor"
+	lbl.size = Vector2(ab.size.x, ab.size.y + 4)
+	lbl.position = Vector2(0, 0)
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	lbl.add_theme_font_override("font", _font_bold)
+	lbl.add_theme_font_size_override("font_size", 10)
+	lbl.add_theme_color_override("font_color", Color(0.85, 0.95, 1.0))
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ab.add_child(lbl)
+	_armor_label = lbl
+
+func _update_armor_ui() -> void:
+	if _armor_bar == null:
+		return
+	if player_max_armor <= 0:
+		_armor_bar.visible = false
+		return
+	_armor_bar.visible = true
+	_armor_bar.max_value = player_max_armor
+	_armor_bar.value = player_armor
+	_armor_label.text = "⬡  " + str(player_armor) + " / " + str(player_max_armor)
+
+func gain_armor(amount: int) -> void:
+	var mult := _armor_gain_boost
+	# Pain Converter: HP %50 altındaysa +%50 Armor Gain
+	var p := get_node_or_null("Player")
+	if p and p.get("has_pain_converter") != null and p.has_pain_converter:
+		if float(player_hp) / float(max(player_max_hp, 1)) < 0.5:
+			mult *= 1.5
+	var boosted := int(float(amount) * mult)
+	player_armor = min(player_armor + boosted, player_armor_cap)
+	player_max_armor = max(player_max_armor, player_armor_cap)
+	_update_armor_ui()
 
 func _setup_neon_sign() -> void:
 	var sign: Node2D = load("res://neon_sign.gd").new()
@@ -783,6 +858,14 @@ func subject_rescued() -> void:
 	GameData.add_xp(GameData.selected_character, 2)
 
 func player_damaged(amount: int = 1) -> void:
+	# Armor önce absorbe eder
+	if player_armor > 0:
+		var absorbed := min(player_armor, amount)
+		player_armor -= absorbed
+		amount -= absorbed
+		_update_armor_ui()
+	if amount <= 0:
+		return
 	player_hp -= amount
 	update_ui()
 	if player_hp <= 0:
@@ -997,8 +1080,19 @@ func show_upgrade_menu() -> void:
 	{"name": "Lightning",           "category": "Calamity",      "color": Color(1.0, 1.0, 0.0), "desc": "Lightning strikes selected point",          "index": 7,  "weight": 8,  "rarity": "common", "chars": []},
 	{"name": "Flame Zone",          "category": "Calamity",      "color": Color(1.0, 0.3, 0.0), "desc": "Continuous damage in selected area",        "index": 8,  "weight": 8,  "rarity": "common", "chars": []},
 	{"name": "Gravitational Force", "category": "Calamity",      "color": Color(0.5, 0.0, 1.0), "desc": "Pulls subjects for 5s",                     "index": 9,  "weight": 8,  "rarity": "common", "chars": []},
-	{"name": "Medkit",              "category": "Individuality", "color": Color(0.9, 0.1, 0.1), "desc": "+10 HP restored",                           "index": 20, "weight": 10, "rarity": "common", "chars": []},
-	{"name": "Max Health Up",       "category": "Individuality", "color": Color(0.8, 0.2, 0.2), "desc": "Maximum HP +5",                             "index": 21, "weight": 10, "rarity": "common", "chars": []},
+	{"name": "Medkit",              "category": "Individuality", "color": Color(0.9, 0.1, 0.1), "desc": "+10 HP restored",                           "index": 20, "weight": 10, "rarity": "common",    "chars": []},
+	{"name": "Max Health Up",       "category": "Individuality", "color": Color(0.8, 0.2, 0.2), "desc": "Maximum HP +5",                             "index": 21, "weight": 10, "rarity": "common",    "chars": []},
+	# ── Vector — Armor Individuality ─────────────────────────────────────────
+	{"name": "Blood for Steel",     "category": "Individuality", "color": Color(0.7, 0.1, 0.1), "desc": "-10 HP  |  +10 Max Armor",                  "index": 30, "weight": 6,  "rarity": "rare",      "chars": ["vector"]},
+	{"name": "Pain Converter",      "category": "Individuality", "color": Color(0.8, 0.2, 0.3), "desc": "HP <50%  →  Armor Gain +50%",               "index": 31, "weight": 2,  "rarity": "epic",      "chars": ["vector"]},
+	{"name": "Adrenal Surge",       "category": "Individuality", "color": Color(1.0, 0.4, 0.1), "desc": "HP <30%  →  Momentum Engine x2",            "index": 32, "weight": 2,  "rarity": "epic",      "chars": ["vector"]},
+	{"name": "Scar Tissue",         "category": "Individuality", "color": Color(0.6, 0.1, 0.1), "desc": "-5 HP  |  +Armor Cap  |  +Armor Regen",     "index": 33, "weight": 6,  "rarity": "rare",      "chars": ["vector"]},
+	{"name": "Emergency Protocol",  "category": "Individuality", "color": Color(1.0, 0.9, 0.0), "desc": "Take 15 dmg  →  +100% Armor Gain (10s)",    "index": 34, "weight": 1,  "rarity": "legendary", "chars": ["vector"]},
+	# ── Vector — Armor Utility ────────────────────────────────────────────────
+	{"name": "Momentum Engine",     "category": "Utility",       "color": Color(0.0, 0.7, 1.0), "desc": "Hit → +1 Momentum Stack → +3% Core Speed (max 20)", "index": 35, "weight": 8, "rarity": "uncommon", "chars": ["vector"]},
+	{"name": "Impact Feedback",     "category": "Utility",       "color": Color(0.5, 0.3, 0.9), "desc": "Per 10 hits → +1 Impact Stack → +1 Armor Gain (max 10)", "index": 36, "weight": 2, "rarity": "epic", "chars": ["vector"]},
+	{"name": "Chain Density",       "category": "Utility",       "color": Color(0.0, 0.9, 0.5), "desc": "Each new enemy hit mid-flight → +dmg, resets on return", "index": 37, "weight": 4, "rarity": "rare", "chars": ["vector"]},
+	{"name": "Last Stand",          "category": "Utility",       "color": Color(1.0, 0.6, 0.0), "desc": "Missing HP → +% Core Speed  |  +Armor Gain efficiency", "index": 38, "weight": 2, "rarity": "epic", "chars": ["vector"]},
 ]
 	upgrades = upgrades.filter(func(u): return u["chars"].is_empty() or char_id in u["chars"])
 	
@@ -1634,8 +1728,23 @@ func _draw_dashed_line(from: Vector2, to: Vector2, color: Color, width: float) -
 		draw_line(from + dir * p, from + dir * e, color, width)
 		p += dash + gap
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	queue_redraw()
+
+	# ── Armor regen ───────────────────────────────────────────────────────────
+	if player_armor_regen_rate > 0.0 and player_armor < player_armor_cap:
+		_armor_regen_acc += delta
+		var regen_amount := int(_armor_regen_acc * player_armor_regen_rate)
+		if regen_amount > 0:
+			_armor_regen_acc = 0.0
+			gain_armor(regen_amount)
+	# ── Armor gain boost timer ─────────────────────────────────────────────────
+	if _armor_gain_boost_timer > 0.0:
+		_armor_gain_boost_timer -= delta
+		if _armor_gain_boost_timer <= 0.0:
+			_armor_gain_boost = 1.0
+			_armor_gain_boost_timer = 0.0
+
 	if upgrading:
 		return
 	# Boss ölüm kontrolü her frame çalışır — spawn_interval beklenmez
@@ -1772,8 +1881,42 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 	elif index == 22:
 		$BallLauncher.queue_upgrade_ball("leech")
 	elif index == 23:
-		# Chip Boost — extend ally chip duration for all future allies
 		ally_chip_duration += 5.0
+	# ── Vector Armor — Individuality ─────────────────────────────────────────
+	elif index == 30:  # Blood for Steel
+		player_hp = max(1, player_hp - 10)
+		player_max_armor += 10
+		player_armor_cap += 10
+		_update_armor_ui()
+	elif index == 31:  # Pain Converter
+		var p := get_node("Player")
+		p.has_pain_converter = true
+	elif index == 32:  # Adrenal Surge
+		var p := get_node("Player")
+		p.has_adrenal_surge = true
+	elif index == 33:  # Scar Tissue
+		player_hp = max(1, player_hp - 5)
+		player_armor_cap += 5
+		player_max_armor = max(player_max_armor, player_armor_cap)
+		player_armor_regen_rate += 1.0
+		_update_armor_ui()
+	elif index == 34:  # Emergency Protocol
+		player_damaged(15)
+		_armor_gain_boost = 2.0
+		_armor_gain_boost_timer = 10.0
+	# ── Vector Armor — Utility ───────────────────────────────────────────────
+	elif index == 35:  # Momentum Engine
+		var p := get_node("Player")
+		p.has_momentum_engine = true
+	elif index == 36:  # Impact Feedback
+		var p := get_node("Player")
+		p.has_impact_feedback = true
+	elif index == 37:  # Chain Density
+		var p := get_node("Player")
+		p.has_chain_density = true
+	elif index == 38:  # Last Stand
+		var p := get_node("Player")
+		p.has_last_stand = true
 
 	update_ui()
 	$BallLauncher.queue_redraw()

@@ -12,6 +12,7 @@ var base_scale = 1.0
 var target_scale = 1.0
 var can_pierce = false
 var hit_subjects = []
+var chain_density_unique_hits: int = 0  # her uçuşta farklı düşman sayısı
 var catch_cooldown = 0.0
 var _stuck_timer: float = 0.0
 var is_active = false
@@ -488,6 +489,7 @@ func _start_returning() -> void:
 	_is_striking  = false
 	$CollisionShape2D.disabled = false
 	hit_subjects.clear()
+	chain_density_unique_hits = 0
 		
 func _try_fusion(other: Node2D) -> void:
 	var self_type = _get_type()
@@ -722,12 +724,37 @@ func _hit_subject(subject: Node2D) -> void:
 		base_damage = 2
 	var total_damage = base_damage
 
+	# Chain Density: yeni düşmana çarpınca hasar artar
+	var _cd_player := _get_player()
+	if _cd_player and _cd_player.has_chain_density and not (subject in hit_subjects):
+		chain_density_unique_hits += 1
+		total_damage += chain_density_unique_hits
+
 # Crit check
 	var is_crit = randf() < crit_chance
 	if is_crit:
 		total_damage = int(total_damage * crit_multiplier)
 
 	subject.take_damage(total_damage)
+
+	# ── Vector Armor & Stack tetikleyicileri ─────────────────────────────────
+	var player_node := _get_player()
+	if is_instance_valid(player_node):
+		var game_node := get_tree().get_first_node_in_group("game")
+		# Armor Core — isabet başına armor kazan
+		if player_node.has_armor_core and game_node:
+			game_node.gain_armor(player_node.armor_gain_per_hit)
+		# Momentum Engine — isabet başına +1 stack
+		if player_node.has_momentum_engine:
+			player_node.momentum_stacks = min(player_node.momentum_stacks + 1, player_node.MOMENTUM_MAX)
+		# Impact Feedback — her 10 isabette +1 Impact Stack → +1 Armor Gain
+		if player_node.has_impact_feedback:
+			player_node.impact_hit_count += 1
+			if player_node.impact_hit_count >= 10:
+				player_node.impact_hit_count = 0
+				if player_node.impact_stacks < player_node.IMPACT_STACK_MAX:
+					player_node.impact_stacks += 1
+					player_node.armor_gain_per_hit += 1
 
 	# ── Veri Toplama ─────────────────────────────────────────
 	# Data amount determined by Fusion > Enhanced > Basic ball order
