@@ -1172,9 +1172,14 @@ func show_upgrade_menu() -> void:
 		# ── Kart ismi ────────────────────────────────────────────────────────
 		var name_label = Label.new()
 		name_label.text = upgrade["name"]
-		name_label.size = Vector2(card_width - 30, 40)
-		name_label.position = Vector2(tx + 15, ty + card_height - 110)
-		name_label.add_theme_font_size_override("font_size", 17)
+		name_label.size = Vector2(card_width - 30, 44)
+		name_label.position = Vector2(tx + 15, ty + card_height - 116)
+		name_label.autowrap_mode = TextServer.AUTOWRAP_WORD
+		name_label.clip_contents = true
+		var name_font_size: int = 17
+		if upgrade["name"].length() > 14:
+			name_font_size = 14
+		name_label.add_theme_font_size_override("font_size", name_font_size)
 		name_label.add_theme_font_override("font", _font_bold)
 		name_label.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0))
 		canvas.add_child(name_label)
@@ -1182,10 +1187,17 @@ func show_upgrade_menu() -> void:
 		# ── Kart açıklaması ──────────────────────────────────────────────────
 		var desc_label = Label.new()
 		desc_label.text = upgrade["desc"]
-		desc_label.size = Vector2(card_width - 30, 60)
-		desc_label.position = Vector2(tx + 15, ty + card_height - 72)
+		desc_label.size = Vector2(card_width - 30, 80)
+		desc_label.position = Vector2(tx + 15, ty + card_height - 88)
 		desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD
-		desc_label.add_theme_font_size_override("font_size", 13)
+		desc_label.clip_contents = true
+		# Uzun metinlerde font küçülsün
+		var desc_font_size: int = 13
+		if upgrade["desc"].length() > 40:
+			desc_font_size = 11
+		if upgrade["desc"].length() > 60:
+			desc_font_size = 10
+		desc_label.add_theme_font_size_override("font_size", desc_font_size)
 		desc_label.add_theme_font_override("font", _font_regular)
 		desc_label.add_theme_color_override("font_color", Color(0.85, 0.85, 0.85))
 		canvas.add_child(desc_label)
