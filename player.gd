@@ -73,6 +73,21 @@ var last_stand_hp_mult: float = 0.005     # Lv1:0.5%  Lv2:0.8%  Lv3:1.2%
 var last_stand_armor_mult: float = 0.0    # Lv3'te devreye girer
 var has_adrenal_surge: bool = false
 
+# ── Yeni Individuality kart değişkenleri ──────────────────────────────────────
+var orbit_speed_mult: float       = 1.0   # Reinforced Frame, Overclocked Reflex, vb.
+var armor_gain_mult: float        = 1.0   # Iron Constitution, Overclocked Reflex, vb.
+var momentum_gain_mult: float     = 1.0   # Fortified Core System
+var damage_mult: float            = 1.0   # Fractured Frame
+var knockback_force_mult: float   = 1.0   # Magnetic Weight
+var slow_duration_mult: float     = 1.0   # Battlefield Anchor
+var return_speed_mult: float      = 1.0   # Hyper Recovery Loop
+var hyper_loop_no_damage: bool    = false # Hyper Recovery Loop: hasar = 0
+var has_blood_circuit: bool       = false
+var has_glass_engine: bool        = false
+var has_adrenal_armor: bool       = false # Adrenal Armor System
+var has_kinetic_nervous: bool     = false # Momentum reset olmaz
+var has_risk_engine: bool         = false # Hasar alınca momentum
+
 # ── Pranga sistemi ────────────────────────────────────────────────────────────
 var _chain_links: Array[Sprite2D] = []
 const _CHAIN_DIR_NAMES: Array[String] = ["east","south-east","south","south-west","west","north-west","north","north-east"]
@@ -386,19 +401,28 @@ func _physics_process(delta: float) -> void:
 	_update_pranga(delta)
 
 	# ── Orbit pozisyonlama ────────────────────────────────────────────────────
-	var _effective_orbit_speed: float = ORBIT_SPEED
+	var _effective_orbit_speed: float = ORBIT_SPEED * orbit_speed_mult
+	var game_node := get_tree().get_first_node_in_group("game")
 	if has_momentum_engine and momentum_stacks > 0:
-		var game := get_tree().get_first_node_in_group("game")
 		# Last Stand: eksik HP başına ekstra bonus
 		var last_stand_bonus: float = 0.0
-		if has_last_stand and game:
-			var missing_hp: float = float(game.player_max_hp - game.player_hp)
-			last_stand_bonus = missing_hp * last_stand_hp_mult
+		if has_last_stand and game_node:
+			last_stand_bonus = float(game_node.player_max_hp - game_node.player_hp) * last_stand_hp_mult
 		# Adrenal Surge: HP %30 altında Momentum x2
 		var stack_mult: float = 1.0
-		if has_adrenal_surge and game and float(game.player_hp) / float(max(game.player_max_hp, 1)) < 0.3:
+		if has_adrenal_surge and game_node and float(game_node.player_hp) / float(max(game_node.player_max_hp, 1)) < 0.3:
 			stack_mult = 2.0
-		_effective_orbit_speed = ORBIT_SPEED * (1.0 + float(momentum_stacks) * momentum_speed_bonus * stack_mult + last_stand_bonus)
+		_effective_orbit_speed = ORBIT_SPEED * orbit_speed_mult * (1.0 + float(momentum_stacks) * momentum_speed_bonus * stack_mult + last_stand_bonus)
+	# Blood Circuit: HP <= %70 iken hız artar (max +%50 at 0 HP)
+	if has_blood_circuit and game_node:
+		var hp_ratio: float = float(game_node.player_hp) / float(max(game_node.player_max_hp, 1))
+		if hp_ratio <= 0.7:
+			_effective_orbit_speed *= 1.0 + (0.7 - hp_ratio) / 0.7 * 0.5
+	# Adrenal Armor System: HP > %70 → Core Speed +%10
+	if has_adrenal_armor and game_node:
+		var hp_r: float = float(game_node.player_hp) / float(max(game_node.player_max_hp, 1))
+		if hp_r > 0.7:
+			_effective_orbit_speed *= 1.1
 	orbit_angle += _effective_orbit_speed * delta
 	var n := orbit_balls.size()
 	for i in range(n - 1, -1, -1):

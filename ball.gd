@@ -509,7 +509,8 @@ func _get_defense_base_damage() -> int:
 func _start_returning() -> void:
 	state         = "returning"
 	moving        = true
-	speed         = 200.0
+	var _rp := _get_player()
+	speed         = 200.0 * (_rp.return_speed_mult if _rp else 1.0)
 	scale         = Vector2(1.0, 1.0)
 	z_index       = 2
 	strike_offset = Vector2.ZERO
@@ -517,6 +518,9 @@ func _start_returning() -> void:
 	$CollisionShape2D.disabled = false
 	hit_subjects.clear()
 	chain_density_unique_hits = 0
+	# Kinetic Nervous System: dönüşte momentum reset olmaz
+	if _rp and not _rp.has_kinetic_nervous:
+		_rp.momentum_stacks = 0
 		
 func _try_fusion(other: Node2D) -> void:
 	var self_type = _get_type()
@@ -778,6 +782,14 @@ func _hit_subject(subject: Node2D) -> void:
 	if is_crit:
 		total_damage = int(total_damage * crit_multiplier)
 
+	# Fractured Frame: global damage multiplier
+	var _dmg_player := _get_player()
+	if _dmg_player:
+		if _dmg_player.hyper_loop_no_damage:
+			total_damage = 0
+		elif _dmg_player.damage_mult != 1.0:
+			total_damage = int(float(total_damage) * _dmg_player.damage_mult)
+
 	subject.take_damage(total_damage)
 
 	# ── Vector yeni core efektleri + Armor & Stack tetikleyicileri ──────────
@@ -796,16 +808,21 @@ func _hit_subject(subject: Node2D) -> void:
 		if game_node_fx.player_armor > 0:
 			subject.take_damage(3)
 	if can_anchor and is_instance_valid(subject) and subject.has_method("apply_slow"):
-		subject.apply_slow(0.6, 3.0)
+		var _slow_dur: float = 3.0 * (player_node.slow_duration_mult if player_node else 1.0)
+		subject.apply_slow(0.6, _slow_dur)
+	# Magnetic Weight: knockback
+	if player_node and player_node.knockback_force_mult != 1.0 and is_instance_valid(subject) and subject.has_method("apply_knockback"):
+		subject.apply_knockback(global_position, 150.0 * player_node.knockback_force_mult)
 	if can_kinetic and _wall_bounce_count > 0:
 		subject.take_damage(_wall_bounce_count)
 	if is_instance_valid(player_node):
 		# Armor Core upgrade (ayrı flag) — isabet başına armor kazan
 		if player_node.has_armor_core and game_node_fx:
 			game_node_fx.gain_armor(player_node.armor_gain_per_hit)
-		# Momentum Engine — isabet başına +1 stack
+		# Momentum Engine — isabet başına +1 stack (Fortified Core: %20 ihtimalle atla)
 		if player_node.has_momentum_engine:
-			player_node.momentum_stacks = min(player_node.momentum_stacks + 1, player_node.momentum_max)
+			if randf() < player_node.momentum_gain_mult:
+				player_node.momentum_stacks = min(player_node.momentum_stacks + 1, player_node.momentum_max)
 		# Impact Feedback — threshold'a göre +1 Impact Stack → +1 Armor Gain
 		if player_node.has_impact_feedback:
 			player_node.impact_hit_count += 1

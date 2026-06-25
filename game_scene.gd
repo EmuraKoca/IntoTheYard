@@ -65,7 +65,20 @@ const _UPGRADE_META: Dictionary = {
 	35: {"name": "Momentum Engine",     "category": "Utility"},
 	36: {"name": "Impact Feedback",     "category": "Utility"},
 	37: {"name": "Chain Density",       "category": "Utility"},
-	38: {"name": "Last Stand",          "category": "Utility"},
+	38: {"name": "Last Stand",              "category": "Utility"},
+	48: {"name": "Reinforced Frame",        "category": "Individuality"},
+	49: {"name": "Iron Constitution",       "category": "Individuality"},
+	50: {"name": "Fortified Core System",   "category": "Individuality"},
+	51: {"name": "Blood Circuit",           "category": "Individuality"},
+	52: {"name": "Fractured Frame",         "category": "Individuality"},
+	53: {"name": "Glass Engine",            "category": "Individuality"},
+	54: {"name": "Overclocked Reflex",      "category": "Individuality"},
+	55: {"name": "Kinetic Nervous System",  "category": "Individuality"},
+	56: {"name": "Hyper Recovery Loop",     "category": "Individuality"},
+	57: {"name": "Magnetic Weight",         "category": "Individuality"},
+	58: {"name": "Battlefield Anchor",      "category": "Individuality"},
+	59: {"name": "Adrenal Armor System",    "category": "Individuality"},
+	60: {"name": "Risk Engine",             "category": "Individuality"},
 }
 
 var subject_scene = preload("res://subject.tscn")
@@ -801,11 +814,25 @@ func _update_armor_ui() -> void:
 
 func gain_armor(amount: int) -> void:
 	var mult := _armor_gain_boost
-	# Pain Converter: HP %50 altındaysa +%50 Armor Gain
 	var p := get_node_or_null("Player")
+	var hp_ratio: float = float(player_hp) / float(max(player_max_hp, 1))
+	# Pain Converter: HP %50 altındaysa +%50 Armor Gain
 	if p and p.get("has_pain_converter") != null and p.has_pain_converter:
-		if float(player_hp) / float(max(player_max_hp, 1)) < 0.5:
+		if hp_ratio < 0.5:
 			mult *= 1.5
+	# Iron Constitution / Overclocked Reflex / Risk Engine kümülatif çarpanı
+	if p:
+		mult *= p.armor_gain_mult
+	# Glass Engine: HP < %50 → +%50, HP > %70 → -%30
+	if p and p.get("has_glass_engine") != null and p.has_glass_engine:
+		if hp_ratio < 0.5:
+			mult *= 1.5
+		elif hp_ratio > 0.7:
+			mult *= 0.7
+	# Adrenal Armor System: HP < %50 → +%40
+	if p and p.get("has_adrenal_armor") != null and p.has_adrenal_armor:
+		if hp_ratio < 0.5:
+			mult *= 1.4
 	var boosted := int(float(amount) * mult)
 	player_armor = min(player_armor + boosted, player_armor_cap)
 	player_max_armor = max(player_max_armor, player_armor_cap)
@@ -1181,6 +1208,10 @@ func player_damaged(amount: int = 1) -> void:
 		_update_armor_ui()
 	if amount <= 0:
 		return
+	# Risk Engine: HP hasarı kadar Momentum stack kazan
+	var _re_player := get_node_or_null("Player")
+	if _re_player and _re_player.get("has_risk_engine") and _re_player.has_risk_engine:
+		_re_player.momentum_stacks = mini(_re_player.momentum_stacks + amount, _re_player.momentum_max)
 	player_hp -= amount
 	update_ui()
 	if player_hp <= 0:
@@ -1417,6 +1448,20 @@ func show_upgrade_menu() -> void:
 	{"name": "Siege Core",    "category": "Identity", "color": Color(0.8, 0.4, 0.1), "desc": "Highest damage core",                     "index": 45, "weight": 2,  "rarity": "epic",     "chars": ["vector"]},
 	{"name": "Bloodbound Core","category": "Identity", "color": Color(0.7, 0.0, 0.1), "desc": "Missing HP → bonus dmg",                 "index": 46, "weight": 3,  "rarity": "epic",     "chars": ["vector"]},
 	{"name": "Tempered Core", "category": "Identity", "color": Color(0.9, 0.7, 0.2), "desc": "Armor active → +3 dmg",                   "index": 47, "weight": 4,  "rarity": "rare",     "chars": ["vector"]},
+	# ── Vector — Yeni Individuality kartlar ──────────────────────────────────────
+	{"name": "Reinforced Frame",        "category": "Individuality", "color": Color(0.5, 0.7, 0.5), "desc": "+20 Max Armor / Core Speed -%10",                   "index": 48, "weight": 5, "rarity": "uncommon", "chars": ["vector"]},
+	{"name": "Iron Constitution",       "category": "Individuality", "color": Color(0.7, 0.8, 0.6), "desc": "Armor gain efficiency +%25",                         "index": 49, "weight": 6, "rarity": "uncommon", "chars": ["vector"]},
+	{"name": "Fortified Core System",   "category": "Individuality", "color": Color(0.4, 0.6, 0.8), "desc": "Armor Cap +15 / Momentum gain -%20",                 "index": 50, "weight": 5, "rarity": "rare",     "chars": ["vector"]},
+	{"name": "Blood Circuit",           "category": "Individuality", "color": Color(0.8, 0.1, 0.1), "desc": "HP <= %70: Core Speed scales up to +%50",            "index": 51, "weight": 5, "rarity": "rare",     "chars": ["vector"]},
+	{"name": "Fractured Frame",         "category": "Individuality", "color": Color(0.9, 0.4, 0.1), "desc": "Core Damage ×1.4 / Max HP -15",                      "index": 52, "weight": 4, "rarity": "rare",     "chars": ["vector"]},
+	{"name": "Glass Engine",            "category": "Individuality", "color": Color(0.5, 0.8, 0.9), "desc": "Low HP: Armor +%50 | High HP: Armor -%30",           "index": 53, "weight": 5, "rarity": "rare",     "chars": ["vector"]},
+	{"name": "Overclocked Reflex",      "category": "Individuality", "color": Color(0.9, 0.9, 0.2), "desc": "Core Speed +%20 / Armor Gain -%15",                  "index": 54, "weight": 5, "rarity": "uncommon", "chars": ["vector"]},
+	{"name": "Kinetic Nervous System",  "category": "Individuality", "color": Color(0.2, 0.9, 0.6), "desc": "Momentum doesn't reset on return / Max Armor -10",   "index": 55, "weight": 4, "rarity": "rare",     "chars": ["vector"]},
+	{"name": "Hyper Recovery Loop",     "category": "Individuality", "color": Color(0.3, 0.7, 1.0), "desc": "Return speed ×1.5 / Core deals 0 damage",            "index": 56, "weight": 3, "rarity": "epic",     "chars": ["vector"]},
+	{"name": "Magnetic Weight",         "category": "Individuality", "color": Color(0.6, 0.4, 0.9), "desc": "Knockback ×2 / Core Speed -%10",                     "index": 57, "weight": 5, "rarity": "uncommon", "chars": ["vector"]},
+	{"name": "Battlefield Anchor",      "category": "Individuality", "color": Color(0.3, 0.5, 0.7), "desc": "Slow duration ×2 / Player Speed -%10",               "index": 58, "weight": 4, "rarity": "rare",     "chars": ["vector"]},
+	{"name": "Adrenal Armor System",    "category": "Individuality", "color": Color(0.9, 0.3, 0.5), "desc": "Low HP: Armor +%40 | High HP: Core Speed +%10",      "index": 59, "weight": 5, "rarity": "rare",     "chars": ["vector"]},
+	{"name": "Risk Engine",             "category": "Individuality", "color": Color(0.8, 0.1, 0.3), "desc": "Damage taken → Momentum stacks / Armor Gain -%30",   "index": 60, "weight": 4, "rarity": "epic",     "chars": ["vector"]},
 ]
 	upgrades = upgrades.filter(func(u): return u["chars"].is_empty() or char_id in u["chars"])
 	# Individuality: bir kez seçilince bir daha çıkmaz
@@ -2333,6 +2378,46 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 		$BallLauncher.queue_upgrade_ball("bloodbound")
 	elif index == 47:
 		$BallLauncher.queue_upgrade_ball("tempered")
+	# ── Vector — Yeni Individuality kartlar ──────────────────────────────────
+	elif index == 48:  # Reinforced Frame
+		player_armor_cap += 20
+		get_node("Player").orbit_speed_mult *= 0.9
+	elif index == 49:  # Iron Constitution
+		get_node("Player").armor_gain_mult *= 1.25
+	elif index == 50:  # Fortified Core System
+		player_armor_cap += 15
+		get_node("Player").momentum_gain_mult *= 0.8
+	elif index == 51:  # Blood Circuit
+		get_node("Player").has_blood_circuit = true
+	elif index == 52:  # Fractured Frame
+		player_max_hp -= 15
+		player_hp = mini(player_hp, player_max_hp)
+		get_node("Player").damage_mult *= 1.4
+		update_ui()
+	elif index == 53:  # Glass Engine
+		get_node("Player").has_glass_engine = true
+	elif index == 54:  # Overclocked Reflex
+		get_node("Player").orbit_speed_mult *= 1.2
+		get_node("Player").armor_gain_mult  *= 0.85
+	elif index == 55:  # Kinetic Nervous System
+		player_armor_cap -= 10
+		player_armor = mini(player_armor, player_armor_cap)
+		get_node("Player").has_kinetic_nervous = true
+		_update_armor_ui()
+	elif index == 56:  # Hyper Recovery Loop
+		get_node("Player").return_speed_mult    = 1.5
+		get_node("Player").hyper_loop_no_damage = true
+	elif index == 57:  # Magnetic Weight
+		get_node("Player").knockback_force_mult = 2.0
+		get_node("Player").orbit_speed_mult    *= 0.9
+	elif index == 58:  # Battlefield Anchor
+		get_node("Player").slow_duration_mult = 2.0
+		get_node("Player").SPEED             = int(get_node("Player").SPEED * 0.9)
+	elif index == 59:  # Adrenal Armor System
+		get_node("Player").has_adrenal_armor = true
+	elif index == 60:  # Risk Engine
+		get_node("Player").has_risk_engine   = true
+		get_node("Player").armor_gain_mult  *= 0.7
 
 	update_ui()
 	$BallLauncher.queue_redraw()
