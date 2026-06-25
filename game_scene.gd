@@ -860,7 +860,7 @@ func subject_rescued() -> void:
 func player_damaged(amount: int = 1) -> void:
 	# Armor önce absorbe eder
 	if player_armor > 0:
-		var absorbed := min(player_armor, amount)
+		var absorbed: int = mini(player_armor, amount)
 		player_armor -= absorbed
 		amount -= absorbed
 		_update_armor_ui()
@@ -1766,7 +1766,7 @@ func _process(delta: float) -> void:
 			GameData.add_xp(GameData.selected_character, 30)
 			_show_run_end_screen()
 
-	spawn_timer += _delta
+	spawn_timer += delta
 	if spawn_timer >= spawn_interval:
 		spawn_timer = 0.0
 		var nyx_alive: bool     = is_instance_valid(_nyx_node)      and not _nyx_node.is_dead
@@ -1803,7 +1803,7 @@ func _process(delta: float) -> void:
 		$UI/CalamityCircle.visible = false
 		
 	if not get_tree().paused:
-		elapsed_time += _delta
+		elapsed_time += delta
 		var minutes = int(elapsed_time / 60)
 		var seconds = int(elapsed_time) % 60
 		$UI/LabelTime.text = "⏱  %02d:%02d" % [minutes, seconds]
