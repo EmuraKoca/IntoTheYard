@@ -1171,8 +1171,8 @@ func show_upgrade_menu() -> void:
 
 		# ── Kart ismi ────────────────────────────────────────────────────────
 		var name_panel := Panel.new()
-		name_panel.size = Vector2(card_width - 30, 44)
-		name_panel.position = Vector2(tx + 15, ty + card_height - 116)
+		name_panel.size = Vector2(card_width - 52, 44)
+		name_panel.position = Vector2(tx + 26, ty + card_height - 116)
 		name_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		name_panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 		canvas.add_child(name_panel)
@@ -1193,8 +1193,8 @@ func show_upgrade_menu() -> void:
 		# ── Kart açıklaması ──────────────────────────────────────────────────
 		# Panel içine Label — Panel sabit width verir, autowrap çalışır
 		var desc_panel := Panel.new()
-		desc_panel.size = Vector2(card_width - 30, 80)
-		desc_panel.position = Vector2(tx + 15, ty + card_height - 88)
+		desc_panel.size = Vector2(card_width - 52, 80)
+		desc_panel.position = Vector2(tx + 26, ty + card_height - 88)
 		desc_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var empty_sb := StyleBoxEmpty.new()
 		desc_panel.add_theme_stylebox_override("panel", empty_sb)
