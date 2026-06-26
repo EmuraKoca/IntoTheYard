@@ -1,4 +1,4 @@
-extends Node2D
+﻿extends Node2D
 
 @onready var _font_bold    = preload("res://assets/orbitronfont/Orbitron-Bold.ttf")
 @onready var _font_regular = preload("res://assets/orbitronfont/Orbitron-Regular.ttf")
@@ -82,9 +82,15 @@ func _build_settings_ui() -> void:
 	panel.size     = Vector2(W, H)
 	var ps := StyleBoxFlat.new()
 	ps.bg_color          = Color(0.02, 0.03, 0.12, 0.97)
-	ps.border_width_left = ps.border_width_right = ps.border_width_top = ps.border_width_bottom = 2
+	ps.border_width_left = 2
+	ps.border_width_right = 2
+	ps.border_width_top = 2
+	ps.border_width_bottom = 2
 	ps.border_color      = Color(0, 0.9, 1, 1)
-	ps.corner_radius_top_left = ps.corner_radius_top_right = ps.corner_radius_bottom_left = ps.corner_radius_bottom_right = 6
+	ps.corner_radius_top_left = 6
+	ps.corner_radius_top_right = 6
+	ps.corner_radius_bottom_left = 6
+	ps.corner_radius_bottom_right = 6
 	ps.shadow_color = Color(0, 0.9, 1, 0.35)
 	ps.shadow_size  = 16
 	panel.add_theme_stylebox_override("panel", ps)
@@ -147,17 +153,29 @@ func _switch_tab(idx: int) -> void:
 			tb.add_theme_color_override("font_color", Color(0, 0, 0, 1))
 			var s := StyleBoxFlat.new()
 			s.bg_color     = Color(0, 0.88, 1, 1)
-			s.border_width_left = s.border_width_right = s.border_width_top = s.border_width_bottom = 0
-			s.corner_radius_top_left = s.corner_radius_top_right = s.corner_radius_bottom_left = s.corner_radius_bottom_right = 4
+			s.border_width_left = 0
+			s.border_width_right = 0
+			s.border_width_top = 0
+			s.border_width_bottom = 0
+			s.corner_radius_top_left = 4
+			s.corner_radius_top_right = 4
+			s.corner_radius_bottom_left = 4
+			s.corner_radius_bottom_right = 4
 			tb.add_theme_stylebox_override("normal", s)
 			tb.add_theme_stylebox_override("hover",  s)
 		else:
 			tb.add_theme_color_override("font_color", Color(0, 0.75, 0.85, 1))
 			var s := StyleBoxFlat.new()
 			s.bg_color     = Color(0.04, 0.06, 0.14, 0.85)
-			s.border_width_left = s.border_width_right = s.border_width_top = s.border_width_bottom = 1
+			s.border_width_left = 1
+			s.border_width_right = 1
+			s.border_width_top = 1
+			s.border_width_bottom = 1
 			s.border_color = Color(0, 0.55, 0.65, 0.6)
-			s.corner_radius_top_left = s.corner_radius_top_right = s.corner_radius_bottom_left = s.corner_radius_bottom_right = 4
+			s.corner_radius_top_left = 4
+			s.corner_radius_top_right = 4
+			s.corner_radius_bottom_left = 4
+			s.corner_radius_bottom_right = 4
 			tb.add_theme_stylebox_override("normal", s)
 			tb.add_theme_stylebox_override("hover",  s)
 
@@ -393,9 +411,15 @@ func _make_button(label: String, font_color: Color, bg: Color, border: Color) ->
 	btn.add_theme_color_override("font_color", font_color)
 	var s := StyleBoxFlat.new()
 	s.bg_color     = bg
-	s.border_width_left = s.border_width_right = s.border_width_top = s.border_width_bottom = 2
+	s.border_width_left = 2
+	s.border_width_right = 2
+	s.border_width_top = 2
+	s.border_width_bottom = 2
 	s.border_color = border
-	s.corner_radius_top_left = s.corner_radius_top_right = s.corner_radius_bottom_left = s.corner_radius_bottom_right = 4
+	s.corner_radius_top_left = 4
+	s.corner_radius_top_right = 4
+	s.corner_radius_bottom_left = 4
+	s.corner_radius_bottom_right = 4
 	btn.add_theme_stylebox_override("normal", s)
 	var sh := s.duplicate()
 	sh.bg_color = bg.lightened(0.12)
@@ -417,12 +441,22 @@ func _add_label(parent: Control, txt: String, pos: Vector2, size: int, color: Co
 func _style_slider(slider: HSlider) -> void:
 	var track := StyleBoxFlat.new()
 	track.bg_color = Color(0.05, 0.12, 0.18, 0.9)
-	track.border_width_left = track.border_width_right = track.border_width_top = track.border_width_bottom = 1
+	track.border_width_left = 1
+	track.border_width_right = 1
+	track.border_width_top = 1
+	track.border_width_bottom = 1
 	track.border_color = Color(0, 0.6, 0.75, 0.6)
-	track.corner_radius_top_left = track.corner_radius_top_right = track.corner_radius_bottom_left = track.corner_radius_bottom_right = 3
+	track.corner_radius_top_left = 3
+	track.corner_radius_top_right = 3
+	track.corner_radius_bottom_left = 3
+	track.corner_radius_bottom_right = 3
 	slider.add_theme_stylebox_override("slider", track)
 
 	var fill := StyleBoxFlat.new()
 	fill.bg_color = Color(0, 0.85, 1, 0.85)
-	fill.corner_radius_top_left = fill.corner_radius_top_right = fill.corner_radius_bottom_left = fill.corner_radius_bottom_right = 3
+	fill.corner_radius_top_left = 3
+	fill.corner_radius_top_right = 3
+	fill.corner_radius_bottom_left = 3
+	fill.corner_radius_bottom_right = 3
 	slider.add_theme_stylebox_override("grabber_area", fill)
+

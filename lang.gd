@@ -174,3 +174,66 @@ func t(key: String) -> String:
 	if _EN.has(key):
 		return _EN[key]
 	return "[%s]" % key
+
+# ── Kart açıklamaları (index → TR metin) ─────────────────────────────────────
+const _DESC_TR: Dictionary = {
+	# ── Vector — Identity ────────────────────────────────────────────────────
+	0:  "Core 3'e bölünür",
+	2:  "Core düşmanları deler",
+	40: "İsabet → Zırh kazan",
+	41: "İsabet → düşman %60 yavaşlar (3sn)",
+	42: "Yüksek hasar, Zırhı kırar",
+	43: "Her duvar sekmesi → +hasar",
+	44: "İsabet → +2 Zırh",
+	45: "En yüksek hasarlı core",
+	46: "Eksik HP → bonus hasar",
+	47: "Zırh aktifken → +3 hasar",
+	# ── Vector — Utility ─────────────────────────────────────────────────────
+	35: "İsabet → +1 Stack\n+3% Core Hızı/stack\n(maks 20 stack)",
+	36: "Her 10 isabette:\n+1 Zırh Kazanımı (maks 10)",
+	37: "Uçuşta yeni düşmana çarparsan:\nhasar artar, dönünce sıfırlanır",
+	38: "Düşük HP → Core Hız bonusu\n& Zırh Kazanım verimliliği",
+	# ── Vector — Individuality ────────────────────────────────────────────────
+	4:  "Hareket hızı artar",
+	20: "+10 HP iyileştirilir",
+	21: "Maksimum HP +5",
+	30: "-10 HP  |  +10 Maks Zırh",
+	31: "HP <%50  →  Zırh Kazanımı +%50",
+	32: "HP <%30  →  Momentum Engine x2",
+	33: "-5 HP  |  +Zırh Kapasitesi  |  +Zırh Yenilenmesi",
+	34: "15 hasar al →\n+%100 Zırh Kazanımı (10sn)",
+	48: "+20 Maks Zırh / Core Hızı -%10",
+	49: "Zırh kazanım verimi +%25",
+	50: "Zırh Kapasitesi +15 / Momentum Kazanımı -%20",
+	51: "HP ≤%70: Core Hızı +%0→%50 arasında artar",
+	52: "Core Hasarı ×1.4 / Maks HP -15",
+	53: "Düşük HP: Zırh +%50 | Yüksek HP: Zırh -%30",
+	54: "Core Hızı +%20 / Zırh Kazanımı -%15",
+	55: "Momentum dönüşte sıfırlanmaz / Maks Zırh -10",
+	56: "Dönüş hızı ×1.5 / Core sıfır hasar verir",
+	57: "Geri tepme ×2 / Core Hızı -%10",
+	58: "Yavaşlatma süresi ×2 / Oyuncu Hızı -%10",
+	59: "Düşük HP: Zırh +%40 | Yüksek HP: Core Hızı +%10",
+	60: "Alınan hasar → Momentum stack / Zırh Kazanımı -%30",
+	# ── Leila — Identity ─────────────────────────────────────────────────────
+	1:  "Core elektrik kazanır",
+	15: "Düşmanı %25 yavaşlatır",
+	17: "Düşmana ıslak etkisi uygular",
+	18: "Düşmana yanma etkisi uygular",
+	# ── Leila — Utility ──────────────────────────────────────────────────────
+	13: "Elektrik core +2 hasar",
+	# ── Cyclone — Identity ───────────────────────────────────────────────────
+	16: "Düşmanı 3sn şaşırtır",
+	19: "Yakındaki güçlü core'u kopyalar",
+	22: "İsabette +2 Can",
+	# ── Herkese açık — Utility & Calamity ────────────────────────────────────
+	11: "Tüm core'lara +1 hasar",
+	7:  "Seçilen noktaya yıldırım çarpar",
+	8:  "Seçilen alanda sürekli hasar",
+	9:  "Düşmanları 5sn çeker",
+}
+
+func desc(index: int, fallback: String) -> String:
+	if locale == "en":
+		return fallback
+	return _DESC_TR.get(index, fallback)

@@ -1582,14 +1582,15 @@ func show_upgrade_menu() -> void:
 		canvas.add_child(desc_panel)
 
 		var desc_label = Label.new()
-		desc_label.text = upgrade["desc"]
+		var _desc_str: String = Lang.desc(upgrade["index"], upgrade["desc"])
+		desc_label.text = _desc_str
 		desc_label.set_anchors_preset(Control.PRESET_FULL_RECT)
 		desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD
 		desc_label.clip_contents = true
 		var desc_font_size: int = 13
-		if upgrade["desc"].length() > 40:
+		if _desc_str.length() > 40:
 			desc_font_size = 11
-		if upgrade["desc"].length() > 60:
+		if _desc_str.length() > 60:
 			desc_font_size = 10
 		desc_label.add_theme_font_size_override("font_size", desc_font_size)
 		desc_label.add_theme_font_override("font", _font_regular)
