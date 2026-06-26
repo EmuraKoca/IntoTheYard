@@ -210,11 +210,25 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_2")
 theme_override_styles/focus = SubResource("StyleBoxFlat_1")
 text = "▶  LOAD GAME"
 
-[node name="BtnQuit" type="Button" parent="." unique_id=2071815634]
+[node name="BtnSettings" type="Button" parent="." unique_id=707070707]
 offset_left = 755.0
 offset_top = 641.0
 offset_right = 1165.0
 offset_bottom = 711.0
+theme_override_colors/font_color = Color(0, 0.95, 1, 1)
+theme_override_fonts/font = ExtResource("font_bold")
+theme_override_font_sizes/font_size = 22
+theme_override_styles/normal = SubResource("StyleBoxFlat_1")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_3")
+theme_override_styles/hover = SubResource("StyleBoxFlat_2")
+theme_override_styles/focus = SubResource("StyleBoxFlat_1")
+text = "⚙  SETTINGS"
+
+[node name="BtnQuit" type="Button" parent="." unique_id=2071815634]
+offset_left = 755.0
+offset_top = 739.0
+offset_right = 1165.0
+offset_bottom = 809.0
 theme_override_colors/font_color = Color(1, 0.18, 0.58, 1)
 theme_override_fonts/font = ExtResource("font_bold")
 theme_override_font_sizes/font_size = 22
