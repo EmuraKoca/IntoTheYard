@@ -1,4 +1,4 @@
-﻿extends Node2D
+extends Node2D
 
 @onready var _font_bold    = preload("res://assets/orbitronfont/Orbitron-Bold.ttf")
 @onready var _font_regular = preload("res://assets/orbitronfont/Orbitron-Regular.ttf")
@@ -459,4 +459,3 @@ func _style_slider(slider: HSlider) -> void:
 	fill.corner_radius_bottom_left = 3
 	fill.corner_radius_bottom_right = 3
 	slider.add_theme_stylebox_override("grabber_area", fill)
-
