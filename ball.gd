@@ -321,7 +321,9 @@ func _physics_process(delta: float) -> void:
 
 	if _bounced:
 		_wall_bounce_count += 1
-		if _wall_bounce_count >= 6:
+		var _bounce_player := _get_player()
+		var _max_bounces := _bounce_player.hyper_loop_max_bounce if _bounce_player else 6
+		if _wall_bounce_count >= _max_bounces:
 			_wall_bounce_count = 0
 			_start_returning()
 			return
@@ -785,9 +787,7 @@ func _hit_subject(subject: Node2D) -> void:
 	# Fractured Frame: global damage multiplier
 	var _dmg_player := _get_player()
 	if _dmg_player:
-		if _dmg_player.hyper_loop_no_damage:
-			total_damage = 0
-		elif _dmg_player.damage_mult != 1.0:
+		if _dmg_player.damage_mult != 1.0:
 			total_damage = int(float(total_damage) * _dmg_player.damage_mult)
 
 	subject.take_damage(total_damage)

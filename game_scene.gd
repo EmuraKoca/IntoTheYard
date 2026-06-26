@@ -1424,7 +1424,7 @@ func show_upgrade_menu() -> void:
 	{"name": "Max Health Up",       "category": "Individuality", "color": Color(0.8, 0.2, 0.2), "desc": "Maximum HP +5",                             "index": 21, "weight": 8, "rarity": "common",   "chars": [],         "min_level": 0},
 	{"name": "Medkit",              "category": "Individuality", "color": Color(0.9, 0.1, 0.1), "desc": "+10 HP restored",                           "index": 20, "weight": 8, "rarity": "common",   "chars": [],         "min_level": 0},
 	{"name": "Gravitational Force", "category": "Calamity",      "color": Color(0.5, 0.0, 1.0), "desc": "Pulls subjects for 5s",                     "index": 9,  "weight": 8, "rarity": "common",   "chars": [],         "min_level": 0},
-	{"name": "Hyper Recovery Loop", "category": "Individuality", "color": Color(0.3, 0.7, 1.0), "desc": "Return speed ×1.5 / Core deals 0 damage",   "index": 56, "weight": 8, "rarity": "common",   "chars": ["vector"], "min_level": 0},
+	{"name": "Hyper Recovery Loop", "category": "Individuality", "color": Color(0.3, 0.7, 1.0), "desc": "Core Return Speed ×1.5\nMax Bounce -2",        "index": 56, "weight": 8, "rarity": "common",   "chars": ["vector"], "min_level": 0},
 	# Lv1: Core davranışlarını öğretir
 	{"name": "Kinetic Core",        "category": "Identity",      "color": Color(0.2, 0.8, 0.6), "desc": "Each wall bounce → +dmg",                   "index": 43, "weight": 8, "rarity": "uncommon", "chars": ["vector"], "min_level": 1},
 	{"name": "Bulwark Core",        "category": "Identity",      "color": Color(0.4, 0.5, 0.7), "desc": "Hit → +2 Armor",                            "index": 44, "weight": 8, "rarity": "uncommon", "chars": ["vector"], "min_level": 1},
@@ -2412,8 +2412,8 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 		get_node("Player").has_kinetic_nervous = true
 		_update_armor_ui()
 	elif index == 56:  # Hyper Recovery Loop
-		get_node("Player").return_speed_mult    = 1.5
-		get_node("Player").hyper_loop_no_damage = true
+		get_node("Player").return_speed_mult     = 1.5
+		get_node("Player").hyper_loop_max_bounce = 4
 	elif index == 57:  # Magnetic Weight
 		get_node("Player").knockback_force_mult = 2.0
 		get_node("Player").orbit_speed_mult    *= 0.9
