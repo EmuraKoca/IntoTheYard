@@ -14,6 +14,7 @@ config/name="IntoTheYard"
 run/main_scene="res://main_menu.tscn"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 config/icon="res://icon.svg"
+config/windows_native_icon="res://assets/ıtyico.ico"
 
 [autoload]
 
