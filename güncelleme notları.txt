@@ -2505,3 +2505,54 @@ Vector Upgrade Kartları — Level Bazlı Kilit Sistemi:
 ✅ Level 4 (3 kart): Bloodbound Core, Siege Core, Adrenal Surge
 ✅ Level 5 (3 kart): Emergency Protocol, Risk Engine, Fractured Frame
 
+
+
+────────────────────────────────────────────────────────────────────────────────
+
+0.0.9.6
+26.06.2026
+
+Settings Ekranı (Ana Menü):
+
+✅ Ana menüye Settings butonu eklendi
+   — Controls: tüm tuş atamaları listelendi (hareket, nişan, fırlatma, RTS, duraklat)
+   — Audio: Master / Müzik / SFX ses slider'ları, anlık uygulama ve kayıt
+   — Display: Tam ekran toggle
+   — Language: Türkçe / İngilizce seçimi
+
+Dil Sistemi (TR / EN):
+
+✅ lang.gd autoload singleton oluşturuldu
+   — Lang.t("key") ile tüm UI stringleri çevrilir
+   — Lang.desc(index, fallback) ile kart açıklamaları çevrilir
+   — Dil tercihi user://settings.cfg'e kaydedilir, oyun açılışında yüklenir
+
+✅ Çevrilen alanlar:
+   — Ana menü butonları ve alt yazısı
+   — Settings ekranı (tüm tab ve etiketler)
+   — Oyun içi UI (Seviye, Upgrade, Calamity, Cores, Data, Balls)
+   — Upgrade menüsü (Confirm / Skip / başlık / kart açıklamaları)
+   — Pause menüsü
+   — Game Over ekranı (başlık, istatistikler, butonlar, Hasmen alıntıları)
+   — Run Complete ekranı
+
+✅ İngilizce kalan alanlar:
+   — Kart isimleri (Split Core, Momentum Engine, Reinforced Frame vb.)
+   — Kart kategorileri (Identity, Utility, Individuality, Calamity)
+
+Oyun İkonu:
+
+✅ ıtyico.ico assets klasörüne eklendi
+   — project.godot'a config/windows_native_icon olarak tanımlandı
+
+Upgrade Kart Sistemi — Level Kilitleri:
+
+✅ min_level sistemi eklendi
+   — Her kart seviyeye göre havuza girer (Lv0→Lv5 arası)
+   — Erken seviyede basit kartlar, ilerledikçe risk/ödül kartları çıkar
+
+Vector .exe Demo:
+
+✅ İlk Windows Desktop export yapıldı (Godot 4.6.1 stable)
+   — Embed PCK: tek .exe dosyası
+   — Ön koşul yok (Visual C++ Redistributable hariç, genellikle kurulu)
