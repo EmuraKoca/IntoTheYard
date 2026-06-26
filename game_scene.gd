@@ -276,14 +276,14 @@ func _show_run_end_screen() -> void:
 	var seconds  := int(elapsed_time) % 60
 
 	var title := Label.new()
-	title.text = "RUN TAMAMLANDI"
+	title.text = Lang.t("run_end_title")
 	title.add_theme_font_size_override("font_size", 52)
 	title.add_theme_font_override("font", _font_bold)
 	title.modulate = Color(0.2, 1.0, 0.6)
 	title.position = Vector2(660, 200)
 	canvas.add_child(title)
 
-	var stats_text := "⏱  %02d:%02d\n\n💀  Düşman: %d\n\n🤝  Kurtarılan: %d" % [
+	var stats_text := (Lang.t("run_end_time") + "\n\n" + Lang.t("run_end_enemies") + "\n\n" + Lang.t("run_end_allies")) % [
 		minutes, seconds, total_subjects_killed, get_tree().get_nodes_in_group("allies").size()
 	]
 	var stats := Label.new()
@@ -295,7 +295,7 @@ func _show_run_end_screen() -> void:
 	canvas.add_child(stats)
 
 	var btn := Button.new()
-	btn.text = "ANA MENÜYE DÖN"
+	btn.text = Lang.t("run_end_btn")
 	btn.add_theme_font_size_override("font_size", 26)
 	btn.position = Vector2(760, 620)
 	btn.size     = Vector2(400, 60)
@@ -428,7 +428,7 @@ func _show_hasmen_selection() -> void:
 
 	# ── CARD SECTION HEADER ─────────────────────────────────────────────────
 	var section_label = Label.new()
-	section_label.text = "// AVAILABLE UPGRADES //"
+	section_label.text = Lang.t("ui_avail_upgrades")
 	section_label.position = Vector2(50, 388)
 	section_label.add_theme_font_size_override("font_size", 18)
 	section_label.add_theme_font_override("font", _font_bold)
@@ -705,7 +705,7 @@ func _ready() -> void:
 
 
 func update_ui() -> void:
-	$UI/LabelLevel.text = "◈  LEVEL " + str(level)
+	$UI/LabelLevel.text = Lang.t("ui_level") + str(level)
 	$UI/IntegrityBar.max_value = player_max_hp
 	$UI/IntegrityBar.value = player_hp
 	$UI/LabelBalls.text = "⬤  BALLS   " + str(get_node("Player").orbit_balls.size()) + " / " + str(get_node("Player").MAX_ORBIT)
@@ -717,24 +717,23 @@ func update_ui() -> void:
 		$UI/IntegrityBar/LabelIntegrity.text = "♥  " + str(player_hp) + " / " + str(player_max_hp)
 
 	# Aktif upgrade'ler
-	var upgrade_text = "— UPGRADES —\n"
+	var upgrade_text = Lang.t("ui_upgrades_header") + "\n"
 	if get_node("Player").SPEED > 300:
-		upgrade_text += "▸ Speed Up\n"
+		upgrade_text += Lang.t("ui_upgrades_speed") + "\n"
 	if get_node("Player").chain_length > 220:
-		upgrade_text += "▸ Chain Up\n"
+		upgrade_text += Lang.t("ui_upgrades_chain") + "\n"
 	if get_node("Player").has_next_one:
-		upgrade_text += "▸ Next One\n"
-	if upgrade_text == "— UPGRADES —\n":
-		upgrade_text += "  none"
+		upgrade_text += Lang.t("ui_upgrades_next") + "\n"
+	if upgrade_text == Lang.t("ui_upgrades_header") + "\n":
+		upgrade_text += Lang.t("ui_upgrades_none")
 	$UI/LabelUpgrades.text = upgrade_text
 
-	# Catch slot indicator (legacy — hidden or repurposed)
 	var catch_lbl = get_node_or_null("UI/LabelCatch")
 	if catch_lbl:
 		catch_lbl.visible = false
 
 	# Calamity slots
-	var calamity_text = "— CALAMITY —\n"
+	var calamity_text = Lang.t("ui_calamity_header") + "\n"
 	if calamity_slots.is_empty():
 		calamity_text += "◻  ◻  ◻"
 	else:
@@ -880,7 +879,7 @@ func _setup_core_panel() -> void:
 
 	# Başlık
 	var title := Label.new()
-	title.text = "— CORES —"
+	title.text = Lang.t("ui_cores_header")
 	title.size = Vector2(PW, 16.0)
 	title.position = Vector2(PX, PY)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -1261,7 +1260,7 @@ func show_game_over() -> void:
 
 	# ── Header ─────────────────────────────────────────────────
 	var header = Label.new()
-	header.text     = "// EXPERIMENT SESSION CONCLUDED //"
+	header.text     = Lang.t("go_header")
 	header.position = Vector2(80, 70)
 	header.add_theme_font_override("font", _font_bold)
 	header.add_theme_font_size_override("font_size", 22)
@@ -1285,10 +1284,10 @@ func show_game_over() -> void:
 	var minutes = int(elapsed_time / 60)
 	var seconds = int(elapsed_time) % 60
 	var rows = [
-		["DATA HARVESTED",       _format_data(data_collected) + " units", Color(0.0, 1.0, 0.55)],
-		["SESSION TIME",         "%02d:%02d" % [minutes, seconds],         Color(0.0, 0.9, 1.0)],
-		["THREATS NEUTRALIZED",  str(total_subjects_killed),                 Color(0.0, 0.9, 1.0)],
-		["EXPERIMENT LEVEL",     str(level),                               Color(0.0, 0.9, 1.0)],
+		[Lang.t("go_data"),    _format_data(data_collected) + Lang.t("go_units"), Color(0.0, 1.0, 0.55)],
+		[Lang.t("go_time"),    "%02d:%02d" % [minutes, seconds],                  Color(0.0, 0.9, 1.0)],
+		[Lang.t("go_threats"), str(total_subjects_killed),                         Color(0.0, 0.9, 1.0)],
+		[Lang.t("go_level"),   str(level),                                         Color(0.0, 0.9, 1.0)],
 	]
 	for i in range(rows.size()):
 		var row = rows[i]
@@ -1335,7 +1334,7 @@ func show_game_over() -> void:
 
 	# ── Butonlar ──────────────────────────────────────────────
 	var retry_btn = Button.new()
-	retry_btn.text         = "RETRY SESSION"
+	retry_btn.text         = Lang.t("go_restart")
 	retry_btn.position     = Vector2(200, 760)
 	retry_btn.size         = Vector2(240, 55)
 	retry_btn.process_mode = Node.PROCESS_MODE_ALWAYS
@@ -1344,7 +1343,7 @@ func show_game_over() -> void:
 	canvas.add_child(retry_btn)
 
 	var menu_btn = Button.new()
-	menu_btn.text         = "MAIN MENU"
+	menu_btn.text         = Lang.t("go_menu")
 	menu_btn.position     = Vector2(480, 760)
 	menu_btn.size         = Vector2(240, 55)
 	menu_btn.process_mode = Node.PROCESS_MODE_ALWAYS
@@ -1362,7 +1361,7 @@ func add_data(amount: int) -> void:
 	data_collected += amount
 	var lbl = get_node_or_null("UI/LabelData")
 	if lbl:
-		lbl.text = _format_data(data_collected) + " units"
+		lbl.text = _format_data(data_collected) + Lang.t("ui_data_units")
 
 func _format_data(n: int) -> String:
 	if n >= 1_000_000:
@@ -1373,15 +1372,15 @@ func _format_data(n: int) -> String:
 
 func _get_hasmen_quote() -> String:
 	if data_collected < 500:
-		return "Pathetic. My patience has limits, unlike your failure rate."
+		return Lang.t("quote_0")
 	elif data_collected < 2_000:
-		return "Barely enough. The Personal-ITY chip deserves better test subjects."
+		return Lang.t("quote_1")
 	elif data_collected < 8_000:
-		return "Mediocre results. But the behavioral patterns are... noted."
+		return Lang.t("quote_2")
 	elif data_collected < 25_000:
-		return "Not bad. The next chip update draws closer. Keep going."
+		return Lang.t("quote_3")
 	else:
-		return "Exceptional. You may yet prove worthy of my investment."
+		return Lang.t("quote_4")
 
 func _weighted_pick(pool: Array, count: int) -> Array:
 	var result: Array = []
@@ -1599,7 +1598,7 @@ func show_upgrade_menu() -> void:
 		
 		# Confirm ve Skip ortada
 		var confirm_btn = Button.new()
-		confirm_btn.text = "Confirm"
+		confirm_btn.text = Lang.t("upgrade_confirm")
 		confirm_btn.size = Vector2(180, 55)
 		confirm_btn.position = Vector2(830, 820)
 		confirm_btn.process_mode = Node.PROCESS_MODE_ALWAYS
@@ -1608,7 +1607,7 @@ func show_upgrade_menu() -> void:
 		canvas.add_child(confirm_btn)
 
 		var skip_btn = Button.new()
-		skip_btn.text = "Skip"
+		skip_btn.text = Lang.t("upgrade_skip")
 		skip_btn.size = Vector2(180, 55)
 		skip_btn.position = Vector2(1030, 820)
 		skip_btn.process_mode = Node.PROCESS_MODE_ALWAYS
@@ -1799,7 +1798,7 @@ func _show_pause_menu() -> void:
 	canvas.add_child(panel)
 	
 	var title = Label.new()
-	title.text = "PAUSED"
+	title.text = Lang.t("pause_title")
 	title.position = Vector2(880, 300)
 	title.add_theme_font_size_override("font_size", 64)
 	title.add_theme_font_override("font", _font_bold)
@@ -1807,7 +1806,7 @@ func _show_pause_menu() -> void:
 	canvas.add_child(title)
 
 	var resume_btn = Button.new()
-	resume_btn.text = "Resume"
+	resume_btn.text = Lang.t("pause_resume")
 	resume_btn.size = Vector2(200, 55)
 	resume_btn.position = Vector2(860, 450)
 	resume_btn.process_mode = Node.PROCESS_MODE_ALWAYS
@@ -1816,7 +1815,7 @@ func _show_pause_menu() -> void:
 	canvas.add_child(resume_btn)
 
 	var menu_btn = Button.new()
-	menu_btn.text = "Main Menu"
+	menu_btn.text = Lang.t("pause_menu")
 	menu_btn.size = Vector2(200, 55)
 	menu_btn.position = Vector2(860, 530)
 	menu_btn.process_mode = Node.PROCESS_MODE_ALWAYS
@@ -1825,7 +1824,7 @@ func _show_pause_menu() -> void:
 	canvas.add_child(menu_btn)
 
 	var quit_btn = Button.new()
-	quit_btn.text = "Quit"
+	quit_btn.text = Lang.t("pause_quit")
 	quit_btn.size = Vector2(200, 55)
 	quit_btn.position = Vector2(860, 610)
 	quit_btn.process_mode = Node.PROCESS_MODE_ALWAYS

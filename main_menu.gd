@@ -13,7 +13,7 @@ var sfx_vol:    float = 0.8
 var fullscreen:  bool = false
 
 # ── Aktif tab ─────────────────────────────────────────────────────────────────
-var _active_tab: int = 0   # 0=Controls  1=Audio  2=Display
+var _active_tab: int = 0   # 0=Controls  1=Audio  2=Display  3=Language
 var _settings_canvas: CanvasLayer = null
 var _tab_panels: Array = []
 var _tab_buttons: Array = []
@@ -22,10 +22,21 @@ var _tab_buttons: Array = []
 func _ready() -> void:
 	_load_settings()
 	_apply_settings()
+	_apply_menu_lang()
 	$BtnNewGame.pressed.connect(_on_new_game)
 	$BtnLoadGame.pressed.connect(_on_load_game)
 	$BtnSettings.pressed.connect(_on_settings)
 	$BtnQuit.pressed.connect(_on_quit)
+
+func _apply_menu_lang() -> void:
+	$BtnNewGame.text  = Lang.t("mm_new_game")
+	$BtnLoadGame.text = Lang.t("mm_load_game")
+	$BtnSettings.text = Lang.t("mm_settings")
+	$BtnQuit.text     = Lang.t("mm_quit")
+	if has_node("LabelSubtitle"):
+		$LabelSubtitle.text = Lang.t("mm_subtitle")
+	if has_node("LabelVersion"):
+		$LabelVersion.text  = Lang.t("mm_version")
 
 # ── Menü işlemleri ────────────────────────────────────────────────────────────
 func _on_new_game() -> void:
@@ -81,7 +92,7 @@ func _build_settings_ui() -> void:
 
 	# ── Başlık ────────────────────────────────────────────────────────────────
 	var title := Label.new()
-	title.text = "⚙  SETTINGS"
+	title.text = Lang.t("set_title")
 	title.position = Vector2(0, 18)
 	title.size = Vector2(W, 40)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -98,7 +109,7 @@ func _build_settings_ui() -> void:
 	panel.add_child(sep)
 
 	# ── Tab butonları ─────────────────────────────────────────────────────────
-	var tab_names := ["CONTROLS", "AUDIO", "DISPLAY"]
+	var tab_names := [Lang.t("set_tab_controls"), Lang.t("set_tab_audio"), Lang.t("set_tab_display"), Lang.t("set_tab_language")]
 	_tab_buttons.clear()
 	for i in range(tab_names.size()):
 		var tb := _make_tab_btn(tab_names[i], i)
@@ -114,11 +125,12 @@ func _build_settings_ui() -> void:
 	_tab_panels.append(_build_controls_tab(panel, content_rect))
 	_tab_panels.append(_build_audio_tab(panel, content_rect))
 	_tab_panels.append(_build_display_tab(panel, content_rect))
+	_tab_panels.append(_build_language_tab(panel, content_rect))
 
 	_switch_tab(_active_tab)
 
 	# ── Kapat butonu ─────────────────────────────────────────────────────────
-	var close_btn := _make_button("✕  CLOSE", Color(1, 0.18, 0.58, 1), Color(0.08, 0.02, 0.05, 0.92), Color(1, 0.18, 0.58, 1))
+	var close_btn := _make_button(Lang.t("set_close"), Color(1, 0.18, 0.58, 1), Color(0.08, 0.02, 0.05, 0.92), Color(1, 0.18, 0.58, 1))
 	close_btn.position = Vector2(W / 2 - 100, H - 62)
 	close_btn.size     = Vector2(200, 44)
 	close_btn.pressed.connect(_close_settings)
@@ -159,22 +171,21 @@ func _build_controls_tab(parent: Control, rect: Rect2) -> Control:
 	parent.add_child(cont)
 
 	var controls := [
-		["MOVEMENT",         "W  A  S  D"],
-		["AIM",              "Mouse"],
-		["LAUNCH CORE",      "Left Click"],
-		["RTS MODE TOGGLE",  "Tab"],
-		["PAUSE / MENU",     "Escape"],
-		["DEBUG (DEV)",      "C  —  Debug toggle"],
-		["INTERACT (DEV)",   "E  —  Event trigger"],
+		[Lang.t("set_ctrl_movement"), "W  A  S  D"],
+		[Lang.t("set_ctrl_aim"),      "Mouse"],
+		[Lang.t("set_ctrl_launch"),   "Left Click"],
+		[Lang.t("set_ctrl_rts"),      "Tab"],
+		[Lang.t("set_ctrl_pause"),    "Escape"],
+		[Lang.t("set_ctrl_debug"),    "C"],
+		[Lang.t("set_ctrl_interact"), "E"],
 	]
 
 	var row_h := 46
 	var col1  := 0.0
 	var col2  := 380.0
 
-	# Başlık satırı
-	_add_label(cont, "ACTION", Vector2(col1, 0), 13, Color(0, 0.7, 0.8, 0.7), _font_bold)
-	_add_label(cont, "KEY / INPUT", Vector2(col2, 0), 13, Color(0, 0.7, 0.8, 0.7), _font_bold)
+	_add_label(cont, Lang.t("set_ctrl_header_action"), Vector2(col1, 0), 13, Color(0, 0.7, 0.8, 0.7), _font_bold)
+	_add_label(cont, Lang.t("set_ctrl_header_key"),    Vector2(col2, 0), 13, Color(0, 0.7, 0.8, 0.7), _font_bold)
 
 	var line := ColorRect.new()
 	line.position = Vector2(0, 22)
@@ -194,7 +205,7 @@ func _build_controls_tab(parent: Control, rect: Rect2) -> Control:
 
 	# Not
 	var note := Label.new()
-	note.text = "* Kontroller şu an değiştirilemez — ileride özelleştirme eklenecek."
+	note.text = Lang.t("set_ctrl_note")
 	note.position = Vector2(0, rect.size.y - 30)
 	note.size = Vector2(rect.size.x, 26)
 	note.add_theme_font_override("font", _font_regular)
@@ -215,9 +226,9 @@ func _build_audio_tab(parent: Control, rect: Rect2) -> Control:
 	parent.add_child(cont)
 
 	var buses := [
-		["MASTER VOLUME",  "Master",  master_vol],
-		["MUSIC VOLUME",   "Music",   music_vol],
-		["SFX VOLUME",     "SFX",     sfx_vol],
+		[Lang.t("set_audio_master"), "Master", master_vol],
+		[Lang.t("set_audio_music"),  "Music",  music_vol],
+		[Lang.t("set_audio_sfx"),    "SFX",    sfx_vol],
 	]
 
 	for i in range(buses.size()):
@@ -269,7 +280,7 @@ func _build_display_tab(parent: Control, rect: Rect2) -> Control:
 	cont.visible  = false
 	parent.add_child(cont)
 
-	_add_label(cont, "FULLSCREEN", Vector2(0, 30), 16, Color(0.82, 0.92, 1, 0.9), _font_bold)
+	_add_label(cont, Lang.t("set_display_fs"), Vector2(0, 30), 16, Color(0.82, 0.92, 1, 0.9), _font_bold)
 
 	var fs_btn := _make_button(
 		"ON" if fullscreen else "OFF",
@@ -291,7 +302,46 @@ func _build_display_tab(parent: Control, rect: Rect2) -> Control:
 	)
 	cont.add_child(fs_btn)
 
-	_add_label(cont, "* Çözünürlük ayarı ileriki güncellemede eklenecek.",
+	_add_label(cont, Lang.t("set_display_note"),
+		Vector2(0, rect.size.y - 30), 12, Color(0.5, 0.6, 0.7, 0.55), _font_regular)
+
+	return cont
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB 4 — LANGUAGE
+# ══════════════════════════════════════════════════════════════════════════════
+func _build_language_tab(parent: Control, rect: Rect2) -> Control:
+	var cont := Control.new()
+	cont.position = rect.position
+	cont.size     = rect.size
+	cont.visible  = false
+	parent.add_child(cont)
+
+	_add_label(cont, Lang.t("set_lang_title"), Vector2(0, 20), 18, Color(0.82, 0.92, 1, 0.9), _font_bold)
+
+	var langs := [["English", "en"], ["Türkçe", "tr"]]
+	for i in range(langs.size()):
+		var lname: String = langs[i][0]
+		var lcode: String = langs[i][1]
+		var is_active := Lang.locale == lcode
+		var fc  := Color(0, 0, 0, 1)      if is_active else Color(0, 0.88, 1, 1)
+		var bg  := Color(0, 0.88, 1, 1)   if is_active else Color(0.02, 0.04, 0.14, 0.9)
+		var brd := Color(0, 0.88, 1, 1)
+		var lb  := _make_button(lname, fc, bg, brd)
+		lb.position = Vector2(i * 220, 65)
+		lb.size     = Vector2(200, 50)
+		lb.pressed.connect(func():
+			Lang.locale = lcode
+			_cfg.set_value("lang", "locale", lcode)
+			_cfg.save(SETTINGS_PATH)
+			_close_settings()
+			_apply_menu_lang()
+			_on_settings()
+			_switch_tab(3)
+		)
+		cont.add_child(lb)
+
+	_add_label(cont, Lang.t("set_lang_note"),
 		Vector2(0, rect.size.y - 30), 12, Color(0.5, 0.6, 0.7, 0.55), _font_regular)
 
 	return cont
@@ -312,10 +362,11 @@ func _save_settings() -> void:
 
 func _load_settings() -> void:
 	if _cfg.load(SETTINGS_PATH) == OK:
-		master_vol = _cfg.get_value("audio",   "master",     1.0)
-		music_vol  = _cfg.get_value("audio",   "music",      0.8)
-		sfx_vol    = _cfg.get_value("audio",   "sfx",        0.8)
-		fullscreen = _cfg.get_value("display", "fullscreen", false)
+		master_vol   = _cfg.get_value("audio",   "master",     1.0)
+		music_vol    = _cfg.get_value("audio",   "music",      0.8)
+		sfx_vol      = _cfg.get_value("audio",   "sfx",        0.8)
+		fullscreen   = _cfg.get_value("display", "fullscreen", false)
+		Lang.locale  = _cfg.get_value("lang",    "locale",     "en")
 
 func _apply_settings() -> void:
 	for bus_data in [["Master", master_vol], ["Music", music_vol], ["SFX", sfx_vol]]:
