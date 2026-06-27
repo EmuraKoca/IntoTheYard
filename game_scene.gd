@@ -2518,7 +2518,7 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 	elif index == 67:  # Hydro Pressure
 		get_node("Player").has_hydro_pressure = true
 	elif index == 68:  # Arc Amplifier
-		get_node("Player").arc_chain_targets = get_node("Player").get("arc_chain_targets", 1) + 1
+		get_node("Player").arc_chain_targets += 1
 	elif index == 69:  # Static Charge
 		get_node("Player").has_static_charge = true
 	elif index == 70:  # Cryostasis
