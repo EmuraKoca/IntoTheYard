@@ -737,9 +737,11 @@ func _draw() -> void:
 		draw_arc(Vector2.ZERO, 14, 0, TAU, 32, Color(r, g, b), 2.0)
 		
 func _hit_subject(subject: Node2D) -> void:
-	var fusion_zone = get_tree().get_first_node_in_group("fusion_zone")
-	if fusion_zone:
-		fusion_zone.add_energy_from_hit(hit_type)
+	var _p := _get_player()
+	if _p and _p.character_type == "leila":
+		var fusion_zone = get_tree().get_first_node_in_group("fusion_zone")
+		if fusion_zone:
+			fusion_zone.add_energy_from_hit(hit_type)
 	if not is_instance_valid(subject):
 		return
 	if subject in hit_subjects:
