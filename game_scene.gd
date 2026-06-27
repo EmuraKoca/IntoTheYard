@@ -27,7 +27,6 @@ var _pending_core_type: String = ""
 # ── Upgrade kart takip sistemi ─────────────────────────────────────────────────
 var _seen_individualities: Array = []   # seçilen Individuality kart isimleri
 var _utility_levels: Dictionary = {}    # {kart_adı: int}  0-3
-var _keyword_tooltip: CanvasLayer = null
 
 const _CORE_FOLDER_MAP: Dictionary = {
 	"normal":     "normalBall",    "electric": "electricBall",
@@ -335,7 +334,6 @@ func _on_confirm(canvas: CanvasLayer) -> void:
 	selected_card_bg = null
 
 func _on_skip(canvas: CanvasLayer) -> void:
-	_hide_keyword_tooltip()
 	canvas.queue_free()
 	upgrading = false
 	get_tree().paused = false
@@ -1583,28 +1581,20 @@ func show_upgrade_menu() -> void:
 		desc_panel.add_theme_stylebox_override("panel", empty_sb)
 		canvas.add_child(desc_panel)
 
-		var desc_label = RichTextLabel.new()
+		var desc_label = Label.new()
 		var _desc_str: String = Lang.desc(upgrade["index"], upgrade["desc"])
-		desc_label.bbcode_enabled   = true
-		desc_label.scroll_active    = false
-		desc_label.fit_content      = true
-		desc_label.meta_underlined  = true
+		desc_label.text = _desc_str
 		desc_label.set_anchors_preset(Control.PRESET_FULL_RECT)
+		desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD
+		desc_label.clip_contents = true
 		var desc_font_size: int = 13
 		if _desc_str.length() > 40:
 			desc_font_size = 11
 		if _desc_str.length() > 60:
 			desc_font_size = 10
-		desc_label.add_theme_font_size_override("normal_font_size", desc_font_size)
-		desc_label.add_theme_font_override("normal_font", _font_regular)
-		desc_label.add_theme_color_override("default_color", Color(0.85, 0.85, 0.85))
-		desc_label.text = Lang.wrap_keywords(_desc_str)
-		desc_label.meta_hover_started.connect(func(meta: Variant):
-			_show_keyword_tooltip(str(meta), get_viewport().get_mouse_position())
-		)
-		desc_label.meta_hover_ended.connect(func(_meta: Variant):
-			_hide_keyword_tooltip()
-		)
+		desc_label.add_theme_font_size_override("font_size", desc_font_size)
+		desc_label.add_theme_font_override("font", _font_regular)
+		desc_label.add_theme_color_override("font_color", Color(0.85, 0.85, 0.85))
 		desc_panel.add_child(desc_label)
 		
 		# Confirm ve Skip ortada
@@ -2253,7 +2243,6 @@ func _process(delta: float) -> void:
 		_spawn_section_boss()
 
 func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
-	_hide_keyword_tooltip()
 	canvas.queue_free()
 	upgrading = false
 	get_tree().paused = false
@@ -2440,70 +2429,6 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 	update_ui()
 	$BallLauncher.queue_redraw()
 	
-func _show_keyword_tooltip(keyword: String, screen_pos: Vector2) -> void:
-	_hide_keyword_tooltip()
-	var keywords := Lang.get_keywords()
-	var definition: String = keywords.get(keyword, "")
-	if definition.is_empty():
-		return
-
-	_keyword_tooltip = CanvasLayer.new()
-	_keyword_tooltip.layer = 200
-	add_child(_keyword_tooltip)
-
-	var panel := Panel.new()
-	var style := StyleBoxFlat.new()
-	style.bg_color            = Color(0.04, 0.07, 0.15, 0.97)
-	style.border_width_left   = 1
-	style.border_width_top    = 1
-	style.border_width_right  = 1
-	style.border_width_bottom = 1
-	style.border_color        = Color(0.49, 0.81, 1.0, 0.85)
-	style.corner_radius_top_left     = 4
-	style.corner_radius_top_right    = 4
-	style.corner_radius_bottom_right = 4
-	style.corner_radius_bottom_left  = 4
-	style.content_margin_left   = 10.0
-	style.content_margin_right  = 10.0
-	style.content_margin_top    = 8.0
-	style.content_margin_bottom = 8.0
-	panel.add_theme_stylebox_override("panel", style)
-	_keyword_tooltip.add_child(panel)
-
-	var vbox := VBoxContainer.new()
-	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	panel.add_child(vbox)
-
-	var title_lbl := Label.new()
-	title_lbl.text = keyword
-	title_lbl.add_theme_color_override("font_color", Color(0.49, 0.81, 1.0, 1.0))
-	title_lbl.add_theme_font_size_override("font_size", 13)
-	vbox.add_child(title_lbl)
-
-	var def_lbl := Label.new()
-	def_lbl.text = definition
-	def_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
-	def_lbl.add_theme_color_override("font_color", Color(0.82, 0.82, 0.82, 1.0))
-	def_lbl.add_theme_font_size_override("font_size", 11)
-	def_lbl.custom_minimum_size = Vector2(220, 0)
-	vbox.add_child(def_lbl)
-
-	# Ekran kenarlarına çarpmasın
-	var vp_size := get_viewport().get_visible_rect().size
-	var px := screen_pos.x + 14.0
-	var py := screen_pos.y - 10.0
-	if px + 250 > vp_size.x:
-		px = screen_pos.x - 260
-	if py + 80 > vp_size.y:
-		py = screen_pos.y - 90
-	panel.position = Vector2(px, py)
-	panel.size = Vector2(240, 70)
-
-func _hide_keyword_tooltip() -> void:
-	if _keyword_tooltip:
-		_keyword_tooltip.queue_free()
-		_keyword_tooltip = null
-
 func _apply_utility_level(index: int, level: int) -> void:
 	var p := get_node("Player")
 	match index:
