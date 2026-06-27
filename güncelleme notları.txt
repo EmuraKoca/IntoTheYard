@@ -2556,3 +2556,73 @@ Vector .exe Demo:
 ✅ İlk Windows Desktop export yapıldı (Godot 4.6.1 stable)
    — Embed PCK: tek .exe dosyası
    — Ön koşul yok (Visual C++ Redistributable hariç, genellikle kurulu)
+
+─────────────────────────────────────────────────────────────────────────────
+0.0.9.7
+27.06.2026
+
+Hata Düzeltmeleri:
+
+✅ apply_slow duration parametresi eklendi
+   — Tüm düşman türlerinde (subject, armed, heavy, frantic, cyber_404, cyber_shotgun,
+     cyber_shooter, cyber_rifle, s_miler_79, nyx_09) apply_slow(amount, duration=3.0)
+     olarak güncellendi
+   — Anchor Core'un slow_duration_mult'ı artık doğru çalışıyor
+
+✅ apply_slow dışındaki timer'lar yanlışlıkla duration'a çevrilmişti, düzeltildi
+   — apply_frozen, apply_glitch vb. fonksiyonlardaki 3.0 sabit değerleri korundu
+
+✅ _max_bounces tip çıkarım hatası giderildi (int açık yazıldı)
+
+✅ Arc Amplifier arc_chain_targets get() hatası giderildi
+
+Yeni Game: Onay Dialogu:
+
+✅ New Game butonuna onay dialogu eklendi
+   — Mevcut kayıt varsa "Kayıt silinecek, emin misin?" uyarısı çıkar
+   — EVET → kaydı siler ve yeni oyuna başlar
+   — HAYIR → menüye geri döner
+   — TR/EN dil desteği mevcut
+
+Upgrade Kart Sistemi — Rarity:
+
+✅ Rarity bazlı kart seçim sistemi eklendi
+   — Common / Uncommon / Rare / Epic / Legendary kategorileri
+   — Level'a göre değişen olasılık tablosu:
+     Lv 1-5:  Common %55 / Uncommon %30 / Rare %12 / Epic %3 / Legendary %0
+     Lv 6-12: Common %35 / Uncommon %35 / Rare %22 / Epic %7 / Legendary %1
+     Lv 13+:  Common %15 / Uncommon %30 / Rare %32 / Epic %18 / Legendary %5
+   — 3 kart için 3 bağımsız rarity çekimi yapılır
+   — O rarity'de kart yoksa alternatif rarity'den seçilir
+
+Leila — Kart Sistemi:
+
+✅ Water Core → Hydro Core, Fire Core → Pyro Core olarak yeniden adlandırıldı
+
+✅ Leila'ya özel 38 yeni kart eklendi (index 61-98):
+   Identity (10): Plasma, Steam, Arc, Echo, Orbit, Scatter, Catalyst, Elemental Mastery,
+                  Voltaic, Tempest Core
+   Utility (16):  Conduction, Hydro Pressure, Arc Amplifier, Static Charge, Cryostasis,
+                  Supercooling, Condensation, Thermal Vision, Living Storm, Arcane Mind,
+                  Resonance Engine, Frozen Time, Overheat, Elemental Harmony,
+                  Mana Overflow, Perfect Catalyst
+   Individuality (6): Arcane Focus, Mystic Flow, Resonant Soul, Elemental Memory,
+                      Elemental Harmony, Catalyst Mind
+   Calamity (5):  Blizzard, Monsoon, EMP Pulse, Volcanic Rift, Thunderstorm
+
+✅ Tüm Leila kart mekanikleri kodlandı:
+   — Plasma Core: Electrified düşmanlara sekme + zincir hasar
+   — Steam Core: Wet hedefte AoE patlama
+   — Arc Core: Duvara çarpınca yakın düşmanlara yıldırım
+   — Echo Core: Düşmandaki elementi kopyala, dönüşte uygula
+   — Catalyst Core: Mevcut debuff süresini sıfırlayıp uzatır
+   — Voltaic Core: Electrified düşman ölünce zincir yıldırım
+   — Tempest Core: Her duvar sekmesinde element sırayla değişir
+   — Scatter Core: Vuruşta 3 random elemental parça fırlar
+   — 26 yeni player.gd değişkeni (debuff_duration_mult, freeze_duration_mult vs.)
+
+Fusion Zone:
+
+✅ Fusion Zone artık sadece Leila'ya özel
+   — Vector ve Cyclone seçilince Fusion Zone ve enerji barı gizlenir
+   — Leila seçilince normal şekilde aktif olur
