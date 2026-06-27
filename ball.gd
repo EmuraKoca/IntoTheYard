@@ -322,7 +322,7 @@ func _physics_process(delta: float) -> void:
 	if _bounced:
 		_wall_bounce_count += 1
 		var _bounce_player := _get_player()
-		var _max_bounces := _bounce_player.hyper_loop_max_bounce if _bounce_player else 6
+		var _max_bounces: int = _bounce_player.hyper_loop_max_bounce if _bounce_player else 6
 		if _wall_bounce_count >= _max_bounces:
 			_wall_bounce_count = 0
 			_start_returning()
