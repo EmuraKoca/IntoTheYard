@@ -237,3 +237,40 @@ func desc(index: int, fallback: String) -> String:
 	if locale == "en":
 		return fallback
 	return _DESC_TR.get(index, fallback)
+
+# ── Keyword sözlükleri ────────────────────────────────────────────────────────
+const _KEYWORDS_EN: Dictionary = {
+	"Armor Gain":  "Amount of Armor gained per Core hit.",
+	"Core Speed":  "Rotation speed of Cores in orbit around the player.",
+	"Momentum":    "Temporary speed bonus gained with each hit. Stacks up.",
+	"Armor":       "Damage buffer layer. Absorbs hits before HP is reduced.",
+	"Rebound":     "Energy retained by a Core after bouncing off a wall.",
+	"Impact":      "Knockback force applied to enemies on hit.",
+	"Chain":       "Continuing the same attack across different targets.",
+	"Return":      "The Core flying back to the player after being launched.",
+	"Slow":        "Reduces enemy movement speed temporarily.",
+}
+
+const _KEYWORDS_TR: Dictionary = {
+	"Zırh Kazanımı": "Her Core isabetiyle kazanılan zırh miktarı.",
+	"Core Hızı":     "Core'ların oyuncu etrafındaki yörüngede dönüş hızı.",
+	"Momentum":      "Her isabetle kazanılan geçici hız bonusu. Birikim yapar.",
+	"Zırh":          "Hasar tampon katmanı. HP düşmeden önce hasarı emer.",
+	"Rebound":       "Core'un duvardan sekip sonrasındaki enerjisi.",
+	"İtki":          "İsabette düşmana uygulanan geri itme kuvveti.",
+	"Zincir":        "Aynı saldırının farklı hedeflere devam etmesi.",
+	"Dönüş":         "Core'un fırlatıldıktan sonra oyuncuya geri dönüşü.",
+	"Yavaşlama":     "Düşmanın hareket hızını geçici olarak azaltır.",
+}
+
+func get_keywords() -> Dictionary:
+	return _KEYWORDS_TR if locale == "tr" else _KEYWORDS_EN
+
+func wrap_keywords(text: String) -> String:
+	var keywords := get_keywords()
+	# Uzun keyword'leri önce işle (Armor Gain > Armor gibi çakışmaları önle)
+	var sorted_keys := keywords.keys()
+	sorted_keys.sort_custom(func(a, b): return a.length() > b.length())
+	for kw in sorted_keys:
+		text = text.replace(kw, "[color=#7ecfff][url=%s]%s[/url][/color]" % [kw, kw])
+	return text
