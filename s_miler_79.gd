@@ -530,7 +530,7 @@ func apply_slow(amount: float, duration: float = 3.0) -> void:
 func apply_frozen() -> void:
 	is_frozen = true
 	_boss_set_element("frozen")
-	await get_tree().create_timer(duration).timeout
+	await get_tree().create_timer(3.0).timeout
 	if not is_instance_valid(self): return
 	is_frozen = false; _boss_clear_element()
 
@@ -545,7 +545,7 @@ func apply_glitch() -> void:
 	if is_glitched: return
 	is_glitched = true
 	_boss_set_element("glitch")
-	await get_tree().create_timer(duration).timeout
+	await get_tree().create_timer(3.0).timeout
 	if not is_instance_valid(self): return
 	is_glitched = false; _boss_clear_element()
 

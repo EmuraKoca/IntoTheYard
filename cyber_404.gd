@@ -198,7 +198,7 @@ func _armor_break() -> void:
 	var cr = get_node_or_null("ColorRect")
 	if cr:
 		cr.color = Color(0.8, 0.1, 0.1)
-	await get_tree().create_timer(duration).timeout
+	await get_tree().create_timer(3.0).timeout
 	is_stunned = false
 
 func die() -> void:
