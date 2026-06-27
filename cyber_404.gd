@@ -198,7 +198,7 @@ func _armor_break() -> void:
 	var cr = get_node_or_null("ColorRect")
 	if cr:
 		cr.color = Color(0.8, 0.1, 0.1)
-	await get_tree().create_timer(3.0).timeout
+	await get_tree().create_timer(duration).timeout
 	is_stunned = false
 
 func die() -> void:
@@ -221,13 +221,13 @@ func _play_death() -> void:
 	if is_instance_valid(self):
 		queue_free()
 
-func apply_slow(amount) -> void:
+func apply_slow(amount, duration: float = 3.0) -> void:
 	if is_slowed:
 		return
 	is_slowed = true
 	original_speed = speed
 	speed = speed * (1.0 - amount)
-	await get_tree().create_timer(3.0).timeout
+	await get_tree().create_timer(duration).timeout
 	speed = original_speed
 	is_slowed = false
 

@@ -648,18 +648,18 @@ func die() -> void:
 	if is_instance_valid(self):
 		queue_free()
 
-func apply_slow(amount: float) -> void:
+func apply_slow(amount: float, duration: float = 3.0) -> void:
 	if is_slowed: return
 	is_slowed = true; original_speed = speed; speed *= (1.0 - amount)
 	_boss_set_element("slow")
-	await get_tree().create_timer(3.0).timeout
+	await get_tree().create_timer(duration).timeout
 	if not is_instance_valid(self): return
 	speed = original_speed; is_slowed = false; _boss_clear_element()
 
 func apply_frozen() -> void:
 	is_frozen = true; is_wet = false
 	_boss_set_element("frozen")
-	await get_tree().create_timer(3.0).timeout
+	await get_tree().create_timer(duration).timeout
 	if not is_instance_valid(self): return
 	is_frozen = false; _boss_clear_element()
 
@@ -674,7 +674,7 @@ func apply_glitch() -> void:
 	if is_glitched: return
 	is_glitched = true
 	_boss_set_element("glitch")
-	await get_tree().create_timer(3.0).timeout
+	await get_tree().create_timer(duration).timeout
 	if not is_instance_valid(self): return
 	is_glitched = false; _boss_clear_element()
 

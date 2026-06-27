@@ -86,14 +86,14 @@ func apply_electrified() -> void:
 		is_electrified = false
 		_clear_element()
 
-func apply_slow(amount) -> void:
+func apply_slow(amount, duration: float = 3.0) -> void:
 	if is_slowed:
 		return
 	is_slowed = true
 	original_speed = speed
 	speed = speed * (1.0 - amount)
 	_set_element("slow")
-	await get_tree().create_timer(3.0).timeout
+	await get_tree().create_timer(duration).timeout
 	if not is_instance_valid(self):
 		return
 	speed = original_speed
