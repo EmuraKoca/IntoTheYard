@@ -53,7 +53,11 @@ const _UPGRADE_META: Dictionary = {
 	4:  {"name": "Speed Upgrade",       "category": "Individuality"},
 	5:  {"name": "Orbit +1",            "category": "Individuality"},
 	11: {"name": "Core Mastery",        "category": "Utility"},
-	13: {"name": "Thunder Amp",         "category": "Utility"},
+	13: {"name": "Electric Amp",        "category": "Utility"},
+	99: {"name": "Cryo Amp",           "category": "Utility"},
+	100: {"name": "Hydro Amp",         "category": "Utility"},
+	101: {"name": "Pyro Amp",          "category": "Utility"},
+	102: {"name": "Pyroblast",         "category": "Utility"},
 	14: {"name": "Split Amp",           "category": "Utility"},
 	20: {"name": "Medkit",              "category": "Individuality"},
 	21: {"name": "Max Health Up",       "category": "Individuality"},
@@ -100,7 +104,6 @@ const _UPGRADE_META: Dictionary = {
 	86: {"name": "Elemental Memory",    "category": "Individuality"},
 	90: {"name": "Mana Overflow",       "category": "Utility"},
 	91: {"name": "Perfect Catalyst",    "category": "Utility"},
-	92: {"name": "Elemental Harmony",   "category": "Individuality"},
 	93: {"name": "Catalyst Mind",       "category": "Individuality"},
 }
 
@@ -1491,7 +1494,10 @@ func show_upgrade_menu() -> void:
 	{"name": "Cryo Core",           "category": "Identity",      "color": Color(0.5, 0.8, 1.0), "desc": "Slows subject by 25%",                      "index": 15, "weight": 10, "rarity": "common", "chars": ["leila"], "min_level": 0},
 	{"name": "Hydro Core",          "category": "Identity",      "color": Color(0.0, 0.5, 1.0), "desc": "Applies wet, single hit",                   "index": 17, "weight": 10, "rarity": "common", "chars": ["leila"], "min_level": 0},
 	{"name": "Pyro Core",           "category": "Identity",      "color": Color(1.0, 0.3, 0.0), "desc": "Applies burn to subject",                   "index": 18, "weight": 10, "rarity": "common", "chars": ["leila"], "min_level": 0},
-	{"name": "Thunder Amp",         "category": "Utility",       "color": Color(0.2, 0.5, 1.0), "desc": "Electric core +2 damage",                   "index": 13, "weight": 10, "rarity": "common",    "chars": ["leila"], "min_level": 0},
+	{"name": "Electric Amp",        "category": "Utility",       "color": Color(0.2, 0.5, 1.0), "desc": "Electric Core +2 damage",                   "index": 13,  "weight": 10, "rarity": "common",   "chars": ["leila"], "min_level": 0},
+	{"name": "Cryo Amp",            "category": "Utility",       "color": Color(0.5, 0.8, 1.0), "desc": "Cryo Core +2 damage",                       "index": 99,  "weight": 10, "rarity": "common",   "chars": ["leila"], "min_level": 0},
+	{"name": "Hydro Amp",           "category": "Utility",       "color": Color(0.0, 0.5, 1.0), "desc": "Hydro Core +2 damage",                      "index": 100, "weight": 10, "rarity": "common",   "chars": ["leila"], "min_level": 0},
+	{"name": "Pyro Amp",            "category": "Utility",       "color": Color(1.0, 0.3, 0.0), "desc": "Pyro Core +2 damage",                       "index": 101, "weight": 10, "rarity": "common",   "chars": ["leila"], "min_level": 0},
 	# Lv1: Elemental çeşitlilik
 	{"name": "Plasma Core",        "category": "Identity",      "color": Color(0.4, 0.6, 1.0), "desc": "Bounces to Electrified enemies",             "index": 61, "weight": 8,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 1},
 	{"name": "Steam Core",         "category": "Identity",      "color": Color(0.7, 0.9, 1.0), "desc": "Hits Wet targets → small AoE burst",         "index": 62, "weight": 8,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 1},
@@ -1517,16 +1523,16 @@ func show_upgrade_menu() -> void:
 	{"name": "Resonance Engine",   "category": "Utility",       "color": Color(0.6, 0.4, 1.0), "desc": "Each Reaction → bonus Core Speed",            "index": 81, "weight": 5,  "rarity": "rare",      "chars": ["leila"], "min_level": 2},
 	{"name": "Frozen Time",        "category": "Utility",       "color": Color(0.6, 0.85, 1.0),"desc": "Freeze duration +30%",                       "index": 82, "weight": 5,  "rarity": "rare",      "chars": ["leila"], "min_level": 2},
 	{"name": "Overheat",           "category": "Utility",       "color": Color(1.0, 0.4, 0.0), "desc": "Burn explodes after 7 stacks",                "index": 83, "weight": 4,  "rarity": "rare",      "chars": ["leila"], "min_level": 2},
-	{"name": "Elemental Harmony",  "category": "Utility",       "color": Color(0.8, 0.8, 1.0), "desc": "3+ different active elements\n→ Core Speed boost", "index": 84, "weight": 4, "rarity": "rare",   "chars": ["leila"], "min_level": 2},
+	{"name": "Elemental Harmony",  "category": "Utility",       "color": Color(0.8, 0.8, 1.0), "desc": "Per unique active element:\n+5% Core Speed",      "index": 84, "weight": 4, "rarity": "rare",   "chars": ["leila"], "min_level": 2},
 	{"name": "Resonant Soul",      "category": "Individuality", "color": Color(0.8, 0.6, 1.0), "desc": "Each Reaction → restore 1 HP",                "index": 85, "weight": 5,  "rarity": "rare",      "chars": ["leila"], "min_level": 2},
 	{"name": "Elemental Memory",   "category": "Individuality", "color": Color(0.7, 0.7, 1.0), "desc": "Reacted enemies hold new elements\n50% longer (2s)", "index": 86, "weight": 4, "rarity": "rare", "chars": ["leila"], "min_level": 2},
 	# Lv3: Build breaker
 	{"name": "Voltaic Core",       "category": "Identity",      "color": Color(0.2, 0.4, 1.0), "desc": "Electrified enemy dies →\nchain lightning to nearest enemy", "index": 87, "weight": 4, "rarity": "epic", "chars": ["leila"], "min_level": 3},
 	{"name": "Tempest Core",       "category": "Identity",      "color": Color(0.4, 0.6, 1.0), "desc": "Element changes on each wall bounce",         "index": 88, "weight": 4,  "rarity": "epic",      "chars": ["leila"], "min_level": 3},
-	{"name": "Thermal Expansion",  "category": "Utility",       "color": Color(1.0, 0.5, 0.1), "desc": "Steam explosion area grows\nas Burn damage stacks", "index": 89, "weight": 3, "rarity": "epic",  "chars": ["leila"], "min_level": 3},
+	{"name": "Thermal Expansion",  "category": "Utility",       "color": Color(0.7, 0.9, 1.0), "desc": "Steam explosion area grows",                        "index": 89,  "weight": 3, "rarity": "epic",  "chars": ["leila"], "min_level": 3},
+	{"name": "Pyroblast",          "category": "Utility",       "color": Color(1.0, 0.4, 0.0), "desc": "Burn damage stacks →\nexplosion radius grows",       "index": 102, "weight": 3, "rarity": "rare",  "chars": ["leila"], "min_level": 2},
 	{"name": "Mana Overflow",      "category": "Utility",       "color": Color(0.6, 0.4, 1.0), "desc": "Using Calamity empowers\nall Cores briefly",   "index": 90, "weight": 3,  "rarity": "epic",      "chars": ["leila"], "min_level": 3},
 	{"name": "Perfect Catalyst",   "category": "Utility",       "color": Color(0.9, 0.7, 1.0), "desc": "Reaction → reapply last used element",        "index": 91, "weight": 3,  "rarity": "epic",      "chars": ["leila"], "min_level": 3},
-	{"name": "Elemental Harmony",  "category": "Individuality", "color": Color(0.8, 0.8, 1.0), "desc": "Per unique active element:\n+5% Core Speed",  "index": 92, "weight": 3,  "rarity": "rare",      "chars": ["leila"], "min_level": 3},
 	{"name": "Catalyst Mind",      "category": "Individuality", "color": Color(0.9, 0.6, 1.0), "desc": "After a Reaction, next element\napplies twice", "index": 93, "weight": 2, "rarity": "legendary", "chars": ["leila"], "min_level": 3},
 	# ── Leila Calamity ────────────────────────────────────────────────────────
 	{"name": "Blizzard",           "category": "Calamity",      "color": Color(0.6, 0.9, 1.0), "desc": "Entire arena freezes for 3s",                 "index": 94, "weight": 2,  "rarity": "legendary", "chars": ["leila"], "min_level": 3},
@@ -2383,9 +2389,14 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 	elif index == 12:
 		var balls_dmg = get_node("Player")
 		balls_dmg.pierce_bonus += 2
-	elif index == 13:
-		var balls_dmg = get_node("Player")
-		balls_dmg.electric_bonus += 2
+	elif index == 13:  # Electric Amp
+		get_node("Player").electric_bonus += 2
+	elif index == 99:  # Cryo Amp
+		get_node("Player").cryo_bonus += 2
+	elif index == 100:  # Hydro Amp
+		get_node("Player").hydro_bonus += 2
+	elif index == 101:  # Pyro Amp
+		get_node("Player").pyro_bonus += 2
 	elif index == 14:
 		var balls_dmg = get_node("Player")
 		balls_dmg.split_bonus += 2
@@ -2570,9 +2581,6 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 	elif index == 86:  # Elemental Memory
 		get_node("Player").has_elemental_memory = true
 		_seen_individualities.append("Elemental Memory")
-	elif index == 92:  # Elemental Harmony (Individuality)
-		get_node("Player").has_elemental_harmony_ind = true
-		_seen_individualities.append("Elemental Harmony")
 	elif index == 93:  # Catalyst Mind
 		get_node("Player").has_catalyst_mind = true
 		_seen_individualities.append("Catalyst Mind")
@@ -2658,7 +2666,7 @@ func _apply_utility_level(index: int, level: int) -> void:
 	match index:
 		11:  # Core Mastery — her seviye +1 ball_mastery (kümülatif, no-op here, handled in elif)
 			pass
-		13:  # Thunder Amp — her seviye +2 electric_bonus (no-op, handled in elif)
+		13:  # Electric Amp — her seviye +2 electric_bonus (no-op, handled in elif)
 			pass
 		14:  # Split Amp — her seviye +2 split_bonus (no-op, handled in elif)
 			pass
