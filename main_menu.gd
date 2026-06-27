@@ -40,10 +40,126 @@ func _apply_menu_lang() -> void:
 
 # ── Menü işlemleri ────────────────────────────────────────────────────────────
 func _on_new_game() -> void:
+	# Kayıt dosyası varsa önce onay al
+	if FileAccess.file_exists("user://ity_save.cfg"):
+		_show_confirm_dialog()
+	else:
+		_start_new_game()
+
+func _start_new_game() -> void:
 	GameData.unlocked_characters = ["vector"]
 	GameData.char_xp = {"vector": 0, "leila": 0, "cyclone": 0}
 	GameData.save_data()
 	get_tree().change_scene_to_file("res://character_select.tscn")
+
+func _show_confirm_dialog() -> void:
+	var canvas := CanvasLayer.new()
+	canvas.layer = 100
+	add_child(canvas)
+
+	# Karartma
+	var dim := ColorRect.new()
+	dim.color = Color(0, 0, 0, 0.72)
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.mouse_filter = Control.MOUSE_FILTER_STOP
+	canvas.add_child(dim)
+
+	# Kutu
+	var box := Panel.new()
+	box.size = Vector2(560, 220)
+	box.position = Vector2(680, 430)
+	var box_style := StyleBoxFlat.new()
+	box_style.bg_color            = Color(0.03, 0.04, 0.12, 0.97)
+	box_style.border_width_left   = 2
+	box_style.border_width_top    = 2
+	box_style.border_width_right  = 2
+	box_style.border_width_bottom = 2
+	box_style.border_color        = Color(1.0, 0.18, 0.58, 1.0)
+	box_style.corner_radius_top_left     = 6
+	box_style.corner_radius_top_right    = 6
+	box_style.corner_radius_bottom_right = 6
+	box_style.corner_radius_bottom_left  = 6
+	box_style.shadow_color = Color(1.0, 0.18, 0.58, 0.35)
+	box_style.shadow_size  = 12
+	box.add_theme_stylebox_override("panel", box_style)
+	canvas.add_child(box)
+
+	# Başlık
+	var title := Label.new()
+	title.text = "! YENİ OYUN" if Lang.locale == "tr" else "! NEW GAME"
+	title.add_theme_font_override("font", _font_bold)
+	title.add_theme_font_size_override("font_size", 20)
+	title.add_theme_color_override("font_color", Color(1.0, 0.18, 0.58, 1.0))
+	title.position = Vector2(20, 18)
+	box.add_child(title)
+
+	# Uyarı metni
+	var warn := Label.new()
+	warn.text = "Mevcut kayıt kalıcı olarak silinecek.\nDevam etmek istiyor musun?" if Lang.locale == "tr" \
+		else "Your existing save will be permanently deleted.\nAre you sure you want to continue?"
+	warn.add_theme_font_override("font", _font_regular)
+	warn.add_theme_font_size_override("font_size", 16)
+	warn.add_theme_color_override("font_color", Color(0.85, 0.85, 0.85))
+	warn.autowrap_mode = TextServer.AUTOWRAP_WORD
+	warn.position = Vector2(20, 60)
+	warn.size = Vector2(520, 80)
+	box.add_child(warn)
+
+	# ── Buton stili yardımcısı ─────────────────────────────────────────────
+	var _make_style := func(bg: Color, border: Color, shadow: Color) -> StyleBoxFlat:
+		var s := StyleBoxFlat.new()
+		s.bg_color            = bg
+		s.border_width_left   = 2
+		s.border_width_top    = 2
+		s.border_width_right  = 2
+		s.border_width_bottom = 2
+		s.border_color        = border
+		s.corner_radius_top_left     = 4
+		s.corner_radius_top_right    = 4
+		s.corner_radius_bottom_right = 4
+		s.corner_radius_bottom_left  = 4
+		s.shadow_color = shadow
+		s.shadow_size  = 8
+		s.content_margin_left   = 14.0
+		s.content_margin_right  = 14.0
+		s.content_margin_top    = 10.0
+		s.content_margin_bottom = 10.0
+		return s
+
+	# EVET butonu (kırmızı)
+	var yes_btn := Button.new()
+	yes_btn.text = "EVET — SİL VE BAŞLA" if Lang.locale == "tr" else "YES — DELETE & START"
+	yes_btn.add_theme_font_override("font", _font_bold)
+	yes_btn.add_theme_font_size_override("font_size", 15)
+	yes_btn.add_theme_color_override("font_color", Color(1.0, 0.18, 0.58, 1.0))
+	yes_btn.add_theme_stylebox_override("normal", _make_style.call(Color(0.08,0.02,0.05,0.95), Color(1.0,0.18,0.58,1.0), Color(1.0,0.18,0.58,0.3)))
+	yes_btn.add_theme_stylebox_override("hover",  _make_style.call(Color(0.22,0.04,0.10,0.97), Color(1.0,0.25,0.65,1.0), Color(1.0,0.25,0.65,0.5)))
+	yes_btn.add_theme_stylebox_override("pressed",_make_style.call(Color(0.05,0.01,0.03,0.97), Color(1.0,0.15,0.45,1.0), Color(0,0,0,0)))
+	yes_btn.add_theme_stylebox_override("focus",  _make_style.call(Color(0.08,0.02,0.05,0.95), Color(1.0,0.18,0.58,1.0), Color(0,0,0,0)))
+	yes_btn.position = Vector2(20, 160)
+	yes_btn.size = Vector2(248, 48)
+	yes_btn.pressed.connect(func():
+		canvas.queue_free()
+		_start_new_game()
+	)
+	box.add_child(yes_btn)
+
+	# HAYIR butonu (mavi)
+	var no_btn := Button.new()
+	no_btn.text = "HAYIR — GERİ DÖN" if Lang.locale == "tr" else "NO — GO BACK"
+	no_btn.add_theme_font_override("font", _font_bold)
+	no_btn.add_theme_font_size_override("font_size", 15)
+	no_btn.add_theme_color_override("font_color", Color(0.0, 0.95, 1.0, 1.0))
+	no_btn.add_theme_stylebox_override("normal", _make_style.call(Color(0.02,0.03,0.10,0.95), Color(0.0,0.95,1.0,1.0), Color(0.0,0.95,1.0,0.3)))
+	no_btn.add_theme_stylebox_override("hover",  _make_style.call(Color(0.00,0.22,0.28,0.97), Color(0.0,1.0,1.0,1.0),  Color(0.0,1.0,1.0,0.5)))
+	no_btn.add_theme_stylebox_override("pressed",_make_style.call(Color(0.00,0.12,0.16,0.97), Color(0.0,0.75,0.82,1.0), Color(0,0,0,0)))
+	no_btn.add_theme_stylebox_override("focus",  _make_style.call(Color(0.02,0.03,0.10,0.95), Color(0.0,0.95,1.0,1.0), Color(0,0,0,0)))
+	no_btn.position = Vector2(292, 160)
+	no_btn.size = Vector2(248, 48)
+	no_btn.pressed.connect(func():
+		canvas.queue_free()
+	)
+	box.add_child(no_btn)
 
 func _on_load_game() -> void:
 	GameData.load_data()
