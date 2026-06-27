@@ -2490,6 +2490,104 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 		get_node("Player").has_risk_engine   = true
 		get_node("Player").armor_gain_mult  *= 0.7
 
+	# ── Leila — Identity Cores ───────────────────────────────────────────────
+	elif index == 61:  # Plasma Core
+		$BallLauncher.queue_upgrade_ball("plasma")
+	elif index == 62:  # Steam Core
+		$BallLauncher.queue_upgrade_ball("steam")
+	elif index == 63:  # Arc Core
+		$BallLauncher.queue_upgrade_ball("arc")
+	elif index == 64:  # Echo Core (Leila)
+		$BallLauncher.queue_upgrade_ball("echo")
+	elif index == 65:  # Orbit Core
+		$BallLauncher.queue_upgrade_ball("orbit")
+	elif index == 77:  # Scatter Core
+		$BallLauncher.queue_upgrade_ball("scatter")
+	elif index == 78:  # Catalyst Core
+		$BallLauncher.queue_upgrade_ball("catalyst")
+	elif index == 79:  # Elemental Mastery (Identity)
+		get_node("Player").debuff_duration_mult *= 1.3
+	elif index == 87:  # Voltaic Core
+		$BallLauncher.queue_upgrade_ball("voltaic")
+	elif index == 88:  # Tempest Core
+		$BallLauncher.queue_upgrade_ball("tempest")
+
+	# ── Leila — Utility ─────────────────────────────────────────────────────
+	elif index == 66:  # Conduction
+		get_node("Player").electric_reaction_range_mult *= 1.3
+	elif index == 67:  # Hydro Pressure
+		get_node("Player").has_hydro_pressure = true
+	elif index == 68:  # Arc Amplifier
+		get_node("Player").arc_chain_targets = get_node("Player").get("arc_chain_targets", 1) + 1
+	elif index == 69:  # Static Charge
+		get_node("Player").has_static_charge = true
+	elif index == 70:  # Cryostasis
+		get_node("Player").freeze_duration_mult *= 1.1
+	elif index == 71:  # Supercooling
+		get_node("Player").cryo_slow_mult *= 1.15
+	elif index == 72:  # Condensation
+		get_node("Player").has_condensation = true
+	elif index == 73:  # Thermal Vision
+		get_node("Player").burn_damage_mult *= 1.2
+	elif index == 74:  # Living Storm
+		get_node("Player").has_living_storm = true
+	elif index == 80:  # Arcane Mind
+		get_node("Player").first_debuff_duration_mult *= 2.0
+	elif index == 81:  # Resonance Engine
+		get_node("Player").reaction_core_speed_bonus += 0.02
+	elif index == 82:  # Frozen Time
+		get_node("Player").freeze_duration_mult *= 1.3
+	elif index == 83:  # Overheat
+		get_node("Player").has_overheat = true
+	elif index == 84:  # Elemental Harmony (Utility)
+		get_node("Player").has_elemental_harmony_util = true
+	elif index == 90:  # Mana Overflow
+		get_node("Player").has_mana_overflow = true
+	elif index == 91:  # Perfect Catalyst
+		get_node("Player").has_perfect_catalyst = true
+
+	# ── Leila — Individuality ────────────────────────────────────────────────
+	elif index == 75:  # Arcane Focus
+		get_node("Player").first_debuff_duration_mult *= 1.5
+		_seen_individualities.append("Arcane Focus")
+	elif index == 76:  # Mystic Flow
+		get_node("Player").mystic_flow_stacks = 0   # her unique element +1% hız
+		_seen_individualities.append("Mystic Flow")
+	elif index == 85:  # Resonant Soul
+		get_node("Player").reaction_heal_amount += 1
+		_seen_individualities.append("Resonant Soul")
+	elif index == 86:  # Elemental Memory
+		get_node("Player").has_elemental_memory = true
+		_seen_individualities.append("Elemental Memory")
+	elif index == 92:  # Elemental Harmony (Individuality)
+		get_node("Player").has_elemental_harmony_ind = true
+		_seen_individualities.append("Elemental Harmony")
+	elif index == 93:  # Catalyst Mind
+		get_node("Player").has_catalyst_mind = true
+		_seen_individualities.append("Catalyst Mind")
+
+	# ── Leila — Calamity ─────────────────────────────────────────────────────
+	elif index == 94:  # Blizzard
+		if calamity_slots.size() < max_calamity_slots:
+			calamity_slots.append("❄️")
+			update_ui()
+	elif index == 95:  # Monsoon
+		if calamity_slots.size() < max_calamity_slots:
+			calamity_slots.append("🌊")
+			update_ui()
+	elif index == 96:  # EMP Pulse
+		if calamity_slots.size() < max_calamity_slots:
+			calamity_slots.append("⚡")
+			update_ui()
+	elif index == 97:  # Volcanic Rift
+		if calamity_slots.size() < max_calamity_slots:
+			calamity_slots.append("🌋")
+			update_ui()
+	elif index == 98:  # Thunderstorm
+		if calamity_slots.size() < max_calamity_slots:
+			calamity_slots.append("⛈️")
+			update_ui()
+
 	update_ui()
 	$BallLauncher.queue_redraw()
 	

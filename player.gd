@@ -88,6 +88,36 @@ var has_adrenal_armor: bool       = false # Adrenal Armor System
 var has_kinetic_nervous: bool     = false # Momentum reset olmaz
 var has_risk_engine: bool         = false # Hasar alınca momentum
 
+# ── Leila — Elemental ────────────────────────────────────────────────────────
+var debuff_duration_mult: float   = 1.0   # Elemental Mastery, Arcane Mind, Arcane Focus
+var first_debuff_duration_mult: float = 1.0  # Arcane Focus / Arcane Mind (ilk debuff)
+var reaction_core_speed_bonus: float  = 0.0  # Resonance Engine: reaksiyon başına hız
+var reaction_heal_amount: int         = 0    # Resonant Soul: reaksiyon başına HP
+var electric_reaction_range_mult: float = 1.0 # Conduction
+var arc_chain_targets: int            = 1    # Arc Amplifier
+var freeze_duration_mult: float       = 1.0  # Cryostasis, Frozen Time
+var cryo_slow_mult: float             = 1.0  # Supercooling
+var burn_damage_mult: float           = 1.0  # Thermal Vision
+var mystic_flow_stacks: int           = 0    # Mystic Flow: unique element sayısı
+var mystic_flow_elements: Array       = []   # Mystic Flow: hangi elementler uygulandı
+var move_speed_bonus_pct: float       = 0.0  # Mystic Flow hız bonusu
+var has_static_charge: bool           = false  # Electrified → hasar aktarır
+var has_hydro_pressure: bool          = false  # Wet core'lar hızlı döner
+var has_condensation: bool            = false  # Wet core'lar hızlı döner (tümü)
+var has_living_storm: bool            = false  # Electrified yaklaşınca şimşek
+var has_overheat: bool                = false  # Burn 7 stackte patlar
+var has_elemental_harmony_util: bool  = false  # 3 element aktifse hız bonusu
+var has_mana_overflow: bool           = false  # Calamity → core'lar güçlenir
+var mana_overflow_timer: float        = 0.0   # Mana Overflow süreci
+var has_perfect_catalyst: bool        = false  # Reaksiyon → son element tekrar
+var last_applied_element: String      = ""    # Perfect Catalyst için
+var has_elemental_harmony_ind: bool   = false  # Individuality: per-element hız
+var has_catalyst_mind: bool           = false  # Reaksiyon → sonraki element 2x
+var catalyst_mind_ready: bool         = false  # Catalyst Mind tetiklenme hazır
+var has_resonant_soul_ind: bool       = false  # Individuality: reaksiyon → +1 HP
+var has_elemental_memory: bool        = false  # Reaksiyon sonrası debuff 50% uzar
+var damage_mult_leila: float          = 1.0   # Thermal Vision vb. hasar çarpanı
+
 # ── Pranga sistemi ────────────────────────────────────────────────────────────
 var _chain_links: Array[Sprite2D] = []
 const _CHAIN_DIR_NAMES: Array[String] = ["east","south-east","south","south-west","west","north-west","north","north-east"]

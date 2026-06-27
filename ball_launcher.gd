@@ -265,6 +265,38 @@ func _launch_typed_ball(ball_type: String) -> void:
 		"tempered":
 			ball.can_tempered = true
 			ball.max_damage   = 9 + player_node.ball_mastery
+		# ── Leila yeni core'lar ───────────────────────────────────────────────
+		"plasma":
+			ball.can_plasma   = true
+			ball.can_electric = true
+			ball.max_damage   = 7 + player_node.ball_mastery
+		"steam":
+			ball.can_steam    = true
+			ball.can_water    = true
+			ball.max_damage   = 5 + player_node.ball_mastery
+		"arc":
+			ball.can_arc      = true
+			ball.can_electric = true
+			ball.max_damage   = 6 + player_node.ball_mastery
+		"echo":
+			ball.can_echo     = true
+			ball.max_damage   = 5 + player_node.ball_mastery
+		"orbit":
+			ball.can_orbit    = true
+			ball.max_damage   = 4 + player_node.ball_mastery
+		"scatter":
+			ball.can_scatter  = true
+			ball.max_damage   = 4 + player_node.ball_mastery
+		"catalyst":
+			ball.can_catalyst = true
+			ball.max_damage   = 5 + player_node.ball_mastery
+		"voltaic":
+			ball.can_voltaic  = true
+			ball.can_electric = true
+			ball.max_damage   = 8 + player_node.ball_mastery
+		"tempest":
+			ball.can_tempest  = true
+			ball.max_damage   = 6 + player_node.ball_mastery
 
 	var direction  = (player.global_position - global_position).normalized()
 	var spawn_pos  = _get_muzzle_global()

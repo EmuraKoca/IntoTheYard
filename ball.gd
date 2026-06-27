@@ -45,6 +45,19 @@ var can_bulwark: bool = false
 var can_siege: bool = false
 var can_bloodbound: bool = false
 var can_tempered: bool = false
+# ── Leila yeni core flag'leri ─────────────────────────────────────────────────
+var can_plasma: bool   = false  # Electrified'a sekme
+var can_steam: bool    = false  # Wet hedef → küçük AoE
+var can_arc: bool      = false  # Duvar sekmesi → yıldırım
+var can_echo: bool     = false  # Düşmanın elementini kopyala, dönüşte uygula
+var _echo_element: String = ""  # Echo Core'un kopyaladığı element
+var can_orbit: bool    = false  # Orbit'te kalır, random element uygular
+var can_scatter: bool  = false  # Vuruşta 3 küçük elemental parça
+var can_catalyst: bool = false  # Mevcut debuff süresini uzatır
+var can_voltaic: bool  = false  # Electrified düşman ölünce zincir
+var can_tempest: bool  = false  # Her duvar sekmesinde element değişir
+var _tempest_elements: Array = ["electric", "cryo", "water", "fire"]
+var _tempest_index: int = 0
 var trail: Line2D = null
 var _wall_bounce_count: int = 0  # sonsuz sekme önlemi
 var trail_positions: Array = []
@@ -327,6 +340,16 @@ func _physics_process(delta: float) -> void:
 			_wall_bounce_count = 0
 			_start_returning()
 			return
+		# Arc Core: duvara çarpınca yakın düşmanlara yıldırım
+		if can_arc:
+			var _arc_enemies := get_tree().get_nodes_in_group("subjects")
+			for _ae in _arc_enemies:
+				if is_instance_valid(_ae) and global_position.distance_to(_ae.global_position) < 160:
+					_ae.take_damage(4)
+					_ae.apply_electrified()
+		# Tempest Core: her duvar sekmesinde element değişir
+		if can_tempest:
+			_tempest_index += 1
 	else:
 		# Düşmana çarpınca sayaç sıfırlanır
 		pass
@@ -523,7 +546,15 @@ func _start_returning() -> void:
 	# Kinetic Nervous System: dönüşte momentum reset olmaz
 	if _rp and not _rp.has_kinetic_nervous:
 		_rp.momentum_stacks = 0
-		
+	# Echo Core: dönüşte kopyalanan elementi aktifleştir
+	if can_echo and not _echo_element.is_empty():
+		match _echo_element:
+			"electric": can_electric = true
+			"fire":     can_fire     = true
+			"water":    can_water    = true
+			"cryo":     can_cryo     = true
+		queue_redraw()
+
 func _try_fusion(other: Node2D) -> void:
 	var self_type = _get_type()
 	var other_type = other._get_type()
@@ -1049,7 +1080,69 @@ func _hit_subject(subject: Node2D) -> void:
 			subject.apply_frozen()
 		else:
 			subject.apply_slow(slow_amount)
-	
+
+	# ── Leila Core efektleri ──────────────────────────────────────────────────
+	# Plasma Core: Electrified düşmanlara sekme
+	if can_plasma and is_instance_valid(subject):
+		subject.apply_electrified()
+		var _p_node := _get_player()
+		var _range: float = 180.0 * (_p_node.electric_reaction_range_mult if _p_node else 1.0)
+		var _enemies := get_tree().get_nodes_in_group("subjects")
+		for _en in _enemies:
+			if _en != subject and is_instance_valid(_en) and _en.is_electrified:
+				if subject.global_position.distance_to(_en.global_position) < _range:
+					_en.take_damage(total_damage / 2)
+
+	# Steam Core: Wet hedef → küçük AoE
+	if can_steam and is_instance_valid(subject):
+		subject.apply_wet()
+		if subject.is_wet or subject.is_burning:
+			var _enemies2 := get_tree().get_nodes_in_group("subjects")
+			for _en2 in _enemies2:
+				if is_instance_valid(_en2) and _en2.global_position.distance_to(subject.global_position) < 80:
+					_en2.take_damage(4)
+
+	# Echo Core: Düşmandaki elementi kopyala → dönüşte uygula
+	if can_echo and is_instance_valid(subject):
+		if subject.is_electrified:  _echo_element = "electric"
+		elif subject.is_burning:    _echo_element = "fire"
+		elif subject.is_wet:        _echo_element = "water"
+		elif subject.is_slowed:     _echo_element = "cryo"
+		elif subject.is_frozen:     _echo_element = "cryo"
+
+	# Catalyst Core: Mevcut debuff süresini uzat (reset + yeniden uygula)
+	if can_catalyst and is_instance_valid(subject):
+		if subject.is_burning:
+			subject.is_burning = false
+			subject.apply_burn()
+		if subject.is_electrified:
+			subject.is_electrified = false
+			subject.apply_electrified()
+		if subject.is_wet:
+			subject.is_wet = false
+			subject.apply_wet()
+		if subject.is_slowed:
+			subject.speed = subject.original_speed
+			subject.is_slowed = false
+			subject.apply_slow(slow_amount)
+
+	# Voltaic Core: Electrified düşman ölünce zincir yıldırım
+	if can_voltaic and is_instance_valid(subject):
+		subject.apply_electrified()
+		_voltaic_chain_on_death(subject)
+
+	# Tempest Core: Her duvar sekmesinde element değişir (duvar sekmesinde tetiklenir)
+	if can_tempest and is_instance_valid(subject):
+		match _tempest_elements[_tempest_index % _tempest_elements.size()]:
+			"electric": subject.apply_electrified()
+			"cryo":     subject.apply_slow(slow_amount)
+			"water":    subject.apply_wet()
+			"fire":     subject.apply_burn()
+
+	# Scatter Core: Vuruşta 3 küçük elemental parça
+	if can_scatter and is_instance_valid(subject):
+		_scatter_explode(subject.global_position)
+
 	if can_split and not has_split:
 		has_split = true
 		can_split = false
@@ -1071,6 +1164,44 @@ func _hit_subject(subject: Node2D) -> void:
 		await get_tree().create_timer(0.5).timeout
 		if subject in hit_subjects:
 			hit_subjects.erase(subject)
+
+func _voltaic_chain_on_death(subject: Node2D) -> void:
+	# Düşman öldüğünde zincir yıldırım
+	if not is_instance_valid(subject):
+		return
+	await subject.tree_exited
+	var _enemies := get_tree().get_nodes_in_group("subjects")
+	var _nearest: Node2D = null
+	var _nearest_dist: float = 220.0
+	for _en in _enemies:
+		if is_instance_valid(_en) and _en != subject:
+			var _d: float = subject.global_position.distance_to(_en.global_position)
+			if _d < _nearest_dist:
+				_nearest_dist = _d
+				_nearest = _en
+	if is_instance_valid(_nearest):
+		_nearest.take_damage(12)
+		_nearest.apply_electrified()
+
+func _scatter_explode(pos: Vector2) -> void:
+	var _elements: Array = ["electric", "cryo", "water", "fire"]
+	var _bs := load("res://ball.tscn")
+	var _game := get_tree().get_first_node_in_group("game")
+	if not _game: return
+	for _i in range(3):
+		var _b = _bs.instantiate()
+		_b.max_damage = 3
+		var _elem: String = _elements[randi() % _elements.size()]
+		match _elem:
+			"electric": _b.can_electric = true
+			"cryo":     _b.can_cryo     = true
+			"water":    _b.can_water    = true
+			"fire":     _b.can_fire     = true
+		_b.global_position = pos
+		_b.add_to_group("player_balls")
+		_game.add_child(_b)
+		var _angle: float = (_i * TAU / 3.0) + randf() * 0.5
+		_b.launch(Vector2(cos(_angle), sin(_angle)))
 
 func _split() -> void:
 	var ball_scene_local = load("res://ball.tscn")
