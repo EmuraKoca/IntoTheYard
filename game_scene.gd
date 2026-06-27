@@ -79,6 +79,29 @@ const _UPGRADE_META: Dictionary = {
 	58: {"name": "Battlefield Anchor",      "category": "Individuality"},
 	59: {"name": "Adrenal Armor System",    "category": "Individuality"},
 	60: {"name": "Risk Engine",             "category": "Individuality"},
+	# ── Leila ────────────────────────────────────────────────────────────────
+	66: {"name": "Conduction",          "category": "Utility"},
+	67: {"name": "Hydro Pressure",      "category": "Utility"},
+	68: {"name": "Arc Amplifier",       "category": "Utility"},
+	69: {"name": "Static Charge",       "category": "Utility"},
+	70: {"name": "Cryostasis",          "category": "Utility"},
+	71: {"name": "Supercooling",        "category": "Utility"},
+	72: {"name": "Condensation",        "category": "Utility"},
+	73: {"name": "Thermal Vision",      "category": "Utility"},
+	74: {"name": "Living Storm",        "category": "Utility"},
+	75: {"name": "Arcane Focus",        "category": "Individuality"},
+	76: {"name": "Mystic Flow",         "category": "Individuality"},
+	80: {"name": "Arcane Mind",         "category": "Utility"},
+	81: {"name": "Resonance Engine",    "category": "Utility"},
+	82: {"name": "Frozen Time",         "category": "Utility"},
+	83: {"name": "Overheat",            "category": "Utility"},
+	84: {"name": "Elemental Harmony",   "category": "Utility"},
+	85: {"name": "Resonant Soul",       "category": "Individuality"},
+	86: {"name": "Elemental Memory",    "category": "Individuality"},
+	90: {"name": "Mana Overflow",       "category": "Utility"},
+	91: {"name": "Perfect Catalyst",    "category": "Utility"},
+	92: {"name": "Elemental Harmony",   "category": "Individuality"},
+	93: {"name": "Catalyst Mind",       "category": "Individuality"},
 }
 
 var subject_scene = preload("res://subject.tscn")
@@ -1455,9 +1478,51 @@ func show_upgrade_menu() -> void:
 	# ── Leila (Elemental) ─────────────────────────────────────────────────────
 	{"name": "Electric Core",       "category": "Identity",      "color": Color(0.2, 0.5, 1.0), "desc": "Core gains electricity",                    "index": 1,  "weight": 10, "rarity": "common", "chars": ["leila"], "min_level": 0},
 	{"name": "Cryo Core",           "category": "Identity",      "color": Color(0.5, 0.8, 1.0), "desc": "Slows subject by 25%",                      "index": 15, "weight": 10, "rarity": "common", "chars": ["leila"], "min_level": 0},
-	{"name": "Water Core",          "category": "Identity",      "color": Color(0.0, 0.5, 1.0), "desc": "Applies wet, single hit",                   "index": 17, "weight": 10, "rarity": "common", "chars": ["leila"], "min_level": 0},
-	{"name": "Fire Core",           "category": "Identity",      "color": Color(1.0, 0.3, 0.0), "desc": "Applies burn to subject",                   "index": 18, "weight": 10, "rarity": "common", "chars": ["leila"], "min_level": 0},
-	{"name": "Thunder Amp",         "category": "Utility",       "color": Color(0.2, 0.5, 1.0), "desc": "Electric core +2 damage",                   "index": 13, "weight": 10, "rarity": "common", "chars": ["leila"], "min_level": 0},
+	{"name": "Hydro Core",          "category": "Identity",      "color": Color(0.0, 0.5, 1.0), "desc": "Applies wet, single hit",                   "index": 17, "weight": 10, "rarity": "common", "chars": ["leila"], "min_level": 0},
+	{"name": "Pyro Core",           "category": "Identity",      "color": Color(1.0, 0.3, 0.0), "desc": "Applies burn to subject",                   "index": 18, "weight": 10, "rarity": "common", "chars": ["leila"], "min_level": 0},
+	{"name": "Thunder Amp",         "category": "Utility",       "color": Color(0.2, 0.5, 1.0), "desc": "Electric core +2 damage",                   "index": 13, "weight": 10, "rarity": "common",    "chars": ["leila"], "min_level": 0},
+	# Lv1: Elemental çeşitlilik
+	{"name": "Plasma Core",        "category": "Identity",      "color": Color(0.4, 0.6, 1.0), "desc": "Bounces to Electrified enemies",             "index": 61, "weight": 8,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 1},
+	{"name": "Steam Core",         "category": "Identity",      "color": Color(0.7, 0.9, 1.0), "desc": "Hits Wet targets → small AoE burst",         "index": 62, "weight": 8,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 1},
+	{"name": "Arc Core",           "category": "Identity",      "color": Color(0.3, 0.5, 1.0), "desc": "Wall bounce → lightning bolt",               "index": 63, "weight": 8,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 1},
+	{"name": "Echo Core",          "category": "Identity",      "color": Color(0.6, 0.8, 1.0), "desc": "Copies element from Debuffed enemy on hit.\nApplies it on return.", "index": 64, "weight": 6, "rarity": "uncommon", "chars": ["leila"], "min_level": 1},
+	{"name": "Orbit Core",         "category": "Identity",      "color": Color(0.5, 0.7, 1.0), "desc": "Stays in orbit, applies random element\nto nearby enemies",           "index": 65, "weight": 6, "rarity": "uncommon", "chars": ["leila"], "min_level": 1},
+	{"name": "Conduction",         "category": "Utility",       "color": Color(0.3, 0.5, 1.0), "desc": "Electric reaction range +30%",               "index": 66, "weight": 8,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 1},
+	{"name": "Hydro Pressure",     "category": "Utility",       "color": Color(0.1, 0.5, 0.9), "desc": "Wet-applying Cores orbit faster",             "index": 67, "weight": 8,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 1},
+	{"name": "Arc Amplifier",      "category": "Utility",       "color": Color(0.2, 0.4, 1.0), "desc": "Lightning chain hits +1 target",              "index": 68, "weight": 8,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 1},
+	{"name": "Static Charge",      "category": "Utility",       "color": Color(0.4, 0.6, 1.0), "desc": "Electrified enemies transfer damage\nto each other", "index": 69, "weight": 6, "rarity": "uncommon", "chars": ["leila"], "min_level": 1},
+	{"name": "Cryostasis",         "category": "Utility",       "color": Color(0.6, 0.85, 1.0),"desc": "Freeze duration +10%",                       "index": 70, "weight": 8,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 1},
+	{"name": "Supercooling",       "category": "Utility",       "color": Color(0.5, 0.8, 1.0), "desc": "Cryo enemies slowed further",                 "index": 71, "weight": 8,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 1},
+	{"name": "Condensation",       "category": "Utility",       "color": Color(0.2, 0.6, 1.0), "desc": "All Wet-applying Cores orbit faster",         "index": 72, "weight": 6,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 1},
+	{"name": "Thermal Vision",     "category": "Utility",       "color": Color(1.0, 0.5, 0.1), "desc": "Burning enemies take more damage",            "index": 73, "weight": 6,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 1},
+	{"name": "Living Storm",       "category": "Utility",       "color": Color(0.3, 0.5, 1.0), "desc": "Electrified enemies approaching you\ntrigger small lightning", "index": 74, "weight": 6, "rarity": "uncommon", "chars": ["leila"], "min_level": 1},
+	{"name": "Arcane Focus",       "category": "Individuality", "color": Color(0.7, 0.5, 1.0), "desc": "First applied debuff lasts 50% longer",      "index": 75, "weight": 6,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 1},
+	{"name": "Mystic Flow",        "category": "Individuality", "color": Color(0.5, 0.7, 1.0), "desc": "Each unique element applied\n→ +1% Move Speed (max 20%)", "index": 76, "weight": 6, "rarity": "uncommon", "chars": ["leila"], "min_level": 1},
+	# Lv2: Reaksiyon odağı
+	{"name": "Scatter Core",       "category": "Identity",      "color": Color(0.5, 0.8, 0.7), "desc": "On hit → splits into 3 small\nrandom Elemental Cores", "index": 77, "weight": 6, "rarity": "rare", "chars": ["leila"], "min_level": 2},
+	{"name": "Catalyst Core",      "category": "Identity",      "color": Color(0.8, 0.6, 1.0), "desc": "Extends duration of existing\nstatus effects on hit",   "index": 78, "weight": 6, "rarity": "rare", "chars": ["leila"], "min_level": 2},
+	{"name": "Elemental Mastery",  "category": "Identity",      "color": Color(0.9, 0.7, 1.0), "desc": "All debuff durations +30%",                   "index": 79, "weight": 5,  "rarity": "rare",      "chars": ["leila"], "min_level": 2},
+	{"name": "Arcane Mind",        "category": "Utility",       "color": Color(0.7, 0.5, 1.0), "desc": "First applied element lasts 100% longer",     "index": 80, "weight": 5,  "rarity": "rare",      "chars": ["leila"], "min_level": 2},
+	{"name": "Resonance Engine",   "category": "Utility",       "color": Color(0.6, 0.4, 1.0), "desc": "Each Reaction → bonus Core Speed",            "index": 81, "weight": 5,  "rarity": "rare",      "chars": ["leila"], "min_level": 2},
+	{"name": "Frozen Time",        "category": "Utility",       "color": Color(0.6, 0.85, 1.0),"desc": "Freeze duration +30%",                       "index": 82, "weight": 5,  "rarity": "rare",      "chars": ["leila"], "min_level": 2},
+	{"name": "Overheat",           "category": "Utility",       "color": Color(1.0, 0.4, 0.0), "desc": "Burn explodes after 7 stacks",                "index": 83, "weight": 4,  "rarity": "rare",      "chars": ["leila"], "min_level": 2},
+	{"name": "Elemental Harmony",  "category": "Utility",       "color": Color(0.8, 0.8, 1.0), "desc": "3+ different active elements\n→ Core Speed boost", "index": 84, "weight": 4, "rarity": "rare",   "chars": ["leila"], "min_level": 2},
+	{"name": "Resonant Soul",      "category": "Individuality", "color": Color(0.8, 0.6, 1.0), "desc": "Each Reaction → restore 1 HP",                "index": 85, "weight": 5,  "rarity": "rare",      "chars": ["leila"], "min_level": 2},
+	{"name": "Elemental Memory",   "category": "Individuality", "color": Color(0.7, 0.7, 1.0), "desc": "Reacted enemies hold new elements\n50% longer (2s)", "index": 86, "weight": 4, "rarity": "rare", "chars": ["leila"], "min_level": 2},
+	# Lv3: Build breaker
+	{"name": "Voltaic Core",       "category": "Identity",      "color": Color(0.2, 0.4, 1.0), "desc": "Electrified enemy dies →\nchain lightning to nearest enemy", "index": 87, "weight": 4, "rarity": "epic", "chars": ["leila"], "min_level": 3},
+	{"name": "Tempest Core",       "category": "Identity",      "color": Color(0.4, 0.6, 1.0), "desc": "Element changes on each wall bounce",         "index": 88, "weight": 4,  "rarity": "epic",      "chars": ["leila"], "min_level": 3},
+	{"name": "Thermal Expansion",  "category": "Utility",       "color": Color(1.0, 0.5, 0.1), "desc": "Steam explosion area grows\nas Burn damage stacks", "index": 89, "weight": 3, "rarity": "epic",  "chars": ["leila"], "min_level": 3},
+	{"name": "Mana Overflow",      "category": "Utility",       "color": Color(0.6, 0.4, 1.0), "desc": "Using Calamity empowers\nall Cores briefly",   "index": 90, "weight": 3,  "rarity": "epic",      "chars": ["leila"], "min_level": 3},
+	{"name": "Perfect Catalyst",   "category": "Utility",       "color": Color(0.9, 0.7, 1.0), "desc": "Reaction → reapply last used element",        "index": 91, "weight": 3,  "rarity": "epic",      "chars": ["leila"], "min_level": 3},
+	{"name": "Elemental Harmony",  "category": "Individuality", "color": Color(0.8, 0.8, 1.0), "desc": "Per unique active element:\n+5% Core Speed",  "index": 92, "weight": 3,  "rarity": "rare",      "chars": ["leila"], "min_level": 3},
+	{"name": "Catalyst Mind",      "category": "Individuality", "color": Color(0.9, 0.6, 1.0), "desc": "After a Reaction, next element\napplies twice", "index": 93, "weight": 2, "rarity": "legendary", "chars": ["leila"], "min_level": 3},
+	# ── Leila Calamity ────────────────────────────────────────────────────────
+	{"name": "Blizzard",           "category": "Calamity",      "color": Color(0.6, 0.9, 1.0), "desc": "Entire arena freezes for 3s",                 "index": 94, "weight": 2,  "rarity": "legendary", "chars": ["leila"], "min_level": 3},
+	{"name": "Monsoon",            "category": "Calamity",      "color": Color(0.1, 0.5, 1.0), "desc": "All enemies gain Wet",                        "index": 95, "weight": 3,  "rarity": "epic",      "chars": ["leila"], "min_level": 2},
+	{"name": "EMP Pulse",          "category": "Calamity",      "color": Color(0.2, 0.4, 1.0), "desc": "All Electrified enemies take 15 dmg",         "index": 96, "weight": 3,  "rarity": "epic",      "chars": ["leila"], "min_level": 2},
+	{"name": "Volcanic Rift",      "category": "Calamity",      "color": Color(1.0, 0.3, 0.0), "desc": "Leaves lava trail on ground",                 "index": 97, "weight": 2,  "rarity": "legendary", "chars": ["leila"], "min_level": 3},
+	{"name": "Thunderstorm",       "category": "Calamity",      "color": Color(0.3, 0.5, 1.0), "desc": "Random lightning strikes for 5s",             "index": 98, "weight": 2,  "rarity": "legendary", "chars": ["leila"], "min_level": 3},
 	# ── Cyclone (Manipülasyon) ────────────────────────────────────────────────
 	{"name": "Glitch Core",         "category": "Identity",      "color": Color(0.8, 0.0, 0.8), "desc": "Disorients subject for 3s",                 "index": 16, "weight": 10, "rarity": "common", "chars": ["cyclone"], "min_level": 0},
 	{"name": "Echo Core",           "category": "Identity",      "color": Color(0.5, 0.5, 1.0), "desc": "Copies the nearest powered-up core",        "index": 19, "weight": 1,  "rarity": "epic",   "chars": ["cyclone"], "min_level": 0},
@@ -1468,20 +1533,19 @@ func show_upgrade_menu() -> void:
 	{"name": "Flame Zone",          "category": "Calamity",      "color": Color(1.0, 0.3, 0.0), "desc": "Continuous damage in selected area",        "index": 8,  "weight": 8,  "rarity": "common", "chars": [], "min_level": 0},
 ]
 	upgrades = upgrades.filter(func(u): return u["chars"].is_empty() or char_id in u["chars"])
-	# Karakter level'ına göre filtrele
 	upgrades = upgrades.filter(func(u): return u.get("min_level", 0) <= char_level)
-	# Individuality: bir kez seçilince bir daha çıkmaz
 	upgrades = upgrades.filter(func(u):
 		if u["category"] == "Individuality":
 			return not (u["name"] in _seen_individualities)
 		return true
 	)
-	# Utility: max 3 seviye, 3'ü dolunca çıkmaz
 	upgrades = upgrades.filter(func(u):
 		if u["category"] == "Utility":
 			return _utility_levels.get(u["name"], 0) < 3
 		return true
 	)
+	# Rarity ağırlıklı seçim: 3 kart için 3 kez rarity çek, o rarity'den kart al
+	upgrades = _pick_rarity_weighted_cards(upgrades, level, 3)
 	
 	var canvas = CanvasLayer.new()
 	canvas.process_mode = Node.PROCESS_MODE_ALWAYS
@@ -2429,6 +2493,57 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 	update_ui()
 	$BallLauncher.queue_redraw()
 	
+func _pick_rarity_weighted_cards(pool: Array, current_level: int, count: int) -> Array:
+	# Rarity olasılık tablosu: [common, uncommon, rare, epic, legendary]
+	var weights: Array
+	if current_level <= 5:
+		weights = [55, 30, 12, 3, 0]
+	elif current_level <= 12:
+		weights = [35, 35, 22, 7, 1]
+	else:
+		weights = [15, 30, 32, 18, 5]
+
+	var rarity_names := ["common", "uncommon", "rare", "epic", "legendary"]
+	var result: Array = []
+	var used_names: Array = []
+
+	for _i in range(count):
+		# Rarity çek
+		var roll: int = randi() % 100
+		var chosen_rarity: String = "common"
+		var cumulative: int = 0
+		for ri in range(rarity_names.size()):
+			cumulative += weights[ri]
+			if roll < cumulative:
+				chosen_rarity = rarity_names[ri]
+				break
+
+		# O rarity'den uygun kartları filtrele
+		var candidates := pool.filter(func(u):
+			return u["rarity"] == chosen_rarity and not (u["name"] in used_names)
+		)
+		# O rarity'de kart yoksa bir üst/alt rarity'de ara
+		if candidates.is_empty():
+			candidates = pool.filter(func(u): return not (u["name"] in used_names))
+
+		if candidates.is_empty():
+			break
+
+		# Weight'e göre ağırlıklı seçim
+		var total_w: int = 0
+		for c in candidates:
+			total_w += c.get("weight", 1)
+		var pick: int = randi() % total_w
+		var cumw: int = 0
+		for c in candidates:
+			cumw += c.get("weight", 1)
+			if pick < cumw:
+				result.append(c)
+				used_names.append(c["name"])
+				break
+
+	return result
+
 func _apply_utility_level(index: int, level: int) -> void:
 	var p := get_node("Player")
 	match index:
