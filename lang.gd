@@ -268,9 +268,17 @@ func get_keywords() -> Dictionary:
 
 func wrap_keywords(text: String) -> String:
 	var keywords := get_keywords()
-	# Uzun keyword'leri önce işle (Armor Gain > Armor gibi çakışmaları önle)
 	var sorted_keys := keywords.keys()
 	sorted_keys.sort_custom(func(a, b): return a.length() > b.length())
+	# Önce placeholder'a çevir: "Armor Gain" → "§0§", "Armor" → "§1§" vs.
+	# Böylece kısa keyword uzun keyword'ün BBCode'una çarpmaz.
+	var bbcodes: Array = []
 	for kw in sorted_keys:
-		text = text.replace(kw, "[color=#7ecfff][url=%s]%s[/url][/color]" % [kw, kw])
+		if kw in text:
+			var placeholder: String = "§%d§" % bbcodes.size()
+			bbcodes.append("[color=#7ecfff][url=%s]%s[/url][/color]" % [kw, kw])
+			text = text.replace(kw, placeholder)
+	# Sonra placeholder'ları gerçek BBCode ile değiştir
+	for i in range(bbcodes.size()):
+		text = text.replace("§%d§" % i, bbcodes[i])
 	return text
