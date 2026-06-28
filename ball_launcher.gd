@@ -297,6 +297,9 @@ func _launch_typed_ball(ball_type: String) -> void:
 		"tempest":
 			ball.can_tempest  = true
 			ball.max_damage   = 6 + player_node.ball_mastery
+		"prismatic":
+			ball.can_prismatic = true
+			ball.max_damage    = 5 + player_node.ball_mastery
 
 	var direction  = (player.global_position - global_position).normalized()
 	var spawn_pos  = _get_muzzle_global()

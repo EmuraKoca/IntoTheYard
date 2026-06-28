@@ -6,6 +6,7 @@ var can_split = false
 var can_electric = false
 var has_split = false
 var is_dead = false
+var is_scatter_piece: bool = false  # Scatter Core parçası — ilk isabet sonrası yok olur
 var moving = false
 var move_direction = Vector2.ZERO
 var base_scale = 1.0
@@ -55,7 +56,8 @@ var can_orbit: bool    = false  # Orbit'te kalır, random element uygular
 var can_scatter: bool  = false  # Vuruşta 3 küçük elemental parça
 var can_catalyst: bool = false  # Mevcut debuff süresini uzatır
 var can_voltaic: bool  = false  # Electrified düşman ölünce zincir
-var can_tempest: bool  = false  # Her duvar sekmesinde element değişir
+var can_tempest: bool    = false  # Her duvar sekmesinde element değişir
+var can_prismatic: bool  = false  # Her düşman isabetinde random element değişir
 var _tempest_elements: Array = ["electric", "cryo", "water", "fire"]
 var _tempest_index: int = 0
 var trail: Line2D = null
@@ -178,6 +180,26 @@ func _setup_ball_sprite() -> void:
 		folder = "bloodboundCore";  frame_count = 9
 	elif can_tempered:
 		folder = "temperedCore";    frame_count = 9
+	elif can_plasma:
+		folder = "plasmaCore";      frame_count = 18
+	elif can_steam:
+		folder = "steamCore";       frame_count = 64
+	elif can_arc:
+		folder = "arcCore";         frame_count = 34
+	elif can_echo:
+		folder = "echoCore";        frame_count = 34
+	elif can_orbit:
+		folder = "orbitCore";       frame_count = 34
+	elif can_scatter:
+		folder = "scatterCore";     frame_count = 34
+	elif can_catalyst:
+		folder = "catalystCore";    frame_count = 34
+	elif can_voltaic:
+		folder = "voltaicCore";     frame_count = 34
+	elif can_tempest:
+		folder = "tempestCore";     frame_count = 34
+	elif can_prismatic:
+		folder = "prismaticCore";   frame_count = 34
 	else:
 		folder = "normalBall";      frame_count = 9
 
@@ -825,6 +847,11 @@ func _hit_subject(subject: Node2D) -> void:
 
 	subject.take_damage(total_damage)
 
+	# Scatter parçası — tek vuruşta yok olur
+	if is_scatter_piece:
+		queue_free()
+		return
+
 	# ── Vector yeni core efektleri + Armor & Stack tetikleyicileri ──────────
 	var player_node := _get_player()
 	var game_node_fx := get_tree().get_first_node_in_group("game")
@@ -1193,6 +1220,8 @@ func _scatter_explode(pos: Vector2) -> void:
 	for _i in range(3):
 		var _b = _bs.instantiate()
 		_b.max_damage = 3
+		_b.is_scatter_piece = true
+		_b.scale = Vector2(0.5, 0.5)
 		var _elem: String = _elements[randi() % _elements.size()]
 		match _elem:
 			"electric": _b.can_electric = true
@@ -1204,6 +1233,7 @@ func _scatter_explode(pos: Vector2) -> void:
 		_game.add_child(_b)
 		var _angle: float = (_i * TAU / 3.0) + randf() * 0.5
 		_b.launch(Vector2(cos(_angle), sin(_angle)))
+	queue_free()
 
 func _split() -> void:
 	var ball_scene_local = load("res://ball.tscn")

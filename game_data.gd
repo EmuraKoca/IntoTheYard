@@ -9,9 +9,9 @@ var unlocked_characters: Array[String] = ["vector"]
 const XP_THRESHOLDS: Array[int] = [0, 600, 1500, 2750, 4250, 6250]
 
 const UNLOCKS: Dictionary = {
-	"vector":  {2: "Piercing Ball",  4: "Heavy Ball",   6: "Crusher Fusion"},
-	"leila":   {2: "Cryo Ball",      4: "Plasma Ball",  6: "Storm Fusion"},
-	"cyclone": {2: "Mimic Ball",     4: "Glitch Ball",  6: "Ghost Fusion"},
+	"vector":  {1: "Piercing Ball",  3: "Heavy Ball",   5: "Crusher Fusion"},
+	"leila":   {1: "Cryo Ball",      3: "Plasma Ball",  5: "Storm Fusion"},
+	"cyclone": {1: "Mimic Ball",     3: "Glitch Ball",  5: "Ghost Fusion"},
 }
 
 var char_xp: Dictionary = {"vector": 0, "leila": 0, "cyclone": 0}
@@ -40,26 +40,26 @@ func get_xp(char_id: String) -> int:
 
 func get_level(char_id: String) -> int:
 	var xp := get_xp(char_id)
-	var lv  := 1
+	var lv  := 0
 	for i in range(1, XP_THRESHOLDS.size()):
 		if xp >= XP_THRESHOLDS[i]:
-			lv = i + 1
+			lv = i
 		else:
 			break
-	return min(lv, XP_THRESHOLDS.size())
+	return min(lv, XP_THRESHOLDS.size() - 1)
 
 func xp_in_current_level(char_id: String) -> int:
 	var lv  := get_level(char_id)
 	var xp  := get_xp(char_id)
-	var base: int = XP_THRESHOLDS[lv - 1]
+	var base: int = XP_THRESHOLDS[lv]
 	return xp - base
 
 func xp_needed_for_level(char_id: String) -> int:
 	var lv := get_level(char_id)
-	if lv >= XP_THRESHOLDS.size():
+	if lv >= XP_THRESHOLDS.size() - 1:
 		return 1  # Max level — bar dolu göster
-	var base: int    = XP_THRESHOLDS[lv - 1]
-	var next_int: int = XP_THRESHOLDS[lv]
+	var base: int     = XP_THRESHOLDS[lv]
+	var next_int: int = XP_THRESHOLDS[lv + 1]
 	return next_int - base
 
 func get_unlock_for_level(char_id: String, lv: int) -> String:

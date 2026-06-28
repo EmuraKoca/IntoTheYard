@@ -2626,3 +2626,90 @@ Fusion Zone:
 ✅ Fusion Zone artık sadece Leila'ya özel
    — Vector ve Cyclone seçilince Fusion Zone ve enerji barı gizlenir
    — Leila seçilince normal şekilde aktif olur
+
+─────────────────────────────────────────────────────────────────────────────
+0.0.9.8
+27–28.06.2026
+
+Hata Düzeltmeleri:
+
+✅ Hyper Recovery Loop yeniden tasarlandı
+   — Eski: Core hasar = 0 (oynanamaz hale getiriyordu)
+   — Yeni: Core Dönüş Hızı ×1.5 / Maks Sekme -2
+   — hyper_loop_no_damage → hyper_loop_max_bounce (int: 6 → 4)
+   — ball.gd'de sekme sayısı artık sabit 6 yerine player.hyper_loop_max_bounce'dan okunuyor
+
+✅ New Game onay dialogu — ilk kez oynayan kullanıcılara artık çıkmıyor
+   — Kök neden: _start_new_game() içindeki save_data() çağrısı kayıt dosyasını
+     oyun başlamadan yaratıyordu
+   — Çözüm: save_data() kaldırıldı; kayıt dosyası ilk XP kazanımında doğal oluşuyor
+
+Leila Kart Sistemi Düzeltmeleri:
+
+✅ Kart listesi ODS dosyasıyla hizalandı
+   — Elemental Mastery → Utility kategorisine taşındı
+   — Arcane Focus → kaldırıldı
+   — Condensation → kaldırıldı
+   — Elemental Harmony (Individuality versiyonu) → kaldırıldı
+   — Resonance Engine açıklaması güncellendi: "Her Reaksiyon → +1 Momentum / Her Momentum → +3% Core Hızı"
+   — Pyroblast açıklaması güncellendi: "Yanma patlamaları, Yanma Yığını kadar Alan kazanır"
+   — Tempest Core açıklaması güncellendi: "Her duvar sekmesinde random Elemente dönüşür"
+   — Orbit Core → Rare nadirliğine yükseltildi
+
+✅ 4 Amp kartı eklendi (index 99-101)
+   — Electric Amp (+2 Electric hasar), Cryo Amp (+2 Cryo hasar)
+   — Hydro Amp (+2 Hydro hasar), Pyro Amp (+2 Pyro hasar)
+   — ball_launcher.gd'de cryo/water/fire max_damage player.cryo/hydro/pyro_bonus ile besleniyor
+
+✅ Prismatic Core eklendi (index 103)
+   — Her düşman isabetiyle random elemente dönüşür
+   — can_prismatic flag'i ball.gd'ye eklendi
+
+Leila Core Sprite'ları:
+
+✅ 10 yeni Leila core sprite seti eklendi (assets/balls/):
+   arcCore, catalystCore, echoCore, orbitCore, plasmaCore,
+   prismaticCore, scatterCore, steamCore, tempestCore, voltaicCore
+✅ ball.gd _setup_ball_sprite() güncellendi — tüm yeni core'lar ilgili klasöre yönlendirildi
+
+Scatter Core Mekaniği:
+
+✅ Scatter Core davranışı tamamlandı
+   — İlk düşman isabetiyle Scatter Core yok olur
+   — Yerine 3 küçük (×0.5 ölçek) random elemental core fırlar (Electric/Cryo/Water/Fire)
+   — Her parça bir düşmana çarpınca yok olur (is_scatter_piece flag)
+   — _scatter_explode() fonksiyonu güncellendi
+
+Karakter Level Sistemi:
+
+✅ Level sistemi 1–6'dan 0–5'e güncellendi
+   — GameData.get_level() artık 0'dan başlıyor, maks 5
+   — UNLOCKS tablosu güncellendi: 2/4/6 → 1/3/5
+   — xp_in_current_level() ve xp_needed_for_level() güncellendi
+
+Leila Kart Havuzu — Level Bazlı Dağılım:
+
+✅ 45 Leila kartı 6 seviyeye dağıtıldı (her geçişte +5 kart)
+   — Lv0 (20 kart): 4 Element Core, 4 Amp, 9 temel Utility, 3 Individuality
+   — Lv1 (+5): Plasma Core, Arc Core, Arcane Mind, Frozen Time, Overheat
+   — Lv2 (+5): Steam Core, Echo Core, Elemental Harmony, Resonance Engine, Pyroblast
+   — Lv3 (+5): Orbit Core, Scatter Core, Catalyst Core, Monsoon, EMP Pulse
+   — Lv4 (+5): Voltaic Core, Tempest Core, Prismatic Core, Thermal Expansion, Mana Overflow
+   — Lv5 (+5): Perfect Catalyst, Catalyst Mind, Blizzard, Volcanic Rift, Thunderstorm
+
+Vector Kart Havuzu — Level Bazlı Dağılım:
+
+✅ 32 Vector kartı yeniden düzenlendi (her geçişte +5 kart)
+   — Lv0 (7 kart): Split, Pierce, Armor, Anchor, Crusher Core + Momentum Engine, Chain Density
+   — Lv1 (+5): Kinetic Core, Bulwark Core, Reinforced Frame, Iron Constitution, Hyper Recovery Loop
+   — Lv2 (+5): Impact Feedback, Blood for Steel, Overclocked Reflex, Magnetic Weight, Battlefield Anchor
+   — Lv3 (+5): Last Stand, Pain Converter, Scar Tissue, Blood Circuit, Kinetic Nervous System
+   — Lv4 (+5): Tempered Core, Bloodbound Core, Glass Engine, Fortified Core System, Adrenal Armor System
+   — Lv5 (+5): Siege Core, Adrenal Surge, Emergency Protocol, Risk Engine, Fractured Frame
+
+Cards Unlocked Ekranı:
+
+✅ Oyun sonunda level atlandığında "Cards Unlocked!" ekranı gösterilir
+   — Run end ekranından önce açılır, Continue butonu ile kapanır
+   — Yeni açılan kartlar kart olarak gösterilir (isim, rarity, kategori rengi, açıklama)
+   — Arka plan için TextureRect hazır (res://assets/unlock_bg.png bağlanacak)
