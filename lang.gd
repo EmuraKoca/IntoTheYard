@@ -68,7 +68,10 @@ const _TR := {
 	"go_units":        " birim",
 	"go_restart":      "TEKRAR DENE",
 	"go_menu":         "ANA MENÜ",
+	"go_continue":     "DEVAM ET",
 	"go_hint":         "[ Devam et — Victor seni izliyor ]",
+	"unlock_continue": "AL VE DEVAM ET",
+	"unlock_hint":     "Yeni kartlar sonraki runlarda görünecek.",
 
 	# ── Hasmen Alıntıları ─────────────────────────────────────────────────────
 	"quote_0": "Sefil. Sabrımın sınırları var, başarısızlık oranının aksine.",
@@ -150,7 +153,10 @@ const _EN := {
 	"go_units":        " units",
 	"go_restart":      "RESTART",
 	"go_menu":         "MAIN MENU",
+	"go_continue":     "CONTINUE",
 	"go_hint":         "[ Keep going — Victor is watching ]",
+	"unlock_continue": "TAKE AND CONTINUE",
+	"unlock_hint":     "New cards will appear in future runs.",
 
 	# ── Hasmen Alıntıları ─────────────────────────────────────────────────────
 	"quote_0": "Pathetic. My patience has limits, unlike your failure rate.",

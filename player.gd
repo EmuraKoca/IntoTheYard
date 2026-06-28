@@ -272,6 +272,7 @@ func _setup_pranga() -> void:
 		var lnk := Sprite2D.new()
 		lnk.visible = false
 		lnk.z_index = 1
+		lnk.z_as_relative = false
 		lnk.scale = Vector2(0.50, 0.50)
 		add_child(lnk)
 		_chain_links.append(lnk)

@@ -27,6 +27,9 @@ var _pending_core_type: String = ""
 # ── Upgrade kart takip sistemi ─────────────────────────────────────────────────
 var _seen_individualities: Array = []   # seçilen Individuality kart isimleri
 var _utility_levels: Dictionary = {}    # {kart_adı: int}  0-3
+var upgrades: Array = []
+var _all_upgrades: Array = []
+var _run_start_level: int = 0
 
 const _CORE_FOLDER_MAP: Dictionary = {
 	"normal":     "normalBall",    "electric": "electricBall",
@@ -287,10 +290,12 @@ func hide_boss_bar() -> void:
 
 func _show_cards_unlocked(lv_from: int, lv_to: int) -> void:
 	var char_id: String = GameData.selected_character
+	if _all_upgrades.is_empty():
+		_build_all_upgrades()
 	var new_cards: Array = []
-	for u in upgrades:
+	for u in _all_upgrades:
 		var ul: int = u.get("min_level", 0)
-		if ul > lv_from - 1 and ul <= lv_to:
+		if ul > lv_from and ul <= lv_to:
 			if u["chars"].is_empty() or char_id in u["chars"]:
 				new_cards.append(u)
 	if new_cards.is_empty():
@@ -308,7 +313,7 @@ func _show_cards_unlocked(lv_from: int, lv_to: int) -> void:
 	bg_tex.size = Vector2(1920, 1080)
 	bg_tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	bg_tex.expand_mode  = TextureRect.EXPAND_IGNORE_SIZE
-	# Arka plan görselini buraya bağla: bg_tex.texture = load("res://assets/unlock_bg.png")
+	bg_tex.texture = load("res://assets/upgradesUnlocked.png")
 	canvas.add_child(bg_tex)
 
 	var bg_dim := ColorRect.new()
@@ -316,124 +321,109 @@ func _show_cards_unlocked(lv_from: int, lv_to: int) -> void:
 	bg_dim.size  = Vector2(1920, 1080)
 	canvas.add_child(bg_dim)
 
-	# ── Başlık ────────────────────────────────────────────────────────────────
-	var title := Label.new()
-	title.text = "Cards Unlocked!"
-	title.add_theme_font_override("font", _font_bold)
-	title.add_theme_font_size_override("font_size", 54)
-	title.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.size = Vector2(1920, 80)
-	title.position = Vector2(0, 120)
-	canvas.add_child(title)
+	# ── Kartlar ───────────────────────────────────────────────────────────────
+	var char_id2: String = GameData.selected_character
+	var char_folder: String = ({"vector": "vectorUpgradeCards", "leila": "leilaUpgradeCards",
+		"cyclone": "cycloneUpgradeCards"} as Dictionary).get(char_id2, "vectorUpgradeCards")
+	var char_suffix: String = ({"vector": "VectorCard", "leila": "LeilaCard",
+		"cyclone": "CycloneCard"} as Dictionary).get(char_id2, "VectorCard")
 
-	var subtitle := Label.new()
-	subtitle.text = "These cards are now available in your card pool."
-	subtitle.add_theme_font_override("font", _font_bold)
-	subtitle.add_theme_font_size_override("font_size", 20)
-	subtitle.add_theme_color_override("font_color", Color(0.8, 0.8, 0.9, 0.85))
-	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	subtitle.size = Vector2(1920, 40)
-	subtitle.position = Vector2(0, 192)
-	canvas.add_child(subtitle)
-
-	# ── Kart kartları ─────────────────────────────────────────────────────────
 	var display_cards: Array = new_cards.slice(0, min(new_cards.size(), 5))
-	var card_w: float = 220.0
-	var card_h: float = 300.0
-	var gap: float    = 32.0
+	var card_w: float  = 280.0
+	var card_h: float  = 400.0
+	var gap: float     = 40.0
 	var total_w: float = display_cards.size() * card_w + (display_cards.size() - 1) * gap
 	var start_x: float = (1920.0 - total_w) / 2.0
-	var card_y: float  = 270.0
+	var card_y: float  = 310.0
 
 	for i in display_cards.size():
 		var u = display_cards[i]
-		var card_root := ColorRect.new()
-		card_root.color    = Color(0.08, 0.08, 0.14)
-		card_root.size     = Vector2(card_w, card_h)
-		card_root.position = Vector2(start_x + i * (card_w + gap), card_y)
-		canvas.add_child(card_root)
+		var rarity: String = u.get("rarity", "common")
+		var tx: float = start_x + i * (card_w + gap)
 
-		# Renkli üst şerit (category rengi)
-		var top_bar := ColorRect.new()
-		top_bar.color = u["color"]
-		top_bar.size  = Vector2(card_w, 8)
-		card_root.add_child(top_bar)
+		# PNG kart çerçevesi
+		var rarity_prefix: String = ({"common": "001_common", "uncommon": "002_uncommon",
+			"rare": "003_rare", "epic": "004_epic", "legendary": "005_legendary"} as Dictionary).get(rarity, "001_common")
+		var card_filename: String
+		if char_id2 == "cyclone" and rarity == "uncommon":
+			card_filename = "002_uncommonCyclone.png"
+		else:
+			card_filename = "%s%s.png" % [rarity_prefix, char_suffix]
+		var card_tex: Texture2D = load("res://assets/upgradeCardsLabel/%s/%s" % [char_folder, card_filename])
+		var card_sprite := TextureRect.new()
+		card_sprite.texture = card_tex
+		card_sprite.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		card_sprite.size = Vector2(card_w, card_h)
+		card_sprite.position = Vector2(tx, card_y)
+		canvas.add_child(card_sprite)
 
-		# Kart adı
+		# Kart ismi (upgrade menüsüyle aynı stil)
+		var name_panel := Panel.new()
+		name_panel.size = Vector2(card_w - 52, 44)
+		name_panel.position = Vector2(tx + 26, card_y + card_h - 116)
+		name_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		name_panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+		canvas.add_child(name_panel)
+
 		var name_lbl := Label.new()
 		name_lbl.text = u["name"]
+		name_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
+		name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
+		name_lbl.clip_contents = true
+		var _nfs: int = 17
+		if u["name"].length() > 14:
+			_nfs = 14
+		name_lbl.add_theme_font_size_override("font_size", _nfs)
 		name_lbl.add_theme_font_override("font", _font_bold)
-		name_lbl.add_theme_font_size_override("font_size", 16)
 		name_lbl.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0))
-		name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		name_lbl.size = Vector2(card_w, 40)
-		name_lbl.position = Vector2(0, 16)
-		card_root.add_child(name_lbl)
-
-		# Rarity
-		var rarity_colors := {"common": Color(0.7,0.7,0.7), "uncommon": Color(0.2,0.9,0.4),
-			"rare": Color(0.2,0.5,1.0), "epic": Color(0.7,0.2,1.0), "legendary": Color(1.0,0.7,0.1)}
-		var rar_lbl := Label.new()
-		rar_lbl.text = u.get("rarity","").capitalize()
-		rar_lbl.add_theme_font_override("font", _font_bold)
-		rar_lbl.add_theme_font_size_override("font_size", 13)
-		rar_lbl.add_theme_color_override("font_color", rarity_colors.get(u.get("rarity",""), Color.WHITE))
-		rar_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		rar_lbl.size = Vector2(card_w, 30)
-		rar_lbl.position = Vector2(0, 54)
-		card_root.add_child(rar_lbl)
-
-		# Category
-		var cat_lbl := Label.new()
-		cat_lbl.text = u.get("category", "")
-		cat_lbl.add_theme_font_override("font", _font_bold)
-		cat_lbl.add_theme_font_size_override("font_size", 12)
-		cat_lbl.add_theme_color_override("font_color", Color(0.6, 0.6, 0.7))
-		cat_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		cat_lbl.size = Vector2(card_w, 28)
-		cat_lbl.position = Vector2(0, 80)
-		card_root.add_child(cat_lbl)
-
-		# Ayırıcı çizgi
-		var line := ColorRect.new()
-		line.color    = Color(1.0, 1.0, 1.0, 0.08)
-		line.size     = Vector2(card_w - 20, 1)
-		line.position = Vector2(10, 115)
-		card_root.add_child(line)
+		name_panel.add_child(name_lbl)
 
 		# Açıklama
+		var desc_panel := Panel.new()
+		desc_panel.size = Vector2(card_w - 52, 80)
+		desc_panel.position = Vector2(tx + 26, card_y + card_h - 88)
+		desc_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		desc_panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+		canvas.add_child(desc_panel)
+
 		var desc_lbl := Label.new()
 		desc_lbl.text = u.get("desc", "")
-		desc_lbl.add_theme_font_override("font", _font_bold)
-		desc_lbl.add_theme_font_size_override("font_size", 14)
-		desc_lbl.add_theme_color_override("font_color", Color(0.85, 0.85, 0.9))
-		desc_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		desc_lbl.size     = Vector2(card_w - 20, card_h - 140)
-		desc_lbl.position = Vector2(10, 126)
-		card_root.add_child(desc_lbl)
+		desc_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
+		desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
+		desc_lbl.clip_contents = true
+		var _dfs: int = 13
+		if u.get("desc", "").length() > 40: _dfs = 11
+		if u.get("desc", "").length() > 60: _dfs = 10
+		desc_lbl.add_theme_font_size_override("font_size", _dfs)
+		desc_lbl.add_theme_font_override("font", _font_regular)
+		desc_lbl.add_theme_color_override("font_color", Color(0.85, 0.85, 0.85))
+		desc_panel.add_child(desc_lbl)
 
-	# ── Continue butonu ───────────────────────────────────────────────────────
+	# ── Alt bilgi yazısı ─────────────────────────────────────────────────────
+	var hint_lbl := Label.new()
+	hint_lbl.text = Lang.t("unlock_hint")
+	hint_lbl.add_theme_font_override("font", _font_regular)
+	hint_lbl.add_theme_font_size_override("font_size", 16)
+	hint_lbl.add_theme_color_override("font_color", Color(0.6, 0.7, 0.8, 0.8))
+	hint_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hint_lbl.size     = Vector2(900, 30)
+	hint_lbl.position = Vector2((1920 - 900) / 2.0, 745)
+	canvas.add_child(hint_lbl)
+
+	# ── Devam Et butonu ───────────────────────────────────────────────────────
 	var btn := Button.new()
-	btn.text = "Continue"
+	btn.text = Lang.t("unlock_continue")
 	btn.add_theme_font_override("font", _font_bold)
 	btn.add_theme_font_size_override("font_size", 24)
-	btn.size     = Vector2(320, 60)
-	btn.position = Vector2((1920 - 320) / 2.0, 660)
+	btn.size     = Vector2(360, 60)
+	btn.position = Vector2((1920 - 360) / 2.0, 785)
 	canvas.add_child(btn)
 
-	var _done := false
-	btn.pressed.connect(func() -> void:
-		_done = true
-		get_tree().paused = false
-		canvas.queue_free()
-	)
 	await btn.pressed
+	get_tree().paused = false
+	canvas.queue_free()
 
-func _show_run_end_screen(lv_before: int = -1, lv_after: int = -1) -> void:
-	if lv_before >= 0 and lv_after > lv_before:
-		await _show_cards_unlocked(lv_before + 1, lv_after)
+func _show_run_end_screen() -> void:
 	get_tree().paused = true
 	var canvas := CanvasLayer.new()
 	canvas.layer = 100
@@ -468,15 +458,18 @@ func _show_run_end_screen(lv_before: int = -1, lv_after: int = -1) -> void:
 	canvas.add_child(stats)
 
 	var btn := Button.new()
-	btn.text = Lang.t("run_end_btn")
+	btn.text = Lang.t("go_continue")
 	btn.add_theme_font_size_override("font_size", 26)
 	btn.position = Vector2(760, 620)
 	btn.size     = Vector2(400, 60)
 	canvas.add_child(btn)
-	btn.pressed.connect(func() -> void:
-		get_tree().paused = false
-		get_tree().change_scene_to_file("res://main_menu.tscn")
-	)
+	await btn.pressed
+	canvas.queue_free()
+	get_tree().paused = false
+	var _lv_now: int = GameData.get_level(GameData.selected_character)
+	if _lv_now > _run_start_level:
+		await _show_cards_unlocked(_run_start_level, _lv_now)
+	get_tree().change_scene_to_file("res://character_select.tscn")
 
 func update_boss_element(elem: String) -> void:
 	if boss_bar_canvas == null:
@@ -885,6 +878,9 @@ func _ready() -> void:
 	_setup_core_panel()
 	update_ui()
 	_update_armor_ui()
+	_run_start_level = GameData.get_level(GameData.selected_character)
+	await get_tree().process_frame
+	_spawn_hasmen_entrance()
 	
 
 
@@ -1517,23 +1513,21 @@ func show_game_over() -> void:
 	canvas.add_child(attr_lbl)
 
 	# ── Butonlar ──────────────────────────────────────────────
-	var retry_btn = Button.new()
-	retry_btn.text         = Lang.t("go_restart")
-	retry_btn.position     = Vector2(200, 760)
-	retry_btn.size         = Vector2(240, 55)
-	retry_btn.process_mode = Node.PROCESS_MODE_ALWAYS
-	retry_btn.add_theme_font_override("font", _font_bold)
-	retry_btn.pressed.connect(_on_restart)
-	canvas.add_child(retry_btn)
+	var continue_btn = Button.new()
+	continue_btn.text         = Lang.t("go_continue")
+	continue_btn.position     = Vector2(340, 760)
+	continue_btn.size         = Vector2(300, 55)
+	continue_btn.process_mode = Node.PROCESS_MODE_ALWAYS
+	continue_btn.add_theme_font_override("font", _font_bold)
+	canvas.add_child(continue_btn)
 
-	var menu_btn = Button.new()
-	menu_btn.text         = Lang.t("go_menu")
-	menu_btn.position     = Vector2(480, 760)
-	menu_btn.size         = Vector2(240, 55)
-	menu_btn.process_mode = Node.PROCESS_MODE_ALWAYS
-	menu_btn.add_theme_font_override("font", _font_bold)
-	menu_btn.pressed.connect(_on_main_menu.bind(canvas))
-	canvas.add_child(menu_btn)
+	await continue_btn.pressed
+	canvas.queue_free()
+	get_tree().paused = false
+	var _lv_now: int = GameData.get_level(GameData.selected_character)
+	if _lv_now > _run_start_level:
+		await _show_cards_unlocked(_run_start_level, _lv_now)
+	get_tree().change_scene_to_file("res://character_select.tscn")
 
 func _on_restart() -> void:
 	get_tree().paused = false
@@ -1585,14 +1579,8 @@ func _weighted_pick(pool: Array, count: int) -> Array:
 				break
 	return result
 
-func show_upgrade_menu() -> void:
-	upgrading = true
-
-	# weight: seçilme ağırlığı — düşük = nadir
-	# rarity: "common" | "rare" | "epic"
-	var char_id: String = get_node("Player").character_type
-	var char_level: int = GameData.get_level(char_id)
-	var upgrades = [
+func _build_all_upgrades() -> void:
+	upgrades = [
 	# ── Vector (Kinetik) — min_level: öğrenme eğrisi ─────────────────────────
 	# Lv0: Vector nedir?
 	{"name": "Split Core",          "category": "Identity",      "color": Color(0.2, 0.8, 0.2), "desc": "Core splits into 3",                        "index": 0,  "weight": 10, "rarity": "common",   "chars": ["vector"], "min_level": 0},
@@ -1697,6 +1685,13 @@ func show_upgrade_menu() -> void:
 	{"name": "Lightning",           "category": "Calamity",      "color": Color(1.0, 1.0, 0.0), "desc": "Lightning strikes selected point",          "index": 7,  "weight": 8,  "rarity": "common", "chars": [], "min_level": 0},
 	{"name": "Flame Zone",          "category": "Calamity",      "color": Color(1.0, 0.3, 0.0), "desc": "Continuous damage in selected area",        "index": 8,  "weight": 8,  "rarity": "common", "chars": [], "min_level": 0},
 ]
+	_all_upgrades = upgrades.duplicate()
+
+func show_upgrade_menu() -> void:
+	upgrading = true
+	_build_all_upgrades()
+	var char_id: String = get_node("Player").character_type
+	var char_level: int = GameData.get_level(char_id)
 	upgrades = upgrades.filter(func(u): return u["chars"].is_empty() or char_id in u["chars"])
 	upgrades = upgrades.filter(func(u): return u.get("min_level", 0) <= char_level)
 	upgrades = upgrades.filter(func(u):
@@ -2410,25 +2405,19 @@ func _process(delta: float) -> void:
 		if not is_instance_valid(_smiler_node) or _smiler_node.is_dead:
 			_smiler_node = null
 			GameData.unlock_character("leila")
-			var _lv_before: int = GameData.get_level(GameData.selected_character)
 			GameData.add_xp(GameData.selected_character, 30)
-			var _lv_after: int = GameData.get_level(GameData.selected_character)
-			_show_run_end_screen(_lv_before, _lv_after)
+			_show_run_end_screen()
 	if _cyber404_node != null:
 		if not is_instance_valid(_cyber404_node) or _cyber404_node.is_dead:
 			_cyber404_node = null
 			GameData.unlock_character("cyclone")
-			var _lv_before: int = GameData.get_level(GameData.selected_character)
 			GameData.add_xp(GameData.selected_character, 30)
-			var _lv_after: int = GameData.get_level(GameData.selected_character)
-			_show_run_end_screen(_lv_before, _lv_after)
+			_show_run_end_screen()
 	if _nyx_node != null:
 		if not is_instance_valid(_nyx_node) or _nyx_node.is_dead:
 			_nyx_node = null
-			var _lv_before: int = GameData.get_level(GameData.selected_character)
 			GameData.add_xp(GameData.selected_character, 30)
-			var _lv_after: int = GameData.get_level(GameData.selected_character)
-			_show_run_end_screen(_lv_before, _lv_after)
+			_show_run_end_screen()
 
 	spawn_timer += delta
 	if spawn_timer >= spawn_interval:

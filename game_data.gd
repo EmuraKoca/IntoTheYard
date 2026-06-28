@@ -6,7 +6,7 @@ var selected_character := "vector"
 var unlocked_characters: Array[String] = ["vector"]
 
 # Kümülatif XP eşikleri — level 2,3,4,5,6 için gereken toplam XP
-const XP_THRESHOLDS: Array[int] = [0, 600, 1500, 2750, 4250, 6250]
+const XP_THRESHOLDS: Array[int] = [0, 1050, 2625, 4800, 7500, 11000]
 
 const UNLOCKS: Dictionary = {
 	"vector":  {1: "Piercing Ball",  3: "Heavy Ball",   5: "Crusher Fusion"},

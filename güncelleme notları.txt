@@ -2713,3 +2713,55 @@ Cards Unlocked Ekranı:
    — Run end ekranından önce açılır, Continue butonu ile kapanır
    — Yeni açılan kartlar kart olarak gösterilir (isim, rarity, kategori rengi, açıklama)
    — Arka plan için TextureRect hazır (res://assets/unlock_bg.png bağlanacak)
+
+─────────────────────────────────────────────────────────────────────────────
+0.0.9.8b
+29.06.2026
+
+Hata Düzeltmeleri:
+
+✅ upgrades dizisi sınıf değişkenine taşındı
+   — Daha önce show_upgrade_menu() içinde lokal tanımlıydı
+   — _show_cards_unlocked() erişemiyordu; artık sınıf kapsamında
+
+✅ _build_all_upgrades() fonksiyonu eklendi
+   — Ham kart listesi (filtresiz) _all_upgrades'e kaydediliyor
+   — Cards Unlocked ekranı bu listeden okuyor; min_level filtresi doğru çalışıyor
+
+✅ Hasmen girişi düzeltildi
+   — _show_hasmen_selection() (güçlendirme seçimi) yanlışlıkla geri eklenmişti, kaldırıldı
+   — _ready() içinde doğrudan _spawn_hasmen_entrance() çağrılıyor
+
+Oyun Sonu Ekranı Yeniden Yapılandırması:
+
+✅ "Restart" butonu kaldırıldı; tek buton "DEVAM ET" / "CONTINUE"
+✅ "Main Menu" butonu her iki ekrandan da kaldırıldı
+   — Character Select'ten oyuncu kendi karar veriyor
+✅ _run_start_level değişkeni eklendi — run başında level kaydediliyor
+✅ Devam Et'e basınca: level atlandıysa → Cards Unlocked → Character Select
+   — Hem ölüm (show_game_over) hem boss yenme (_show_run_end_screen) için geçerli
+✅ lang.gd: go_continue / unlock_continue / unlock_hint stringleri eklendi (TR + EN)
+
+Cards Unlocked Ekranı Güncellemeleri:
+
+✅ "Cards Unlocked!" başlık yazısı kaldırıldı (PNG'de mevcut)
+✅ Kartlar upgrade menüsüyle aynı PNG kart görselleri kullanıyor
+✅ Kart ismi ve açıklama stili upgrade menüsüyle eşleştirildi
+   — StyleBoxEmpty panel, PRESET_FULL_RECT, dinamik font boyutu
+✅ upgradesUnlocked.png arka plan olarak bağlandı
+✅ Hint yazısı ve "AL VE DEVAM ET" butonu kartların altına taşındı
+
+Level XP Eşikleri:
+
+✅ Tüm XP eşikleri ×1.75 arttırıldı
+   — Lv0→1: 600 → 1.050
+   — Lv1→2: 900 → 1.575
+   — Lv2→3: 1.250 → 2.175
+   — Lv3→4: 1.500 → 2.700
+   — Lv4→5: 2.000 → 3.500
+
+Zincir Z-Index Düzeltmesi:
+
+✅ Zincir halkaları artık player'ın altında çiziliyor
+   — z_as_relative = false, z_index = 1 (mutlak)
+   — Player z_index = 2 — zincir zeminin üstünde, player'ın altında görünür
