@@ -2331,7 +2331,7 @@ func _spawn_subject() -> void:
 		"cyber_shotgun": subject = cyber_shotgun_scene.instantiate()
 		_:               subject = subject_scene.instantiate()
 
-	var rand_x = randf_range(950, 1820)
+	var rand_x = randf_range(950, 1580)
 	subject.position = Vector2(rand_x, -50)
 	add_child(subject)
 
