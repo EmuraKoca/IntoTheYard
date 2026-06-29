@@ -256,7 +256,7 @@ func _collapse() -> void:
 		return
 
 	# 60% ally chance
-	if randf() < 0.10:
+	if randf() < 0.03:
 		_become_ally()
 	else:
 		_escape()
