@@ -2765,3 +2765,44 @@ Zincir Z-Index Düzeltmesi:
 ✅ Zincir halkaları artık player'ın altında çiziliyor
    — z_as_relative = false, z_index = 1 (mutlak)
    — Player z_index = 2 — zincir zeminin üstünde, player'ın altında görünür
+
+─────────────────────────────────────────────────────────────────────────────
+0.0.9.9
+29.06.2026
+
+XP Eğrisi:
+
+✅ Tüm XP eşikleri 2 katına çıkarıldı
+   — Lv0→1: 1.050 → 2.100
+   — Lv1→2: 2.625 → 5.250
+   — Lv2→3: 4.800 → 9.600
+   — Lv3→4: 7.500 → 15.000
+   — Lv4→5: 11.000 → 22.000
+
+Cards Unlocked Ekranı:
+
+✅ Arka plan overlay (koyu mavi katman) kaldırıldı
+   — upgradesUnlocked.png artık olduğu gibi, karartmasız gösteriliyor
+✅ Çoklu level atlamada tüm kartlar gösteriliyor
+   — 2+ level atlanırsa her levelin kartları toplanır
+   — Sayfa başına 5 kart; fazlası "SONRAKI ▶" butonuyla sayfalanır
+   — Son sayfada "AL VE DEVAM ET" butonu çıkar
+
+Düşman Escape Sistemi:
+
+✅ Tüm 7 düşmana CyberShooter escape mantığı uygulandı
+   — subject, armed_subject, heavy_subject, frantic_subject,
+     cyber_shooter, cyber_rifle, cyber_shotgun
+   — Önce güneydoğuya iner (y=900), sonra doğuya doğru sahneyi terk eder
+   — %30 ihtimalle kaçış dialogu gösterilir
+   — Escape hızı speed × 4.5 (minimum 200)
+
+Müttefiklik Oranı:
+
+✅ Tüm düşmanlarda müttefiklik şansı %10 → %3'e düşürüldü
+
+Düşman Yığılması Düzeltmesi:
+
+✅ UI sınırına görünmez duvar (StaticBody2D) eklendi — x=1625
+✅ Düşman spawn aralığı 1820 → 1580'e daraltıldı
+   — Düşmanlar artık UI sınırının soluna spawn oluyor
