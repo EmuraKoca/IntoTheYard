@@ -861,6 +861,17 @@ func _spawn_hasmen_entrance() -> void:
 	)
 
 func _ready() -> void:
+	# UI sınırında görünmez duvar — düşmanların UI alanına girmesini engeller
+	var wall := StaticBody2D.new()
+	wall.name = "UIWall"
+	var wall_shape := CollisionShape2D.new()
+	var rect := RectangleShape2D.new()
+	rect.size = Vector2(20.0, 1080.0)
+	wall_shape.shape = rect
+	wall.add_child(wall_shape)
+	wall.position = Vector2(1625.0, 540.0)
+	add_child(wall)
+
 	# Karakter bazlı başlangıç değerleri
 	var char_type: String = get_node("Player").character_type
 	if char_type == "vector":
