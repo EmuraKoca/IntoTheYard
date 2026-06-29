@@ -307,7 +307,7 @@ func _show_cards_unlocked(lv_from: int, lv_to: int) -> void:
 	canvas.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(canvas)
 
-	# ── Arka plan ─────────────────────────────────────────────────────────────
+	# ── Arka plan — görseli olduğu gibi kullan ───────────────────────────────
 	var bg_tex := TextureRect.new()
 	bg_tex.name = "UnlockBg"
 	bg_tex.size = Vector2(1920, 1080)
@@ -316,110 +316,123 @@ func _show_cards_unlocked(lv_from: int, lv_to: int) -> void:
 	bg_tex.texture = load("res://assets/upgradesUnlocked.png")
 	canvas.add_child(bg_tex)
 
-	var bg_dim := ColorRect.new()
-	bg_dim.color = Color(0.0, 0.0, 0.05, 0.78)
-	bg_dim.size  = Vector2(1920, 1080)
-	canvas.add_child(bg_dim)
-
-	# ── Kartlar ───────────────────────────────────────────────────────────────
+	# ── Sayfalı kart gösterimi (sayfa başına max 5) ───────────────────────────
 	var char_id2: String = GameData.selected_character
 	var char_folder: String = ({"vector": "vectorUpgradeCards", "leila": "leilaUpgradeCards",
 		"cyclone": "cycloneUpgradeCards"} as Dictionary).get(char_id2, "vectorUpgradeCards")
 	var char_suffix: String = ({"vector": "VectorCard", "leila": "LeilaCard",
 		"cyclone": "CycloneCard"} as Dictionary).get(char_id2, "VectorCard")
 
-	var display_cards: Array = new_cards.slice(0, min(new_cards.size(), 5))
-	var card_w: float  = 280.0
-	var card_h: float  = 400.0
-	var gap: float     = 40.0
-	var total_w: float = display_cards.size() * card_w + (display_cards.size() - 1) * gap
-	var start_x: float = (1920.0 - total_w) / 2.0
-	var card_y: float  = 310.0
+	const PAGE_SIZE: int = 5
+	var total_pages: int = ceili(float(new_cards.size()) / PAGE_SIZE)
 
-	for i in display_cards.size():
-		var u = display_cards[i]
-		var rarity: String = u.get("rarity", "common")
-		var tx: float = start_x + i * (card_w + gap)
+	for page in range(total_pages):
+		# Önceki sayfanın kartlarını temizle (bg hariç)
+		for child in canvas.get_children():
+			if child != bg_tex:
+				child.queue_free()
+		await get_tree().process_frame
 
-		# PNG kart çerçevesi
-		var rarity_prefix: String = ({"common": "001_common", "uncommon": "002_uncommon",
-			"rare": "003_rare", "epic": "004_epic", "legendary": "005_legendary"} as Dictionary).get(rarity, "001_common")
-		var card_filename: String
-		if char_id2 == "cyclone" and rarity == "uncommon":
-			card_filename = "002_uncommonCyclone.png"
-		else:
-			card_filename = "%s%s.png" % [rarity_prefix, char_suffix]
-		var card_tex: Texture2D = load("res://assets/upgradeCardsLabel/%s/%s" % [char_folder, card_filename])
-		var card_sprite := TextureRect.new()
-		card_sprite.texture = card_tex
-		card_sprite.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		card_sprite.size = Vector2(card_w, card_h)
-		card_sprite.position = Vector2(tx, card_y)
-		canvas.add_child(card_sprite)
+		var display_cards: Array = new_cards.slice(page * PAGE_SIZE, min((page + 1) * PAGE_SIZE, new_cards.size()))
+		var card_w: float  = 280.0
+		var card_h: float  = 400.0
+		var gap: float     = 40.0
+		var total_w: float = display_cards.size() * card_w + (display_cards.size() - 1) * gap
+		var start_x: float = (1920.0 - total_w) / 2.0
+		var card_y: float  = 310.0
 
-		# Kart ismi (upgrade menüsüyle aynı stil)
-		var name_panel := Panel.new()
-		name_panel.size = Vector2(card_w - 52, 44)
-		name_panel.position = Vector2(tx + 26, card_y + card_h - 116)
-		name_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		name_panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
-		canvas.add_child(name_panel)
+		for i in display_cards.size():
+			var u = display_cards[i]
+			var rarity: String = u.get("rarity", "common")
+			var tx: float = start_x + i * (card_w + gap)
 
-		var name_lbl := Label.new()
-		name_lbl.text = u["name"]
-		name_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
-		name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
-		name_lbl.clip_contents = true
-		var _nfs: int = 17
-		if u["name"].length() > 14:
-			_nfs = 14
-		name_lbl.add_theme_font_size_override("font_size", _nfs)
-		name_lbl.add_theme_font_override("font", _font_bold)
-		name_lbl.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0))
-		name_panel.add_child(name_lbl)
+			var rarity_prefix: String = ({"common": "001_common", "uncommon": "002_uncommon",
+				"rare": "003_rare", "epic": "004_epic", "legendary": "005_legendary"} as Dictionary).get(rarity, "001_common")
+			var card_filename: String
+			if char_id2 == "cyclone" and rarity == "uncommon":
+				card_filename = "002_uncommonCyclone.png"
+			else:
+				card_filename = "%s%s.png" % [rarity_prefix, char_suffix]
+			var card_tex: Texture2D = load("res://assets/upgradeCardsLabel/%s/%s" % [char_folder, card_filename])
+			var card_sprite := TextureRect.new()
+			card_sprite.texture = card_tex
+			card_sprite.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			card_sprite.size = Vector2(card_w, card_h)
+			card_sprite.position = Vector2(tx, card_y)
+			canvas.add_child(card_sprite)
 
-		# Açıklama
-		var desc_panel := Panel.new()
-		desc_panel.size = Vector2(card_w - 52, 80)
-		desc_panel.position = Vector2(tx + 26, card_y + card_h - 88)
-		desc_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		desc_panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
-		canvas.add_child(desc_panel)
+			var name_panel := Panel.new()
+			name_panel.size = Vector2(card_w - 52, 44)
+			name_panel.position = Vector2(tx + 26, card_y + card_h - 116)
+			name_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			name_panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+			canvas.add_child(name_panel)
 
-		var desc_lbl := Label.new()
-		desc_lbl.text = u.get("desc", "")
-		desc_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
-		desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
-		desc_lbl.clip_contents = true
-		var _dfs: int = 13
-		if u.get("desc", "").length() > 40: _dfs = 11
-		if u.get("desc", "").length() > 60: _dfs = 10
-		desc_lbl.add_theme_font_size_override("font_size", _dfs)
-		desc_lbl.add_theme_font_override("font", _font_regular)
-		desc_lbl.add_theme_color_override("font_color", Color(0.85, 0.85, 0.85))
-		desc_panel.add_child(desc_lbl)
+			var name_lbl := Label.new()
+			name_lbl.text = u["name"]
+			name_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
+			name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
+			name_lbl.clip_contents = true
+			var _nfs: int = 17
+			if u["name"].length() > 14: _nfs = 14
+			name_lbl.add_theme_font_size_override("font_size", _nfs)
+			name_lbl.add_theme_font_override("font", _font_bold)
+			name_lbl.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0))
+			name_panel.add_child(name_lbl)
 
-	# ── Alt bilgi yazısı ─────────────────────────────────────────────────────
-	var hint_lbl := Label.new()
-	hint_lbl.text = Lang.t("unlock_hint")
-	hint_lbl.add_theme_font_override("font", _font_regular)
-	hint_lbl.add_theme_font_size_override("font_size", 16)
-	hint_lbl.add_theme_color_override("font_color", Color(0.6, 0.7, 0.8, 0.8))
-	hint_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	hint_lbl.size     = Vector2(900, 30)
-	hint_lbl.position = Vector2((1920 - 900) / 2.0, 745)
-	canvas.add_child(hint_lbl)
+			var desc_panel := Panel.new()
+			desc_panel.size = Vector2(card_w - 52, 80)
+			desc_panel.position = Vector2(tx + 26, card_y + card_h - 88)
+			desc_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			desc_panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+			canvas.add_child(desc_panel)
 
-	# ── Devam Et butonu ───────────────────────────────────────────────────────
-	var btn := Button.new()
-	btn.text = Lang.t("unlock_continue")
-	btn.add_theme_font_override("font", _font_bold)
-	btn.add_theme_font_size_override("font_size", 24)
-	btn.size     = Vector2(360, 60)
-	btn.position = Vector2((1920 - 360) / 2.0, 785)
-	canvas.add_child(btn)
+			var desc_lbl := Label.new()
+			desc_lbl.text = u.get("desc", "")
+			desc_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
+			desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
+			desc_lbl.clip_contents = true
+			var _dfs: int = 13
+			if u.get("desc", "").length() > 40: _dfs = 11
+			if u.get("desc", "").length() > 60: _dfs = 10
+			desc_lbl.add_theme_font_size_override("font_size", _dfs)
+			desc_lbl.add_theme_font_override("font", _font_regular)
+			desc_lbl.add_theme_color_override("font_color", Color(0.85, 0.85, 0.85))
+			desc_panel.add_child(desc_lbl)
 
-	await btn.pressed
+		# Sayfa göstergesi (birden fazla sayfa varsa)
+		if total_pages > 1:
+			var page_lbl := Label.new()
+			page_lbl.text = "%d / %d" % [page + 1, total_pages]
+			page_lbl.add_theme_font_override("font", _font_regular)
+			page_lbl.add_theme_font_size_override("font_size", 14)
+			page_lbl.add_theme_color_override("font_color", Color(0.6, 0.7, 0.8, 0.7))
+			page_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			page_lbl.size     = Vector2(200, 24)
+			page_lbl.position = Vector2((1920 - 200) / 2.0, 750)
+			canvas.add_child(page_lbl)
+
+		var hint_lbl := Label.new()
+		hint_lbl.text = Lang.t("unlock_hint")
+		hint_lbl.add_theme_font_override("font", _font_regular)
+		hint_lbl.add_theme_font_size_override("font_size", 16)
+		hint_lbl.add_theme_color_override("font_color", Color(0.6, 0.7, 0.8, 0.8))
+		hint_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		hint_lbl.size     = Vector2(900, 30)
+		hint_lbl.position = Vector2((1920 - 900) / 2.0, 778)
+		canvas.add_child(hint_lbl)
+
+		var btn := Button.new()
+		var is_last_page: bool = (page == total_pages - 1)
+		btn.text = Lang.t("unlock_continue") if is_last_page else ("SONRAKI  ▶" if Lang.locale == "tr" else "NEXT  ▶")
+		btn.add_theme_font_override("font", _font_bold)
+		btn.add_theme_font_size_override("font_size", 24)
+		btn.size     = Vector2(360, 60)
+		btn.position = Vector2((1920 - 360) / 2.0, 812)
+		canvas.add_child(btn)
+
+		await btn.pressed
+
 	get_tree().paused = false
 	canvas.queue_free()
 
