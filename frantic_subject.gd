@@ -264,12 +264,31 @@ func _collapse() -> void:
 		_escape()
 
 func _escape() -> void:
+	if randf() < 0.3:
+		var escape_dialogs = [
+			"Hasmen... what have you done to us.",
+			"I'm out of this, man.",
+			"Mommyyy!"
+		]
+		var dialog = escape_dialogs[randi() % escape_dialogs.size()]
+		var game = get_parent()
+		if game.has_method("show_dialog"):
+			game.show_dialog(dialog, global_position)
+	var nav_speed: float = max(speed * 4.5, 200.0)
+	var se_target: Vector2 = Vector2(global_position.x + 200.0, 900.0)
+	var e_target:  Vector2 = Vector2(2000.0, 900.0)
 	$FranticSprite.play("run_E")
-	var tw := create_tween()
-	tw.set_parallel(true)
-	tw.tween_property(self, "global_position", Vector2(2100.0, global_position.y), 1.2)
-	tw.tween_property(self, "modulate:a", 0.0, 0.8)
-	await tw.finished
+	var tween = create_tween()
+	tween.tween_property(self, "global_position", se_target,
+		global_position.distance_to(se_target) / nav_speed)
+	await get_tree().create_timer(
+		global_position.distance_to(se_target) / nav_speed).timeout
+	if not is_instance_valid(self): return
+	var tween2 = create_tween()
+	tween2.tween_property(self, "global_position", e_target,
+		global_position.distance_to(e_target) / nav_speed)
+	await get_tree().create_timer(
+		global_position.distance_to(e_target) / nav_speed).timeout
 	if is_instance_valid(self): queue_free()
 
 func _become_ally() -> void:

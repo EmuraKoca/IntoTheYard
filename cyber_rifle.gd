@@ -262,7 +262,7 @@ func _escape() -> void:
 		var game = get_parent()
 		if game.has_method("show_dialog"):
 			game.show_dialog(dialog, global_position)
-	var nav_speed: float = max(speed * 3.0, 150.0)
+	var nav_speed: float = max(speed * 4.5, 200.0)
 	var se_target: Vector2 = Vector2(global_position.x + 200.0, 900.0)
 	var e_target:  Vector2 = Vector2(2000.0, 900.0)
 	$RifleSprite.play("walk_SE")
