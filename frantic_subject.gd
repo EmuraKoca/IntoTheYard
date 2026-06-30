@@ -258,7 +258,7 @@ func _collapse() -> void:
 		return
 
 	# 60% ally chance
-	if randf() < 0.03:
+	if randf() < 0.25:
 		_become_ally()
 	else:
 		_escape()
@@ -283,12 +283,11 @@ func _escape() -> void:
 			_min_escape_dist = _d
 			_nearest_escape = _ed
 	var nav_speed: float = max(speed * 4.5, 200.0)
-	$FranticSprite.play("run_SW")
+	$FranticSprite.play("run_SE")
 	var tween = create_tween()
 	tween.tween_property(self, "global_position", _nearest_escape,
 		global_position.distance_to(_nearest_escape) / nav_speed)
-	await get_tree().create_timer(
-		global_position.distance_to(_nearest_escape) / nav_speed).timeout
+	await tween.finished
 	if is_instance_valid(self): queue_free()
 
 func _become_ally() -> void:
@@ -308,8 +307,7 @@ func _become_ally() -> void:
 	var _atween = create_tween()
 	_atween.tween_property(self, "global_position", _nearest,
 		global_position.distance_to(_nearest) / _aspeed)
-	await get_tree().create_timer(
-		global_position.distance_to(_nearest) / _aspeed).timeout
+	await _atween.finished
 	if not is_instance_valid(self): return
 	add_to_group("allies")
 	remove_from_group("subjects")
@@ -327,7 +325,7 @@ func _become_ally() -> void:
 	var nav_speed: float = max(speed * 3.0, 150.0)
 	var inside: Vector2  = Vector2(randf_range(50.0, 720.0), randf_range(720.0, 1040.0))
 
-	$FranticSprite.play("run_SW")
+	$FranticSprite.play("run_SE")
 	var tw: Tween = create_tween()
 	tw.tween_property(self, "global_position", inside,
 		max(global_position.distance_to(inside) / nav_speed, 0.05))\
