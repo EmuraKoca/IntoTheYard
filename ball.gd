@@ -518,6 +518,7 @@ func _process_returning(delta: float) -> void:
 			_hit_subject(collider)
 			if can_pierce:
 				move_and_collide(collision.get_remainder())
+				global_position += move_direction * 18.0
 		elif not collider.is_in_group("player"):
 			# Bariyer veya statik duvar — aninda geri don
 			_start_returning()
@@ -1193,7 +1194,7 @@ func _hit_subject(subject: Node2D) -> void:
 	if is_fused and fusion_type == "phantom":
 		hit_subjects.erase(subject)  # anında geçer
 	elif can_pierce:
-		await get_tree().create_timer(0.18).timeout
+		await get_tree().create_timer(0.5).timeout
 		if subject in hit_subjects:
 			hit_subjects.erase(subject)
 	else:
