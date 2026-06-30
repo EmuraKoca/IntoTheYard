@@ -518,7 +518,10 @@ func _process_returning(delta: float) -> void:
 			_hit_subject(collider)
 			if can_pierce:
 				move_and_collide(collision.get_remainder())
-				global_position += move_direction * 18.0
+				var _away := (global_position - collider.global_position).normalized()
+				if _away.length_squared() < 0.01:
+					_away = move_direction
+				global_position += _away * 40.0
 		elif not collider.is_in_group("player"):
 			# Bariyer veya statik duvar — aninda geri don
 			_start_returning()
