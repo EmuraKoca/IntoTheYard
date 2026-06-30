@@ -1091,8 +1091,8 @@ const _FUSED_FOLDER_MAP: Dictionary = {
 
 func _get_core_icon_texture(core_type: String) -> Texture2D:
 	if core_type.begins_with("fused:"):
-		var fusion_name := core_type.substr(6)
-		var folder := _FUSED_FOLDER_MAP.get(fusion_name, "")
+		var fusion_name: String = core_type.substr(6)
+		var folder: String = _FUSED_FOLDER_MAP.get(fusion_name, "")
 		if folder != "":
 			return load("res://assets/fusedBalls/%s/frame_000.png" % folder)
 	var folder: String = _CORE_FOLDER_MAP.get(core_type, "normalBall")
