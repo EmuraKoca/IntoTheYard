@@ -325,6 +325,19 @@ func _become_ally() -> void:
 	await get_tree().create_timer(
 		global_position.distance_to(_nearest) / _aspeed).timeout
 	if not is_instance_valid(self): return
+	# Kapıya ulaştı — lab'a iniş efekti
+	var _fade_out = create_tween()
+	_fade_out.tween_property(self, "modulate", Color(0, 0, 0, 1), 0.5)
+	await _fade_out.finished
+	if not is_instance_valid(self): return
+	await get_tree().create_timer(0.3).timeout
+	if not is_instance_valid(self): return
+	# Diğer tarafa çık — oyun alanı içinde aynı Y konumunda
+	global_position = Vector2(960, global_position.y)
+	var _fade_in = create_tween()
+	_fade_in.tween_property(self, "modulate", Color(1, 1, 1, 1), 0.4)
+	await _fade_in.finished
+	if not is_instance_valid(self): return
 	add_to_group("allies")
 	remove_from_group("subjects")
 	if is_instance_valid(_chip_node): _chip_node.queue_redraw()
