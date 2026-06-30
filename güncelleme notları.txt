@@ -2835,3 +2835,43 @@ Upgrade Ekranı Senkronizasyonu:
 ✅ Ally/Escape tweenleri artık create_timer yerine tween.finished ile
    bekleniyor — upgrade ekranı geldiğinde animasyon bozulmuyor
 
+─────────────────────────────────────────────────────────────────────────────
+0.0.9.9b (devam)
+01.07.2026
+
+Ally Yürüme Animasyonu:
+
+✅ Tüm 6 düşman tipinde set_physics_process(false) eklendi
+   — _become_ally() sırasında _update_anim_dir_from_velocity() artık
+     animasyonu override etmiyor
+✅ Sprite node isimleri düzeltildi (armed/heavy/shotgun/shooter/rifle
+   $SubjectSprite yerine doğru node adlarını kullanıyor)
+✅ .play() çağrısı _pre_tween öncesine taşındı — kapıya yürürken
+   başından itibaren doğru animasyon oynuyor
+
+Chip Efekti Güncellendi:
+
+✅ Tüm 6 düşman tipi ArmedSubject'in cyan + neon mor efektini aldı
+   — Daha hızlı titreşim (18.0), daha uzun kıvılcımlar (9.0 genlik)
+   — Flicker eşiği 0.30 → 0.15 (daha sık çakıyor)
+
+Escape Pause Düzeltmesi:
+
+✅ _escape() içinde create_timer yerine await tween.finished kullanıldı
+   — Upgrade ekranı açıkken escape tweeni timer ile desync olmayacak
+
+Fusion Core UI:
+
+✅ Fusion makinesinden çıkan core artık UI panelinde görünüyor
+   — _spawn_fused_ball() player_balls grubuna eklemeyi unutuyordu
+✅ Fuse olmuş core kendi ikonuyla görünüyor (önceden ilk giren
+   core'un ikonu gösteriliyordu — is_fused kontrolü eklendi)
+✅ thermalShock frame sayısı düzeltildi: 17 → 9
+   — frame_016.png bulunamıyor hatasıyla core görünmez oluyordu
+
+Proje Altyapısı:
+
+✅ CLAUDE.md eklendi — ev/işyeri bilgisayarları arası bağlam köprüsü
+✅ /playtester, /content-agent, /po slash command'ları eklendi
+   — Kart balans analizi, yeni içerik üretimi, roadmap yönetimi
+
