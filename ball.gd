@@ -518,7 +518,7 @@ func _process_returning(delta: float) -> void:
 			_hit_subject(collider)
 			if can_pierce:
 				move_and_collide(collision.get_remainder())
-				var _away := (global_position - collider.global_position).normalized()
+				var _away: Vector2 = (global_position - collider.global_position).normalized()
 				if _away.length_squared() < 0.01:
 					_away = move_direction
 				global_position += _away * 40.0
