@@ -1046,8 +1046,9 @@ func gain_armor(amount: int) -> void:
 
 func _get_ball_core_type(ball) -> String:
 	if not is_instance_valid(ball): return "normal"
-	if ball.get("is_fused") and ball.get("fusion_type", "") != "":
-		return "fused:" + ball.get("fusion_type")
+	var _ft = ball.get("fusion_type")
+	if ball.get("is_fused") and _ft != null and _ft != "":
+		return "fused:" + str(_ft)
 	if ball.get("can_armor"):      return "armor"
 	if ball.get("can_anchor"):     return "anchor"
 	if ball.get("can_crusher"):    return "crusher"
