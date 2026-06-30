@@ -320,8 +320,8 @@ func _become_ally() -> void:
 	if not is_instance_valid(self): return
 	await get_tree().create_timer(0.3).timeout
 	if not is_instance_valid(self): return
-	# Diğer tarafa çık — oyun alanı içinde aynı Y konumunda
-	global_position = Vector2(960, global_position.y)
+	# Direkt yaşam alanında belir
+	global_position = Vector2(randf_range(50.0, 720.0), randf_range(720.0, 1040.0))
 	scale = Vector2(0.0, 0.0)
 	var _fade_in = create_tween()
 	_fade_in.set_parallel(true)
@@ -336,25 +336,9 @@ func _become_ally() -> void:
 	modulate = Color(1.0, 1.0, 1.0, 1.0)
 	scale    = Vector2(1.0, 1.0)
 	_is_exiting = false
-	_reached_living_area = false
-	_wander_timer = 0.0
-
-	$CollisionShape2D.disabled = true
-	set_physics_process(false)
-
-	var nav_speed: float = max(speed * 3.0, 150.0)
-	var inside: Vector2  = Vector2(randf_range(50.0, 720.0), randf_range(720.0, 1040.0))
-
-	$FranticSprite.play("run_W")
-	var tw: Tween = create_tween()
-	tw.tween_property(self, "global_position", inside,
-		max(global_position.distance_to(inside) / nav_speed, 0.05))\
-		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	await tw.finished
-	if not is_instance_valid(self): return
-
 	_reached_living_area = true
 	_wander_timer = 0.0
+	$CollisionShape2D.disabled = false
 	set_physics_process(true)
 
 func _start_exit() -> void:
