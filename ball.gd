@@ -516,12 +516,15 @@ func _process_returning(delta: float) -> void:
 		var collider = collision.get_collider()
 		if collider.is_in_group("subjects"):
 			_hit_subject(collider)
-			if can_pierce:
+			var _is_heavy: bool = collider.get_script() != null and collider.get_script().resource_path.contains("heavy")
+			if can_pierce and not _is_heavy:
 				move_and_collide(collision.get_remainder())
 				var _away: Vector2 = (global_position - collider.global_position).normalized()
 				if _away.length_squared() < 0.01:
 					_away = move_direction
 				global_position += _away * 40.0
+			elif can_pierce and _is_heavy:
+				move_direction = move_direction.bounce(collision.get_normal())
 		elif not collider.is_in_group("player"):
 			# Bariyer veya statik duvar — aninda geri don
 			_start_returning()
