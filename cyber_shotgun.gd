@@ -175,7 +175,7 @@ func _collapse() -> void:
 	set_physics_process(false)
 	$CollisionShape2D.set_deferred("disabled", true)
 	await get_tree().create_timer(0.4).timeout
-	if randf() < 0.03:
+	if randf() < 0.25:
 		_become_ally()
 	else:
 		_escape()
@@ -300,15 +300,20 @@ func _become_ally() -> void:
 	if not is_instance_valid(self): return
 	# Kapıya ulaştı — lab'a iniş efekti
 	var _fade_out = create_tween()
+	_fade_out.set_parallel(true)
 	_fade_out.tween_property(self, "modulate", Color(0, 0, 0, 1), 0.5)
+	_fade_out.tween_property(self, "scale", Vector2(0.0, 0.0), 0.5)
 	await _fade_out.finished
 	if not is_instance_valid(self): return
 	await get_tree().create_timer(0.3).timeout
 	if not is_instance_valid(self): return
 	# Diğer tarafa çık — oyun alanı içinde aynı Y konumunda
 	global_position = Vector2(960, global_position.y)
+	scale = Vector2(0.0, 0.0)
 	var _fade_in = create_tween()
+	_fade_in.set_parallel(true)
 	_fade_in.tween_property(self, "modulate", Color(1, 1, 1, 1), 0.4)
+	_fade_in.tween_property(self, "scale", Vector2(1.0, 1.0), 0.4)
 	await _fade_in.finished
 	if not is_instance_valid(self): return
 	add_to_group("allies")
@@ -335,6 +340,8 @@ func _ally_behavior() -> void:
 		var direction = (closest.global_position - global_position).normalized()
 		velocity = direction * speed
 		move_and_slide()
+		_update_anim_dir(velocity)
+		_update_anim(true)
 		if closest_dist < 60:
 			attack_cooldown -= get_physics_process_delta_time()
 			if attack_cooldown <= 0:
@@ -342,6 +349,7 @@ func _ally_behavior() -> void:
 				attack_cooldown = attack_rate
 	else:
 		velocity = Vector2.ZERO
+		_update_anim(false)
 
 func _setup_element_indicator(y_offset: float) -> void:
 	_elem_indicator = load("res://elem_indicator.gd").new()

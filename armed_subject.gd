@@ -272,7 +272,7 @@ func _collapse() -> void:
 		return
 
 	# 60% ally chance
-	if randf() < 0.03:
+	if randf() < 0.25:
 		_become_ally()
 	else:
 		_escape()
@@ -327,15 +327,20 @@ func _become_ally() -> void:
 	if not is_instance_valid(self): return
 	# Kapıya ulaştı — lab'a iniş efekti
 	var _fade_out = create_tween()
+	_fade_out.set_parallel(true)
 	_fade_out.tween_property(self, "modulate", Color(0, 0, 0, 1), 0.5)
+	_fade_out.tween_property(self, "scale", Vector2(0.0, 0.0), 0.5)
 	await _fade_out.finished
 	if not is_instance_valid(self): return
 	await get_tree().create_timer(0.3).timeout
 	if not is_instance_valid(self): return
 	# Diğer tarafa çık — oyun alanı içinde aynı Y konumunda
 	global_position = Vector2(960, global_position.y)
+	scale = Vector2(0.0, 0.0)
 	var _fade_in = create_tween()
+	_fade_in.set_parallel(true)
 	_fade_in.tween_property(self, "modulate", Color(1, 1, 1, 1), 0.4)
+	_fade_in.tween_property(self, "scale", Vector2(1.0, 1.0), 0.4)
 	await _fade_in.finished
 	if not is_instance_valid(self): return
 	add_to_group("allies")
@@ -354,7 +359,7 @@ func _become_ally() -> void:
 	var nav_speed: float = max(speed * 3.0, 150.0)
 	var inside: Vector2  = Vector2(randf_range(50.0, 720.0), randf_range(720.0, 1040.0))
 
-	$ArmedSprite.play("run_SE")
+	$ArmedSprite.play("run_W")
 	var tw: Tween = create_tween()
 	tw.tween_property(self, "global_position", inside,
 		max(global_position.distance_to(inside) / nav_speed, 0.05))\
