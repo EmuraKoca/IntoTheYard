@@ -327,7 +327,7 @@ func _physics_process(delta: float) -> void:
 		var _fly_dist := global_position.distance_to(_fly_player.global_position)
 		if _fly_dist < 80:
 			$CollisionShape2D.disabled = true
-			if _fly_dist < 55 and catch_cooldown <= 0:
+			if _fly_dist < 55:
 				_fly_player.add_to_orbit(self)
 				return
 		else:
