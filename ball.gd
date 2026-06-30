@@ -233,7 +233,7 @@ func launch(direction: Vector2, spd: float = 600.0) -> void:
 	speed = spd
 	moving = true
 	state = "flying"
-	catch_cooldown = 0.5
+	catch_cooldown = 1.2
 	$CollisionShape2D.disabled = false
 	scale = Vector2(1.0, 1.0)
 	z_index = 5
@@ -244,7 +244,7 @@ func launch_with_speed(direction: Vector2, spd: float) -> void:
 	speed = spd
 	moving = true
 	state = "flying"
-	catch_cooldown = 0.5
+	catch_cooldown = 1.2
 	$CollisionShape2D.disabled = false
 	scale = Vector2(1.0, 1.0)
 	z_index = 5
@@ -327,7 +327,7 @@ func _physics_process(delta: float) -> void:
 		var _fly_dist := global_position.distance_to(_fly_player.global_position)
 		if _fly_dist < 80:
 			$CollisionShape2D.disabled = true
-			if _fly_dist < 55:
+			if _fly_dist < 55 and catch_cooldown <= 0:
 				_fly_player.add_to_orbit(self)
 				return
 		else:
