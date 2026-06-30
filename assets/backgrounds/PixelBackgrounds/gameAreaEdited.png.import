@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cghw8jw6rj7a4"
-path="res://.godot/imported/gameAreyaEdited.png-260cbc47a79c5104047210fb2109fd1f.ctex"
+uid="uid://b3dwdfvuyfktg"
+path="res://.godot/imported/gameAreaEdited.png-41ce98af89e59d88fb6c787a806a81a9.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/backgrounds/PixelBackgrounds/gameAreyaEdited.png"
-dest_files=["res://.godot/imported/gameAreyaEdited.png-260cbc47a79c5104047210fb2109fd1f.ctex"]
+source_file="res://assets/backgrounds/PixelBackgrounds/gameAreaEdited.png"
+dest_files=["res://.godot/imported/gameAreaEdited.png-41ce98af89e59d88fb6c787a806a81a9.ctex"]
 
 [params]
 

@@ -2806,3 +2806,32 @@ Düşman Yığılması Düzeltmesi:
 ✅ UI sınırına görünmez duvar (StaticBody2D) eklendi — x=1625
 ✅ Düşman spawn aralığı 1820 → 1580'e daraltıldı
    — Düşmanlar artık UI sınırının soluna spawn oluyor
+
+─────────────────────────────────────────────────────────────────────────────
+0.0.9.9b
+30.06.2026
+
+Kapı Bazlı Navigasyon:
+
+✅ Tüm 7 düşmana kapı bazlı navigasyon uygulandı
+   — Escape: en yakın sağ kapıya (X=1585) yönlenir, kapıda queue_free
+   — Ally: en yakın sol kapıya (X=875) yürür, kapıda kararıp küçülür
+     (lab'a iniş efekti), ardından yaşam alanında belirir
+
+Ally Kapı Efekti:
+
+✅ Ally kapısına varınca silüet kararır + küçülür (0.5s)
+✅ Kısa beklemenin ardından yaşam alanında (X=50-720) rastgele konumda
+   yeniden belirir + büyür (0.4s)
+✅ Işınlanma veya geri yürüme yok — geçiş doğal görünüyor
+
+Escape Animasyonu:
+
+✅ Escape sırasında yüz yönü düzeltildi — walk_SE / run_SE
+   (önceden SW oynuyordu, düşman geri geri kaçıyordu)
+
+Upgrade Ekranı Senkronizasyonu:
+
+✅ Ally/Escape tweenleri artık create_timer yerine tween.finished ile
+   bekleniyor — upgrade ekranı geldiğinde animasyon bozulmuyor
+
