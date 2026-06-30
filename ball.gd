@@ -328,7 +328,7 @@ func _physics_process(delta: float) -> void:
 		var _fly_dist := global_position.distance_to(_fly_player.global_position)
 		if _fly_dist < 80:
 			$CollisionShape2D.disabled = true
-			if _fly_dist < 55:
+			if _fly_dist < 50:
 				_near_player_timer += delta
 				if catch_cooldown <= 0 or _near_player_timer >= 0.3:
 					_near_player_timer = 0.0
