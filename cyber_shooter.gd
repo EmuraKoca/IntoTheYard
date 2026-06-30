@@ -172,7 +172,7 @@ func _collapse() -> void:
 	set_physics_process(false)
 	$CollisionShape2D.set_deferred("disabled", true)
 	await get_tree().create_timer(0.4).timeout
-	if randf() < 0.25:
+	if randf() < 0.03:
 		_become_ally()
 	else:
 		_escape()
@@ -267,11 +267,12 @@ func _escape() -> void:
 			_min_escape_dist = _d
 			_nearest_escape = _ed
 	var nav_speed: float = max(speed * 4.5, 200.0)
-	$ShooterSprite.play("walk_SE")
+	$ShooterSprite.play("walk_SW")
 	var tween = create_tween()
 	tween.tween_property(self, "global_position", _nearest_escape,
 		global_position.distance_to(_nearest_escape) / nav_speed)
-	await tween.finished
+	await get_tree().create_timer(
+		global_position.distance_to(_nearest_escape) / nav_speed).timeout
 	if is_instance_valid(self): queue_free()
 
 func _become_ally() -> void:
@@ -291,7 +292,8 @@ func _become_ally() -> void:
 	var _atween = create_tween()
 	_atween.tween_property(self, "global_position", _nearest,
 		global_position.distance_to(_nearest) / _aspeed)
-	await _atween.finished
+	await get_tree().create_timer(
+		global_position.distance_to(_nearest) / _aspeed).timeout
 	if not is_instance_valid(self): return
 	add_to_group("allies")
 	remove_from_group("subjects")
@@ -300,6 +302,15 @@ func _become_ally() -> void:
 	modulate = Color(1.0, 1.0, 1.0, 1.0)
 	scale    = Vector2(1.0, 1.0)
 
+	# First run to the tribune gate
+	var tween = create_tween()
+	tween.tween_property(self, "global_position", Vector2(850, 1000), 1.5)
+	await get_tree().create_timer(1.5).timeout
+
+	# Then move to the living area
+	var tween2 = create_tween()
+	tween2.tween_property(self, "global_position", Vector2(490, 1000), 1.0)
+	await get_tree().create_timer(1.0).timeout
 
 	set_physics_process(true)
 	$CollisionShape2D.disabled = false
