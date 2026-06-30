@@ -123,7 +123,7 @@ func _setup_ball_sprite() -> void:
 			"plasma_discharge":["plasmaDischarge",  17],
 			"railgun":         ["railGun",          17],
 			"steam_pressure":  ["steamPressure",    17],
-			"thermal_shock":   ["thermalShock",     17],
+			"thermal_shock":   ["thermalShock",      9],
 			"thermite":        ["thermite",         17],
 			"wet_split":       ["wetSplitBall",     17],
 		}
