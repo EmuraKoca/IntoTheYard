@@ -207,6 +207,7 @@ func _spawn_fused_ball(type_a: String, type_b: String) -> void:
 	_apply_fusion_to_ball(new_ball, fusion_result)
 	new_ball.global_position = global_position + dir * 30
 	get_parent().add_child(new_ball)
+	new_ball.add_to_group("player_balls")
 	await get_tree().process_frame
 	new_ball.get_node("CollisionShape2D").disabled = false
 	new_ball.state = "flying"
