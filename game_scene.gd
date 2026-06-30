@@ -1046,6 +1046,8 @@ func gain_armor(amount: int) -> void:
 
 func _get_ball_core_type(ball) -> String:
 	if not is_instance_valid(ball): return "normal"
+	if ball.get("is_fused") and ball.get("fusion_type", "") != "":
+		return "fused:" + ball.get("fusion_type")
 	if ball.get("can_armor"):      return "armor"
 	if ball.get("can_anchor"):     return "anchor"
 	if ball.get("can_crusher"):    return "crusher"
@@ -1065,7 +1067,34 @@ func _get_ball_core_type(ball) -> String:
 	if ball.get("is_mimic"):       return "mimic"
 	return "normal"
 
+const _FUSED_FOLDER_MAP: Dictionary = {
+	"conductive":       "conductive",
+	"cryostatic":       "cryoStatic",
+	"deep_freeze":      "deepFreeze",
+	"electric_split":   "electrifiedSplit",
+	"firework":         "fireWork",
+	"frozen_split":     "frozenSplit",
+	"glacier_spike":    "glacierSpike",
+	"glitched_split":   "glitchedSplit",
+	"hydro_jet":        "hydroJet",
+	"meltdown":         "meltDown",
+	"overclock":        "overClock",
+	"phantom":          "phantom",
+	"piercing_split":   "piercingSplit",
+	"plasma_discharge": "plasmaDischarge",
+	"railgun":          "railGun",
+	"steam_pressure":   "steamPressure",
+	"thermal_shock":    "thermalShock",
+	"thermite":         "thermite",
+	"wet_split":        "wetSplitBall",
+}
+
 func _get_core_icon_texture(core_type: String) -> Texture2D:
+	if core_type.begins_with("fused:"):
+		var fusion_name := core_type.substr(6)
+		var folder := _FUSED_FOLDER_MAP.get(fusion_name, "")
+		if folder != "":
+			return load("res://assets/fusedBalls/%s/frame_000.png" % folder)
 	var folder: String = _CORE_FOLDER_MAP.get(core_type, "normalBall")
 	return load("res://assets/balls/%s/frame_000.png" % folder)
 
