@@ -294,7 +294,8 @@ func _become_ally() -> void:
 			_min_d = _d
 			_nearest = _ad
 	var _aspeed: float = max(speed * 4.5, 200.0)
-	# Kapıya 150px kala küçülmeye başla
+	$RifleSprite.play("walk_W")
+	# Kapıya 80px kala küçülmeye başla
 	var _pre_shrink_pos: Vector2 = _nearest + (_nearest - global_position).normalized() * -80.0
 	if global_position.distance_to(_nearest) > 80.0:
 		var _pre_tween = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_BOUND)
@@ -305,7 +306,6 @@ func _become_ally() -> void:
 	if is_instance_valid(_chip_node): _chip_node.queue_free()
 	var _early_shrink = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_BOUND)
 	_early_shrink.tween_property(self, "scale", Vector2(0.35, 0.35), 0.4)
-	$SubjectSprite.play("walk_W")
 
 	# 1 — Kapıya yürü
 	var _atween = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_BOUND)
