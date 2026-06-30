@@ -475,7 +475,7 @@ func _process_returning(delta: float) -> void:
 	var to_player = player.global_position - global_position
 	var dist = to_player.length()
 
-	if dist < 40:
+	if dist < 70:
 		$CollisionShape2D.disabled = true
 		if player.orbit_balls.size() < player.MAX_ORBIT:
 			player.add_to_orbit(self)
