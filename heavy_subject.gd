@@ -281,7 +281,7 @@ func _escape() -> void:
 			_min_escape_dist = _d
 			_nearest_escape = _ed
 	var nav_speed: float = max(speed * 4.5, 200.0)
-	$HeavySprite.play("walk_SW")
+	$HeavySprite.play("walk_SE")
 	var tween = create_tween()
 	tween.tween_property(self, "global_position", _nearest_escape,
 		global_position.distance_to(_nearest_escape) / nav_speed)
@@ -338,7 +338,7 @@ func _become_ally() -> void:
 	var nav_speed: float = max(speed * 3.0, 150.0)
 	var inside: Vector2  = Vector2(randf_range(50.0, 720.0), randf_range(720.0, 1040.0))
 
-	$HeavySprite.play("walk_SW")
+	$HeavySprite.play("walk_SE")
 	var tw: Tween = create_tween()
 	tw.tween_property(self, "global_position", inside,
 		max(global_position.distance_to(inside) / nav_speed, 0.05))\

@@ -267,7 +267,7 @@ func _escape() -> void:
 			_min_escape_dist = _d
 			_nearest_escape = _ed
 	var nav_speed: float = max(speed * 4.5, 200.0)
-	$ShooterSprite.play("walk_SW")
+	$ShooterSprite.play("walk_SE")
 	var tween = create_tween()
 	tween.tween_property(self, "global_position", _nearest_escape,
 		global_position.distance_to(_nearest_escape) / nav_speed)
