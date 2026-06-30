@@ -275,7 +275,7 @@ func _escape() -> void:
 		var game = get_parent()
 		if game.has_method("show_dialog"):
 			game.show_dialog(dialog, global_position)
-	var _escape_doors: Array = [Vector2(395, 1585), Vector2(550, 1585), Vector2(710, 1585), Vector2(865, 1585)]
+	var _escape_doors: Array = [Vector2(1585, 395), Vector2(1585, 550), Vector2(1585, 710), Vector2(1585, 865)]
 	var _nearest_escape: Vector2 = _escape_doors[0]
 	var _min_escape_dist: float = global_position.distance_to(_escape_doors[0])
 	for _ed in _escape_doors:
@@ -296,7 +296,7 @@ func _become_ally() -> void:
 	var game = get_parent()
 	if game.has_method("subject_rescued"):
 		game.subject_rescued()
-	var _ally_doors: Array = [Vector2(395, 875), Vector2(550, 875), Vector2(710, 875), Vector2(865, 875)]
+	var _ally_doors: Array = [Vector2(875, 395), Vector2(875, 550), Vector2(875, 710), Vector2(875, 865)]
 	var _nearest: Vector2 = _ally_doors[0]
 	var _min_d: float = global_position.distance_to(_ally_doors[0])
 	for _ad in _ally_doors:
