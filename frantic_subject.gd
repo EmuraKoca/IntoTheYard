@@ -285,11 +285,10 @@ func _escape() -> void:
 			_nearest_escape = _ed
 	var nav_speed: float = max(speed * 4.5, 200.0)
 	$FranticSprite.play("run_SE")
-	var tween = create_tween()
+	var tween = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_BOUND)
 	tween.tween_property(self, "global_position", _nearest_escape,
 		global_position.distance_to(_nearest_escape) / nav_speed)
-	await get_tree().create_timer(
-		global_position.distance_to(_nearest_escape) / nav_speed).timeout
+	await tween.finished
 	if is_instance_valid(self): queue_free()
 
 func _become_ally() -> void:
@@ -413,26 +412,26 @@ func _draw_chip() -> void:
 		Vector2(-4.0,   6.0), Vector2( 5.0,   9.0),
 	]
 	for i in anchors.size():
-		var flicker: float = (sin(t * (14.0 + i * 6.7) + i * 1.3) + 1.0) * 0.5
-		if flicker < 0.30:
+		var flicker: float = (sin(t * (18.0 + i * 6.7) + i * 1.3) + 1.0) * 0.5
+		if flicker < 0.15:
 			continue
 		var p: Vector2  = anchors[i]
-		var ex: float   = sin(t * (9.0 + i * 3.1) + i) * 6.5
-		var ey: float   = cos(t * (7.0 + i * 2.5) + i) * 5.5
-		var a:  float   = flicker * 0.95
-		# Sarı-turuncu ana kıvılcım (kalın)
+		var ex: float   = sin(t * (11.0 + i * 3.1) + i) * 9.0
+		var ey: float   = cos(t * (9.0  + i * 2.5) + i) * 8.0
+		var a:  float   = flicker * 1.0
+		# Cyan ana kıvılcım
 		_chip_node.draw_line(p, p + Vector2(ex, ey),
-				Color(1.0, 1.0, 0.35, a), 2.2)
-		# Mor parıltı — aynı yol üzerine bindirilmiş
+				Color(0.0, 0.9, 1.0, a * 0.9), 1.2)
+		# Neon mor üst katman
 		_chip_node.draw_line(p, p + Vector2(ex, ey),
-				Color(0.75, 0.1, 1.0, a * 0.55), 1.2)
-		# Sarı-turuncu ikinci segment
-		var ex2: float = ex + sin(t * 11.0 + i) * 3.5
-		var ey2: float = ey + 2.5
+				Color(0.55, 0.0, 0.85, a * 0.65), 0.7)
+		# İkinci segment — elektrik mavisi
+		var ex2: float = ex + sin(t * 13.0 + i) * 4.0
+		var ey2: float = ey + cos(t * 10.0 + i) * 3.5
 		_chip_node.draw_line(p + Vector2(ex, ey),
 				p + Vector2(ex2, ey2),
-				Color(1.0, 0.85, 0.1, a * 0.70), 1.8)
-		# Mor ikinci segment
+				Color(0.1, 0.75, 1.0, a * 0.75), 1.0)
+		# İkinci segment — neon mor
 		_chip_node.draw_line(p + Vector2(ex, ey),
 				p + Vector2(ex2, ey2),
-				Color(0.6, 0.0, 1.0, a * 0.40), 1.0)
+				Color(0.45, 0.0, 0.75, a * 0.50), 0.6)

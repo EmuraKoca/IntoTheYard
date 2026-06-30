@@ -299,11 +299,10 @@ func _escape() -> void:
 			_nearest_escape = _ed
 	var nav_speed: float = max(speed * 4.5, 200.0)
 	$ArmedSprite.play("run_SE")
-	var tween = create_tween()
+	var tween = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_BOUND)
 	tween.tween_property(self, "global_position", _nearest_escape,
 		global_position.distance_to(_nearest_escape) / nav_speed)
-	await get_tree().create_timer(
-		global_position.distance_to(_nearest_escape) / nav_speed).timeout
+	await tween.finished
 	if is_instance_valid(self): queue_free()
 
 func _become_ally() -> void:
