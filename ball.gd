@@ -16,6 +16,7 @@ var hit_subjects = []
 var chain_density_unique_hits: int = 0  # her uçuşta farklı düşman sayısı
 var catch_cooldown = 0.0
 var _stuck_timer: float = 0.0
+var _near_player_timer: float = 0.0
 var is_active = false
 var max_damage = 5
 var crit_multiplier = 2.0
@@ -327,10 +328,16 @@ func _physics_process(delta: float) -> void:
 		var _fly_dist := global_position.distance_to(_fly_player.global_position)
 		if _fly_dist < 80:
 			$CollisionShape2D.disabled = true
-			if _fly_dist < 55 and catch_cooldown <= 0:
-				_fly_player.add_to_orbit(self)
-				return
+			if _fly_dist < 55:
+				_near_player_timer += delta
+				if catch_cooldown <= 0 or _near_player_timer >= 0.3:
+					_near_player_timer = 0.0
+					_fly_player.add_to_orbit(self)
+					return
+			else:
+				_near_player_timer = 0.0
 		else:
+			_near_player_timer = 0.0
 			if $CollisionShape2D.disabled:
 				$CollisionShape2D.disabled = false
 
