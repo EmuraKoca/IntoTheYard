@@ -2,5 +2,6 @@
 .godot/
 /android/
 
-# Claude Code
-.claude/
+# Claude Code — ayar ve cache dosyaları gizli kalır, commands paylaşılır
+.claude/*
+!.claude/commands/
