@@ -272,28 +272,43 @@ func _escape() -> void:
 		var game = get_parent()
 		if game.has_method("show_dialog"):
 			game.show_dialog(dialog, global_position)
+	var _escape_doors: Array = [Vector2(395, 1585), Vector2(550, 1585), Vector2(710, 1585), Vector2(865, 1585)]
+	var _nearest_escape: Vector2 = _escape_doors[0]
+	var _min_escape_dist: float = global_position.distance_to(_escape_doors[0])
+	for _ed in _escape_doors:
+		var _d: float = global_position.distance_to(_ed)
+		if _d < _min_escape_dist:
+			_min_escape_dist = _d
+			_nearest_escape = _ed
 	var nav_speed: float = max(speed * 4.5, 200.0)
-	var se_target: Vector2 = Vector2(global_position.x + 200.0, 900.0)
-	var e_target:  Vector2 = Vector2(2000.0, 900.0)
-	$HeavySprite.play("walk_E")
+	$HeavySprite.play("walk_SW")
 	var tween = create_tween()
-	tween.tween_property(self, "global_position", se_target,
-		global_position.distance_to(se_target) / nav_speed)
+	tween.tween_property(self, "global_position", _nearest_escape,
+		global_position.distance_to(_nearest_escape) / nav_speed)
 	await get_tree().create_timer(
-		global_position.distance_to(se_target) / nav_speed).timeout
-	if not is_instance_valid(self): return
-	var tween2 = create_tween()
-	tween2.tween_property(self, "global_position", e_target,
-		global_position.distance_to(e_target) / nav_speed)
-	await get_tree().create_timer(
-		global_position.distance_to(e_target) / nav_speed).timeout
+		global_position.distance_to(_nearest_escape) / nav_speed).timeout
 	if is_instance_valid(self): queue_free()
 
 func _become_ally() -> void:
 	var game = get_parent()
 	if game.has_method("subject_rescued"):
 		game.subject_rescued()
-
+	var _ally_doors: Array = [Vector2(395, 875), Vector2(550, 875), Vector2(710, 875), Vector2(865, 875)]
+	var _nearest: Vector2 = _ally_doors[0]
+	var _min_d: float = global_position.distance_to(_ally_doors[0])
+	for _ad in _ally_doors:
+		var _d: float = global_position.distance_to(_ad)
+		if _d < _min_d:
+			_min_d = _d
+			_nearest = _ad
+	var _aspeed: float = max(speed * 4.5, 200.0)
+	$HeavySprite.play("walk_W")
+	var _atween = create_tween()
+	_atween.tween_property(self, "global_position", _nearest,
+		global_position.distance_to(_nearest) / _aspeed)
+	await get_tree().create_timer(
+		global_position.distance_to(_nearest) / _aspeed).timeout
+	if not is_instance_valid(self): return
 	add_to_group("allies")
 	remove_from_group("subjects")
 	if is_instance_valid(_chip_node): _chip_node.queue_redraw()
