@@ -371,11 +371,16 @@ func _physics_process(delta: float) -> void:
 			return
 		# Arc Core: duvara çarpınca yakın düşmanlara yıldırım
 		if can_arc:
+			var _arc_p := _get_player()
+			var _arc_limit: int = 3 + (_arc_p.arc_chain_targets if _arc_p and _arc_p.get("arc_chain_targets") else 0)
+			var _arc_hit: int = 0
 			var _arc_enemies := get_tree().get_nodes_in_group("subjects")
 			for _ae in _arc_enemies:
+				if _arc_hit >= _arc_limit: break
 				if is_instance_valid(_ae) and global_position.distance_to(_ae.global_position) < 160:
 					_ae.take_damage(4)
 					_ae.apply_electrified()
+					_arc_hit += 1
 		# Tempest Core: her duvar sekmesinde element değişir
 		if can_tempest:
 			_tempest_index += 1
@@ -537,6 +542,32 @@ func _defense_hit(subject: Node2D) -> void:
 	if can_water   and is_instance_valid(subject): subject.apply_wet()
 	if can_electric and is_instance_valid(subject): subject.apply_electrified()
 	if can_cryo    and is_instance_valid(subject): subject.apply_slow(slow_amount)
+	# Perfect Catalyst için son elementi kaydet + Mystic Flow / Elemental Harmony
+	var _pn := _get_player()
+	if _pn:
+		var _applied_elem := ""
+		if can_fire:       _applied_elem = "fire"
+		elif can_water:    _applied_elem = "wet"
+		elif can_electric: _applied_elem = "electric"
+		elif can_cryo:     _applied_elem = "cryo"
+		if _applied_elem != "":
+			if _pn.get("last_applied_element") != null:
+				_pn.last_applied_element = _applied_elem
+			# Mystic Flow: yeni unique element → +1% hız
+			if _pn.get("mystic_flow_elements") != null and _applied_elem not in _pn.mystic_flow_elements:
+				_pn.mystic_flow_elements.append(_applied_elem)
+				_pn.mystic_flow_stacks += 1
+				_pn.SPEED += 5  # +1% ≈ +5 (base ~500)
+			# Elemental Harmony (Individuality): per-unique-element +5% core hız
+			if _pn.get("has_elemental_harmony_ind") and _pn.has_elemental_harmony_ind:
+				_pn.orbit_speed_mult = 1.0 + _pn.mystic_flow_stacks * 0.05
+	# Catalyst Mind — önceki reaksiyon hazırsa bu elementi 2x uygula
+	if _pn and _pn.get("catalyst_mind_ready") and _pn.catalyst_mind_ready:
+		_pn.catalyst_mind_ready = false
+		if can_fire and is_instance_valid(subject):    subject.apply_burn()
+		elif can_water and is_instance_valid(subject): subject.apply_wet()
+		elif can_electric and is_instance_valid(subject): subject.apply_electrified()
+		elif can_cryo and is_instance_valid(subject):  subject.apply_slow(slow_amount)
 	if can_glitch  and is_instance_valid(subject): subject.apply_glitch()
 	defense_life -= defense_damage
 	if defense_life <= 0:

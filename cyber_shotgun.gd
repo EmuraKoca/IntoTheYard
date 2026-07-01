@@ -153,6 +153,14 @@ func _shoot(target: Node2D) -> void:
 
 func take_damage(amount, from_ally: bool = false) -> void:
 	health -= amount
+	if is_electrified and not from_ally:
+		var p := _get_player()
+		if p and p.get("has_static_charge") and p.has_static_charge:
+			for body in get_tree().get_nodes_in_group("subjects"):
+				if body != self and is_instance_valid(body) and body.get("is_electrified") and body.is_electrified:
+					if global_position.distance_to(body.global_position) < 150.0:
+						body.health -= int(amount * 0.4)
+						if body.health <= 0: body.die()
 	if health <= 0:
 		die()
 
@@ -187,9 +195,16 @@ func apply_slow(amount, duration: float = 3.0) -> void:
 	if not is_instance_valid(self): return
 	is_slowed = true
 	original_speed = speed
-	speed = speed * (1.0 - amount)
+	var p := _get_player()
+	var slow_amount := amount
+	if p and p.get("cryo_slow_mult"):
+		slow_amount = min(amount * p.cryo_slow_mult, 0.9)
+	speed = speed * (1.0 - slow_amount)
 	_set_element("slow")
-	await get_tree().create_timer(duration).timeout
+	var dur := duration
+	if p and p.get("first_debuff_duration_mult") and not _had_any_element():
+		dur *= p.first_debuff_duration_mult
+	await get_tree().create_timer(dur).timeout
 	if not is_instance_valid(self):
 		return
 	speed = original_speed
@@ -200,7 +215,11 @@ func apply_frozen() -> void:
 	is_frozen = true
 	is_wet = false
 	_set_element("frozen")
-	await get_tree().create_timer(3.0).timeout
+	var p := _get_player()
+	var dur := 3.0
+	if p and p.get("freeze_duration_mult"):
+		dur *= p.freeze_duration_mult
+	await get_tree().create_timer(dur).timeout
 	if not is_instance_valid(self):
 		return
 	is_frozen = false
@@ -211,7 +230,11 @@ func apply_wet() -> void:
 	if not is_instance_valid(self): return
 	is_wet = true
 	_set_element("wet")
-	await get_tree().create_timer(5.0).timeout
+	var p := _get_player()
+	var dur := 5.0
+	if p and p.get("first_debuff_duration_mult") and not _had_any_element():
+		dur *= p.first_debuff_duration_mult
+	await get_tree().create_timer(dur).timeout
 	if not is_instance_valid(self):
 		return
 	is_wet = false
@@ -235,7 +258,15 @@ func apply_electrified() -> void:
 	if not is_instance_valid(self): return
 	is_electrified = true
 	_set_element("electrified")
-	await get_tree().create_timer(5.0).timeout
+	var p := _get_player()
+	var dur := 5.0
+	if p and p.get("first_debuff_duration_mult") and not _had_any_element():
+		dur *= p.first_debuff_duration_mult
+	# Living Storm: electrified iken player yakınsa periyodik hasar
+	var _ls_p := _get_player()
+	if _ls_p and _ls_p.get("has_living_storm") and _ls_p.has_living_storm:
+		_living_storm_loop()
+	await get_tree().create_timer(dur).timeout
 	if is_instance_valid(self):
 		is_electrified = false
 		_clear_element()
@@ -247,16 +278,34 @@ func apply_burn() -> void:
 	if not is_instance_valid(self): return
 	is_burning = true
 	_set_element("burn")
+	var p := _get_player()
+	var tick_dmg: int = 2
+	if p and p.get("burn_damage_mult"):
+		tick_dmg = max(1, int(2.0 * p.burn_damage_mult))
 	for i in range(3):
 		await get_tree().create_timer(1.0).timeout
 		if is_instance_valid(self) and health > 0:
-			health -= 2
+			health -= tick_dmg
+			if p and p.get("has_overheat") and p.has_overheat:
+				if not p.get("_overheat_counter"):
+					p.set("_overheat_counter", 0)
+				p._overheat_counter += 1
+				if p._overheat_counter >= 7:
+					p._overheat_counter = 0
+					_react_overheat()
 			if health <= 0:
 				die()
 	if not is_instance_valid(self):
 		return
 	is_burning = false
 	_clear_element()
+
+func _react_overheat() -> void:
+	for body in get_tree().get_nodes_in_group("subjects"):
+		if is_instance_valid(body) and global_position.distance_to(body.global_position) < 150.0:
+			body.health -= 15
+			body._react_flash(Color(1.0, 0.3, 0.0))
+			if body.health <= 0: body.die()
 
 func _escape() -> void:
 	if is_instance_valid(_chip_node): _chip_node.queue_free()
@@ -417,6 +466,23 @@ func _draw_chip() -> void:
 				p + Vector2(ex2, ey2),
 				Color(0.45, 0.0, 0.75, a * 0.50), 0.6)
 
+func _get_player() -> Node:
+	var game := get_node_or_null("/root/GameScene")
+	return game.get_node_or_null("Player") if game else null
+
+func _had_any_element() -> bool:
+	return is_burning or is_wet or is_electrified or is_slowed or is_frozen
+
+
+func _living_storm_loop() -> void:
+	while is_instance_valid(self) and is_electrified:
+		await get_tree().create_timer(1.5).timeout
+		if not is_instance_valid(self) or not is_electrified: break
+		var _target := get_tree().get_first_node_in_group("player")
+		if _target and global_position.distance_to(_target.global_position) < 120.0:
+			health -= 3
+			_react_flash(Color(0.2, 0.5, 4.0))
+			if health <= 0: die(); break
 func _check_reaction(incoming: String) -> void:
 	var game := get_node_or_null("/root/GameScene")
 	var player := game.get_node_or_null("Player") if game else null
@@ -524,6 +590,29 @@ func _react_flash(color: Color) -> void:
 		modulate = Color(1, 1, 1, 1)
 
 func _notify_reaction(game: Node, player: Node) -> void:
-	if player and player.get("reaction_heal_amount") and player.reaction_heal_amount > 0:
+	if not player: return
+
+	if player.get("reaction_heal_amount") and player.reaction_heal_amount > 0:
 		if game and game.has_method("heal_player"):
 			game.heal_player(player.reaction_heal_amount)
+
+	if player.get("reaction_core_speed_bonus") and player.reaction_core_speed_bonus > 0:
+		if player.get("momentum_stacks") and player.get("momentum_max"):
+			player.momentum_stacks = mini(player.momentum_stacks + 1, player.momentum_max)
+		if player.get("orbit_speed_mult"):
+			player.orbit_speed_mult += player.reaction_core_speed_bonus
+
+	if player.get("has_perfect_catalyst") and player.has_perfect_catalyst:
+		var last_elem: String = player.get("last_applied_element") if player.get("last_applied_element") else ""
+		if last_elem == "fire" and not is_burning:
+			apply_burn()
+		elif last_elem == "wet" and not is_wet:
+			apply_wet()
+		elif last_elem == "electric" and not is_electrified:
+			apply_electrified()
+		elif last_elem == "cryo" and not is_slowed:
+			apply_slow(0.25)
+
+	if player.get("has_catalyst_mind") and player.has_catalyst_mind:
+		player.catalyst_mind_ready = true
+
