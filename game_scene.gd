@@ -1018,6 +1018,10 @@ func _update_armor_ui() -> void:
 	_armor_label.visible = false
 	$UI/IntegrityBar/LabelIntegrity.text = "♥ " + str(player_hp) + "/" + str(player_max_hp) + "   ⬡ " + str(player_armor)
 
+func heal_player(amount: int) -> void:
+	player_hp = min(player_hp + amount, player_max_hp)
+	update_ui()
+
 func gain_armor(amount: int) -> void:
 	var mult := _armor_gain_boost
 	var p := get_node_or_null("Player")

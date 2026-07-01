@@ -183,6 +183,8 @@ func _collapse() -> void:
 func apply_slow(amount, duration: float = 3.0) -> void:
 	if is_slowed:
 		return
+	_check_reaction("cryo")
+	if not is_instance_valid(self): return
 	is_slowed = true
 	original_speed = speed
 	speed = speed * (1.0 - amount)
@@ -205,6 +207,8 @@ func apply_frozen() -> void:
 	_clear_element()
 
 func apply_wet() -> void:
+	_check_reaction("wet")
+	if not is_instance_valid(self): return
 	is_wet = true
 	_set_element("wet")
 	await get_tree().create_timer(5.0).timeout
@@ -227,6 +231,8 @@ func apply_glitch() -> void:
 func apply_electrified() -> void:
 	if is_electrified:
 		return
+	_check_reaction("electric")
+	if not is_instance_valid(self): return
 	is_electrified = true
 	_set_element("electrified")
 	await get_tree().create_timer(5.0).timeout
@@ -237,6 +243,8 @@ func apply_electrified() -> void:
 func apply_burn() -> void:
 	if is_burning:
 		return
+	_check_reaction("fire")
+	if not is_instance_valid(self): return
 	is_burning = true
 	_set_element("burn")
 	for i in range(3):
@@ -408,3 +416,114 @@ func _draw_chip() -> void:
 		_chip_node.draw_line(p + Vector2(ex, ey),
 				p + Vector2(ex2, ey2),
 				Color(0.45, 0.0, 0.75, a * 0.50), 0.6)
+
+func _check_reaction(incoming: String) -> void:
+	var game := get_node_or_null("/root/GameScene")
+	var player := game.get_node_or_null("Player") if game else null
+	var dmg_mult: float = 1.0
+
+	if player and player.get("has_volatile_mixture") and player.has_volatile_mixture:
+		var active := 0
+		if is_burning:     active += 1
+		if is_wet:         active += 1
+		if is_electrified: active += 1
+		if is_slowed:      active += 1
+		if active >= 2:
+			if is_wet and is_electrified:
+				is_wet = false; is_electrified = false
+				_react_electrocute(dmg_mult, game, player); return
+			elif is_wet and is_slowed:
+				is_wet = false; is_slowed = false
+				speed = original_speed if original_speed > 0 else speed
+				apply_frozen(); _react_flash(Color(0.5, 0.9, 1.0))
+				_notify_reaction(game, player); return
+			elif is_burning and is_wet:
+				is_wet = false; is_burning = false
+				_react_steam(dmg_mult, game, player); return
+			elif is_burning and is_slowed:
+				is_burning = false; is_slowed = false
+				speed = original_speed if original_speed > 0 else speed
+				_react_melt(dmg_mult); return
+
+	if player and player.get("has_chain_catalyst") and player.has_chain_catalyst:
+		var active := 0
+		if is_burning:     active += 1
+		if is_wet:         active += 1
+		if is_electrified: active += 1
+		if is_slowed:      active += 1
+		if active >= 2:
+			dmg_mult = 1.3
+
+	if incoming == "electric" and is_wet:
+		is_wet = false; is_electrified = false
+		_react_electrocute(dmg_mult, game, player); return
+	if incoming == "wet" and is_electrified:
+		is_wet = false; is_electrified = false
+		_react_electrocute(dmg_mult, game, player); return
+	if incoming == "cryo" and is_wet:
+		is_wet = false; is_slowed = false
+		apply_frozen(); _react_flash(Color(0.5, 0.9, 1.0))
+		_notify_reaction(game, player); return
+	if incoming == "wet" and is_slowed:
+		is_wet = false; is_slowed = false
+		speed = original_speed if original_speed > 0 else speed
+		apply_frozen(); _react_flash(Color(0.5, 0.9, 1.0))
+		_notify_reaction(game, player); return
+	if incoming == "wet" and is_burning:
+		is_wet = false; is_burning = false
+		_react_steam(dmg_mult, game, player); return
+	if incoming == "fire" and is_wet:
+		is_wet = false; is_burning = false
+		_react_steam(dmg_mult, game, player); return
+	if incoming == "fire" and is_slowed:
+		is_burning = false; is_slowed = false
+		speed = original_speed if original_speed > 0 else speed
+		_react_melt(dmg_mult); return
+	if incoming == "cryo" and is_burning:
+		is_burning = false; is_slowed = false
+		speed = original_speed if original_speed > 0 else speed
+		_react_melt(dmg_mult); return
+
+func _react_electrocute(mult: float, game: Node, player: Node) -> void:
+	var dmg := int(12 * mult)
+	health -= dmg
+	_react_flash(Color(0.2, 0.5, 4.0))
+	var prev_speed := speed
+	speed = 0.0
+	await get_tree().create_timer(0.8).timeout
+	if not is_instance_valid(self): return
+	speed = prev_speed
+	_clear_element()
+	_notify_reaction(game, player)
+	if health <= 0: die()
+
+func _react_steam(mult: float, game: Node, player: Node) -> void:
+	var dmg := int(8 * mult)
+	for body in get_tree().get_nodes_in_group("subjects"):
+		if body == self: continue
+		if is_instance_valid(body) and global_position.distance_to(body.global_position) < 120.0:
+			body.health -= dmg
+			if body.health <= 0: body.die()
+	health -= dmg
+	_react_flash(Color(0.9, 0.9, 1.0))
+	_clear_element()
+	_notify_reaction(game, player)
+	if health <= 0: die()
+
+func _react_melt(mult: float) -> void:
+	var dmg := int(18 * mult)
+	health -= dmg
+	_react_flash(Color(1.0, 0.6, 0.1))
+	_clear_element()
+	if health <= 0: die()
+
+func _react_flash(color: Color) -> void:
+	modulate = color
+	await get_tree().create_timer(0.15).timeout
+	if is_instance_valid(self):
+		modulate = Color(1, 1, 1, 1)
+
+func _notify_reaction(game: Node, player: Node) -> void:
+	if player and player.get("reaction_heal_amount") and player.reaction_heal_amount > 0:
+		if game and game.has_method("heal_player"):
+			game.heal_player(player.reaction_heal_amount)
