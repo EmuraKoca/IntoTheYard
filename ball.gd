@@ -897,6 +897,13 @@ func _hit_subject(subject: Node2D) -> void:
 		if player_node.has_momentum_engine:
 			if randf() < player_node.momentum_gain_mult:
 				player_node.momentum_stacks = min(player_node.momentum_stacks + 1, player_node.momentum_max)
+				# Pressure Valve — her 5 momentum stack'te +1 armor
+				if player_node.has_pressure_valve:
+					player_node._pressure_valve_acc += 1
+					if player_node._pressure_valve_acc >= 5:
+						player_node._pressure_valve_acc = 0
+						if game_node_fx:
+							game_node_fx.gain_armor(1)
 		# Impact Feedback — threshold'a göre +1 Impact Stack → +1 Armor Gain
 		if player_node.has_impact_feedback:
 			player_node.impact_hit_count += 1

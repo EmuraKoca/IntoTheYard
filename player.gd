@@ -90,6 +90,11 @@ var has_glass_engine: bool        = false
 var has_adrenal_armor: bool       = false # Adrenal Armor System
 var has_kinetic_nervous: bool     = false # Momentum reset olmaz
 var has_risk_engine: bool         = false # Hasar alınca momentum
+var has_pressure_valve: bool      = false # Her 5 momentum → +1 armor
+var _pressure_valve_acc: int      = 0     # Momentum sayacı
+
+var has_chain_catalyst: bool      = false # 2+ element → +%30 reaksiyon hasarı
+var has_volatile_mixture: bool    = false # 3. element → anında reaksiyon
 
 # ── Leila — Elemental ────────────────────────────────────────────────────────
 var debuff_duration_mult: float   = 1.0   # Elemental Mastery, Arcane Mind, Arcane Focus

@@ -1637,7 +1637,6 @@ func _build_all_upgrades() -> void:
 	upgrades = [
 	# ── Vector (Kinetik) — min_level: öğrenme eğrisi ─────────────────────────
 	# Lv0: Vector nedir?
-	{"name": "Split Core",          "category": "Identity",      "color": Color(0.2, 0.8, 0.2), "desc": "Core splits into 3",                        "index": 0,  "weight": 10, "rarity": "common",   "chars": ["vector"], "min_level": 0},
 	{"name": "Pierce Core",         "category": "Identity",      "color": Color(1.0, 0.8, 0.0), "desc": "Core pierces through",                      "index": 2,  "weight": 10, "rarity": "common",   "chars": ["vector"], "min_level": 0},
 	{"name": "Armor Core",          "category": "Identity",      "color": Color(0.5, 0.6, 0.8), "desc": "Hit → gain Armor",                          "index": 40, "weight": 10, "rarity": "common",   "chars": ["vector"], "min_level": 0},
 	{"name": "Anchor Core",         "category": "Identity",      "color": Color(0.3, 0.4, 0.6), "desc": "Hit → slow enemy 60% (3s)",                 "index": 41, "weight": 10, "rarity": "common",   "chars": ["vector"], "min_level": 0},
@@ -1655,7 +1654,6 @@ func _build_all_upgrades() -> void:
 	{"name": "Kinetic Core",        "category": "Identity",      "color": Color(0.2, 0.8, 0.6), "desc": "Each wall bounce → +dmg",                   "index": 43, "weight": 8, "rarity": "uncommon", "chars": ["vector"], "min_level": 1},
 	{"name": "Bulwark Core",        "category": "Identity",      "color": Color(0.4, 0.5, 0.7), "desc": "Hit → +2 Armor",                            "index": 44, "weight": 8, "rarity": "uncommon", "chars": ["vector"], "min_level": 1},
 	{"name": "Impact Feedback",     "category": "Utility",       "color": Color(0.5, 0.3, 0.9), "desc": "Every 10 hits:\n+1 Armor Gain (max 10)",    "index": 36, "weight": 6, "rarity": "uncommon", "chars": ["vector"], "min_level": 2},
-	{"name": "Magnetic Weight",     "category": "Individuality", "color": Color(0.6, 0.4, 0.9), "desc": "Knockback ×2 / Core Speed -%10",             "index": 57, "weight": 6, "rarity": "uncommon", "chars": ["vector"], "min_level": 2},
 	{"name": "Battlefield Anchor",  "category": "Individuality", "color": Color(0.3, 0.5, 0.7), "desc": "Slow duration ×2 / Player Speed -%10",       "index": 58, "weight": 6, "rarity": "uncommon", "chars": ["vector"], "min_level": 2},
 	{"name": "Blood for Steel",     "category": "Individuality", "color": Color(0.7, 0.1, 0.1), "desc": "-10 HP  |  +10 Max Armor",                   "index": 30, "weight": 6, "rarity": "uncommon", "chars": ["vector"], "min_level": 2},
 	{"name": "Overclocked Reflex",  "category": "Individuality", "color": Color(0.9, 0.9, 0.2), "desc": "Core Speed +%20 / Armor Gain -%15",          "index": 54, "weight": 6, "rarity": "uncommon", "chars": ["vector"], "min_level": 2},
@@ -1672,12 +1670,13 @@ func _build_all_upgrades() -> void:
 	{"name": "Adrenal Armor System", "category":"Individuality",  "color": Color(0.9, 0.3, 0.5), "desc": "Low HP: Armor +%40 | High HP: Core Speed +%10", "index": 59, "weight": 4, "rarity": "rare",  "chars": ["vector"], "min_level": 4},
 	# Lv4: Build specialization
 	{"name": "Bloodbound Core",     "category": "Identity",      "color": Color(0.7, 0.0, 0.1), "desc": "Missing HP → bonus dmg",                     "index": 46, "weight": 4, "rarity": "epic",     "chars": ["vector"], "min_level": 4},
-	{"name": "Siege Core",          "category": "Identity",      "color": Color(0.8, 0.4, 0.1), "desc": "Highest damage core",                        "index": 45, "weight": 3, "rarity": "epic",     "chars": ["vector"], "min_level": 5},
 	{"name": "Adrenal Surge",       "category": "Individuality", "color": Color(1.0, 0.4, 0.1), "desc": "HP <30%  →  Momentum Engine x2",             "index": 32, "weight": 3, "rarity": "epic",     "chars": ["vector"], "min_level": 5},
 	# Lv5: Run breaker
 	{"name": "Emergency Protocol",  "category": "Individuality", "color": Color(1.0, 0.9, 0.0), "desc": "Take 15 dmg →\n+100% Armor Gain (10s)",       "index": 34, "weight": 2, "rarity": "legendary","chars": ["vector"], "min_level": 5},
 	{"name": "Risk Engine",         "category": "Individuality", "color": Color(0.8, 0.1, 0.3), "desc": "Damage taken → Momentum stacks / Armor Gain -%30", "index": 60, "weight": 2, "rarity": "epic", "chars": ["vector"], "min_level": 5},
 	{"name": "Fractured Frame",     "category": "Individuality", "color": Color(0.9, 0.4, 0.1), "desc": "Core Damage ×1.4 / Max HP -15",               "index": 52, "weight": 2, "rarity": "epic",     "chars": ["vector"], "min_level": 5},
+	{"name": "Pressure Valve",      "category": "Utility",       "color": Color(0.3, 0.8, 0.7), "desc": "Every 5 Momentum stacks:\ngain +1 Armor",     "index": 104, "weight": 6, "rarity": "uncommon", "chars": ["vector"], "min_level": 2},
+	{"name": "Iron Blood",          "category": "Individuality", "color": Color(0.6, 0.2, 0.2), "desc": "Max HP → Armor Cap:\n+1 Cap per 10 Max HP",   "index": 105, "weight": 4, "rarity": "rare",     "chars": ["vector"], "min_level": 3},
 	# ── Leila (Elemental) ─────────────────────────────────────────────────────
 	{"name": "Electric Core",       "category": "Identity",      "color": Color(0.2, 0.5, 1.0), "desc": "Core gains electricity",                    "index": 1,  "weight": 10, "rarity": "common", "chars": ["leila"], "min_level": 0},
 	{"name": "Cryo Core",           "category": "Identity",      "color": Color(0.5, 0.8, 1.0), "desc": "Slows subject by 25%",                      "index": 15, "weight": 10, "rarity": "common", "chars": ["leila"], "min_level": 0},
@@ -1691,11 +1690,9 @@ func _build_all_upgrades() -> void:
 	{"name": "Hydro Pressure",     "category": "Utility",       "color": Color(0.1, 0.5, 0.9), "desc": "Wet-applying Cores orbit faster",             "index": 67,  "weight": 8,  "rarity": "uncommon", "chars": ["leila"], "min_level": 0},
 	{"name": "Arc Amplifier",      "category": "Utility",       "color": Color(0.2, 0.4, 1.0), "desc": "Lightning chain hits +1 target",              "index": 68,  "weight": 8,  "rarity": "uncommon", "chars": ["leila"], "min_level": 0},
 	{"name": "Static Charge",      "category": "Utility",       "color": Color(0.4, 0.6, 1.0), "desc": "Electrified enemies transfer damage\nto each other", "index": 69, "weight": 6, "rarity": "uncommon", "chars": ["leila"], "min_level": 0},
-	{"name": "Cryostasis",         "category": "Utility",       "color": Color(0.6, 0.85, 1.0),"desc": "Freeze duration +10%",                       "index": 70,  "weight": 8,  "rarity": "uncommon", "chars": ["leila"], "min_level": 0},
 	{"name": "Supercooling",       "category": "Utility",       "color": Color(0.5, 0.8, 1.0), "desc": "Cryo enemies slowed further",                 "index": 71,  "weight": 8,  "rarity": "uncommon", "chars": ["leila"], "min_level": 0},
 	{"name": "Thermal Vision",     "category": "Utility",       "color": Color(1.0, 0.5, 0.1), "desc": "Burning enemies take more damage",            "index": 73,  "weight": 6,  "rarity": "uncommon", "chars": ["leila"], "min_level": 0},
 	{"name": "Living Storm",       "category": "Utility",       "color": Color(0.3, 0.5, 1.0), "desc": "Electrified enemies approaching you\ntrigger small lightning", "index": 74, "weight": 6, "rarity": "uncommon", "chars": ["leila"], "min_level": 0},
-	{"name": "Elemental Mastery",  "category": "Utility",       "color": Color(0.9, 0.7, 1.0), "desc": "All debuff durations +30%",                   "index": 79,  "weight": 5,  "rarity": "uncommon", "chars": ["leila"], "min_level": 0},
 	{"name": "Mystic Flow",        "category": "Individuality", "color": Color(0.5, 0.7, 1.0), "desc": "Each unique element applied\n→ +1% Move Speed (max 20%)", "index": 76, "weight": 6, "rarity": "uncommon", "chars": ["leila"], "min_level": 0},
 	{"name": "Elemental Memory",   "category": "Individuality", "color": Color(0.7, 0.7, 1.0), "desc": "Reacted enemies hold new elements\n50% longer (2s)", "index": 86, "weight": 4, "rarity": "uncommon", "chars": ["leila"], "min_level": 0},
 	{"name": "Resonant Soul",      "category": "Individuality", "color": Color(0.8, 0.6, 1.0), "desc": "Each Reaction → restore 1 HP",                "index": 85,  "weight": 5,  "rarity": "uncommon", "chars": ["leila"], "min_level": 0},
@@ -1726,6 +1723,8 @@ func _build_all_upgrades() -> void:
 	# Lv5: Legendary endgame
 	{"name": "Perfect Catalyst",   "category": "Utility",       "color": Color(0.9, 0.7, 1.0), "desc": "Reaction → reapply last used element",        "index": 91, "weight": 3,  "rarity": "epic",      "chars": ["leila"], "min_level": 5},
 	{"name": "Catalyst Mind",      "category": "Individuality", "color": Color(0.9, 0.6, 1.0), "desc": "After a Reaction, next element\napplies twice", "index": 93, "weight": 2, "rarity": "legendary", "chars": ["leila"], "min_level": 5},
+	{"name": "Chain Catalyst",     "category": "Utility",       "color": Color(0.7, 0.5, 1.0), "desc": "2+ elements on target:\nReactions deal +30% dmg", "index": 106, "weight": 6, "rarity": "uncommon", "chars": ["leila"], "min_level": 1},
+	{"name": "Volatile Mixture",   "category": "Individuality", "color": Color(0.9, 0.4, 1.0), "desc": "3rd element on target:\ninstantly triggers Reaction", "index": 107, "weight": 4, "rarity": "rare", "chars": ["leila"], "min_level": 3},
 	# ── Leila Calamity ────────────────────────────────────────────────────────
 	{"name": "Blizzard",           "category": "Calamity",      "color": Color(0.6, 0.9, 1.0), "desc": "Entire arena freezes for 3s",                 "index": 94, "weight": 2,  "rarity": "legendary", "chars": ["leila"], "min_level": 5},
 	{"name": "Volcanic Rift",      "category": "Calamity",      "color": Color(1.0, 0.3, 0.0), "desc": "Leaves lava trail on ground",                 "index": 97, "weight": 2,  "rarity": "legendary", "chars": ["leila"], "min_level": 5},
@@ -2708,6 +2707,13 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 	elif index == 60:  # Risk Engine
 		get_node("Player").has_risk_engine   = true
 		get_node("Player").armor_gain_mult  *= 0.7
+	elif index == 104:  # Pressure Valve
+		get_node("Player").has_pressure_valve = true
+	elif index == 105:  # Iron Blood
+		var p := get_node("Player")
+		player_armor_cap += int(player_max_hp / 10)
+		player_max_armor = max(player_max_armor, player_armor_cap)
+		_update_armor_ui()
 
 	# ── Leila — Identity Cores ───────────────────────────────────────────────
 	elif index == 61:  # Plasma Core
@@ -2783,6 +2789,10 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 	elif index == 93:  # Catalyst Mind
 		get_node("Player").has_catalyst_mind = true
 		_seen_individualities.append("Catalyst Mind")
+	elif index == 106:  # Chain Catalyst
+		get_node("Player").has_chain_catalyst = true
+	elif index == 107:  # Volatile Mixture
+		get_node("Player").has_volatile_mixture = true
 
 	# ── Leila — Calamity ─────────────────────────────────────────────────────
 	elif index == 94:  # Blizzard
