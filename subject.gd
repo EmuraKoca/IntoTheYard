@@ -150,7 +150,7 @@ func apply_slow(amount, duration: float = 3.0) -> void:
 	is_slowed = true
 	original_speed = speed
 	var p := _get_player()
-	var slow_amount := amount
+	var slow_amount: float = float(amount)
 	if p and p.get("cryo_slow_mult"):
 		slow_amount = min(amount * p.cryo_slow_mult, 0.9)
 	speed = speed * (1.0 - slow_amount)
@@ -265,7 +265,7 @@ func _react_electrocute(mult: float, game: Node, player: Node) -> void:
 	health -= dmg
 	_react_flash(Color(0.2, 0.5, 4.0))
 	# Kısa stun — hareket durdur
-	var prev_speed := speed
+	var prev_speed: float = float(speed)
 	speed = 0.0
 	await get_tree().create_timer(0.8).timeout
 	if not is_instance_valid(self): return
