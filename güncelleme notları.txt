@@ -2875,3 +2875,58 @@ Proje Altyapısı:
 ✅ /playtester, /content-agent, /po slash command'ları eklendi
    — Kart balans analizi, yeni içerik üretimi, roadmap yönetimi
 
+
+─────────────────────────────────────────────────────────────────────────────
+v0.0.9.9c
+01.07.2026
+
+Kart Havuzu Güncellemesi (Vector & Leila):
+
+Kaldırılan kartlar (gereksiz / sinerji dışı):
+  — Split Core, Siege Core, Magnetic Weight (Vector)
+  — Cryostasis, Elemental Mastery (Leila)
+
+Eklenen kartlar:
+  ✅ Pressure Valve (Vector, uncommon) — Her 5 momentum → +1 Armor
+  ✅ Iron Blood (Vector, rare) — Max HP → Armor Cap: her 10 Max HP başına +1
+  ✅ Chain Catalyst (Leila, uncommon) — 2+ element aktifken reaksiyon +%30 hasar
+  ✅ Volatile Mixture (Leila, rare) — 3. element gelince anında reaksiyon tetikler
+
+Elementel Reaksiyon Sistemi (tüm 7 düşman tipi):
+
+  ✅ Wet + Electric → Electrocute: 12 hasar + 0.8s stun
+  ✅ Wet + Cryo    → Freeze: 3s hareketsizlik
+  ✅ Burn + Wet    → Steam: 8 hasar + 120px AoE
+  ✅ Burn + Cryo   → Melt: 18 hasar, her iki element söner
+
+Leila Kart Efektleri:
+
+  ✅ Thermal Vision     — burn_damage_mult: yanma tick hasarı artar
+  ✅ Frozen Time        — freeze_duration_mult: donma süresi uzar
+  ✅ Supercooling       — cryo_slow_mult: yavaşlama miktarı artar
+  ✅ Arcane Mind / Arcane Focus — first_debuff_duration_mult: ilk element süresi uzar
+  ✅ Overheat           — 7 burn tick'te 150px AoE patlama
+  ✅ Resonance Engine   — reaksiyon → +1 momentum → orbit hız artar
+  ✅ Perfect Catalyst   — reaksiyon sonrası son element yeniden uygulanır
+  ✅ Catalyst Mind      — sonraki element 2x uygulanır
+  ✅ Arc Amplifier      — Arc Core'un zincir hedef sayısı artar
+  ✅ Static Charge      — electrified düşman vurulunca %40 hasar yakındakilere yayılır
+  ✅ Living Storm       — electrified düşman player'a 120px yaklaşınca 1.5s'de bir 3 hasar
+  ✅ Mystic Flow        — her yeni unique element +5 SPEED
+  ✅ Elemental Harmony  — orbit hızı aktif unique element sayısıyla ölçeklenir
+  ✅ Chain Catalyst     — 2+ element aktifken reaksiyon hasarı x1.3
+  ✅ Volatile Mixture   — 3. element anında reaksiyon tetikler
+  ✅ Resonant Soul      — reaksiyon başına +1 HP (heal_player sistemi eklendi)
+
+Test Edilmesi Gerekenler:
+
+  ⚠️  Reaksiyon zinciri: Wet + Electric → Electrocute → Perfect Catalyst →
+      son element tekrar uygulanıyor mu?
+  ⚠️  Volatile Mixture: 3. element gerçekten anında mı reaksiyon veriyor,
+      yoksa normal reaksiyon da ayrıca mı tetikleniyor? (çift tetik riski)
+  ⚠️  Overheat sayacı (_overheat_counter) subject öldüğünde sıfırlanıyor mu?
+      Yoksa global sayaç birden fazla düşmandan birikiyor mu?
+  ⚠️  Living Storm + Static Charge aynı anda aktifse: electrified düşman
+      hem hasar alıyor hem yayıyor — sonsuz döngü riski var mı?
+  ⚠️  Catalyst Mind (catalyst_mind_ready) upgrade ekranında sıfırlanıyor mu?
+  ⚠️  Ally chance hâlâ %25 (test modu) — prodüksiyona geçmeden %3'e düşür
