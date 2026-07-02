@@ -884,17 +884,15 @@ func _ready() -> void:
 	$UI/BtnPause.pressed.connect(_show_pause_menu)
 	$UI/FusionEnergyBar.max_value = 50
 	$UI/FusionEnergyBar.value = 0
-	if char_type == "leila":
-		_activate_fusion_zone()
-	else:
-		var _fz := get_tree().get_first_node_in_group("fusion_zone")
-		if _fz:
-			_fz.visible = false
-			_fz.set_physics_process(false)
-		var _ps := get_node_or_null("ProcessorSprite")
-		if _ps:
-			_ps.visible = false
-		$UI/FusionEnergyBar.visible = false
+	# Fusion Zone şimdilik tüm karakterler için kapalı (ITY 2'ye ertelendi)
+	var _fz := get_tree().get_first_node_in_group("fusion_zone")
+	if _fz:
+		_fz.visible = false
+		_fz.set_physics_process(false)
+	var _ps := get_node_or_null("ProcessorSprite")
+	if _ps:
+		_ps.visible = false
+	$UI/FusionEnergyBar.visible = false
 	_setup_data_bar()
 	_setup_auto_toggle()
 	_setup_neon_sign()
