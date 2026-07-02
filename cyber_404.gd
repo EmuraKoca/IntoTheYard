@@ -135,6 +135,7 @@ func _shotgun_burst(_player: Node2D) -> void:
 			for j in range(3):
 				var bullet = bullet_scene.instantiate()
 				bullet.global_position = global_position
+				bullet.bullet_type = "shotgun"
 				var spread = deg_to_rad(-10 + j * 10)
 				get_parent().add_child(bullet)
 				bullet.launch(base_dir.rotated(spread))
@@ -162,12 +163,14 @@ func _random_weapon(player: Node2D) -> void:
 		0:
 			var bullet = bullet_scene.instantiate()
 			bullet.global_position = global_position
+			bullet.bullet_type = "smg"
 			get_parent().add_child(bullet)
 			bullet.launch(dir)
 		1:
 			for i in range(7):
 				var bullet = bullet_scene.instantiate()
 				bullet.global_position = global_position
+				bullet.bullet_type = "shotgun"
 				var angle = deg_to_rad(-30 + i * 10)
 				get_parent().add_child(bullet)
 				bullet.launch(dir.rotated(angle))
@@ -175,6 +178,7 @@ func _random_weapon(player: Node2D) -> void:
 			for i in range(5):
 				var bullet = bullet_scene.instantiate()
 				bullet.global_position = global_position
+				bullet.bullet_type = "smg"
 				get_parent().add_child(bullet)
 				bullet.launch(dir)
 				await get_tree().create_timer(0.15).timeout
