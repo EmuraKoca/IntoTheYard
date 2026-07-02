@@ -924,6 +924,10 @@ func _hit_subject(subject: Node2D) -> void:
 		# Armor Core upgrade (ayrı flag) — isabet başına armor kazan
 		if player_node.has_armor_core and game_node_fx:
 			game_node_fx.gain_armor(player_node.armor_gain_per_hit)
+		# Steel Rhythm — Armor = Cap iken hit → +1 Momentum stack
+		if player_node.get("has_steel_rhythm") != null and player_node.has_steel_rhythm:
+			if game_node_fx and game_node_fx.player_armor >= game_node_fx.player_armor_cap and game_node_fx.player_armor_cap > 0:
+				player_node.momentum_stacks = min(player_node.momentum_stacks + 1, player_node.momentum_max)
 		# Momentum Engine — isabet başına +1 stack (Fortified Core: %20 ihtimalle atla)
 		if player_node.has_momentum_engine:
 			if randf() < player_node.momentum_gain_mult:

@@ -3000,3 +3000,87 @@ Test Edilmesi Gerekenler:
   ⚠️  Freeze VFX boyut/pozisyon: scale=0.5, position=(0,0) — karaktere göre
       kayıyorsa ayarlanmalı
   ⚠️  Freeze → Escape/Ally geçişinde buz anında kayboluyor mu?
+
+─────────────────────────────────────────────────────────────────────────────
+v0.0.9.9f
+02.07.2026
+
+Steam VFX:
+
+  ✅ Tüm 7 düşman tipine _spawn_steam_vfx() eklendi
+     — Burn + Wet / Wet + Fire reaksiyonunda animasyon bir kez oynar, biter bitmez silinir
+     — assets/VFX/steam/ — 17 frame, 12 fps, z_index = 1
+
+Fusion Zone Kaldırıldı:
+
+  ✅ Leila'nın Fusion Zone mekaniği oyundan tamamen çıkarıldı
+     — Aşırı güçlü ve oyun dengesini bozucu bulunduğu için kaldırıldı
+     — Oyunda artık Fusion mekaniği yoktur
+
+Kart Balans Düzenlemeleri (Playtester Raporu):
+
+  ✅ Thermal Vision ve Mystic Flow: min_level 0 → 1
+     — Leila Lv0 kart havuzu 18'den 16'ya düşürüldü
+  ✅ Emergency Protocol: +%100 → +%75 Armor Gain (10s)
+     — Kasıtlı hasar loop kurma riski azaltıldı
+  ✅ Catalyst Mind: 5 saniyelik cooldown eklendi
+     — Zincirleme reaksiyon döngüsünü kısıtlar
+  ✅ Adrenal Armor System: +%40 → +%30 Armor Gain (düşük HP)
+  ✅ Blizzard, Volcanic Rift: min_level 5 → 4
+     — Calamity kartları bir kademe erken erişilebilir oldu
+  ✅ Risk Engine: weight 2 → 3 (biraz daha sık çıkar)
+  ✅ Resonant Soul: reaksiyon başına 1 HP → 2 HP
+  ✅ Elemental Memory: açıklama güncellendi — "50% uzun (2s)" → "100% uzun (4s)"
+
+Yeni Vector Kartları (Content Agent):
+
+  ✅ 6 yeni Vector kartı eklendi (index 108–113), kart sprite'ları bekleniyor
+     — Momentum Cascade (uncommon, Lv2): 10+ momentum → Armor Gain ×1.5
+     — Steel Rhythm (uncommon, Lv2): Armor dolu iken hit → +1 momentum
+     — Bulwark Surge (rare, Lv3): Armor ≥ %75 cap → Core Speed +%15
+     — Severance Protocol (rare, Lv3): HP ilk %40 altına düşünce Armor Cap +10
+     — Inertia Plating (rare, Lv4): Alındığında momentum × 5 → Max Armor
+     — Overclock Threshold (epic, Lv5): 20 momentum'da Core Damage ×1.3 kalıcı
+  ✅ Vector: 31 → 37 kart
+
+Elemental Memory İmplementasyonu:
+
+  ✅ Tüm 7 düşmanda _had_reaction flag eklendi
+     — Reaksiyon geçiren düşmana uygulanan yeni elementler 2× uzun sürer
+     — apply_wet / apply_electrified / apply_slow: dur *= 2.0
+     — apply_burn: 3 tick → 6 tick
+
+Leila Calamity İmplementasyonu:
+
+  ✅ Blizzard (❄️): Tüm düşmanları dondurur (apply_frozen)
+  ✅ Monsoon (🌊): Tüm düşmanlara Wet uygular
+  ✅ Volcanic Rift (🌋): 4s boyunca hedef bölgeye 2 hasar/0.5s + Burn
+  ✅ Thunderstorm (⛈️): 5s boyunca her saniyede 3 rastgele düşmana 5 hasar + Electrify
+  ✅ EMP Pulse (🔋): Zaten Electrified olan tüm düşmanlara 15 hasar
+     — EMP emoji ⚡ → 🔋 olarak değiştirildi (Vector lightning ile çakışıyordu)
+  ✅ _react_flash_screen() yardımcı fonksiyonu eklendi (tüm Calamity'ler için renk flaşı)
+
+Elemental VFX Sistemi:
+
+  ✅ cryoEffect (1 frame): apply_slow() ile spawn, slow bitince silinir
+     — Cryo core değen düşmanda buz sarkıtları görünür
+  ✅ melt (4 frame): Cryo slow + Burn → Melt reaksiyonunda oynar
+  ✅ electrocute (17 frame): Wet + Electric → Electrocute reaksiyonunda oynar
+  ✅ overheat (15 frame): 13 burn tick'te patlama reaksiyonunda oynar
+  ✅ meltTheFrozen (17 frame): Yeni reaksiyon — Frozen + Fire → özel VFX
+     — Freeze bloğu anında kırılır, 20 hasar verir
+     — _check_reaction'a "is_frozen + incoming fire" durumu eklendi
+
+Overheat Eşiği:
+
+  ✅ Global burn tick sayacı: 7 → 13'e yükseltildi
+     — Çoklu düşmanla sayaç birikiyor, 13 daha dengeli
+
+Test Edilmesi Gerekenler:
+
+  ⚠️  Tüm VFX scale/pozisyon: scale=0.5, position=(0,0) — karaktere göre ayar gerekebilir
+  ⚠️  Yeni Vector kartları (108–113): sprite'lar eklenince görsel test yapılmalı
+  ⚠️  Elemental Memory: reaksiyon sonrası element sürelerinin 2× uzadığı doğrulanmalı
+  ⚠️  Volatile Mixture + Perfect Catalyst zinciri: hız ve denge izlenmeli
+  ⚠️  meltTheFrozen: dondurulmuş düşmana Pyro değince buz bloğu kırılıyor mu?
+  ⚠️  Leila Calamity'leri: Blizzard, Monsoon, Volcanic Rift, Thunderstorm, EMP oyunda test edilmeli

@@ -29,6 +29,8 @@ var _killed_by_ally: bool = false
 # Animasyon
 var _anim_dir: String = "S"
 var _freeze_sprite: AnimatedSprite2D = null
+var _cryo_sprite: AnimatedSprite2D = null
+var _had_reaction: bool = false
 var _uppercutting: bool = false
 
 func take_damage(amount, from_ally: bool = false) -> void:
@@ -56,7 +58,10 @@ func apply_burn() -> void:
 	var tick_dmg: int = 2
 	if p and p.get("burn_damage_mult"):
 		tick_dmg = max(1, int(2.0 * p.burn_damage_mult))
-	for i in range(3):
+	var burn_ticks := 3
+	if p and p.get("has_elemental_memory") and p.has_elemental_memory and _had_reaction:
+		burn_ticks = 6
+	for i in range(burn_ticks):
 		await get_tree().create_timer(1.0).timeout
 		if is_instance_valid(self) and health > 0:
 			health -= tick_dmg
@@ -64,7 +69,7 @@ func apply_burn() -> void:
 				if not p.get("_overheat_counter"):
 					p.set("_overheat_counter", 0)
 				p._overheat_counter += 1
-				if p._overheat_counter >= 7:
+				if p._overheat_counter >= 13:
 					p._overheat_counter = 0
 					_react_overheat()
 			if health <= 0:
@@ -75,6 +80,7 @@ func apply_burn() -> void:
 	_clear_element()
 
 func _react_overheat() -> void:
+	_spawn_overheat_vfx()
 	for body in get_tree().get_nodes_in_group("subjects"):
 		if is_instance_valid(body) and global_position.distance_to(body.global_position) < 150.0:
 			body.health -= 15
@@ -106,6 +112,24 @@ func apply_frozen() -> void:
 	$HeavySprite.play("walk_" + _anim_dir)
 	_clear_element()
 
+func _spawn_cryo_vfx() -> void:
+	var sf := SpriteFrames.new()
+	if sf.has_animation("default"): sf.remove_animation("default")
+	sf.add_animation("cryo")
+	sf.set_animation_speed("cryo", 1.0)
+	sf.set_animation_loop("cryo", false)
+	sf.add_frame("cryo", load("res://assets/VFX/cryoEffect/frame_000.png"))
+	var spr := AnimatedSprite2D.new()
+	spr.sprite_frames = sf
+	spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	spr.z_index = 1
+	spr.z_as_relative = false
+	spr.position = Vector2(0, 0)
+	spr.scale = Vector2(0.5, 0.5)
+	add_child(spr)
+	spr.play("cryo")
+	_cryo_sprite = spr
+
 func _spawn_freeze_vfx() -> void:
 	var sf := SpriteFrames.new()
 	if sf.has_animation("default"): sf.remove_animation("default")
@@ -131,6 +155,8 @@ func apply_wet() -> void:
 	_set_element("wet")
 	var p := _get_player()
 	var dur := 5.0
+	if p and p.get("has_elemental_memory") and p.has_elemental_memory and _had_reaction:
+		dur *= 2.0
 	if p and p.get("first_debuff_duration_mult") and not _had_any_element():
 		dur *= p.first_debuff_duration_mult
 	await get_tree().create_timer(dur).timeout
@@ -159,6 +185,8 @@ func apply_electrified() -> void:
 	_set_element("electrified")
 	var p := _get_player()
 	var dur := 5.0
+	if p and p.get("has_elemental_memory") and p.has_elemental_memory and _had_reaction:
+		dur *= 2.0
 	if p and p.get("first_debuff_duration_mult") and not _had_any_element():
 		dur *= p.first_debuff_duration_mult
 	# Living Storm: electrified iken player yakınsa periyodik hasar
@@ -183,12 +211,18 @@ func apply_slow(amount, duration: float = 3.0) -> void:
 		slow_amount = min(amount * p.cryo_slow_mult, 0.9)
 	speed = speed * (1.0 - slow_amount)
 	_set_element("slow")
+	_spawn_cryo_vfx()
 	var dur := duration
+	if p and p.get("has_elemental_memory") and p.has_elemental_memory and _had_reaction:
+		dur *= 2.0
 	if p and p.get("first_debuff_duration_mult") and not _had_any_element():
 		dur *= p.first_debuff_duration_mult
 	await get_tree().create_timer(dur).timeout
 	if not is_instance_valid(self):
 		return
+	if is_instance_valid(_cryo_sprite):
+		_cryo_sprite.queue_free()
+		_cryo_sprite = null
 	speed = original_speed
 	is_slowed = false
 	_clear_element()
@@ -358,6 +392,9 @@ func _escape() -> void:
 	if is_instance_valid(_freeze_sprite):
 		_freeze_sprite.queue_free()
 		_freeze_sprite = null
+	if is_instance_valid(_cryo_sprite):
+		_cryo_sprite.queue_free()
+		_cryo_sprite = null
 	$HeavySprite.play("walk_" + _anim_dir)
 	if is_instance_valid(_chip_node): _chip_node.queue_free()
 	var _escape_doors: Array = [Vector2(1585, 395), Vector2(1585, 550), Vector2(1585, 710), Vector2(1585, 865)]
@@ -386,6 +423,9 @@ func _become_ally() -> void:
 	if is_instance_valid(_freeze_sprite):
 		_freeze_sprite.queue_free()
 		_freeze_sprite = null
+	if is_instance_valid(_cryo_sprite):
+		_cryo_sprite.queue_free()
+		_cryo_sprite = null
 	set_physics_process(false)
 	var game = get_parent()
 	if game.has_method("subject_rescued"):
@@ -605,6 +645,10 @@ func _check_reaction(incoming: String) -> void:
 	if incoming == "fire" and is_wet:
 		is_wet = false; is_burning = false
 		_react_steam(dmg_mult, game, player); return
+	# frozen + fire → melt the frozen
+	if incoming == "fire" and is_frozen:
+		_react_melt_frozen(dmg_mult, game, player)
+		return
 	if incoming == "fire" and is_slowed:
 		is_burning = false; is_slowed = false
 		speed = original_speed if original_speed > 0 else speed
@@ -615,6 +659,7 @@ func _check_reaction(incoming: String) -> void:
 		_react_melt(dmg_mult); return
 
 func _react_electrocute(mult: float, game: Node, player: Node) -> void:
+	_spawn_electrocute_vfx()
 	var dmg := int(12 * mult)
 	health -= dmg
 	_react_flash(Color(0.2, 0.5, 4.0))
@@ -628,6 +673,7 @@ func _react_electrocute(mult: float, game: Node, player: Node) -> void:
 	if health <= 0: die()
 
 func _react_steam(mult: float, game: Node, player: Node) -> void:
+	_spawn_steam_vfx()
 	var dmg := int(8 * mult)
 	for body in get_tree().get_nodes_in_group("subjects"):
 		if body == self: continue
@@ -640,7 +686,116 @@ func _react_steam(mult: float, game: Node, player: Node) -> void:
 	_notify_reaction(game, player)
 	if health <= 0: die()
 
+func _spawn_steam_vfx() -> void:
+	var sf := SpriteFrames.new()
+	if sf.has_animation("default"): sf.remove_animation("default")
+	sf.add_animation("steam")
+	sf.set_animation_speed("steam", 12.0)
+	sf.set_animation_loop("steam", false)
+	for i in range(17):
+		sf.add_frame("steam", load("res://assets/VFX/steam/frame_%03d.png" % i))
+	var spr := AnimatedSprite2D.new()
+	spr.sprite_frames = sf
+	spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	spr.z_index = 1
+	spr.z_as_relative = false
+	spr.position = Vector2(0, 0)
+	spr.scale = Vector2(0.5, 0.5)
+	add_child(spr)
+	spr.play("steam")
+	spr.animation_finished.connect(spr.queue_free)
+
+func _react_melt_frozen(mult: float, game: Node, player: Node) -> void:
+	if is_instance_valid(_freeze_sprite):
+		_freeze_sprite.queue_free()
+		_freeze_sprite = null
+	is_frozen = false
+	_spawn_melt_frozen_vfx()
+	var dmg := int(20 * mult)
+	health -= dmg
+	_react_flash(Color(1.0, 0.5, 0.2))
+	_clear_element()
+	_notify_reaction(game, player)
+	if health <= 0: die()
+
+func _spawn_melt_frozen_vfx() -> void:
+	var sf := SpriteFrames.new()
+	if sf.has_animation("default"): sf.remove_animation("default")
+	sf.add_animation("melt_frozen")
+	sf.set_animation_speed("melt_frozen", 12.0)
+	sf.set_animation_loop("melt_frozen", false)
+	for i in range(17):
+		sf.add_frame("melt_frozen", load("res://assets/VFX/meltTheFrozen/frame_%03d.png" % i))
+	var spr := AnimatedSprite2D.new()
+	spr.sprite_frames = sf
+	spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	spr.z_index = 1
+	spr.z_as_relative = false
+	spr.position = Vector2(0, 0)
+	spr.scale = Vector2(0.5, 0.5)
+	add_child(spr)
+	spr.play("melt_frozen")
+	spr.animation_finished.connect(spr.queue_free)
+
+func _spawn_melt_vfx() -> void:
+	var sf := SpriteFrames.new()
+	if sf.has_animation("default"): sf.remove_animation("default")
+	sf.add_animation("melt")
+	sf.set_animation_speed("melt", 10.0)
+	sf.set_animation_loop("melt", false)
+	for i in range(4):
+		sf.add_frame("melt", load("res://assets/VFX/melt/frame_%03d.png" % i))
+	var spr := AnimatedSprite2D.new()
+	spr.sprite_frames = sf
+	spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	spr.z_index = 1
+	spr.z_as_relative = false
+	spr.position = Vector2(0, 0)
+	spr.scale = Vector2(0.5, 0.5)
+	add_child(spr)
+	spr.play("melt")
+	spr.animation_finished.connect(spr.queue_free)
+
+func _spawn_electrocute_vfx() -> void:
+	var sf := SpriteFrames.new()
+	if sf.has_animation("default"): sf.remove_animation("default")
+	sf.add_animation("electrocute")
+	sf.set_animation_speed("electrocute", 12.0)
+	sf.set_animation_loop("electrocute", false)
+	for i in range(17):
+		sf.add_frame("electrocute", load("res://assets/VFX/electrocute/frame_%03d.png" % i))
+	var spr := AnimatedSprite2D.new()
+	spr.sprite_frames = sf
+	spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	spr.z_index = 1
+	spr.z_as_relative = false
+	spr.position = Vector2(0, 0)
+	spr.scale = Vector2(0.5, 0.5)
+	add_child(spr)
+	spr.play("electrocute")
+	spr.animation_finished.connect(spr.queue_free)
+
+func _spawn_overheat_vfx() -> void:
+	var sf := SpriteFrames.new()
+	if sf.has_animation("default"): sf.remove_animation("default")
+	sf.add_animation("overheat")
+	sf.set_animation_speed("overheat", 12.0)
+	sf.set_animation_loop("overheat", false)
+	for i in range(15):
+		sf.add_frame("overheat", load("res://assets/VFX/overheat/frame_%03d.png" % i))
+	var spr := AnimatedSprite2D.new()
+	spr.sprite_frames = sf
+	spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	spr.z_index = 1
+	spr.z_as_relative = false
+	spr.position = Vector2(0, 0)
+	spr.scale = Vector2(0.5, 0.5)
+	add_child(spr)
+	spr.play("overheat")
+	spr.animation_finished.connect(spr.queue_free)
+
 func _react_melt(mult: float) -> void:
+	_spawn_melt_vfx()
 	var dmg := int(18 * mult)
 	health -= dmg
 	_react_flash(Color(1.0, 0.6, 0.1))
@@ -655,6 +810,7 @@ func _react_flash(color: Color) -> void:
 
 func _notify_reaction(game: Node, player: Node) -> void:
 	if not player: return
+	_had_reaction = true
 
 	if player.get("reaction_heal_amount") and player.reaction_heal_amount > 0:
 		if game and game.has_method("heal_player"):
@@ -677,5 +833,6 @@ func _notify_reaction(game: Node, player: Node) -> void:
 		elif last_elem == "cryo" and not is_slowed:
 			apply_slow(0.25)
 
-	if player.get("has_catalyst_mind") and player.has_catalyst_mind:
+	if player.get("has_catalyst_mind") and player.has_catalyst_mind and player.catalyst_mind_cooldown <= 0.0:
 		player.catalyst_mind_ready = true
+		player.catalyst_mind_cooldown = 5.0

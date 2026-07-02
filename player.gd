@@ -92,6 +92,14 @@ var has_kinetic_nervous: bool     = false # Momentum reset olmaz
 var has_risk_engine: bool         = false # Hasar alınca momentum
 var has_pressure_valve: bool      = false # Her 5 momentum → +1 armor
 var _pressure_valve_acc: int      = 0     # Momentum sayacı
+var has_momentum_cascade: bool    = false # 10+ momentum → Armor Gain ×1.5
+var has_steel_rhythm: bool        = false # Armor = Cap iken hit → +1 momentum
+var has_bulwark_surge: bool       = false # Armor ≥ %75 cap → Core Speed +%15
+var bulwark_surge_active: bool    = false # _process tarafından güncellenir
+var has_severance_protocol: bool  = false # HP < %40 → Armor Cap +10 (bir kez)
+var _severance_triggered: bool    = false # Severance Protocol tetiklendi mi
+var has_overclock_threshold: bool = false # 20 momentum → Core Dmg ×1.3 kalıcı
+var _overclock_triggered: bool    = false # Overclock tetiklendi mi
 
 var has_chain_catalyst: bool      = false # 2+ element → +%30 reaksiyon hasarı
 var has_volatile_mixture: bool    = false # 3. element → anında reaksiyon
@@ -122,6 +130,7 @@ var last_applied_element: String      = ""    # Perfect Catalyst için
 var has_elemental_harmony_ind: bool   = false  # Individuality: per-element hız
 var has_catalyst_mind: bool           = false  # Reaksiyon → sonraki element 2x
 var catalyst_mind_ready: bool         = false  # Catalyst Mind tetiklenme hazır
+var catalyst_mind_cooldown: float     = 0.0   # 5s cooldown aralarında
 var has_resonant_soul_ind: bool       = false  # Individuality: reaksiyon → +1 HP
 var has_elemental_memory: bool        = false  # Reaksiyon sonrası debuff 50% uzar
 var damage_mult_leila: float          = 1.0   # Thermal Vision vb. hasar çarpanı
@@ -392,6 +401,8 @@ func _dash() -> void:
 		dash_is_empty = true
 
 func _physics_process(delta: float) -> void:
+	if catalyst_mind_cooldown > 0.0:
+		catalyst_mind_cooldown -= delta
 	# RTS modu — en yakın düşmana otomatik ateş
 	if rts_mode and not orbit_balls.is_empty():
 		_rts_fire_timer -= delta
@@ -462,6 +473,11 @@ func _physics_process(delta: float) -> void:
 		var hp_r: float = float(game_node.player_hp) / float(max(game_node.player_max_hp, 1))
 		if hp_r > 0.7:
 			_effective_orbit_speed *= 1.1
+	# Bulwark Surge: Armor ≥ %75 cap → Core Speed +%15
+	if get("has_bulwark_surge") != null and has_bulwark_surge and game_node:
+		var _armor_ratio: float = float(game_node.player_armor) / float(max(game_node.player_armor_cap, 1))
+		if _armor_ratio >= 0.75:
+			_effective_orbit_speed *= 1.15
 	orbit_angle += _effective_orbit_speed * delta
 	var n := orbit_balls.size()
 	for i in range(n - 1, -1, -1):
