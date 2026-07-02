@@ -345,6 +345,9 @@ func _escape() -> void:
 	is_slowed = false
 	is_frozen = false
 	_clear_element()
+	if is_instance_valid(_freeze_sprite):
+		_freeze_sprite.queue_free()
+		_freeze_sprite = null
 	$ShotgunSprite.play("walk_" + _anim_dir)
 	if is_instance_valid(_chip_node): _chip_node.queue_free()
 	var _escape_doors: Array = [Vector2(1585, 395), Vector2(1585, 550), Vector2(1585, 710), Vector2(1585, 865)]
@@ -370,6 +373,9 @@ func _become_ally() -> void:
 	is_slowed = false
 	is_frozen = false
 	_clear_element()
+	if is_instance_valid(_freeze_sprite):
+		_freeze_sprite.queue_free()
+		_freeze_sprite = null
 	set_physics_process(false)
 	var game = get_parent()
 	if game.has_method("subject_rescued"):
