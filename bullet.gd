@@ -38,18 +38,16 @@ func _setup_sprite() -> void:
 				frames.add_frame(key, load(path))
 
 	sprite.sprite_frames = frames
+	sprite.scale = Vector2(0.4, 0.4)  # Sprite boyutu küçültme
 
 	# Yöne göre animasyon seç
-	var angle := rad_to_deg(direction.angle())  # -180..180, East=0
-	# S=90, SE=45..135, SW=-45..-135 → ama top-down: S=aşağı=90°
-	# Açıyı 8 yöne çek:
+	# Godot angle(): East=0°, S(aşağı)=90°, SE=45°, SW=135°
+	var angle := rad_to_deg(direction.angle())
 	var anim_key := "S"
-	if angle >= 22.5 and angle < 67.5:
-		anim_key = "SE"
-	elif angle >= -67.5 and angle < -22.5:
-		anim_key = "SW"  # NE olur ama bullet için S yeterli
-	elif angle >= 67.5 and angle < 112.5:
-		anim_key = "S"
+	if angle >= 25.0 and angle < 70.0:
+		anim_key = "SE"   # sağ-aşağı
+	elif angle >= 110.0 and angle < 155.0:
+		anim_key = "SW"   # sol-aşağı
 
 	if frames.has_animation(anim_key) and frames.get_frame_count(anim_key) > 0:
 		sprite.play(anim_key)
