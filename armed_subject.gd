@@ -33,6 +33,7 @@ var _killed_by_ally: bool = false
 var _anim_dir: String = "S"
 var _freeze_sprite: AnimatedSprite2D = null
 var _cryo_sprite: AnimatedSprite2D = null
+var _melt_frozen_sprite: AnimatedSprite2D = null
 var _had_reaction: bool = false
 var _kicking: bool = false
 
@@ -411,6 +412,9 @@ func _escape() -> void:
 	if is_instance_valid(_cryo_sprite):
 		_cryo_sprite.queue_free()
 		_cryo_sprite = null
+	if is_instance_valid(_melt_frozen_sprite):
+		_melt_frozen_sprite.queue_free()
+		_melt_frozen_sprite = null
 	$ArmedSprite.play("run_" + _anim_dir)
 	if is_instance_valid(_chip_node): _chip_node.queue_free()
 	var _escape_doors: Array = [Vector2(1585, 395), Vector2(1585, 550), Vector2(1585, 710), Vector2(1585, 865)]
@@ -442,6 +446,9 @@ func _become_ally() -> void:
 	if is_instance_valid(_cryo_sprite):
 		_cryo_sprite.queue_free()
 		_cryo_sprite = null
+	if is_instance_valid(_melt_frozen_sprite):
+		_melt_frozen_sprite.queue_free()
+		_melt_frozen_sprite = null
 	set_physics_process(false)
 	var game = get_parent()
 	if game.has_method("subject_rescued"):
@@ -751,7 +758,8 @@ func _spawn_melt_frozen_vfx() -> void:
 	spr.scale = Vector2(0.5, 0.5)
 	add_child(spr)
 	spr.play("melt_frozen")
-	spr.animation_finished.connect(spr.queue_free)
+	_melt_frozen_sprite = spr
+	spr.animation_finished.connect(func(): _melt_frozen_sprite = null; spr.queue_free())
 
 func _spawn_melt_vfx() -> void:
 	var sf := SpriteFrames.new()
