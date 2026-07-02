@@ -5,65 +5,48 @@ var direction   = Vector2.ZERO
 var damage      = 3
 var bullet_type = "glock"  # "glock", "smg", "shotgun"
 
+# Renk paleti — bullet_type'a göre
+var _col_core:  Color
+var _col_mid:   Color
+var _col_outer: Color
+
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	z_index = 2
+	# ColorRect ve AnimatedSprite2D'yi gizle
+	var rect := get_node_or_null("ColorRect")
+	if rect: rect.visible = false
+	var spr := get_node_or_null("AnimatedSprite2D")
+	if spr: spr.visible = false
 
 func launch(dir: Vector2) -> void:
 	direction = dir.normalized()
-	_setup_sprite()
+	_pick_colors()
+	queue_redraw()
 
-func _setup_sprite() -> void:
-	var sprite := $AnimatedSprite2D as AnimatedSprite2D
-	if not sprite:
-		return
-
-	var folder_s  := "res://assets/projectiles/" + _folder_name() + "/"
-	var folder_se := "res://assets/projectiles/" + _folder_name() + "_SE/"
-	var folder_sw := "res://assets/projectiles/" + _folder_name() + "_SW/"
-
-	var frames := SpriteFrames.new()
-	if frames.has_animation("default"):
-		frames.remove_animation("default")
-
-	for anim in [["S", folder_s], ["SE", folder_se], ["SW", folder_sw]]:
-		var key: String   = anim[0]
-		var folder: String = anim[1]
-		frames.add_animation(key)
-		frames.set_animation_speed(key, 12.0)
-		frames.set_animation_loop(key, true)
-		for i in range(10):
-			var path := folder + "frame_%03d.png" % i
-			if ResourceLoader.exists(path):
-				frames.add_frame(key, load(path))
-
-	sprite.sprite_frames = frames
-	sprite.scale = Vector2(0.4, 0.4)  # Sprite boyutu küçültme
-
-	# Yöne göre animasyon seç
-	# Godot angle(): East=0°, S(aşağı)=90°, SE=45°, SW=135°
-	var angle := rad_to_deg(direction.angle())
-	var anim_key := "S"
-	if angle >= 25.0 and angle < 70.0:
-		anim_key = "SE"   # sağ-aşağı
-	elif angle >= 110.0 and angle < 155.0:
-		anim_key = "SW"   # sol-aşağı
-
-	if frames.has_animation(anim_key) and frames.get_frame_count(anim_key) > 0:
-		sprite.play(anim_key)
-	elif frames.get_frame_count("S") > 0:
-		sprite.play("S")
-
-	# ColorRect'i gizle — sprite var
-	var rect := get_node_or_null("ColorRect")
-	if rect:
-		rect.visible = false
-
-func _folder_name() -> String:
+func _pick_colors() -> void:
 	match bullet_type:
-		"smg":     return "smg"
-		"shotgun": return "shotgunAmmo"
-		_:         return "glock"
+		"smg":
+			_col_core  = Color(1.0, 1.0, 1.0)       # parlak beyaz merkez
+			_col_mid   = Color(0.3, 0.6, 1.0)        # mavi
+			_col_outer = Color(0.1, 0.2, 0.6, 0.6)   # koyu mavi glow
+		"shotgun":
+			_col_core  = Color(1.0, 1.0, 0.8)        # parlak sarı merkez
+			_col_mid   = Color(1.0, 0.4, 0.05)       # turuncu
+			_col_outer = Color(0.5, 0.1, 0.0, 0.6)   # koyu kırmızı glow
+		_:  # glock
+			_col_core  = Color(1.0, 1.0, 0.6)        # sarı merkez
+			_col_mid   = Color(0.9, 0.75, 0.1)       # altın
+			_col_outer = Color(0.4, 0.3, 0.0, 0.6)   # koyu sarı glow
+
+func _draw() -> void:
+	# Pixel art mermi: 3 katman, keskin kenar, tam piksel
+	# Dış glow — 5px, yarı saydam
+	draw_circle(Vector2.ZERO, 5.0, _col_outer)
+	# Orta halka — 3px
+	draw_circle(Vector2.ZERO, 3.0, _col_mid)
+	# Parlak merkez — 1px
+	draw_circle(Vector2.ZERO, 1.0, _col_core)
 
 func _physics_process(delta: float) -> void:
 	global_position += direction * speed * delta
