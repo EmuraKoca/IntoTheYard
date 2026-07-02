@@ -23,6 +23,7 @@ var bullet_scene = preload("res://bullet.tscn")
 
 # Animasyon
 var _anim_dir: String = "S"
+var _freeze_sprite: AnimatedSprite2D = null
 
 func _ready() -> void:
 	z_index = 2
@@ -213,10 +214,13 @@ func apply_slow(amount, duration: float = 3.0) -> void:
 	_clear_element()
 
 func apply_frozen() -> void:
+	if is_frozen:
+		return
 	is_frozen = true
 	is_wet = false
 	_set_element("frozen")
 	$ShotgunSprite.stop()
+	_spawn_freeze_vfx()
 	var p := _get_player()
 	var dur := 3.0
 	if p and p.get("freeze_duration_mult"):
@@ -224,9 +228,33 @@ func apply_frozen() -> void:
 	await get_tree().create_timer(dur).timeout
 	if not is_instance_valid(self):
 		return
+	if is_instance_valid(_freeze_sprite):
+		_freeze_sprite.play("freeze")
+		await _freeze_sprite.animation_finished
+	if is_instance_valid(_freeze_sprite):
+		_freeze_sprite.queue_free()
+		_freeze_sprite = null
 	is_frozen = false
 	$ShotgunSprite.play("walk_" + _anim_dir)
 	_clear_element()
+
+func _spawn_freeze_vfx() -> void:
+	var sf := SpriteFrames.new()
+	if sf.has_animation("default"): sf.remove_animation("default")
+	sf.add_animation("freeze")
+	sf.set_animation_speed("freeze", 8.0)
+	sf.set_animation_loop("freeze", false)
+	for i in range(15):
+		sf.add_frame("freeze", load("res://assets/VFX/crashFreeze/frame_%03d.png" % i))
+	_freeze_sprite = AnimatedSprite2D.new()
+	_freeze_sprite.sprite_frames = sf
+	_freeze_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_freeze_sprite.z_index = 5
+	_freeze_sprite.position = Vector2(0, -50)
+	_freeze_sprite.scale = Vector2(0.5, 0.5)
+	add_child(_freeze_sprite)
+	_freeze_sprite.frame = 0
+	_freeze_sprite.stop()
 
 func apply_wet() -> void:
 	_check_reaction("wet")
