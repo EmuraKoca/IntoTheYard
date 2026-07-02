@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bn6158k4geonq"
-path="res://.godot/imported/slow.png-cf80cb105252e13e6b0e7ae229c2884e.ctex"
+uid="uid://df8im45bsbrc4"
+path="res://.godot/imported/frame_014.png-a6ebe535c8fb9685e8811f84f2f8d1a4.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/elemIndicators/slow.png"
-dest_files=["res://.godot/imported/slow.png-cf80cb105252e13e6b0e7ae229c2884e.ctex"]
+source_file="res://assets/VFX/crashFreeze/frame_014.png"
+dest_files=["res://.godot/imported/frame_014.png-a6ebe535c8fb9685e8811f84f2f8d1a4.ctex"]
 
 [params]
 

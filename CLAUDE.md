@@ -5,11 +5,14 @@ köprüsü olarak kullanılır. Her oturum başında oku, her oturum sonunda gü
 
 ## Şu an üzerinde çalışılanlar / devam eden işler
 
-- (Güncel değil — son oturumda burayı güncellemeyi unutma)
+- v0.0.9.9e tamamlandı, test aşamasında
+- Freeze VFX boyut/pozisyon (scale=0.5, pos=0,0) oyunda test edilmeli — karaktere göre ayar gerekebilir
 
 ## Bilinen sorunlar / takip edilmesi gerekenler
 
-- (yok)
+- Freeze VFX scale ve pozisyon karaktere göre ayarlanmamış, test sonrası düzeltilecek
+- Calamity Lightning/Flame durum efektleri test edilmedi
+- Leila kart sinerjileri (reaksiyon zinciri, Volatile Mixture, Catalyst Mind vb.) tam test bekliyor
 
 ## Notlar
 

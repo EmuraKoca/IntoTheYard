@@ -2965,3 +2965,38 @@ Test Edilmesi Gerekenler:
   ⚠️  Calamity Flame: sadece ilk hit'te burn uygulanıyor mu, her tick'te değil?
   ⚠️  Ally: düşman ally olurken üzerindeki ateş/buz/elektrik efekti kayboluyor mu?
   ⚠️  Cyclone/Leila: sola/sağa yürürken idle'a geçince son yön korunuyor mu?
+
+─────────────────────────────────────────────────────────────────────────────
+v0.0.9.9e
+02.07.2026
+
+Freeze VFX (crashFreeze sprite sistemi):
+
+  ✅ Düşman freeze olunca frame_000 sabit, düşman animasyonu duruyor
+  ✅ Çözülme anında frame_000–014 sırayla oynar, biter bitmez sprite silinir
+  ✅ Buz sprite z_index = -1 → düşmanın arkasında render edilir (hapsolmuş görünüm)
+  ✅ Tüm 7 düşman tipine uygulandı (_spawn_freeze_vfx)
+  ✅ Escape veya Ally durumunda freeze VFX anında kaldırılıyor
+  ✅ apply_frozen() başına is_frozen guard eklendi (çift tetik önlendi)
+
+Idle Yön Düzeltmesi (Vector):
+
+  ✅ Vector idle'da artık North'a bakıyor (Cyclone/Leila ile aynı davranış)
+  ✅ Cyclone/Leila aim_direction tabanlı idle mantığı korundu (doğruydu)
+
+Escape/Ally Durum Efekti (Düzeltme):
+
+  ✅ _escape() fonksiyonuna da status flag temizliği + _clear_element() eklendi
+     (daha önce yalnızca _become_ally()'de vardı)
+
+Yeni Görseller:
+
+  ✅ assets/VFX/crashFreeze/ — 15 frame buz bloğu animasyonu
+  ✅ assets/backgrounds/PixelBackgrounds/street2.png — yeni arka plan
+  ✅ assets/elemIndicators/slow.png — güncellendi
+
+Test Edilmesi Gerekenler:
+
+  ⚠️  Freeze VFX boyut/pozisyon: scale=0.5, position=(0,0) — karaktere göre
+      kayıyorsa ayarlanmalı
+  ⚠️  Freeze → Escape/Ally geçişinde buz anında kayboluyor mu?

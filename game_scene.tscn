@@ -8,7 +8,6 @@
 [ext_resource type="Script" uid="uid://bhw3nykv6n3e8" path="res://tribune.gd" id="5_mj2jn"]
 [ext_resource type="Script" uid="uid://fwym7endixjs" path="res://fusion_zone.gd" id="7_6e45b"]
 [ext_resource type="Texture2D" uid="uid://cwxa2172uj8ds" path="res://assets/backgrounds/PixelBackgrounds/Labroof2.png" id="10_7nf4l"]
-[ext_resource type="Texture2D" uid="uid://dwac860uk0f5i" path="res://assets/backgrounds/PixelBackgrounds/street.png" id="10_miq82"]
 [ext_resource type="Texture2D" uid="uid://dvp1ee4s7p0pk" path="res://assets/backgrounds/PixelBackgrounds/LabRoof0.png" id="11_cxwtw"]
 [ext_resource type="Shader" uid="uid://8m6x8whvcd36" path="res://game_scene.gdshader" id="12_ueiaa"]
 [ext_resource type="Texture2D" uid="uid://bkbr8lawyjpfm" path="res://assets/backgrounds/PixelBackgrounds/gameAreaEdited2.png" id="13_7nf4l"]
@@ -28,6 +27,7 @@
 [ext_resource type="Texture2D" uid="uid://b68t1venf0mnd" path="res://assets/placeHolder/Stairs, ladders and Railings.png" id="21_if5p2"]
 [ext_resource type="Texture2D" uid="uid://x7rp5ahnlnkh" path="res://assets/placeHolder/21.png" id="22_7nf4l"]
 [ext_resource type="Texture2D" uid="uid://dy4tl64y2ygjb" path="res://assets/placeHolder/14.png" id="22_f54l4"]
+[ext_resource type="Texture2D" uid="uid://d2l2ci3novyug" path="res://assets/backgrounds/PixelBackgrounds/street2.png" id="23_1hpar"]
 [ext_resource type="Texture2D" uid="uid://bbhmmd563pxs8" path="res://assets/placeHolder/19.png" id="23_cxwtw"]
 [ext_resource type="Texture2D" uid="uid://bneygk3t17e0b" path="res://assets/placeHolder/13.png" id="23_jv0we"]
 [ext_resource type="Texture2D" uid="uid://befbveu3hlbg4" path="res://assets/placeHolder/15.png" id="24_kyyqo"]
@@ -3968,7 +3968,7 @@ tile_set = SubResource("TileSet_cxwtw")
 z_index = -1
 offset_right = 1630.0
 offset_bottom = 240.0
-texture = ExtResource("10_miq82")
+texture = ExtResource("23_1hpar")
 expand_mode = 1
 
 [node name="BG_Living" type="TextureRect" parent="." unique_id=788596882]

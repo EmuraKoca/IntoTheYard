@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bn6158k4geonq"
-path="res://.godot/imported/slow.png-cf80cb105252e13e6b0e7ae229c2884e.ctex"
+uid="uid://d2l2ci3novyug"
+path="res://.godot/imported/street2.png-e0959881341f27141f024bdc639726cc.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/elemIndicators/slow.png"
-dest_files=["res://.godot/imported/slow.png-cf80cb105252e13e6b0e7ae229c2884e.ctex"]
+source_file="res://assets/backgrounds/PixelBackgrounds/street2.png"
+dest_files=["res://.godot/imported/street2.png-e0959881341f27141f024bdc639726cc.ctex"]
 
 [params]
 
