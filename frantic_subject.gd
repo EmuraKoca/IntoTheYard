@@ -70,6 +70,7 @@ func apply_frozen() -> void:
 	is_frozen = true
 	is_wet = false
 	_set_element("frozen")
+	$FranticSprite.stop()
 	var p := _get_player()
 	var dur := 3.0
 	if p and p.get("freeze_duration_mult"):
@@ -78,6 +79,7 @@ func apply_frozen() -> void:
 	if not is_instance_valid(self):
 		return
 	is_frozen = false
+	$FranticSprite.play("run_" + _anim_dir)
 	_clear_element()
 
 func apply_wet() -> void:
@@ -321,6 +323,13 @@ func _collapse() -> void:
 		_escape()
 
 func _escape() -> void:
+	is_burning = false
+	is_wet = false
+	is_electrified = false
+	is_slowed = false
+	is_frozen = false
+	_clear_element()
+	$FranticSprite.play("run_" + _anim_dir)
 	if is_instance_valid(_chip_node): _chip_node.queue_free()
 	var _escape_doors: Array = [Vector2(1585, 395), Vector2(1585, 550), Vector2(1585, 710), Vector2(1585, 865)]
 	var _nearest_escape: Vector2 = _escape_doors[0]
