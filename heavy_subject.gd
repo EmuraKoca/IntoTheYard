@@ -117,8 +117,8 @@ func _spawn_freeze_vfx() -> void:
 	_freeze_sprite = AnimatedSprite2D.new()
 	_freeze_sprite.sprite_frames = sf
 	_freeze_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	_freeze_sprite.z_index = 5
-	_freeze_sprite.position = Vector2(0, -50)
+	_freeze_sprite.z_index = -1
+	_freeze_sprite.position = Vector2(0, 0)
 	_freeze_sprite.scale = Vector2(0.5, 0.5)
 	add_child(_freeze_sprite)
 	_freeze_sprite.frame = 0
