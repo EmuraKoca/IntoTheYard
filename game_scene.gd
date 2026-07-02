@@ -162,8 +162,8 @@ const _DATA_BAR_H    := 14.0
 const _DATA_BAR_W    := 272.0
 
 # ── Boss sırası — her bölümde 10. dakikada boss gelir ────────────────────────
-const BOSS_SPAWN_TIME: float = 60.0
-var _boss_check_index:  int  = 1  # TEST: Smiler atlanıyor, direkt Cyber404
+const BOSS_SPAWN_TIME: float = 600.0
+var _boss_check_index:  int  = 0
 var _boss_spawned:      bool = false
 var _cyber404_node = null
 var _cyber404_spawned: bool = false
@@ -2323,34 +2323,35 @@ func _make_gravity_gradient() -> Gradient:
 	return g
 
 func _spawn_subject() -> void:
-	# ── TEST MODU: 1-10 armedsubject, 11+ normal akış ──────────────────────────
+	# Level bazlı ağırlıklı havuz — yeni tipler kademeli olarak eklenir
 	var pool: Array = []
-	if level <= 10:
+
+	# 1-3: Sadece Subject
+	for i in 5: pool.append("subject")
+
+	# 4-7: + FranticSubject
+	if level >= 4:
+		for i in 3: pool.append("frantic")
+
+	# 8-11: + ArmedSubject
+	if level >= 8:
+		for i in 2: pool.append("armed")
+
+	# 12-15: + HeavySubject
+	if level >= 12:
+		for i in 2: pool.append("heavy")
+
+	# 16-19: + CyberShooter
+	if level >= 16:
 		pool.append("cyber_shooter")
+
+	# 20-22: + CyberRifle
+	if level >= 20:
 		pool.append("cyber_rifle")
+
+	# 23+: + CyberShotgun
+	if level >= 23:
 		pool.append("cyber_shotgun")
-	else:
-		# Level bazlı ağırlıklı havuz — yeni tipler kademeli olarak eklenir
-		# 1-3: Sadece Subject
-		for i in 5: pool.append("subject")
-		# 4-7: + FranticSubject
-		if level >= 4:
-			for i in 3: pool.append("frantic")
-		# 8-11: + ArmedSubject
-		if level >= 8:
-			for i in 2: pool.append("armed")
-		# 12-15: + HeavySubject
-		if level >= 12:
-			for i in 2: pool.append("heavy")
-		# 16-19: + CyberShooter
-		if level >= 16:
-			pool.append("cyber_shooter")
-		# 20-22: + CyberRifle
-		if level >= 20:
-			pool.append("cyber_rifle")
-		# 23+: + CyberShotgun
-		if level >= 23:
-			pool.append("cyber_shotgun")
 
 	var subject
 	match pool[randi() % pool.size()]:
