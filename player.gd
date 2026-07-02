@@ -621,9 +621,11 @@ func _setup_leila_sprite() -> void:
 	sprite.play("idle_S")
 
 func _update_leila_anim_dir() -> void:
-	if velocity == Vector2.ZERO:
-		return
-	var deg: float = rad_to_deg(velocity.angle())
+	var deg: float
+	if velocity != Vector2.ZERO:
+		deg = rad_to_deg(velocity.angle())
+	else:
+		deg = rad_to_deg(aim_direction.angle())
 	if   deg > -22.5  and deg <= 22.5:   _leila_anim_dir = "E"
 	elif deg > 22.5   and deg <= 67.5:   _leila_anim_dir = "SE"
 	elif deg > 67.5   and deg <= 112.5:  _leila_anim_dir = "S"
@@ -646,9 +648,11 @@ func _update_leila_animation() -> void:
 		sprite.play(anim)
 
 func _update_cyclone_anim_dir() -> void:
-	if velocity == Vector2.ZERO:
-		return
-	var deg: float = rad_to_deg(velocity.angle())
+	var deg: float
+	if velocity != Vector2.ZERO:
+		deg = rad_to_deg(velocity.angle())
+	else:
+		deg = rad_to_deg(aim_direction.angle())
 	if   deg > -22.5  and deg <= 22.5:   _cyclone_anim_dir = "E"
 	elif deg > 22.5   and deg <= 67.5:   _cyclone_anim_dir = "SE"
 	elif deg > 67.5   and deg <= 112.5:  _cyclone_anim_dir = "S"
@@ -687,7 +691,7 @@ func _update_anim_dir() -> void:
 	elif s:       _anim_dir = "S"
 	elif d:       _anim_dir = "E"
 	elif a:       _anim_dir = "W"
-	# tuş basılı değilse mevcut yön korunur
+	else:         _anim_dir = "N"
 
 
 func _get_vector_scale(anim_name: String) -> Vector2:
