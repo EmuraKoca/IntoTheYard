@@ -183,7 +183,7 @@ func _collapse() -> void:
 	set_physics_process(false)
 	$CollisionShape2D.set_deferred("disabled", true)
 	await get_tree().create_timer(0.4).timeout
-	if randf() < 0.25:
+	if randf() < 0.01:
 		_become_ally()
 	else:
 		_escape()
