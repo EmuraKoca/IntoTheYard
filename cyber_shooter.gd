@@ -144,6 +144,7 @@ func _physics_process(delta: float) -> void:
 func _shoot(target: Node2D) -> void:
 	var bullet = bullet_scene.instantiate()
 	bullet.global_position = global_position
+	bullet.bullet_type = "smg"
 	var dir = (target.global_position - global_position).normalized()
 	get_parent().add_child(bullet)
 	bullet.launch(dir)

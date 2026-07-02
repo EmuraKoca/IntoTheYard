@@ -147,6 +147,7 @@ func _shoot(target: Node2D) -> void:
 	for i in range(3):
 		var bullet = bullet_scene.instantiate()
 		bullet.global_position = global_position
+		bullet.bullet_type = "shotgun"
 		var spread_dir = dir.rotated(deg_to_rad(-20 + i * 20))
 		get_parent().add_child(bullet)
 		bullet.launch(spread_dir)

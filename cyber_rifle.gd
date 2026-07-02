@@ -148,6 +148,7 @@ func _shoot(target: Node2D) -> void:
 		if not is_instance_valid(self): return
 		var bullet = bullet_scene.instantiate()
 		bullet.global_position = global_position
+		bullet.bullet_type = "smg"
 		get_parent().add_child(bullet)
 		bullet.launch(dir)
 		await get_tree().create_timer(0.18).timeout
