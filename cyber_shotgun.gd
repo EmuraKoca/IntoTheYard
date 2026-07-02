@@ -391,7 +391,7 @@ func _become_ally() -> void:
 
 
 	set_physics_process(true)
-	$CollisionShape2D.disabled = false
+	$CollisionShape2D.set_deferred("disabled", false)
 
 func _ally_behavior() -> void:
 	var subjects = get_tree().get_nodes_in_group("subjects")

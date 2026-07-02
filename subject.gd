@@ -471,7 +471,7 @@ func die() -> void:
 	is_dead = true
 	if is_in_group("allies"):
 		set_physics_process(false)
-		$CollisionShape2D.disabled = true
+		$CollisionShape2D.set_deferred("disabled", true)
 		var tween = create_tween()
 		tween.tween_property(self, "modulate", Color(1, 1, 1, 0), 1.0)
 		await get_tree().create_timer(1.0).timeout
@@ -484,7 +484,7 @@ func die() -> void:
 
 func _collapse() -> void:
 	set_physics_process(false)
-	$CollisionShape2D.disabled = true
+	$CollisionShape2D.set_deferred("disabled", true)
 	await get_tree().create_timer(0.4).timeout
 
 	# Killed by an ally — just run left, never become an ally
@@ -587,7 +587,7 @@ func _become_ally() -> void:
 	_is_exiting = false
 	_reached_living_area = true
 	_wander_timer = 0.0
-	$CollisionShape2D.disabled = false
+	$CollisionShape2D.set_deferred("disabled", false)
 	set_physics_process(true)
 
 func _ally_behavior() -> void:
