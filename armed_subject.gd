@@ -336,16 +336,6 @@ func _collapse() -> void:
 
 func _escape() -> void:
 	if is_instance_valid(_chip_node): _chip_node.queue_free()
-	if randf() < 0.3:
-		var escape_dialogs = [
-			"Hasmen... what have you done to us.",
-			"I'm out of this, man.",
-			"Mommyyy!"
-		]
-		var dialog = escape_dialogs[randi() % escape_dialogs.size()]
-		var game = get_parent()
-		if game.has_method("show_dialog"):
-			game.show_dialog(dialog, global_position)
 	var _escape_doors: Array = [Vector2(1585, 395), Vector2(1585, 550), Vector2(1585, 710), Vector2(1585, 865)]
 	var _nearest_escape: Vector2 = _escape_doors[0]
 	var _min_escape_dist: float = global_position.distance_to(_escape_doors[0])
@@ -363,6 +353,12 @@ func _escape() -> void:
 	if is_instance_valid(self): queue_free()
 
 func _become_ally() -> void:
+	is_burning = false
+	is_wet = false
+	is_electrified = false
+	is_slowed = false
+	is_frozen = false
+	_clear_element()
 	set_physics_process(false)
 	var game = get_parent()
 	if game.has_method("subject_rescued"):
@@ -656,4 +652,3 @@ func _notify_reaction(game: Node, player: Node) -> void:
 
 	if player.get("has_catalyst_mind") and player.has_catalyst_mind:
 		player.catalyst_mind_ready = true
-

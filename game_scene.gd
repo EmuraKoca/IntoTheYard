@@ -2129,10 +2129,13 @@ func _activate_lightning(pos: Vector2) -> void:
 	for subject in subjects:
 		if subject.global_position.distance_to(pos) < 100:
 			subject.take_damage(3)
+			if subject.has_method("apply_electrified"):
+				subject.apply_electrified()
 	_vfx_lightning(pos)
 
 func _activate_flame(pos: Vector2) -> void:
 	_vfx_flame(pos)
+	var subjects_hit: Array = []
 	var flame_timer = get_tree().create_timer(0.5)
 	var hits = 0
 	while hits < 6:
@@ -2140,6 +2143,10 @@ func _activate_flame(pos: Vector2) -> void:
 		for subject in subjects:
 			if subject.global_position.distance_to(pos) < 120:
 				subject.take_damage(1)
+				if hits == 0 and not subject in subjects_hit:
+					subjects_hit.append(subject)
+					if subject.has_method("apply_burn"):
+						subject.apply_burn()
 		hits += 1
 		await flame_timer.timeout
 		flame_timer = get_tree().create_timer(0.5)

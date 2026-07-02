@@ -2930,3 +2930,38 @@ Test Edilmesi Gerekenler:
       hem hasar alıyor hem yayıyor — sonsuz döngü riski var mı?
   ⚠️  Catalyst Mind (catalyst_mind_ready) upgrade ekranında sıfırlanıyor mu?
   ⚠️  Ally chance hâlâ %25 (test modu) — prodüksiyona geçmeden %3'e düşür
+
+─────────────────────────────────────────────────────────────────────────────
+v0.0.9.9d
+02.07.2026
+
+Düşman Durum Efekti Temizliği (Ally):
+
+  ✅ _become_ally() — tüm 7 düşman tipinde (subject, armed, heavy, frantic,
+     cyber_shooter, cyber_rifle, cyber_shotgun) ally olurken is_burning /
+     is_wet / is_electrified / is_slowed / is_frozen sıfırlanıyor, _clear_element()
+     çağrılıyor. Artık ally yürürken üzerinde durum efekti kalmıyor.
+
+Düşman Konuşmaları Kaldırıldı:
+
+  ✅ _escape() içindeki escape_dialogs / show_dialog blokları tüm 7 düşman
+     tipinden silindi. Artık hiçbir düşman kaçarken konuşmuyor.
+
+Calamity Durum Efektleri:
+
+  ✅ _activate_lightning() — menzildeki düşmanlara hasar + apply_electrified()
+  ✅ _activate_flame()    — ilk hit'te menzildeki düşmanlara apply_burn()
+     (Gravity ve Arise fiziksel / top yönlendirme; durum etkisi gerekmez)
+
+Cyclone & Leila Idle Yön Düzeltmesi:
+
+  ✅ _update_leila_anim_dir() ve _update_cyclone_anim_dir() velocity == ZERO
+     olduğunda erken dönüyor; son hareket yönü korunuyor. Artık idle'da
+     North'a dönmüyor — Vector ile aynı davranış.
+
+Test Edilmesi Gerekenler:
+
+  ⚠️  Calamity Lightning: düşman hem hasar alıyor hem electrified oldu mu?
+  ⚠️  Calamity Flame: sadece ilk hit'te burn uygulanıyor mu, her tick'te değil?
+  ⚠️  Ally: düşman ally olurken üzerindeki ateş/buz/elektrik efekti kayboluyor mu?
+  ⚠️  Cyclone/Leila: sola/sağa yürürken idle'a geçince son yön korunuyor mu?
