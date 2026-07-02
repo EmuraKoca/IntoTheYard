@@ -163,7 +163,7 @@ const _DATA_BAR_W    := 272.0
 
 # ── Boss sırası — her bölümde 10. dakikada boss gelir ────────────────────────
 const BOSS_SPAWN_TIME: float = 60.0
-var _boss_check_index:  int  = 0
+var _boss_check_index:  int  = 1  # TEST: Smiler atlanıyor, direkt Cyber404
 var _boss_spawned:      bool = false
 var _cyber404_node = null
 var _cyber404_spawned: bool = false
@@ -2326,7 +2326,9 @@ func _spawn_subject() -> void:
 	# ── TEST MODU: 1-10 armedsubject, 11+ normal akış ──────────────────────────
 	var pool: Array = []
 	if level <= 10:
-		pool.append("armed")
+		pool.append("cyber_shooter")
+		pool.append("cyber_rifle")
+		pool.append("cyber_shotgun")
 	else:
 		# Level bazlı ağırlıklı havuz — yeni tipler kademeli olarak eklenir
 		# 1-3: Sadece Subject
