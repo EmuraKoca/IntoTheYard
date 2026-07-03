@@ -2105,6 +2105,8 @@ func _input(event: InputEvent) -> void:
 				_activate_emp()
 			calamity_slots.remove_at(calamity_index)
 			calamity_index = clamp(calamity_index, 0, max(calamity_slots.size() - 1, 0))
+			if _player_node and _player_node.get("has_mana_overflow") and _player_node.has_mana_overflow:
+				_player_node.mana_overflow_timer = 5.0
 			update_ui()
 	
 	# Tab → Tactical Mode aç/kapat
@@ -2541,6 +2543,17 @@ func _process(delta: float) -> void:
 	if p and (p.auto_mode or Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)):
 		queue_redraw()
 
+	# ── Elemental Harmony: aktif unique element → Core Speed bonusu ──────────
+	if p and p.get("has_elemental_harmony_util") and p.has_elemental_harmony_util:
+		var _eh_elems := {}
+		for _body in get_tree().get_nodes_in_group("subjects"):
+			if _body.get("is_wet") and _body.is_wet: _eh_elems["wet"] = true
+			if _body.get("is_burning") and _body.is_burning: _eh_elems["burn"] = true
+			if _body.get("is_slowed") and _body.is_slowed: _eh_elems["cryo"] = true
+			if _body.get("is_electrified") and _body.is_electrified: _eh_elems["elec"] = true
+			if _body.get("is_frozen") and _body.is_frozen: _eh_elems["frozen"] = true
+		p.elemental_harmony_bonus = _eh_elems.size() * 0.05
+
 	# ── Last Stand Lv2-3: eksik HP → pasif armor kazanımı ─────────────────────
 	if p and p.has_last_stand and p.last_stand_armor_mult > 0.0:
 		var _missing := float(player_max_hp - player_hp)
@@ -2918,10 +2931,14 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 		get_node("Player").has_overheat = true
 	elif index == 84:  # Elemental Harmony (Utility)
 		get_node("Player").has_elemental_harmony_util = true
+	elif index == 89:  # Thermal Expansion
+		get_node("Player").has_thermal_expansion = true
 	elif index == 90:  # Mana Overflow
 		get_node("Player").has_mana_overflow = true
 	elif index == 91:  # Perfect Catalyst
 		get_node("Player").has_perfect_catalyst = true
+	elif index == 102:  # Pyroblast
+		get_node("Player").has_pyroblast = true
 
 	# ── Leila — Individuality ────────────────────────────────────────────────
 	elif index == 75:  # Arcane Focus

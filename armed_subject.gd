@@ -73,8 +73,12 @@ func apply_burn() -> void:
 
 func _react_overheat() -> void:
 	_spawn_overheat_vfx()
+	var p := _get_player()
+	var _oh_radius := 150.0
+	if p and p.get("has_pyroblast") and p.has_pyroblast:
+		_oh_radius = 150.0 + float(p.get("_overheat_counter") if p.get("_overheat_counter") != null else 0) * 8.0
 	for body in get_tree().get_nodes_in_group("subjects"):
-		if is_instance_valid(body) and global_position.distance_to(body.global_position) < 150.0:
+		if is_instance_valid(body) and global_position.distance_to(body.global_position) < _oh_radius:
 			body.health -= 15
 			body._react_flash(Color(1.0, 0.3, 0.0))
 			if body.health <= 0: body.die()
@@ -701,10 +705,15 @@ func _react_electrocute(mult: float, game: Node, player: Node) -> void:
 func _react_steam(mult: float, game: Node, player: Node) -> void:
 	_spawn_steam_vfx()
 	var dmg := int(8 * mult)
+	var _steam_radius := 120.0
+	var _thermal := player and player.get("has_thermal_expansion") and player.has_thermal_expansion
+	if _thermal:
+		_steam_radius = 200.0
 	for body in get_tree().get_nodes_in_group("subjects"):
 		if body == self: continue
-		if is_instance_valid(body) and global_position.distance_to(body.global_position) < 120.0:
+		if is_instance_valid(body) and global_position.distance_to(body.global_position) < _steam_radius:
 			body.health -= dmg
+			if _thermal and body.get("apply_wet"): body.apply_wet(0.3, 2.0)
 			if body.health <= 0: body.die()
 	health -= dmg
 	_react_flash(Color(0.9, 0.9, 1.0))

@@ -126,6 +126,9 @@ var _overheat_counter: int            = 0
 var has_elemental_harmony_util: bool  = false  # 3 element aktifse hız bonusu
 var has_mana_overflow: bool           = false  # Calamity → core'lar güçlenir
 var mana_overflow_timer: float        = 0.0   # Mana Overflow süreci
+var has_pyroblast: bool               = false
+var has_thermal_expansion: bool       = false
+var elemental_harmony_bonus: float    = 0.0   # Elemental Harmony: unique element başına +5% hız
 var has_perfect_catalyst: bool        = false  # Reaksiyon → son element tekrar
 var last_applied_element: String      = ""    # Perfect Catalyst için
 var has_elemental_harmony_ind: bool   = false  # Individuality: per-element hız
@@ -479,6 +482,13 @@ func _physics_process(delta: float) -> void:
 		var _armor_ratio: float = float(game_node.player_armor) / float(max(game_node.player_armor_cap, 1))
 		if _armor_ratio >= 0.75:
 			_effective_orbit_speed *= 1.15
+	# Mana Overflow: Calamity sonrası 5s boyunca Core Speed +%50
+	if mana_overflow_timer > 0.0:
+		mana_overflow_timer -= delta
+		_effective_orbit_speed *= 1.5
+	# Elemental Harmony: aktif unique element başına +%5 Core Speed
+	if has_elemental_harmony_util and elemental_harmony_bonus > 0.0:
+		_effective_orbit_speed *= (1.0 + elemental_harmony_bonus)
 	orbit_angle += _effective_orbit_speed * delta
 	var n := orbit_balls.size()
 	for i in range(n - 1, -1, -1):
