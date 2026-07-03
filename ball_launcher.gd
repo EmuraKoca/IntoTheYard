@@ -208,6 +208,10 @@ func _process(delta: float) -> void:
 func _launch_typed_ball(ball_type: String) -> void:
 	if player == null: return
 	var player_node = get_parent().get_node("Player")
+	var _current_balls := get_tree().get_nodes_in_group("player_balls")
+	_current_balls = _current_balls.filter(func(b): return is_instance_valid(b))
+	if _current_balls.size() >= player_node.MAX_ORBIT:
+		return
 
 	var ball = ball_scene.instantiate()
 	var vector_bonus: int = 3 if player_node.character_type == "vector" else 0
