@@ -34,7 +34,7 @@ var _run_start_level: int = 0
 var _player_node: Node = null  # önbellek — her frame get_node çağrısını önler
 
 const _CORE_FOLDER_MAP: Dictionary = {
-	"normal":     "normalBall",    "electric": "electricBall",
+	"normal":     "normalBall",    "electric": "electricBall",  "arc": "arcCore",
 	"pierce":     "pierceBall",    "split":    "splitBall",
 	"cryo":       "cryoBall",      "glitch":   "glitchBall",
 	"water":      "waterBall",     "fire":     "fireBall",
