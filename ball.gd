@@ -147,6 +147,8 @@ func _setup_ball_sprite() -> void:
 			_sprite.play("spin")
 			add_child(_sprite)
 		return
+	elif can_arc:
+		folder = "arcCore";       frame_count = 17
 	elif can_electric:
 		folder = "electricBall";  frame_count = 17
 	elif can_fire:
@@ -185,8 +187,6 @@ func _setup_ball_sprite() -> void:
 		folder = "plasmaCore";      frame_count = 18
 	elif can_steam:
 		folder = "steamCore";       frame_count = 32
-	elif can_arc:
-		folder = "arcCore";         frame_count = 17
 	elif can_echo:
 		folder = "echoCore";        frame_count = 17
 	elif can_orbit:
