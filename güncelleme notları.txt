@@ -3108,3 +3108,17 @@ Optimizasyon:
      — Önce her frame tetikleniyordu, şimdi auto_mode veya LMB basılıyken
   ✅ Freeze VFX SpriteFrames artık static var ile paylaşılıyor
      — Her donmada 15 PNG disk'ten yükleniyordu → ilk donmada bir kez yüklenir, sonra önbellekten
+
+  ✅ Dead code kartlar implement edildi (Elemental Harmony, Mana Overflow, Pyroblast, Thermal Expansion)
+     — Elemental Harmony: arenada aktif unique element başına +%5 Core Speed
+     — Mana Overflow: Calamity kullanımı sonrası 5s boyunca Core Speed +%50
+     — Pyroblast: Overheat patlaması AoE radius büyüyor (150 + counter×8 px)
+     — Thermal Expansion: Steam patlaması AoE 120→200px, yakın düşmanlara Wet yayılıyor
+  ✅ MeltTheFrozen VFX Escape/Ally anında temizleniyor
+     — _melt_frozen_sprite class variable eklendi, tüm 7 düşman dosyasına uygulandı
+  ✅ Arc Core sprite düzeltildi
+     — Oyun içi: can_arc kontrolü can_electric'ten önceye alındı (electricBall yerine arcCore)
+     — UI: _CORE_FOLDER_MAP ve _get_ball_core_type'a Arc Core eklendi
+  ✅ Tüm Leila Core'ları UI'da doğru sprite gösteriyor
+     — _CORE_FOLDER_MAP'e 8 eksik Core eklendi (plasma, steam, echo, orbit, scatter, catalyst, voltaic, tempest, prismatic)
+     — _get_ball_core_type'a 10 Leila Core eklendi — Steam Core Hydro olarak görünüyordu, düzeltildi
