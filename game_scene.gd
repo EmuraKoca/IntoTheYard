@@ -1750,6 +1750,22 @@ func _build_all_upgrades() -> void:
 	{"name": "Lightning",           "category": "Calamity",      "color": Color(1.0, 1.0, 0.0), "desc": "Lightning strikes selected point",          "index": 7,  "weight": 8,  "rarity": "common", "chars": [], "min_level": 0},
 	{"name": "Flame Zone",          "category": "Calamity",      "color": Color(1.0, 0.3, 0.0), "desc": "Continuous damage in selected area",        "index": 8,  "weight": 8,  "rarity": "common", "chars": [], "min_level": 0},
 ]
+	# ── TEST MODE — false yapınca normal ağırlıklara döner ──────────────────
+	const TEST_ELEMENTAL: bool = true
+	if TEST_ELEMENTAL:
+		var _focus = ["Electric Core", "Cryo Core", "Hydro Core", "Pyro Core",
+					  "Electric Amp", "Cryo Amp", "Hydro Amp", "Pyro Amp",
+					  "Elemental Memory"]
+		for u in upgrades:
+			u["min_level"] = 0
+			if u.get("name", "") in _focus:
+				u["weight"] = 99
+			elif u.get("category") == "Calamity":
+				u["weight"] = 50
+			elif "leila" in u.get("chars", []):
+				u["weight"] = 1
+	# ─────────────────────────────────────────────────────────────────────────
+
 	_all_upgrades = upgrades.duplicate()
 
 func show_upgrade_menu() -> void:
