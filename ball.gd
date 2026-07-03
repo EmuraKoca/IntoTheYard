@@ -192,7 +192,7 @@ func _setup_ball_sprite() -> void:
 	elif can_orbit:
 		folder = "orbitCore";       frame_count = 34
 	elif can_scatter:
-		folder = "scatterCore";     frame_count = 34
+		folder = "scatterCore";     frame_count = 17
 	elif can_catalyst:
 		folder = "catalystCore";    frame_count = 34
 	elif can_voltaic:
