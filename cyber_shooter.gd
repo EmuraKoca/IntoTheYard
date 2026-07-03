@@ -663,7 +663,7 @@ func _react_steam(mult: float, game: Node, player: Node) -> void:
 	_spawn_steam_vfx()
 	var dmg := int(8 * mult)
 	var _steam_radius := 120.0
-	var _thermal := player and player.get("has_thermal_expansion") and player.has_thermal_expansion
+	var _thermal: bool = player and player.get("has_thermal_expansion") and player.has_thermal_expansion
 	if _thermal:
 		_steam_radius = 200.0
 	for body in get_tree().get_nodes_in_group("subjects"):
