@@ -1,5 +1,7 @@
 extends CharacterBody2D
 
+static var _freeze_sf: SpriteFrames = null
+
 const SURGERY_EXIT := Vector2(850, 1000)  # The only exit point from the living area
 
 var speed = 63.0
@@ -121,15 +123,16 @@ func _spawn_cryo_vfx() -> void:
 	_cryo_sprite = spr
 
 func _spawn_freeze_vfx() -> void:
-	var sf := SpriteFrames.new()
-	if sf.has_animation("default"): sf.remove_animation("default")
-	sf.add_animation("freeze")
-	sf.set_animation_speed("freeze", 8.0)
-	sf.set_animation_loop("freeze", false)
-	for i in range(15):
-		sf.add_frame("freeze", load("res://assets/VFX/crashFreeze/frame_%03d.png" % i))
+	if _freeze_sf == null:
+		_freeze_sf = SpriteFrames.new()
+		if _freeze_sf.has_animation("default"): _freeze_sf.remove_animation("default")
+		_freeze_sf.add_animation("freeze")
+		_freeze_sf.set_animation_speed("freeze", 8.0)
+		_freeze_sf.set_animation_loop("freeze", false)
+		for i in range(15):
+			_freeze_sf.add_frame("freeze", load("res://assets/VFX/crashFreeze/frame_%03d.png" % i))
 	_freeze_sprite = AnimatedSprite2D.new()
-	_freeze_sprite.sprite_frames = sf
+	_freeze_sprite.sprite_frames = _freeze_sf
 	_freeze_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_freeze_sprite.z_index = -1
 	_freeze_sprite.position = Vector2(0, 0)

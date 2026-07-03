@@ -122,6 +122,7 @@ var has_hydro_pressure: bool          = false  # Wet core'lar hızlı döner
 var has_condensation: bool            = false  # Wet core'lar hızlı döner (tümü)
 var has_living_storm: bool            = false  # Electrified yaklaşınca şimşek
 var has_overheat: bool                = false  # Burn 7 stackte patlar
+var _overheat_counter: int            = 0
 var has_elemental_harmony_util: bool  = false  # 3 element aktifse hız bonusu
 var has_mana_overflow: bool           = false  # Calamity → core'lar güçlenir
 var mana_overflow_timer: float        = 0.0   # Mana Overflow süreci

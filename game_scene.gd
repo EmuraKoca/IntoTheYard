@@ -31,6 +31,8 @@ var upgrades: Array = []
 var _all_upgrades: Array = []
 var _run_start_level: int = 0
 
+var _player_node: Node = null  # önbellek — her frame get_node çağrısını önler
+
 const _CORE_FOLDER_MAP: Dictionary = {
 	"normal":     "normalBall",    "electric": "electricBall",
 	"pierce":     "pierceBall",    "split":    "splitBall",
@@ -44,11 +46,14 @@ const _CORE_FOLDER_MAP: Dictionary = {
 }
 
 const _CORE_INDEX_MAP: Dictionary = {
-	0: "split",  1: "electric", 2: "pierce",  15: "cryo",
-	16: "glitch", 17: "water",  18: "fire",   19: "mimic",
-	22: "leech",  40: "armor",  41: "anchor", 42: "crusher",
-	43: "kinetic",44: "bulwark",45: "siege",  46: "bloodbound",
+	0: "split",   1: "electric",  2: "pierce",   15: "cryo",
+	16: "glitch", 17: "water",   18: "fire",    19: "mimic",
+	22: "leech",  40: "armor",   41: "anchor",  42: "crusher",
+	43: "kinetic",44: "bulwark", 45: "siege",   46: "bloodbound",
 	47: "tempered",
+	61: "plasma", 62: "steam",   63: "arc",     64: "echo",
+	65: "orbit",  77: "scatter", 78: "catalyst",87: "voltaic",
+	88: "tempest",103: "prismatic",
 }
 
 # index → {name, category}  (Identity kart izleme gerekmez, sadece Individuality+Utility)
@@ -861,6 +866,7 @@ func _spawn_hasmen_entrance() -> void:
 	)
 
 func _ready() -> void:
+	_player_node = get_node("Player")
 	# UI sınırında görünmez duvar — düşmanların UI alanına girmesini engeller
 	var wall := StaticBody2D.new()
 	wall.name = "UIWall"
@@ -1751,7 +1757,7 @@ func _build_all_upgrades() -> void:
 	{"name": "Flame Zone",          "category": "Calamity",      "color": Color(1.0, 0.3, 0.0), "desc": "Continuous damage in selected area",        "index": 8,  "weight": 8,  "rarity": "common", "chars": [], "min_level": 0},
 ]
 	# ── TEST MODE — false yapınca normal ağırlıklara döner ──────────────────
-	const TEST_ELEMENTAL: bool = true
+	const TEST_ELEMENTAL: bool = false
 	if TEST_ELEMENTAL:
 		var _focus = ["Electric Core", "Cryo Core", "Hydro Core", "Pyro Core",
 					  "Electric Amp", "Cryo Amp", "Hydro Amp", "Pyro Amp",
@@ -2469,7 +2475,7 @@ func _spawn_subject() -> void:
 	add_child(subject)
 
 func _draw() -> void:
-	var player := get_node_or_null("Player")
+	var player := _player_node
 	if player == null: return
 	var auto_on: bool  = player.auto_mode
 	var lmb_held: bool = Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
@@ -2527,15 +2533,19 @@ func _draw_dashed_line(from: Vector2, to: Vector2, color: Color, width: float) -
 		p += dash + gap
 
 func _process(delta: float) -> void:
-	queue_redraw()
 	_update_core_panel()   # her frame güncelle — deferred add_child'ı yakala
 
+	var p := _player_node
+
+	# Yörünge çizgisi sadece gerekince yeniden çiz
+	if p and (p.auto_mode or Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)):
+		queue_redraw()
+
 	# ── Last Stand Lv2-3: eksik HP → pasif armor kazanımı ─────────────────────
-	var _ls_player := get_node_or_null("Player")
-	if _ls_player and _ls_player.has_last_stand and _ls_player.last_stand_armor_mult > 0.0:
+	if p and p.has_last_stand and p.last_stand_armor_mult > 0.0:
 		var _missing := float(player_max_hp - player_hp)
 		if _missing > 0.0:
-			_armor_regen_acc += delta * (_missing * _ls_player.last_stand_armor_mult)
+			_armor_regen_acc += delta * (_missing * p.last_stand_armor_mult)
 			var _ls_regen := int(_armor_regen_acc)
 			if _ls_regen > 0:
 				_armor_regen_acc -= float(_ls_regen)
@@ -2548,27 +2558,25 @@ func _process(delta: float) -> void:
 		if regen_amount > 0:
 			_armor_regen_acc = 0.0
 			gain_armor(regen_amount)
+
 	# ── Bulwark Surge: Armor ≥ %75 cap → Core Speed +%15 ─────────────────────
-	var _bs_player := get_node_or_null("Player")
-	if _bs_player and _bs_player.get("has_bulwark_surge") != null and _bs_player.has_bulwark_surge:
+	if p and p.get("has_bulwark_surge") and p.has_bulwark_surge:
 		var _bs_ratio := float(player_armor) / float(max(player_armor_cap, 1))
-		_bs_player.set("bulwark_surge_active", _bs_ratio >= 0.75)
+		p.bulwark_surge_active = _bs_ratio >= 0.75
 
 	# ── Severance Protocol: HP < %40 → Armor Cap +10 (bir kez) ───────────────
-	var _sp_player := get_node_or_null("Player")
-	if _sp_player and _sp_player.get("has_severance_protocol") != null and _sp_player.has_severance_protocol:
-		if not _sp_player.get("_severance_triggered") and float(player_hp) / float(max(player_max_hp, 1)) < 0.4:
-			_sp_player._severance_triggered = true
+	if p and p.get("has_severance_protocol") and p.has_severance_protocol:
+		if not p.get("_severance_triggered") and float(player_hp) / float(max(player_max_hp, 1)) < 0.4:
+			p._severance_triggered = true
 			player_armor_cap += 10
 			player_max_armor = max(player_max_armor, player_armor_cap)
 			_update_armor_ui()
 
 	# ── Overclock Threshold: 20 momentum stacks → Core Dmg ×1.3 (bir kez) ───
-	var _ot_player := get_node_or_null("Player")
-	if _ot_player and _ot_player.get("has_overclock_threshold") != null and _ot_player.has_overclock_threshold:
-		if not _ot_player.get("_overclock_triggered") and _ot_player.momentum_stacks >= 20:
-			_ot_player._overclock_triggered = true
-			_ot_player.damage_mult *= 1.3
+	if p and p.get("has_overclock_threshold") and p.has_overclock_threshold:
+		if not p.get("_overclock_triggered") and p.momentum_stacks >= 20:
+			p._overclock_triggered = true
+			p.damage_mult *= 1.3
 
 	# ── Armor gain boost timer ─────────────────────────────────────────────────
 	if _armor_gain_boost_timer > 0.0:

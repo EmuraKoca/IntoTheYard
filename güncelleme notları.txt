@@ -3084,3 +3084,27 @@ Test Edilmesi Gerekenler:
   ⚠️  Volatile Mixture + Perfect Catalyst zinciri: hız ve denge izlenmeli
   ⚠️  meltTheFrozen: dondurulmuş düşmana Pyro değince buz bloğu kırılıyor mu?
   ⚠️  Leila Calamity'leri: Blizzard, Monsoon, Volcanic Rift, Thunderstorm, EMP oyunda test edilmeli
+
+v0.0.9.9g — Bugfix & Optimizasyon (2026-07-03):
+
+Bugfix:
+
+  ✅ _overheat_counter crash düzeltildi
+     — player.gd'de var _overheat_counter: int = 0 tanımlandı
+     — Tüm 7 düşman dosyasında dinamik .set() yerine doğrudan property erişimi artık çalışıyor
+  ✅ Steam Pressure (Pyro + Hydro) mavi/wet parlaması — kasıtlı bırakıldı
+     — Oyuncu core'un dönüştüğünü görsel olarak fark edebilsin diye
+  ✅ Discard overlay Leila core'larında çıkmıyordu
+     — _CORE_INDEX_MAP'e eksik Leila core indexleri eklendi
+     — (61:plasma, 62:steam, 63:arc, 64:echo, 65:orbit, 77:scatter, 78:catalyst, 87:voltaic, 88:tempest, 103:prismatic)
+  ✅ TEST_ELEMENTAL false yapıldı — kart ağırlıkları normale döndü
+     — Düşman canları 3× hâlâ aktif (test kolaylığı için)
+
+Optimizasyon:
+
+  ✅ game_scene._process: Player node önbelleğe alındı (_player_node)
+     — Her frame 4x get_node_or_null("Player") → tek önbellek erişimi
+  ✅ queue_redraw() sadece yörünge çizgisi gerekince çağrılıyor
+     — Önce her frame tetikleniyordu, şimdi auto_mode veya LMB basılıyken
+  ✅ Freeze VFX SpriteFrames artık static var ile paylaşılıyor
+     — Her donmada 15 PNG disk'ten yükleniyordu → ilk donmada bir kez yüklenir, sonra önbellekten
