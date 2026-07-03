@@ -184,23 +184,23 @@ func _setup_ball_sprite() -> void:
 	elif can_plasma:
 		folder = "plasmaCore";      frame_count = 18
 	elif can_steam:
-		folder = "steamCore";       frame_count = 64
+		folder = "steamCore";       frame_count = 32
 	elif can_arc:
-		folder = "arcCore";         frame_count = 34
+		folder = "arcCore";         frame_count = 17
 	elif can_echo:
-		folder = "echoCore";        frame_count = 34
+		folder = "echoCore";        frame_count = 17
 	elif can_orbit:
-		folder = "orbitCore";       frame_count = 34
+		folder = "orbitCore";       frame_count = 17
 	elif can_scatter:
 		folder = "scatterCore";     frame_count = 17
 	elif can_catalyst:
-		folder = "catalystCore";    frame_count = 34
+		folder = "catalystCore";    frame_count = 17
 	elif can_voltaic:
-		folder = "voltaicCore";     frame_count = 34
+		folder = "voltaicCore";     frame_count = 17
 	elif can_tempest:
-		folder = "tempestCore";     frame_count = 34
+		folder = "tempestCore";     frame_count = 17
 	elif can_prismatic:
-		folder = "prismaticCore";   frame_count = 34
+		folder = "prismaticCore";   frame_count = 17
 	else:
 		folder = "normalBall";      frame_count = 9
 
