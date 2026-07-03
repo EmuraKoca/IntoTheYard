@@ -3,8 +3,8 @@ extends CharacterBody2D
 const SURGERY_EXIT := Vector2(850, 1000)  # The only exit point from the living area
 
 var speed = 110.0
-var health = 8
-var max_health = 8
+var health = 24
+var max_health = 24
 var is_dead = false
 var original_speed = 0.0
 var is_slowed = false

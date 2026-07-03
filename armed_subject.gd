@@ -3,8 +3,8 @@ extends CharacterBody2D
 const SURGERY_EXIT := Vector2(850, 1000)  # The only exit point from the living area
 
 var speed = 63.0
-var health = 20
-var max_health = 20
+var health = 60
+var max_health = 60
 var jump_timer = 0.0
 var jump_interval = 2.0
 var jump_direction = Vector2.ZERO

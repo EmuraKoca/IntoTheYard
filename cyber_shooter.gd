@@ -1,7 +1,7 @@
 extends CharacterBody2D
 
 var speed = 42.0
-var health = 15
+var health = 45
 var is_dead = false
 var is_frozen = false
 var is_slowed = false
@@ -14,7 +14,7 @@ var original_speed = 60.0
 var shoot_timer = 0.0
 var shoot_interval = 3.0
 var is_electrified = false
-var max_health = 15
+var max_health = 45
 var _elem_indicator = null
 var attack_cooldown = 0.0
 var attack_rate = 1.0
