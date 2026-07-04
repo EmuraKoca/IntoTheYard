@@ -837,7 +837,7 @@ func _spawn_overcharge_vfx() -> void:
 	spr.z_index = 1
 	spr.z_as_relative = false
 	spr.position = Vector2(0, 0)
-	spr.scale = Vector2(0.5, 0.5)
+	spr.scale = Vector2(1.2, 1.2)
 	add_child(spr)
 	spr.play("overcharge")
 	spr.animation_finished.connect(spr.queue_free)

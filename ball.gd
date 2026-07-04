@@ -365,13 +365,6 @@ func _physics_process(delta: float) -> void:
 
 	if _bounced:
 		if can_steam: _spawn_steam_cloud(global_position)
-		_wall_bounce_count += 1
-		var _bounce_player := _get_player()
-		var _max_bounces: int = _bounce_player.hyper_loop_max_bounce if _bounce_player else 6
-		if _wall_bounce_count >= _max_bounces:
-			_wall_bounce_count = 0
-			_start_returning()
-			return
 		# Tempest Core: her duvar sekmesinde element değişir
 		if can_tempest:
 			_tempest_index += 1
@@ -401,14 +394,14 @@ func _physics_process(delta: float) -> void:
 	if collision:
 		var collider = collision.get_collider()
 		if collider.is_in_group("subjects"):
-			_wall_bounce_count = 0
 			_hit_subject(collider)
-			# Remainder her zaman işle — subject içinde takılma önlemi
 			move_and_collide(collision.get_remainder())
 		elif collider.is_in_group("player"):
 			if not collider.is_dashing:
 				move_direction = move_direction.bounce(collision.get_normal())
 				move_direction = move_direction.normalized()
+		elif collider.is_in_group("balls"):
+			pass  # top-top çakışmasını yok say
 		else:
 			# Bariyer veya statik duvar — aninda geri don
 			_start_returning()
@@ -843,7 +836,7 @@ func _hit_subject(subject: Node2D) -> void:
 		if _bn.length_squared() < 0.01:
 			_bn = -move_direction
 		move_direction = move_direction.bounce(_bn).normalized()
-		global_position += _bn * 8.0
+		global_position += _bn * 22.0
 
 	# Mimic reverts after 5 hits
 	if mimic_done and not is_mimic:
@@ -1276,7 +1269,7 @@ func _hit_subject(subject: Node2D) -> void:
 		if subject in hit_subjects:
 			hit_subjects.erase(subject)
 	else:
-		await get_tree().create_timer(0.5).timeout
+		await get_tree().create_timer(0.25).timeout
 		if subject in hit_subjects:
 			hit_subjects.erase(subject)
 
