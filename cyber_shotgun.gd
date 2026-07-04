@@ -261,8 +261,8 @@ func _spawn_cryo_vfx() -> void:
 	var spr := AnimatedSprite2D.new()
 	spr.sprite_frames = sf
 	spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	spr.z_index = 1
-	spr.z_as_relative = false
+	spr.z_index = 3
+	spr.z_as_relative = true
 	spr.position = Vector2(0, 0)
 	spr.scale = Vector2(0.5, 0.5)
 	add_child(spr)
