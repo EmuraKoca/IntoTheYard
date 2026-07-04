@@ -52,7 +52,7 @@ var can_tempered: bool = false
 # ── Leila yeni core flag'leri ─────────────────────────────────────────────────
 var can_plasma: bool   = false  # Electrified'a sekme
 var can_steam: bool    = false  # Wet hedef → küçük AoE
-var can_arc: bool      = false  # Duvar sekmesi → yıldırım
+var can_arc: bool      = false  # Electrified düşmana çarptığında debuff 2 yakına yayılır
 var can_echo: bool     = false  # Düşmanın elementini kopyala, dönüşte uygula
 var _echo_element: String = ""  # Echo Core'un kopyaladığı element
 var can_orbit: bool    = false  # Orbit'te kalır, random element uygular
@@ -372,18 +372,6 @@ func _physics_process(delta: float) -> void:
 			_wall_bounce_count = 0
 			_start_returning()
 			return
-		# Arc Core: duvara çarpınca yakın düşmanlara yıldırım
-		if can_arc:
-			var _arc_p := _get_player()
-			var _arc_limit: int = 3 + (_arc_p.arc_chain_targets if _arc_p and _arc_p.get("arc_chain_targets") else 0)
-			var _arc_hit: int = 0
-			var _arc_enemies := get_tree().get_nodes_in_group("subjects")
-			for _ae in _arc_enemies:
-				if _arc_hit >= _arc_limit: break
-				if is_instance_valid(_ae) and global_position.distance_to(_ae.global_position) < 160:
-					_ae.take_damage(4)
-					_ae.apply_electrified()
-					_arc_hit += 1
 		# Tempest Core: her duvar sekmesinde element değişir
 		if can_tempest:
 			_tempest_index += 1
@@ -1211,6 +1199,20 @@ func _hit_subject(subject: Node2D) -> void:
 			if _en != subject and is_instance_valid(_en) and _en.is_electrified:
 				if subject.global_position.distance_to(_en.global_position) < _range:
 					_en.take_damage(total_damage / 2)
+
+	# Arc Core: hedef Electrified ise debuff'ı 2 yak��n düşmana yay (elektrik uygulamaz)
+	if can_arc and is_instance_valid(subject) and subject.get("is_electrified") and subject.is_electrified:
+		var _arc_p := _get_player()
+		var _arc_limit: int = 2 + (_arc_p.arc_chain_targets if _arc_p and _arc_p.get("arc_chain_targets") else 0)
+		var _arc_hit: int = 0
+		var _arc_enemies := get_tree().get_nodes_in_group("subjects")
+		for _ae in _arc_enemies:
+			if _arc_hit >= _arc_limit: break
+			if _ae == subject: continue
+			if is_instance_valid(_ae) and subject.global_position.distance_to(_ae.global_position) < 160.0:
+				if _ae.get("apply_electrified"):
+					_ae.apply_electrified()
+					_arc_hit += 1
 
 	# Steam Core: çarptığı yerde buhar bulutu bırak
 	if can_steam:
