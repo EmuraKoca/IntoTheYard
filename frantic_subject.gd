@@ -31,8 +31,10 @@ var _killed_by_ally: bool = false
 # Animasyon
 var _anim_dir: String = "S"
 var _freeze_sprite: AnimatedSprite2D = null
+var _reactions_cancelled: bool = false  # ally/escape anında reaction coroutine keset
 var _cryo_sprite: AnimatedSprite2D = null
 var _melt_frozen_sprite: AnimatedSprite2D = null
+var _electrocute_sprite: AnimatedSprite2D = null
 var _had_reaction: bool = false
 var _kicking: bool = false
 
@@ -396,6 +398,7 @@ func _escape() -> void:
 	is_burning = false
 	is_wet = false
 	is_electrified = false
+	_reactions_cancelled = true
 	is_slowed = false
 	is_frozen = false
 	_clear_element()
@@ -408,6 +411,9 @@ func _escape() -> void:
 	if is_instance_valid(_melt_frozen_sprite):
 		_melt_frozen_sprite.queue_free()
 		_melt_frozen_sprite = null
+	if is_instance_valid(_electrocute_sprite):
+		_electrocute_sprite.queue_free()
+		_electrocute_sprite = null
 	$FranticSprite.play("run_" + _anim_dir)
 	if is_instance_valid(_chip_node): _chip_node.queue_free()
 	var _escape_doors: Array = [Vector2(1585, 395), Vector2(1585, 550), Vector2(1585, 710), Vector2(1585, 865)]
@@ -430,6 +436,7 @@ func _become_ally() -> void:
 	is_burning = false
 	is_wet = false
 	is_electrified = false
+	_reactions_cancelled = true
 	is_slowed = false
 	is_frozen = false
 	_clear_element()
@@ -442,6 +449,9 @@ func _become_ally() -> void:
 	if is_instance_valid(_melt_frozen_sprite):
 		_melt_frozen_sprite.queue_free()
 		_melt_frozen_sprite = null
+	if is_instance_valid(_electrocute_sprite):
+		_electrocute_sprite.queue_free()
+		_electrocute_sprite = null
 	set_physics_process(false)
 	var game = get_parent()
 	if game.has_method("subject_rescued"):
@@ -679,10 +689,16 @@ func _react_electrocute(mult: float, game: Node, player: Node) -> void:
 	var dmg := int(12 * mult)
 	health -= dmg
 	_react_flash(Color(0.2, 0.5, 4.0))
+	# Yakındaki dusmanlara elektrik yay — wet ise zincirleme Electrocute tetiklenir
+	for body in get_tree().get_nodes_in_group("subjects"):
+		if body == self: continue
+		if is_instance_valid(body) and global_position.distance_to(body.global_position) < 100.0:
+			if body.get("apply_electrified"): body.apply_electrified()
 	var prev_speed: float = float(speed)
 	speed = 0.0
 	await get_tree().create_timer(0.8).timeout
 	if not is_instance_valid(self): return
+	if _reactions_cancelled: _reactions_cancelled = false; return
 	speed = prev_speed
 	_clear_element()
 	_notify_reaction(game, player)
@@ -795,7 +811,8 @@ func _spawn_electrocute_vfx() -> void:
 	spr.scale = Vector2(0.5, 0.5)
 	add_child(spr)
 	spr.play("electrocute")
-	spr.animation_finished.connect(spr.queue_free)
+	_electrocute_sprite = spr
+	spr.animation_finished.connect(func(): _electrocute_sprite = null; spr.queue_free())
 
 func _spawn_overheat_vfx() -> void:
 	var sf := SpriteFrames.new()
