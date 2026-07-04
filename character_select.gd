@@ -222,7 +222,7 @@ func _fill_center(card: Panel, c: Dictionary) -> void:
 		card.add_child(xp_bg)
 
 		# XP bar doluluk
-		var fill_ratio: float = float(xp_cur) / float(max(xp_need, 1))
+		var fill_ratio: float = clampf(float(xp_cur) / float(max(xp_need, 1)), 0.0, 1.0)
 		var xp_fill := ColorRect.new()
 		xp_fill.size     = Vector2((card.size.x - 16) * fill_ratio, 6)
 		xp_fill.position = Vector2(8, card.size.y - 14)

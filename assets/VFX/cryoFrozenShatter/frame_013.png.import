@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://clklguaxw74oo"
-path="res://.godot/imported/frame_000.png-1767b25c7e7042dd5a48392622febfea.ctex"
+uid="uid://t8ej7bur5adh"
+path="res://.godot/imported/frame_013.png-bd0f7b88d9b72765d23a62435b78f73b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/VFX/cryoEffect/frame_000.png"
-dest_files=["res://.godot/imported/frame_000.png-1767b25c7e7042dd5a48392622febfea.ctex"]
+source_file="res://assets/VFX/cryoFrozenShatter/frame_013.png"
+dest_files=["res://.godot/imported/frame_013.png-bd0f7b88d9b72765d23a62435b78f73b.ctex"]
 
 [params]
 

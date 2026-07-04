@@ -184,8 +184,8 @@ func add_to_orbit(ball: Node2D) -> void:
 	ball._is_striking  = false
 	ball.get_node("CollisionShape2D").disabled = true
 	ball._reset_defense_life()
-	# Auto mode: orbit'e giren top hemen fırlatılır
-	if auto_mode:
+	# Auto mode: orbit'e giren top hemen fırlatılır (Orbit Core hariç)
+	if auto_mode and not ball.get("can_orbit"):
 		_fire_ball()
 
 func remove_from_orbit(ball: Node2D) -> void:
@@ -212,6 +212,11 @@ func _fire_ball() -> void:
 	if orbit_balls.is_empty(): return
 	fire_index = fire_index % orbit_balls.size()
 	var ball = orbit_balls[fire_index]
+	# Orbit Core atla — bir sonrakine geç
+	if ball.get("can_orbit"):
+		fire_index = (fire_index + 1) % orbit_balls.size()
+		ball = orbit_balls[fire_index]
+		if ball.get("can_orbit"): return  # hepsi Orbit Core ise fırlatma
 	orbit_balls.remove_at(fire_index)
 	if fire_index >= orbit_balls.size():
 		fire_index = 0
@@ -224,6 +229,7 @@ func _fire_ball() -> void:
 	ball.moving        = false
 	ball.strike_offset = Vector2.ZERO
 	ball._is_striking  = false
+	ball.catch_cooldown = 1.0  # snap sırasında _physics_process tekrar orbit'e almasın
 	ball.get_node("CollisionShape2D").disabled = true
 
 	# Hızla merkeze çek

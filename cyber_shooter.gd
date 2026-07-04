@@ -762,7 +762,7 @@ func _spawn_cryostatic_vfx() -> void:
 	sf.add_animation("cryostatic")
 	sf.set_animation_speed("cryostatic", 12.0)
 	sf.set_animation_loop("cryostatic", false)
-	for i in range(1, 14):
+	for i in range(3, 16):
 		sf.add_frame("cryostatic", load("res://assets/VFX/slowElectricCryostatic/%d.png" % i))
 	var spr := AnimatedSprite2D.new()
 	spr.sprite_frames = sf
