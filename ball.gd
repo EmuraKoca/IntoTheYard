@@ -610,34 +610,27 @@ func _spawn_steam_cloud(pos: Vector2) -> void:
 		if _steam_cloud_sf.has_animation("default"): _steam_cloud_sf.remove_animation("default")
 		_steam_cloud_sf.add_animation("cloud")
 		_steam_cloud_sf.set_animation_speed("cloud", 10.0)
-		_steam_cloud_sf.set_animation_loop("cloud", true)
+		_steam_cloud_sf.set_animation_loop("cloud", false)
 		for i in range(17):
 			_steam_cloud_sf.add_frame("cloud", load("res://assets/VFX/steamCoreVFX/frame_%03d.png" % i))
 	var cloud := AnimatedSprite2D.new()
 	cloud.sprite_frames = _steam_cloud_sf
 	cloud.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	cloud.z_index = 3
-	cloud.scale = Vector2(0.6, 0.6)
+	cloud.scale = Vector2(0.35, 0.35)
 	cloud.global_position = pos
 	cloud.modulate = Color(1, 1, 1, 0.85)
 	game.add_child(cloud)
 	cloud.play("cloud")
-	# 2.5s boyunca her 0.5s'de yakındaki düşmanlara Wet uygula
-	var elapsed := 0.0
-	while elapsed < 2.5:
-		await get_tree().create_timer(0.5).timeout
-		elapsed += 0.5
-		if not is_instance_valid(cloud): return
-		for body in get_tree().get_nodes_in_group("subjects"):
-			if is_instance_valid(body) and body.global_position.distance_to(pos) < 70.0:
-				if not body.get("is_wet") and body.get("apply_wet"):
-					body.apply_wet()
-	# Solarak yok ol
-	if is_instance_valid(cloud):
-		var tw := cloud.create_tween()
-		tw.tween_property(cloud, "modulate:a", 0.0, 0.4)
-		await tw.finished
-		if is_instance_valid(cloud): cloud.queue_free()
+	# Animasyon bitince silinir
+	cloud.animation_finished.connect(cloud.queue_free)
+	# Animasyon ortasında yakındaki düşmanlara Wet uygula
+	await get_tree().create_timer(0.8).timeout
+	if not is_instance_valid(cloud): return
+	for body in get_tree().get_nodes_in_group("subjects"):
+		if is_instance_valid(body) and body.global_position.distance_to(pos) < 45.0:
+			if not body.get("is_wet") and body.get("apply_wet"):
+				body.apply_wet()
 
 func _start_returning() -> void:
 	state         = "returning"
