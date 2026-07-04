@@ -854,7 +854,7 @@ func _spawn_overcharge_vfx() -> void:
 	sf.add_animation("overcharge")
 	sf.set_animation_speed("overcharge", 12.0)
 	sf.set_animation_loop("overcharge", false)
-	for i in range(20):
+	for i in range(10):
 		sf.add_frame("overcharge", load("res://assets/VFX/overcharge/frame_%03d.png" % i))
 	var spr := AnimatedSprite2D.new()
 	spr.sprite_frames = sf
@@ -862,7 +862,7 @@ func _spawn_overcharge_vfx() -> void:
 	spr.z_index = 1
 	spr.z_as_relative = false
 	spr.position = Vector2(0, 0)
-	spr.scale = Vector2(1.2, 1.2)
+	spr.scale = Vector2(1.0, 1.0)
 	add_child(spr)
 	spr.play("overcharge")
 	spr.animation_finished.connect(spr.queue_free)
