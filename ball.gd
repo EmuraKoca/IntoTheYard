@@ -1,5 +1,7 @@
 ﻿extends CharacterBody2D
 
+static var _steam_cloud_sf: SpriteFrames = null  # paylaşılan, bir kez yüklenir
+
 var speed = 600.0
 var damage = 0
 var can_split = false
@@ -147,8 +149,12 @@ func _setup_ball_sprite() -> void:
 			_sprite.play("spin")
 			add_child(_sprite)
 		return
+	elif can_voltaic:
+		folder = "voltaicCore";     frame_count = 17
 	elif can_arc:
 		folder = "arcCore";       frame_count = 17
+	elif can_plasma:
+		folder = "plasmaCore";    frame_count = 9
 	elif can_electric:
 		folder = "electricBall";  frame_count = 17
 	elif can_fire:
@@ -163,6 +169,8 @@ func _setup_ball_sprite() -> void:
 		folder = "glitchBall";    frame_count = 9
 	elif can_pierce:
 		folder = "pierceBall";    frame_count = 9
+	elif can_steam:
+		folder = "steamCore";     frame_count = 32
 	elif can_water:
 		folder = "waterBall";     frame_count = 9
 	elif is_mimic:
@@ -183,10 +191,6 @@ func _setup_ball_sprite() -> void:
 		folder = "bloodboundCore";  frame_count = 9
 	elif can_tempered:
 		folder = "temperedCore";    frame_count = 9
-	elif can_plasma:
-		folder = "plasmaCore";      frame_count = 18
-	elif can_steam:
-		folder = "steamCore";       frame_count = 32
 	elif can_echo:
 		folder = "echoCore";        frame_count = 17
 	elif can_orbit:
@@ -195,8 +199,6 @@ func _setup_ball_sprite() -> void:
 		folder = "scatterCore";     frame_count = 17
 	elif can_catalyst:
 		folder = "catalystCore";    frame_count = 17
-	elif can_voltaic:
-		folder = "voltaicCore";     frame_count = 17
 	elif can_tempest:
 		folder = "tempestCore";     frame_count = 17
 	elif can_prismatic:
@@ -362,6 +364,7 @@ func _physics_process(delta: float) -> void:
 		return
 
 	if _bounced:
+		if can_steam: _spawn_steam_cloud(global_position)
 		_wall_bounce_count += 1
 		var _bounce_player := _get_player()
 		var _max_bounces: int = _bounce_player.hyper_loop_max_bounce if _bounce_player else 6
@@ -574,6 +577,7 @@ func _defense_hit(subject: Node2D) -> void:
 		_auto_fire()
 
 func _auto_fire() -> void:
+	if can_orbit: return  # Orbit Core orbit'te kalır, fırlatılmaz
 	var player := _get_player()
 	if not is_instance_valid(player): return
 	player.remove_from_orbit(self)
@@ -597,6 +601,43 @@ func _get_defense_base_damage() -> int:
 	elif can_leech:   fd = 2
 	else:             fd = 5
 	return max(int(fd * 0.5), 1)
+
+func _spawn_steam_cloud(pos: Vector2) -> void:
+	var game := get_node_or_null("/root/GameScene")
+	if not is_instance_valid(game): return
+	if _steam_cloud_sf == null:
+		_steam_cloud_sf = SpriteFrames.new()
+		if _steam_cloud_sf.has_animation("default"): _steam_cloud_sf.remove_animation("default")
+		_steam_cloud_sf.add_animation("cloud")
+		_steam_cloud_sf.set_animation_speed("cloud", 10.0)
+		_steam_cloud_sf.set_animation_loop("cloud", true)
+		for i in range(17):
+			_steam_cloud_sf.add_frame("cloud", load("res://assets/VFX/steamCoreVFX/frame_%03d.png" % i))
+	var cloud := AnimatedSprite2D.new()
+	cloud.sprite_frames = _steam_cloud_sf
+	cloud.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	cloud.z_index = 3
+	cloud.scale = Vector2(0.6, 0.6)
+	cloud.global_position = pos
+	cloud.modulate = Color(1, 1, 1, 0.85)
+	game.add_child(cloud)
+	cloud.play("cloud")
+	# 2.5s boyunca her 0.5s'de yakındaki düşmanlara Wet uygula
+	var elapsed := 0.0
+	while elapsed < 2.5:
+		await get_tree().create_timer(0.5).timeout
+		elapsed += 0.5
+		if not is_instance_valid(cloud): return
+		for body in get_tree().get_nodes_in_group("subjects"):
+			if is_instance_valid(body) and body.global_position.distance_to(pos) < 70.0:
+				if not body.get("is_wet") and body.get("apply_wet"):
+					body.apply_wet()
+	# Solarak yok ol
+	if is_instance_valid(cloud):
+		var tw := cloud.create_tween()
+		tw.tween_property(cloud, "modulate:a", 0.0, 0.4)
+		await tw.finished
+		if is_instance_valid(cloud): cloud.queue_free()
 
 func _start_returning() -> void:
 	state         = "returning"
@@ -1178,14 +1219,9 @@ func _hit_subject(subject: Node2D) -> void:
 				if subject.global_position.distance_to(_en.global_position) < _range:
 					_en.take_damage(total_damage / 2)
 
-	# Steam Core: Wet hedef → küçük AoE
-	if can_steam and is_instance_valid(subject):
-		subject.apply_wet()
-		if subject.is_wet or subject.is_burning:
-			var _enemies2 := get_tree().get_nodes_in_group("subjects")
-			for _en2 in _enemies2:
-				if is_instance_valid(_en2) and _en2.global_position.distance_to(subject.global_position) < 80:
-					_en2.take_damage(4)
+	# Steam Core: çarptığı yerde buhar bulutu bırak
+	if can_steam:
+		_spawn_steam_cloud(global_position)
 
 	# Echo Core: Düşmandaki elementi kopyala → dönüşte uygula
 	if can_echo and is_instance_valid(subject):
@@ -1255,7 +1291,10 @@ func _voltaic_chain_on_death(subject: Node2D) -> void:
 	if not is_instance_valid(subject):
 		return
 	await subject.tree_exited
-	var _enemies := get_tree().get_nodes_in_group("subjects")
+	if not is_instance_valid(self): return
+	var _tree := get_tree()
+	if not _tree: return
+	var _enemies := _tree.get_nodes_in_group("subjects")
 	var _nearest: Node2D = null
 	var _nearest_dist: float = 220.0
 	for _en in _enemies:

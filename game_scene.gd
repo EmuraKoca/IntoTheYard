@@ -32,6 +32,7 @@ var _all_upgrades: Array = []
 var _run_start_level: int = 0
 
 var _player_node: Node = null  # önbellek — her frame get_node çağrısını önler
+var _lmb_clear_pending: bool = false  # LMB bırakılınca bir kez daha redraw
 
 const _CORE_FOLDER_MAP: Dictionary = {
 	"normal":     "normalBall",    "electric": "electricBall",
@@ -2003,6 +2004,9 @@ func _activate_gravity(pos: Vector2) -> void:
 	var duration = 5.0
 	var elapsed = 0.0
 	while elapsed < duration:
+		if upgrading:
+			await get_tree().process_frame
+			continue
 		var subjects = get_tree().get_nodes_in_group("subjects")
 		for subject in subjects:
 			if subject.global_position.distance_to(pos) < 150:
@@ -2253,7 +2257,6 @@ func _activate_lightning(pos: Vector2) -> void:
 
 func _activate_flame(pos: Vector2) -> void:
 	_vfx_flame(pos)
-	var subjects_hit: Array = []
 	var flame_timer = get_tree().create_timer(0.5)
 	var hits = 0
 	while hits < 6:
@@ -2261,10 +2264,8 @@ func _activate_flame(pos: Vector2) -> void:
 		for subject in subjects:
 			if subject.global_position.distance_to(pos) < 120:
 				subject.take_damage(1)
-				if hits == 0 and not subject in subjects_hit:
-					subjects_hit.append(subject)
-					if subject.has_method("apply_burn"):
-						subject.apply_burn()
+				if subject.has_method("apply_burn") and subject.get("is_burning") == false:
+					subject.apply_burn()
 		hits += 1
 		await flame_timer.timeout
 		flame_timer = get_tree().create_timer(0.5)
@@ -2554,9 +2555,11 @@ func _process(delta: float) -> void:
 
 	var p := _player_node
 
-	# Yörünge çizgisi sadece gerekince yeniden çiz
-	if p and (p.auto_mode or Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)):
+	# Yörünge çizgisi: aktifken her frame, bırakılınca bir kez daha (çizgiyi sil)
+	var _lmb := Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
+	if p and (p.auto_mode or _lmb or _lmb_clear_pending):
 		queue_redraw()
+	_lmb_clear_pending = _lmb
 
 	# ── Elemental Harmony: aktif unique element → Core Speed bonusu ──────────
 	if p and p.get("has_elemental_harmony_util") and p.has_elemental_harmony_util:
