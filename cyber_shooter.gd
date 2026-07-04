@@ -659,6 +659,20 @@ func _check_reaction(incoming: String) -> void:
 		is_electrified = false
 		_react_shatter(dmg_mult, game, player)
 		return
+
+	# slowed + electric → Cryostatic Shock: AoE slow yayılır + hasar
+	if incoming == "electric" and is_slowed and not is_frozen:
+		is_slowed = false
+		is_electrified = false
+		speed = original_speed if original_speed > 0 else speed
+		_react_cryostatic(dmg_mult, game, player)
+		return
+	if incoming == "cryo" and is_electrified and not is_frozen:
+		is_slowed = false
+		is_electrified = false
+		speed = original_speed if original_speed > 0 else speed
+		_react_cryostatic(dmg_mult, game, player)
+		return
 	if incoming == "fire" and is_slowed:
 		is_burning = false; is_slowed = false
 		speed = original_speed if original_speed > 0 else speed
@@ -724,6 +738,41 @@ func _spawn_steam_vfx() -> void:
 	spr.scale = Vector2(0.5, 0.5)
 	add_child(spr)
 	spr.play("steam")
+	spr.animation_finished.connect(spr.queue_free)
+
+func _react_cryostatic(mult: float, game: Node, player: Node) -> void:
+	_spawn_cryostatic_vfx()
+	var dmg := int(10 * mult)
+	var aoe_radius := 120.0
+	for body in get_tree().get_nodes_in_group("subjects"):
+		if body == self: continue
+		if is_instance_valid(body) and global_position.distance_to(body.global_position) < aoe_radius:
+			body.take_damage(dmg)
+			if body.get("apply_slow"): body.apply_slow(0.4, 2.0)
+			if body.health <= 0: body.die()
+	health -= dmg
+	_react_flash(Color(0.5, 0.8, 1.0))
+	_clear_element()
+	_notify_reaction(game, player)
+	if health <= 0: die()
+
+func _spawn_cryostatic_vfx() -> void:
+	var sf := SpriteFrames.new()
+	if sf.has_animation("default"): sf.remove_animation("default")
+	sf.add_animation("cryostatic")
+	sf.set_animation_speed("cryostatic", 12.0)
+	sf.set_animation_loop("cryostatic", false)
+	for i in range(1, 14):
+		sf.add_frame("cryostatic", load("res://assets/VFX/slowElectricCryostatic/%d.png" % i))
+	var spr := AnimatedSprite2D.new()
+	spr.sprite_frames = sf
+	spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	spr.z_index = 1
+	spr.z_as_relative = false
+	spr.position = Vector2(0, 0)
+	spr.scale = Vector2(1.0, 1.0)
+	add_child(spr)
+	spr.play("cryostatic")
 	spr.animation_finished.connect(spr.queue_free)
 
 func _react_shatter(mult: float, game: Node, player: Node) -> void:
