@@ -168,6 +168,8 @@ var _data_bar_canvas: CanvasLayer = null
 var _data_bar_fill:   ColorRect   = null
 var _data_bar_label:  Label       = null
 var _data_particle_canvas: CanvasLayer = null
+var _active_particles: int = 0
+const _MAX_PARTICLES: int = 20
 const _DATA_BAR_POS  := Vector2(1640, 698)
 const _DATA_BAR_H    := 14.0
 const _DATA_BAR_W    := 272.0
@@ -1426,13 +1428,27 @@ func _update_data_bar() -> void:
 	_data_bar_fill.color = Color(0.0, 1.0 - ratio * 0.2, 0.2 + ratio * 0.5, 0.9)
 
 func _spawn_data_particles(world_pos: Vector2, amount: float, count: int) -> void:
+	# Limit aşıldıysa görsel atla, veriyi direkt ekle
+	if _active_particles >= _MAX_PARTICLES:
+		_data_current += amount
+		_update_data_bar()
+		if _data_current >= _data_max:
+			_data_current = 0.0
+			_data_max     = _data_max * 1.35
+			get_tree().paused = true
+			show_upgrade_menu()
+		return
+
 	var canvas_tf: Transform2D = get_viewport().get_canvas_transform()
 	var screen_pos: Vector2    = canvas_tf * world_pos
 	var bar_target: Vector2    = _DATA_BAR_POS + Vector2(_DATA_BAR_W * 0.5, _DATA_BAR_H * 0.5) + Vector2(0, 7)
 	var chars := ["0","1","▓","▒","░","#","@","$","%","&","■","▲"]
-	var per_particle := amount / float(count)
+	# Aktif parçacık sayısına göre count'u kısalt
+	var spawn_count := mini(count, _MAX_PARTICLES - _active_particles)
+	var per_particle := amount / float(spawn_count)
 
-	for i in count:
+	for i in spawn_count:
+		_active_particles += 1
 		var lbl := Label.new()
 		lbl.text = chars[randi() % chars.size()]
 		lbl.add_theme_font_override("font", _font_regular)
@@ -1450,6 +1466,7 @@ func _spawn_data_particles(world_pos: Vector2, amount: float, count: int) -> voi
 		tw.parallel().tween_property(lbl, "modulate:a", 0.0, duration * 0.4)\
 			.set_delay(duration * 0.7)
 		tw.tween_callback(func() -> void:
+			_active_particles -= 1
 			_data_current += per_particle
 			_update_data_bar()
 			if _data_current >= _data_max:
