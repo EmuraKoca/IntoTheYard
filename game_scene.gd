@@ -1749,7 +1749,7 @@ func _build_all_upgrades() -> void:
 	{"name": "Resonant Soul",      "category": "Individuality", "color": Color(0.8, 0.6, 1.0), "desc": "Each Reaction → restore 2 HP",                "index": 85,  "weight": 5,  "rarity": "uncommon", "chars": ["leila"], "min_level": 0},
 	# Lv1: İlk özel core'lar + reaksiyon temeli
 	{"name": "Plasma Core",        "category": "Identity",      "color": Color(0.4, 0.6, 1.0), "desc": "Bounces to Electrified enemies",             "index": 61, "weight": 8,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 1},
-	{"name": "Arc Core",           "category": "Identity",      "color": Color(0.3, 0.5, 1.0), "desc": "Wall bounce → lightning bolt",               "index": 63, "weight": 8,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 1},
+	{"name": "Arc Core",           "category": "Identity",      "color": Color(0.3, 0.5, 1.0), "desc": "Electrified hedefe çarptığında\ndebuff 2 yakın düşmana yayılır",               "index": 63, "weight": 8,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 1},
 	{"name": "Arcane Mind",        "category": "Utility",       "color": Color(0.7, 0.5, 1.0), "desc": "First applied element lasts 100% longer",     "index": 80, "weight": 5,  "rarity": "rare",      "chars": ["leila"], "min_level": 1},
 	{"name": "Frozen Time",        "category": "Utility",       "color": Color(0.6, 0.85, 1.0),"desc": "Freeze duration +30%",                       "index": 82, "weight": 5,  "rarity": "rare",      "chars": ["leila"], "min_level": 1},
 	{"name": "Overheat",           "category": "Utility",       "color": Color(1.0, 0.4, 0.0), "desc": "Burn explodes after 7 stacks",                "index": 83, "weight": 4,  "rarity": "rare",      "chars": ["leila"], "min_level": 1},
@@ -1766,7 +1766,7 @@ func _build_all_upgrades() -> void:
 	{"name": "Monsoon",            "category": "Calamity",      "color": Color(0.1, 0.5, 1.0), "desc": "All enemies gain Wet",                        "index": 95, "weight": 3,  "rarity": "epic",      "chars": ["leila"], "min_level": 3},
 	{"name": "EMP Pulse",          "category": "Calamity",      "color": Color(0.2, 0.4, 1.0), "desc": "All Electrified enemies take 15 dmg",         "index": 96, "weight": 3,  "rarity": "epic",      "chars": ["leila"], "min_level": 3},
 	# Lv4: Epic tier
-	{"name": "Voltaic Core",       "category": "Identity",      "color": Color(0.2, 0.4, 1.0), "desc": "Electrified enemy dies →\nchain lightning to nearest enemy", "index": 87, "weight": 4, "rarity": "epic", "chars": ["leila"], "min_level": 4},
+	{"name": "Voltaic Core",       "category": "Identity",      "color": Color(0.2, 0.4, 1.0), "desc": "Electrified hedefe çarptığında\nhasar zinciri (3 düşmana kadar)", "index": 87, "weight": 4, "rarity": "epic", "chars": ["leila"], "min_level": 4},
 	{"name": "Tempest Core",       "category": "Identity",      "color": Color(0.4, 0.6, 1.0), "desc": "Changes to a random Element\nafter each wall bounce",  "index": 88, "weight": 4,  "rarity": "epic",      "chars": ["leila"], "min_level": 4},
 	{"name": "Prismatic Core",     "category": "Identity",      "color": Color(0.8, 0.5, 1.0), "desc": "Randomly changes Element\nafter every enemy hit",        "index": 103, "weight": 5, "rarity": "rare",      "chars": ["leila"], "min_level": 4},
 	{"name": "Thermal Expansion",  "category": "Utility",       "color": Color(0.7, 0.9, 1.0), "desc": "Steam explosion area grows",                        "index": 89,  "weight": 3, "rarity": "epic",  "chars": ["leila"], "min_level": 4},
