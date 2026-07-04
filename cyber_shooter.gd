@@ -804,6 +804,40 @@ func _spawn_overheat_vfx() -> void:
 	spr.play("overheat")
 	spr.animation_finished.connect(spr.queue_free)
 
+func _react_overcharge(mult: float, game: Node, player: Node) -> void:
+	_spawn_overcharge_vfx()
+	var dmg := int(14 * mult)
+	var aoe_radius := 110.0
+	for body in get_tree().get_nodes_in_group("subjects"):
+		if body == self: continue
+		if is_instance_valid(body) and global_position.distance_to(body.global_position) < aoe_radius:
+			body.health -= dmg
+			if body.health <= 0: body.die()
+	health -= dmg
+	_react_flash(Color(1.0, 0.6, 0.0))
+	_clear_element()
+	_notify_reaction(game, player)
+	if health <= 0: die()
+
+func _spawn_overcharge_vfx() -> void:
+	var sf := SpriteFrames.new()
+	if sf.has_animation("default"): sf.remove_animation("default")
+	sf.add_animation("overcharge")
+	sf.set_animation_speed("overcharge", 12.0)
+	sf.set_animation_loop("overcharge", false)
+	for i in range(20):
+		sf.add_frame("overcharge", load("res://assets/VFX/overcharge/frame_%03d.png" % i))
+	var spr := AnimatedSprite2D.new()
+	spr.sprite_frames = sf
+	spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	spr.z_index = 1
+	spr.z_as_relative = false
+	spr.position = Vector2(0, 0)
+	spr.scale = Vector2(0.5, 0.5)
+	add_child(spr)
+	spr.play("overcharge")
+	spr.animation_finished.connect(spr.queue_free)
+
 func _react_melt(mult: float) -> void:
 	_spawn_melt_vfx()
 	var dmg := int(18 * mult)
