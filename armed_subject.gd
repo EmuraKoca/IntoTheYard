@@ -689,6 +689,18 @@ func _check_reaction(incoming: String) -> void:
 	if incoming == "fire" and is_frozen:
 		_react_melt_frozen(dmg_mult, game, player)
 		return
+
+	# frozen + electric → Shatter: yüksek hasar, ikisi söner
+	if incoming == "electric" and is_frozen:
+		is_frozen = false
+		is_electrified = false
+		_react_shatter(dmg_mult, game, player)
+		return
+	if incoming == "cryo" and is_electrified and is_frozen:
+		is_frozen = false
+		is_electrified = false
+		_react_shatter(dmg_mult, game, player)
+		return
 	if incoming == "fire" and is_slowed:
 		is_burning = false; is_slowed = false
 		speed = original_speed if original_speed > 0 else speed
@@ -754,6 +766,34 @@ func _spawn_steam_vfx() -> void:
 	spr.scale = Vector2(0.5, 0.5)
 	add_child(spr)
 	spr.play("steam")
+	spr.animation_finished.connect(spr.queue_free)
+
+func _react_shatter(mult: float, game: Node, player: Node) -> void:
+	_spawn_shatter_vfx()
+	var dmg := int(22 * mult)
+	health -= dmg
+	_react_flash(Color(0.6, 0.9, 1.0))
+	_clear_element()
+	_notify_reaction(game, player)
+	if health <= 0: die()
+
+func _spawn_shatter_vfx() -> void:
+	var sf := SpriteFrames.new()
+	if sf.has_animation("default"): sf.remove_animation("default")
+	sf.add_animation("shatter")
+	sf.set_animation_speed("shatter", 12.0)
+	sf.set_animation_loop("shatter", false)
+	for i in range(17):
+		sf.add_frame("shatter", load("res://assets/VFX/cryoFrozenShatter/frame_%03d.png" % i))
+	var spr := AnimatedSprite2D.new()
+	spr.sprite_frames = sf
+	spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	spr.z_index = 1
+	spr.z_as_relative = false
+	spr.position = Vector2(0, 0)
+	spr.scale = Vector2(1.0, 1.0)
+	add_child(spr)
+	spr.play("shatter")
 	spr.animation_finished.connect(spr.queue_free)
 
 func _react_melt_frozen(mult: float, game: Node, player: Node) -> void:
