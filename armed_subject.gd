@@ -114,9 +114,10 @@ func _spawn_cryo_vfx() -> void:
 	var sf := SpriteFrames.new()
 	if sf.has_animation("default"): sf.remove_animation("default")
 	sf.add_animation("cryo")
-	sf.set_animation_speed("cryo", 1.0)
-	sf.set_animation_loop("cryo", false)
-	sf.add_frame("cryo", load("res://assets/VFX/cryoEffect/frame_000.png"))
+	sf.set_animation_speed("cryo", 8.0)
+	sf.set_animation_loop("cryo", true)
+	for i in range(1, 10):
+		sf.add_frame("cryo", load("res://assets/VFX/cryoEffect/%d.png" % i))
 	var spr := AnimatedSprite2D.new()
 	spr.sprite_frames = sf
 	spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
