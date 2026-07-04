@@ -1242,10 +1242,9 @@ func _hit_subject(subject: Node2D) -> void:
 			subject.is_slowed = false
 			subject.apply_slow(slow_amount)
 
-	# Voltaic Core: Electrified düşman ölünce zincir yıldırım
-	if can_voltaic and is_instance_valid(subject):
-		subject.apply_electrified()
-		_voltaic_chain_on_death(subject)
+	# Voltaic Core: Electrified hedefe çarptığında hasar zinciri (debuff taşımaz)
+	if can_voltaic and is_instance_valid(subject) and subject.get("is_electrified") and subject.is_electrified:
+		_voltaic_chain(subject, total_damage, 3)
 
 	# Tempest Core: Her duvar sekmesinde element değişir (duvar sekmesinde tetiklenir)
 	if can_tempest and is_instance_valid(subject):
@@ -1281,26 +1280,25 @@ func _hit_subject(subject: Node2D) -> void:
 		if subject in hit_subjects:
 			hit_subjects.erase(subject)
 
-func _voltaic_chain_on_death(subject: Node2D) -> void:
-	# Düşman öldüğünde zincir yıldırım
-	if not is_instance_valid(subject):
-		return
-	await subject.tree_exited
-	if not is_instance_valid(self): return
+func _voltaic_chain(from: Node2D, dmg: int, hops_left: int) -> void:
+	if hops_left <= 0 or not is_instance_valid(from): return
 	var _tree := get_tree()
 	if not _tree: return
-	var _enemies := _tree.get_nodes_in_group("subjects")
+	# En yakın Electrified düşmanı bul (from hariç)
 	var _nearest: Node2D = null
 	var _nearest_dist: float = 220.0
-	for _en in _enemies:
-		if is_instance_valid(_en) and _en != subject:
-			var _d: float = subject.global_position.distance_to(_en.global_position)
-			if _d < _nearest_dist:
-				_nearest_dist = _d
-				_nearest = _en
-	if is_instance_valid(_nearest):
-		_nearest.take_damage(12)
-		_nearest.apply_electrified()
+	for _en in _tree.get_nodes_in_group("subjects"):
+		if not is_instance_valid(_en) or _en == from: continue
+		if not (_en.get("is_electrified") and _en.is_electrified): continue
+		var _d: float = from.global_position.distance_to(_en.global_position)
+		if _d < _nearest_dist:
+			_nearest_dist = _d
+			_nearest = _en
+	if not is_instance_valid(_nearest): return
+	_nearest.take_damage(dmg)
+	if _nearest.health <= 0: _nearest.die()
+	# Zincirlemeye devam et
+	_voltaic_chain(_nearest, dmg, hops_left - 1)
 
 func _scatter_explode(pos: Vector2) -> void:
 	var _elements: Array = ["electric", "cryo", "water", "fire"]
