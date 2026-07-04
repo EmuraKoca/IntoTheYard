@@ -3085,7 +3085,8 @@ Test Edilmesi Gerekenler:
   ⚠️  meltTheFrozen: dondurulmuş düşmana Pyro değince buz bloğu kırılıyor mu?
   ⚠️  Leila Calamity'leri: Blizzard, Monsoon, Volcanic Rift, Thunderstorm, EMP oyunda test edilmeli
 
-v0.0.9.9g — Bugfix & Optimizasyon (2026-07-03):
+v0.0.9.9g — Bugfix & Optimizasyon 
+(03.07.2026):
 
 Bugfix:
 
@@ -3122,3 +3123,58 @@ Optimizasyon:
   ✅ Tüm Leila Core'ları UI'da doğru sprite gösteriyor
      — _CORE_FOLDER_MAP'e 8 eksik Core eklendi (plasma, steam, echo, orbit, scatter, catalyst, voltaic, tempest, prismatic)
      — _get_ball_core_type'a 10 Leila Core eklendi — Steam Core Hydro olarak görünüyordu, düzeltildi
+
+v0.0.9.9h — Elemental Sistem Genişletmesi & Bugfix
+(04.07.2026):
+
+Yeni Reaksiyonlar:
+
+  ✅ Overcharge (Fire + Electric):
+     — İkisi söner, 14 × mult AoE hasar, 110px yarıçap
+     — overcharge VFX (10 frame) eklendi
+
+  ✅ Shatter (Frozen + Electric):
+     — İkisi söner, 22 × mult yüksek tek hedef hasar
+     — cryoFrozenShatter VFX (17 frame) eklendi
+
+  ✅ Cryostatic Shock (Slowed + Electric):
+     — Frozen değil, sadece slowed + electric kombinasyonu
+     — 10 × mult AoE hasar, 120px yarıçap, çevreye 2s slow yayılır
+     — slowElectricCryostatic VFX (13 frame) eklendi
+
+Core Yeniden Tasarım:
+
+  ✅ Arc Core — Duvar sekmesi kaldırıldı, yeni konsept:
+     — Electrified hedefe çarptığında debuff'ı 2 yakın düşmana yayar
+     — Arc Amplifier: +1 yayma hedefi (her alışta)
+  ✅ Voltaic Core — Ölüm zinciri kaldırıldı, yeni konsept:
+     — Electrified hedefe çarptığında hasar zinciri (3 hop, 220px)
+     — Debuff taşımaz — Arc Core'dan ayrışıyor
+  ✅ Arc Core, Voltaic Core, Arc Amplifier kart açıklamaları güncellendi
+
+VFX Güncellemeleri:
+
+  ✅ Steam Core VFX — loop kapatıldı, tek seferlik oynar
+     — Scale: 0.6 → 0.35, Wet yarıçapı: 70px → 45px
+  ✅ Cryo slow VFX — 1 frame'den 9 frame animasyona güncellendi (loop, 8fps)
+     — Z-index düzeltildi: artık düşman sprite'ının önünde görünüyor
+  ✅ Electrocute VFX — Escape/Ally anında temizleniyor
+     — _electrocute_sprite referansı tüm 7 düşmana eklendi
+
+Top Fiziği:
+
+  ✅ Bounce limit kaldırıldı — toplar sınırsız sekebilir
+  ✅ Top-top çakışması düzeltildi — toplar birbirini "duvar" sanıp geri dönmüyordu
+  ✅ Düşmana yapışma düzeltildi — push-away 8px → 22px, hit cooldown 0.5s → 0.25s
+
+Bugfix:
+
+  ✅ Voltaic Core sprite — electricBall yerine voltaicCore görünüyor
+  ✅ Flame Zone Calamity — her tickte burn uygular (sadece ilk tik değil)
+  ✅ Gravity Calamity — upgrade ekranında arka planda çalışmaya devam etmiyordu
+  ✅ _voltaic_chain_on_death crash — get_tree() null guard eklendi
+
+Performans:
+
+  ✅ Data parçacığı limiti — yoğun ölüm anında donma düzeltildi
+     — Max 20 aktif parçacık; limit aşılınca görsel atlanıp veri direkt ekleniyor
