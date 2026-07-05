@@ -106,7 +106,7 @@ func _get_character_start_type() -> String:
 	if _startup_fired < 2:
 		return ""   # normal
 	match player.character_type:
-		"vector":  return ""  # 3 Normal Ball
+		"vector":  return ""
 		"leila":
 			var pool := ["fire", "water", "cryo", "electric"]
 			return pool[randi() % pool.size()]

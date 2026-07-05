@@ -1,4 +1,4 @@
-extends CharacterBody2D
+﻿extends CharacterBody2D
 
 static var _freeze_sf: SpriteFrames = null
 
@@ -198,7 +198,7 @@ func _collapse() -> void:
 	else:
 		_escape()
 
-func apply_slow(amount, duration: float = 3.0) -> void:
+func apply_slow(amount, duration: float = 3.0, source: String = "cryo", anchor_pos: Vector2 = Vector2.ZERO) -> void:
 	if is_slowed:
 		return
 	_check_reaction("cryo")
@@ -211,7 +211,8 @@ func apply_slow(amount, duration: float = 3.0) -> void:
 		slow_amount = min(amount * p.cryo_slow_mult, 0.9)
 	speed = speed * (1.0 - slow_amount)
 	_set_element("slow")
-	_spawn_cryo_vfx()
+	if source != "anchor":
+		_spawn_cryo_vfx()
 	var dur := duration
 	if p and p.get("has_elemental_memory") and p.has_elemental_memory and _had_reaction:
 		dur *= 2.0
@@ -774,7 +775,7 @@ func _spawn_cryostatic_vfx() -> void:
 	spr.z_index = 1
 	spr.z_as_relative = false
 	spr.position = Vector2(0, 0)
-	spr.scale = Vector2(1.0, 1.0)
+	spr.scale = Vector2(0.65, 0.65)
 	add_child(spr)
 	spr.play("cryostatic")
 	spr.animation_finished.connect(spr.queue_free)
@@ -802,7 +803,7 @@ func _spawn_shatter_vfx() -> void:
 	spr.z_index = 1
 	spr.z_as_relative = false
 	spr.position = Vector2(0, 0)
-	spr.scale = Vector2(1.0, 1.0)
+	spr.scale = Vector2(0.65, 0.65)
 	add_child(spr)
 	spr.play("shatter")
 	spr.animation_finished.connect(spr.queue_free)
@@ -927,7 +928,7 @@ func _spawn_overcharge_vfx() -> void:
 	spr.z_index = 1
 	spr.z_as_relative = false
 	spr.position = Vector2(0, 0)
-	spr.scale = Vector2(1.0, 1.0)
+	spr.scale = Vector2(0.65, 0.65)
 	add_child(spr)
 	spr.play("overcharge")
 	spr.animation_finished.connect(spr.queue_free)

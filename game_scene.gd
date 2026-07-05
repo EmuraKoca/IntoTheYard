@@ -1,4 +1,4 @@
-extends Node2D
+﻿extends Node2D
 
 var _font_bold    = preload("res://assets/orbitronfont/Orbitron-Bold.ttf")
 var _font_regular = preload("res://assets/orbitronfont/Orbitron-Regular.ttf")
@@ -229,8 +229,16 @@ func _screen_shake() -> void:
 	var camera = get_node("Camera2D")
 	var original_pos = camera.offset
 	var tween = create_tween()
-	for i in range(8):
-		tween.tween_property(camera, "offset", Vector2(randf_range(-15, 15), randf_range(-15, 15)), 0.05)
+	for i in range(4):
+		tween.tween_property(camera, "offset", Vector2(randf_range(-3, 3), randf_range(-3, 3)), 0.05)
+	tween.tween_property(camera, "offset", original_pos, 0.05)
+
+func screen_shake_heavy() -> void:
+	var camera = get_node("Camera2D")
+	var original_pos = camera.offset
+	var tween = create_tween()
+	for i in range(4):
+		tween.tween_property(camera, "offset", Vector2(randf_range(-3, 3), randf_range(-3, 3)), 0.05)
 	tween.tween_property(camera, "offset", original_pos, 0.05)
 
 func show_boss_bar(boss_node: Node2D, boss_name: String = "CYBER 404") -> void:
@@ -1063,6 +1071,47 @@ func gain_armor(amount: int) -> void:
 	player_armor = min(player_armor + boosted, player_armor_cap)
 	player_max_armor = max(player_max_armor, player_armor_cap)
 	_update_armor_ui()
+	# Armor/Bulwark Core: kazanım anında altın shield flash
+	if is_instance_valid(_player_node):
+		var _spr := _player_node.get_node_or_null("VectorSprite")
+		if not _spr:
+			_spr = _player_node.get_node_or_null("LeilaSprite")
+		if not _spr:
+			_spr = _player_node.get_node_or_null("CycloneSprite")
+		if is_instance_valid(_spr):
+			var _tw := create_tween()
+			_tw.tween_property(_spr, "modulate", Color(1.0, 0.9, 0.3, 1.0), 0.06)
+			_tw.tween_property(_spr, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.15)
+
+func _spawn_emergency_vfx() -> void:
+	if not is_instance_valid(_player_node): return
+	# Aktivasyon patlaması
+	var p := CPUParticles2D.new()
+	p.top_level = true
+	p.global_position = _player_node.global_position
+	p.one_shot = true
+	p.explosiveness = 1.0
+	p.amount = 24
+	p.lifetime = 0.5
+	p.initial_velocity_min = 60.0
+	p.initial_velocity_max = 180.0
+	p.gravity = Vector2.ZERO
+	p.scale_amount_min = 2.0
+	p.scale_amount_max = 4.5
+	p.color = Color(0.9, 0.1, 0.1)
+	add_child(p)
+	p.emitting = true
+	get_tree().create_timer(1.2).timeout.connect(p.queue_free)
+	# 10s kırmızı kriz aura — sprite'ı pulse et
+	var _spr := _player_node.get_node_or_null("VectorSprite")
+	if not _spr:
+		_spr = _player_node.get_node_or_null("LeilaSprite")
+	if not _spr:
+		_spr = _player_node.get_node_or_null("CycloneSprite")
+	if not is_instance_valid(_spr): return
+	var _aura_tw := create_tween().set_loops(10)
+	_aura_tw.tween_property(_spr, "modulate", Color(1.0, 0.35, 0.35, 1.0), 0.5)
+	_aura_tw.tween_property(_spr, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.5)
 
 func _get_ball_core_type(ball) -> String:
 	if not is_instance_valid(ball): return "normal"
@@ -1686,6 +1735,7 @@ func _build_all_upgrades() -> void:
 	{"name": "Armor Core",          "category": "Identity",      "color": Color(0.5, 0.6, 0.8), "desc": "Hit → gain Armor",                          "index": 40, "weight": 10, "rarity": "common",   "chars": ["vector"], "min_level": 0},
 	{"name": "Anchor Core",         "category": "Identity",      "color": Color(0.3, 0.4, 0.6), "desc": "Hit → slow enemy 60% (3s)",                 "index": 41, "weight": 10, "rarity": "common",   "chars": ["vector"], "min_level": 0},
 	{"name": "Crusher Core",        "category": "Identity",      "color": Color(0.6, 0.3, 0.1), "desc": "High damage, breaks Armor",                 "index": 42, "weight": 10, "rarity": "common",   "chars": ["vector"], "min_level": 0},
+	{"name": "Siege Core",          "category": "Identity",      "color": Color(0.4, 0.4, 0.5), "desc": "Highest damage core",                       "index": 45, "weight": 6,  "rarity": "uncommon", "chars": ["vector"], "min_level": 2},
 	{"name": "Momentum Engine",     "category": "Utility",       "color": Color(0.0, 0.7, 1.0), "desc": "Hit → +1 Stack\n+3% Core Speed per stack\n(max 20 stacks)", "index": 35, "weight": 8, "rarity": "common", "chars": ["vector"], "min_level": 0},
 	{"name": "Chain Density",       "category": "Utility",       "color": Color(0.0, 0.9, 0.5), "desc": "New enemy hit mid-flight:\n+dmg ramp, resets on return",     "index": 37, "weight": 8, "rarity": "common", "chars": ["vector"], "min_level": 0},
 	{"name": "Reinforced Frame",    "category": "Individuality", "color": Color(0.5, 0.7, 0.5), "desc": "+20 Max Armor / Core Speed -%10",           "index": 48, "weight": 8, "rarity": "common",   "chars": ["vector"], "min_level": 1},
@@ -1714,10 +1764,10 @@ func _build_all_upgrades() -> void:
 	{"name": "Fortified Core System","category":"Individuality",  "color": Color(0.4, 0.6, 0.8), "desc": "Armor Cap +15 / Momentum gain -%20",          "index": 50, "weight": 4, "rarity": "rare",     "chars": ["vector"], "min_level": 4},
 	{"name": "Adrenal Armor System", "category":"Individuality",  "color": Color(0.9, 0.3, 0.5), "desc": "Low HP: Armor +%30 | High HP: Core Speed +%10", "index": 59, "weight": 4, "rarity": "rare",  "chars": ["vector"], "min_level": 4},
 	# Lv4: Build specialization
-	{"name": "Bloodbound Core",     "category": "Identity",      "color": Color(0.7, 0.0, 0.1), "desc": "Missing HP → bonus dmg",                     "index": 46, "weight": 4, "rarity": "epic",     "chars": ["vector"], "min_level": 4},
+	{"name": "Bloodbound Core",     "category": "Identity",      "color": Color(0.7, 0.0, 0.1), "desc": "Missing HP → bonus dmg",                     "index": 46, "weight": 4,  "rarity": "epic",     "chars": ["vector"], "min_level": 4},
 	{"name": "Adrenal Surge",       "category": "Individuality", "color": Color(1.0, 0.4, 0.1), "desc": "HP <30%  →  Momentum Engine x2",             "index": 32, "weight": 3, "rarity": "epic",     "chars": ["vector"], "min_level": 5},
 	# Lv5: Run breaker
-	{"name": "Emergency Protocol",  "category": "Individuality", "color": Color(1.0, 0.9, 0.0), "desc": "Take 15 dmg →\n+75% Armor Gain (10s)",        "index": 34, "weight": 2, "rarity": "legendary","chars": ["vector"], "min_level": 5},
+	{"name": "Emergency Protocol",  "category": "Individuality", "color": Color(1.0, 0.9, 0.0), "desc": "Take 15 dmg →\n+75% Armor Gain (10s)",        "index": 34, "weight": 2,   "rarity": "legendary","chars": ["vector"], "min_level": 5},
 	{"name": "Risk Engine",         "category": "Individuality", "color": Color(0.8, 0.1, 0.3), "desc": "Damage taken → Momentum stacks / Armor Gain -%30", "index": 60, "weight": 3, "rarity": "epic", "chars": ["vector"], "min_level": 5},
 	{"name": "Fractured Frame",     "category": "Individuality", "color": Color(0.9, 0.4, 0.1), "desc": "Core Damage ×1.4 / Max HP -15",               "index": 52, "weight": 2, "rarity": "epic",     "chars": ["vector"], "min_level": 5},
 	{"name": "Pressure Valve",      "category": "Utility",       "color": Color(0.3, 0.8, 0.7), "desc": "Every 5 Momentum stacks:\ngain +1 Armor",     "index": 104, "weight": 6, "rarity": "uncommon", "chars": ["vector"], "min_level": 2},
@@ -2819,6 +2869,7 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 		player_damaged(15)
 		_armor_gain_boost = 1.75
 		_armor_gain_boost_timer = 10.0
+		_spawn_emergency_vfx()
 	# ── Vector Armor — Utility ───────────────────────────────────────────────
 	elif index == 35:  # Momentum Engine
 		var p := get_node("Player")

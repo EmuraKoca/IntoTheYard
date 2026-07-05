@@ -90,6 +90,7 @@ var _last_position: Vector2 = Vector2.ZERO
 var _pos_stuck_timer: float = 0.0
 
 var _sprite: AnimatedSprite2D = null
+var _kinetic_vfx: Sprite2D = null
 
 func _ready() -> void:
 	z_index = 5
@@ -222,9 +223,16 @@ func _setup_ball_sprite() -> void:
 	# 48px referans boyut — 32px PNG'ler için scale orantılı büyütülür
 	var _base_px: float = 48.0
 	var _tex_size: float = float(frames.get_frame_texture("spin", 0).get_width())
-	_sprite.scale = Vector2.ONE * (0.675 * (_base_px / _tex_size))
+	_sprite.scale = Vector2.ONE * (0.57375 * (_base_px / _tex_size))
 	_sprite.play("spin")
 	add_child(_sprite)
+	if can_kinetic:
+		_kinetic_vfx = Sprite2D.new()
+		_kinetic_vfx.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		_kinetic_vfx.scale = _sprite.scale
+		_kinetic_vfx.visible = false
+		_kinetic_vfx.z_index = 1
+		add_child(_kinetic_vfx)
 
 func _get_player() -> Node2D:
 	if not is_instance_valid(_cached_player):
@@ -294,6 +302,8 @@ func _process(_delta: float) -> void:
 
 func _physics_process(delta: float) -> void:
 	_update_trail(delta)
+	if can_bloodbound:
+		queue_redraw()
 
 	match state:
 		"orbiting":  _process_orbiting(delta); return
@@ -365,12 +375,12 @@ func _physics_process(delta: float) -> void:
 
 	if _bounced:
 		if can_steam: _spawn_steam_cloud(global_position)
-		# Tempest Core: her duvar sekmesinde element değişir
 		if can_tempest:
 			_tempest_index += 1
-	else:
-		# Düşmana çarpınca sayaç sıfırlanır
-		pass
+		if can_kinetic:
+			_wall_bounce_count += 1
+			_update_kinetic_vfx()
+			queue_redraw()
 
 	# Mimic
 	if mimic_done and not is_mimic:
@@ -394,8 +404,15 @@ func _physics_process(delta: float) -> void:
 	if collision:
 		var collider = collision.get_collider()
 		if collider.is_in_group("subjects"):
+			var _was_pierce: bool = can_pierce
+			var _is_heavy: bool = collider.get_script() != null and collider.get_script().resource_path.contains("heavy")
 			_hit_subject(collider)
-			move_and_collide(collision.get_remainder())
+			if _was_pierce and not _is_heavy:
+				var _shape: CollisionShape2D = collider.get_node_or_null("CollisionShape2D")
+				if _shape:
+					_shape.disabled = true
+					get_tree().create_timer(0.5).timeout.connect(func():
+						if is_instance_valid(_shape): _shape.disabled = false)
 		elif collider.is_in_group("player"):
 			if not collider.is_dashing:
 				move_direction = move_direction.bounce(collision.get_normal())
@@ -506,13 +523,14 @@ func _process_returning(delta: float) -> void:
 		if collider.is_in_group("subjects"):
 			_hit_subject(collider)
 			var _is_heavy: bool = collider.get_script() != null and collider.get_script().resource_path.contains("heavy")
-			if can_pierce and not _is_heavy:
-				move_and_collide(collision.get_remainder())
-				var _away: Vector2 = (global_position - collider.global_position).normalized()
-				if _away.length_squared() < 0.01:
-					_away = move_direction
-				global_position += _away * 40.0
-			elif can_pierce and _is_heavy:
+			var _was_pierce: bool = can_pierce
+			if _was_pierce and not _is_heavy:
+				var _shape2: CollisionShape2D = collider.get_node_or_null("CollisionShape2D")
+				if _shape2:
+					_shape2.disabled = true
+					get_tree().create_timer(0.15).timeout.connect(func():
+						if is_instance_valid(_shape2): _shape2.disabled = false)
+			elif _was_pierce and _is_heavy:
 				move_direction = move_direction.bounce(collision.get_normal())
 		elif not collider.is_in_group("player"):
 			# Bariyer veya statik duvar — aninda geri don
@@ -817,6 +835,16 @@ func _draw() -> void:
 		var g = (sin(mimic_ring_time * 2.0 + 2.094) + 1.0) / 2.0
 		var b = (sin(mimic_ring_time * 2.0 + 4.189) + 1.0) / 2.0
 		draw_arc(Vector2.ZERO, 14, 0, TAU, 32, Color(r, g, b), 2.0)
+	# Bloodbound pulsing kırmızı aura — düşük HP'de görünür
+	if can_bloodbound:
+		var _gfx := get_tree().get_first_node_in_group("game") if get_tree() else null
+		if _gfx and _gfx.get("player_max_hp") and _gfx.player_max_hp > 0:
+			var _hp_pct: float = float(_gfx.player_hp) / float(_gfx.player_max_hp)
+			if _hp_pct < 0.5:
+				var _pulse: float = (sin(Time.get_ticks_msec() * 0.006) + 1.0) / 2.0
+				var _alpha: float = lerp(0.3, 0.85, _pulse) * (1.0 - _hp_pct * 2.0)
+				var _radius: float = lerp(13.0, 18.0, _pulse)
+				draw_arc(Vector2.ZERO, _radius, 0, TAU, 32, Color(0.9, 0.05, 0.05, _alpha), 2.5)
 		
 func _hit_subject(subject: Node2D) -> void:
 	var _p := _get_player()
@@ -836,7 +864,7 @@ func _hit_subject(subject: Node2D) -> void:
 		if _bn.length_squared() < 0.01:
 			_bn = -move_direction
 		move_direction = move_direction.bounce(_bn).normalized()
-		global_position += _bn * 22.0
+		global_position += _bn * 30.0
 
 	# Mimic reverts after 5 hits
 	if mimic_done and not is_mimic:
@@ -915,6 +943,12 @@ func _hit_subject(subject: Node2D) -> void:
 	# ── Vector yeni core efektleri + Armor & Stack tetikleyicileri ──────────
 	var player_node := _get_player()
 	var game_node_fx := get_tree().get_first_node_in_group("game")
+	if can_siege and game_node_fx:
+		game_node_fx.screen_shake_heavy()
+		_spawn_impact_burst(global_position, Color(0.85, 0.85, 0.9), 22)
+	if can_crusher and game_node_fx:
+		game_node_fx._screen_shake()
+		_spawn_impact_burst(global_position, Color(1.0, 0.45, 0.1), 16)
 	if can_armor and is_instance_valid(player_node) and game_node_fx:
 		game_node_fx.gain_armor(1)
 	if can_bulwark and is_instance_valid(player_node) and game_node_fx:
@@ -924,17 +958,23 @@ func _hit_subject(subject: Node2D) -> void:
 		var bonus: int = missing / 5
 		if bonus > 0:
 			subject.take_damage(bonus)
+			var _burst_count: int = clamp(8 + bonus * 2, 8, 32)
+			_spawn_impact_burst(global_position, Color(0.9, 0.1, 0.1), _burst_count)
 	if can_tempered and game_node_fx:
 		if game_node_fx.player_armor > 0:
 			subject.take_damage(3)
 	if can_anchor and is_instance_valid(subject) and subject.has_method("apply_slow"):
 		var _slow_dur: float = 3.0 * (player_node.slow_duration_mult if player_node else 1.0)
-		subject.apply_slow(0.6, _slow_dur)
+		subject.apply_slow(0.6, _slow_dur, "anchor", subject.global_position + Vector2(0, 20))
 	# Magnetic Weight: knockback
 	if player_node and player_node.knockback_force_mult != 1.0 and is_instance_valid(subject) and subject.has_method("apply_knockback"):
 		subject.apply_knockback(global_position, 150.0 * player_node.knockback_force_mult)
 	if can_kinetic and _wall_bounce_count > 0:
 		subject.take_damage(_wall_bounce_count)
+		_spawn_impact_burst(global_position, Color(0.2, 0.8, 1.0), clamp(_wall_bounce_count * 4, 6, 28))
+		_wall_bounce_count = 0
+		_update_kinetic_vfx()
+		queue_redraw()
 	if is_instance_valid(player_node):
 		# Armor Core upgrade (ayrı flag) — isabet başına armor kazan
 		if player_node.has_armor_core and game_node_fx:
@@ -1364,10 +1404,48 @@ func _electric_blast() -> void:
 			z.take_damage(5)
 
 # ─────────────────────────────────────────────
+# KINETIC CORE VFX
+# ─────────────────────────────────────────────
+func _update_kinetic_vfx() -> void:
+	if not is_instance_valid(_kinetic_vfx): return
+	if _wall_bounce_count <= 0:
+		_kinetic_vfx.visible = false
+		return
+	var frame_idx: int = clamp(_wall_bounce_count, 1, 13)
+	var tex := load("res://assets/VFX/kineticCoreVFX/frame_%03d.png" % frame_idx)
+	if tex:
+		_kinetic_vfx.texture = tex
+		_kinetic_vfx.visible = true
+
+# ─────────────────────────────────────────────
+# IMPACT BURST VFX
+# ─────────────────────────────────────────────
+func _spawn_impact_burst(pos: Vector2, color: Color, count: int) -> void:
+	var p := CPUParticles2D.new()
+	p.top_level = true
+	p.global_position = pos
+	p.emitting = false
+	p.one_shot = true
+	p.explosiveness = 1.0
+	p.amount = count
+	p.lifetime = 0.35
+	p.speed_scale = 1.0
+	p.initial_velocity_min = 80.0
+	p.initial_velocity_max = 220.0
+	p.gravity = Vector2(0, 300)
+	p.scale_amount_min = 2.5
+	p.scale_amount_max = 5.0
+	p.color = color
+	get_tree().current_scene.add_child(p)
+	p.emitting = true
+	get_tree().create_timer(1.0).timeout.connect(p.queue_free)
+
+# ─────────────────────────────────────────────
 # CYBERPUNK TRAIL SYSTEM
 # ─────────────────────────────────────────────
 
 func _setup_trail() -> void:
+	return  # Trail devre dışı — test için
 	trail = Line2D.new()
 	# top_level=true: does not inherit parent transform, drawn in world coordinates
 	trail.top_level = true

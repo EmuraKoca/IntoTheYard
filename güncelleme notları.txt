@@ -3178,3 +3178,44 @@ Performans:
 
   ✅ Data parçacığı limiti — yoğun ölüm anında donma düzeltildi
      — Max 20 aktif parçacık; limit aşılınca görsel atlanıp veri direkt ekleniyor
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+v0.0.9.9h (devam) — Vector VFX, Top Fiziği Düzeltmeleri (2026-07-05)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Vector VFX:
+
+  ✅ Siege Core — çarpma anında ekran sarsıntısı (3px) + gri CPUParticles burst
+  ✅ Crusher Core — çarpma anında ekran sarsıntısı (3px) + turuncu CPUParticles burst
+  ✅ Bloodbound Core — çarpma anında kırmızı CPUParticles burst
+     — Sağlık %50 altına düştüğünde kırmızı pulsing aura (_draw arc)
+  ✅ Kinetic Core — wall bounce sayısına göre frame overlay VFX (frame_001–013)
+     — Kritik bugfix: _wall_bounce_count hiç artırılmıyordu, düzeltildi
+     — Her bouncea sonra kinetic hasar bonus artık doğru hesaplanıyor
+  ✅ Emergency Protocol — aktivasyon anında kırmızı burst + 10s kırmızı aura
+  ✅ Armor/Bulwark Core — zırh kazanıldığında altın flash efekti
+
+Görsel Düzeltmeleri:
+
+  ✅ Overcharge / Shatter / Cryostatic Shock VFX boyutu — %100 → %65 küçültüldü
+  ✅ Core iz efektleri (trail) — tüm coreler için devre dışı bırakıldı
+  ✅ Core sprite boyutu — %100 → %85 küçültüldü
+
+Kart Havuzu:
+
+  ✅ Siege Core kart tanımı eklendi — önceden sadece upgrade handler vardı, kart çıkmıyordu
+     — index 45, uncommon, min_level 2, weight 6
+
+Top Fiziği:
+
+  ✅ Top ışınlanma hatası düzeltildi — move_and_collide remainder kaldırıldı
+     — Toplar artık fizik motoru yerine _hit_subject() ile yön değiştiriyor
+  ✅ Top çarpma sonrası 30px separation eklendi — düşmana gömülme önlendi
+  ✅ Pierce Core tutarsızlık düzeltildi — CollisionShape2D devre dışı süresi 0.15s → 0.5s
+     — Kalabalık düşman gruplarında geçiş artık çok daha tutarlı
+
+Yeni Parametreler:
+
+  ✅ apply_slow() — source ve anchor_pos parametreleri eklendi
+     — Anchor Core: cryo VFX atlanıyor, sadece element göstergesi çıkıyor
