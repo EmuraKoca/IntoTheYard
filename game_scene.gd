@@ -1424,9 +1424,9 @@ func _setup_tooltip() -> void:
 func _setup_calamity_cells() -> void:
 	const CAL_PX := 1640.0
 	const CAL_PY := 636.0
-	const CELL_W := 72.0
-	const CELL_H := 26.0
-	const GAP    := 4.0
+	const CELL_W := 32.0
+	const CELL_H := 22.0
+	const GAP    := 6.0
 	_calamity_cells = []
 	for i in range(3):
 		var cell := Panel.new()
