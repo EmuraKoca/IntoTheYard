@@ -428,7 +428,7 @@ func _physics_process(delta: float) -> void:
 				var _shape: CollisionShape2D = collider.get_node_or_null("CollisionShape2D")
 				if _shape:
 					_shape.disabled = true
-					get_tree().create_timer(0.5).timeout.connect(func():
+					get_tree().create_timer(0.1).timeout.connect(func():
 						if is_instance_valid(_shape): _shape.disabled = false, CONNECT_ONE_SHOT)
 		elif collider.is_in_group("player"):
 			if not collider.is_dashing:
