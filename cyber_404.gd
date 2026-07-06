@@ -1,9 +1,9 @@
 extends CharacterBody2D
 
 var armor = 90
-var health = 90
+var health = 45
 var max_armor = 90
-var max_health = 90
+var max_health = 45
 var is_dead = false
 var is_frozen = false
 var is_slowed = false

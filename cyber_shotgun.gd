@@ -1,9 +1,9 @@
-﻿extends CharacterBody2D
+extends CharacterBody2D
 
 static var _freeze_sf: SpriteFrames = null
 
 var speed = 35.0
-var health = 60
+var health = 30
 var is_dead = false
 var is_frozen = false
 var is_slowed = false
@@ -16,7 +16,7 @@ var original_speed = 50.0
 var shoot_timer = 0.0
 var shoot_interval = 5.5
 var is_electrified = false
-var max_health = 60
+var max_health = 30
 var _elem_indicator = null
 var attack_cooldown = 0.0
 var attack_rate = 1.0
@@ -26,7 +26,7 @@ var bullet_scene = preload("res://bullet.tscn")
 # Animasyon
 var _anim_dir: String = "S"
 var _freeze_sprite: AnimatedSprite2D = null
-var _reactions_cancelled: bool = false  # ally/escape anında reaction coroutine keset
+var _reactions_cancelled: bool = false  # ally/escape an�nda reaction coroutine keset
 var _cryo_sprite: AnimatedSprite2D = null
 var _melt_frozen_sprite: AnimatedSprite2D = null
 var _electrocute_sprite: AnimatedSprite2D = null
@@ -151,7 +151,7 @@ func _physics_process(delta: float) -> void:
 
 func _shoot(target: Node2D) -> void:
 	var dir = (target.global_position - global_position).normalized()
-	# 3 mermi yelpazeyle: -20°, 0°, +20°
+	# 3 mermi yelpazeyle: -20�, 0�, +20�
 	for i in range(3):
 		var bullet = bullet_scene.instantiate()
 		bullet.global_position = global_position
@@ -331,7 +331,7 @@ func apply_electrified() -> void:
 		dur *= 2.0
 	if p and p.get("first_debuff_duration_mult") and not _had_any_element():
 		dur *= p.first_debuff_duration_mult
-	# Living Storm: electrified iken player yakınsa periyodik hasar
+	# Living Storm: electrified iken player yak�nsa periyodik hasar
 	var _ls_p := _get_player()
 	if _ls_p and _ls_p.get("has_living_storm") and _ls_p.has_living_storm:
 		_living_storm_loop()
@@ -456,7 +456,7 @@ func _become_ally() -> void:
 			_nearest = _ad
 	var _aspeed: float = max(speed * 4.5, 200.0)
 	$ShotgunSprite.play("walk_W")
-	# Kapıya 80px kala küçülmeye başla
+	# Kap�ya 80px kala k���lmeye ba�la
 	var _pre_shrink_pos: Vector2 = _nearest + (_nearest - global_position).normalized() * -80.0
 	if global_position.distance_to(_nearest) > 80.0:
 		var _pre_tween = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_BOUND)
@@ -468,14 +468,14 @@ func _become_ally() -> void:
 	var _early_shrink = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_BOUND)
 	_early_shrink.tween_property(self, "scale", Vector2(0.35, 0.35), 0.4)
 
-	# 1 — Kapıya yürü
+	# 1 � Kap�ya y�r�
 	var _atween = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_BOUND)
 	_atween.tween_property(self, "global_position", _nearest,
 		global_position.distance_to(_nearest) / _aspeed)
 	await _atween.finished
 	if not is_instance_valid(self): return
 
-	# 2 — Kapıda küçül, yürümeye devam et, 1.5 sn sonra tribün altında eski boyuta dön
+	# 2 � Kap�da k���l, y�r�meye devam et, 1.5 sn sonra trib�n alt�nda eski boyuta d�n
 	var _dest: Vector2 = Vector2(randf_range(50.0, 680.0), randf_range(720.0, 1020.0))
 	var _walk_dur: float = _nearest.distance_to(_dest) / _aspeed
 	if is_instance_valid(_chip_node): _chip_node.queue_free()
@@ -540,7 +540,7 @@ func _clear_element() -> void:
 func _draw_chip() -> void:
 	if is_dead or is_in_group("allies"):
 		return
-	# Vücuda yayılmış elektrik kıvılcımları (sarı-turuncu + mor)
+	# V�cuda yay�lm�� elektrik k�v�lc�mlar� (sar�-turuncu + mor)
 	var t := _chip_t
 	var anchors := [
 		Vector2(-7.0, -22.0), Vector2( 7.0, -19.0),
@@ -555,19 +555,19 @@ func _draw_chip() -> void:
 		var ex: float   = sin(t * (11.0 + i * 3.1) + i) * 9.0
 		var ey: float   = cos(t * (9.0  + i * 2.5) + i) * 8.0
 		var a:  float   = flicker * 1.0
-		# Cyan ana kıvılcım
+		# Cyan ana k�v�lc�m
 		_chip_node.draw_line(p, p + Vector2(ex, ey),
 				Color(0.0, 0.9, 1.0, a * 0.9), 1.2)
-		# Neon mor üst katman
+		# Neon mor �st katman
 		_chip_node.draw_line(p, p + Vector2(ex, ey),
 				Color(0.55, 0.0, 0.85, a * 0.65), 0.7)
-		# İkinci segment — elektrik mavisi
+		# �kinci segment � elektrik mavisi
 		var ex2: float = ex + sin(t * 13.0 + i) * 4.0
 		var ey2: float = ey + cos(t * 10.0 + i) * 3.5
 		_chip_node.draw_line(p + Vector2(ex, ey),
 				p + Vector2(ex2, ey2),
 				Color(0.1, 0.75, 1.0, a * 0.75), 1.0)
-		# İkinci segment — neon mor
+		# �kinci segment � neon mor
 		_chip_node.draw_line(p + Vector2(ex, ey),
 				p + Vector2(ex2, ey2),
 				Color(0.45, 0.0, 0.75, a * 0.50), 0.6)
@@ -647,12 +647,12 @@ func _check_reaction(incoming: String) -> void:
 	if incoming == "fire" and is_wet:
 		is_wet = false; is_burning = false
 		_react_steam(dmg_mult, game, player); return
-	# frozen + fire → melt the frozen
+	# frozen + fire � melt the frozen
 	if incoming == "fire" and is_frozen:
 		_react_melt_frozen(dmg_mult, game, player)
 		return
 
-	# frozen + electric → Shatter: yüksek hasar, ikisi söner
+	# frozen + electric � Shatter: y�ksek hasar, ikisi s�ner
 	if incoming == "electric" and is_frozen:
 		is_frozen = false
 		is_electrified = false
@@ -664,7 +664,7 @@ func _check_reaction(incoming: String) -> void:
 		_react_shatter(dmg_mult, game, player)
 		return
 
-	# slowed + electric → Cryostatic Shock: AoE slow yayılır + hasar
+	# slowed + electric � Cryostatic Shock: AoE slow yay�l�r + hasar
 	if incoming == "electric" and is_slowed and not is_frozen:
 		is_slowed = false
 		is_electrified = false
@@ -691,7 +691,7 @@ func _react_electrocute(mult: float, game: Node, player: Node) -> void:
 	var dmg := int(12 * mult)
 	health -= dmg
 	_react_flash(Color(0.2, 0.5, 4.0))
-	# Yakındaki dusmanlara elektrik yay — wet ise zincirleme Electrocute tetiklenir
+	# Yak�ndaki dusmanlara elektrik yay � wet ise zincirleme Electrocute tetiklenir
 	for body in get_tree().get_nodes_in_group("subjects"):
 		if body == self: continue
 		if is_instance_valid(body) and global_position.distance_to(body.global_position) < 100.0:

@@ -91,11 +91,13 @@ var _pos_stuck_timer: float = 0.0
 
 var _sprite: AnimatedSprite2D = null
 var _kinetic_vfx: Sprite2D = null
+var _momentum_trail: CPUParticles2D = null
 
 func _ready() -> void:
 	z_index = 5
 	$CollisionShape2D.disabled = false
 	_setup_trail()
+	_setup_momentum_trail()
 	_setup_ball_sprite()
 	_update_modulate()
 	_cached_player = get_tree().get_first_node_in_group("player")
@@ -302,6 +304,7 @@ func _process(_delta: float) -> void:
 
 func _physics_process(delta: float) -> void:
 	_update_trail(delta)
+	_update_momentum_trail()
 	if can_bloodbound:
 		queue_redraw()
 
@@ -359,6 +362,12 @@ func _physics_process(delta: float) -> void:
 		global_position.x = 912
 		move_direction.x = abs(move_direction.x)
 		_bounced = true
+		# Siege Core — sol duvar: tribün sarsıntısı
+		if can_siege:
+			var _gfx := get_tree().get_first_node_in_group("game")
+			if _gfx:
+				_gfx._screen_shake_small()
+				_spawn_impact_burst(global_position, Color(0.5, 0.2, 1.0), 12)
 	if global_position.x >= 1580:
 		global_position.x = 1578
 		move_direction.x = -abs(move_direction.x)
@@ -412,7 +421,7 @@ func _physics_process(delta: float) -> void:
 				if _shape:
 					_shape.disabled = true
 					get_tree().create_timer(0.5).timeout.connect(func():
-						if is_instance_valid(_shape): _shape.disabled = false)
+						if is_instance_valid(_shape): _shape.disabled = false, CONNECT_ONE_SHOT)
 		elif collider.is_in_group("player"):
 			if not collider.is_dashing:
 				move_direction = move_direction.bounce(collision.get_normal())
@@ -529,7 +538,7 @@ func _process_returning(delta: float) -> void:
 				if _shape2:
 					_shape2.disabled = true
 					get_tree().create_timer(0.15).timeout.connect(func():
-						if is_instance_valid(_shape2): _shape2.disabled = false)
+						if is_instance_valid(_shape2): _shape2.disabled = false, CONNECT_ONE_SHOT)
 			elif _was_pierce and _is_heavy:
 				move_direction = move_direction.bounce(collision.get_normal())
 		elif not collider.is_in_group("player"):
@@ -943,12 +952,7 @@ func _hit_subject(subject: Node2D) -> void:
 	# ── Vector yeni core efektleri + Armor & Stack tetikleyicileri ──────────
 	var player_node := _get_player()
 	var game_node_fx := get_tree().get_first_node_in_group("game")
-	if can_siege and game_node_fx:
-		game_node_fx.screen_shake_heavy()
-		_spawn_impact_burst(global_position, Color(0.85, 0.85, 0.9), 22)
-	if can_crusher and game_node_fx:
-		game_node_fx._screen_shake()
-		_spawn_impact_burst(global_position, Color(1.0, 0.45, 0.1), 16)
+	pass  # Siege ve Crusher düşman efektleri kaldırıldı
 	if can_armor and is_instance_valid(player_node) and game_node_fx:
 		game_node_fx.gain_armor(1)
 	if can_bulwark and is_instance_valid(player_node) and game_node_fx:
@@ -1443,6 +1447,50 @@ func _spawn_impact_burst(pos: Vector2, color: Color, count: int) -> void:
 # ─────────────────────────────────────────────
 # CYBERPUNK TRAIL SYSTEM
 # ─────────────────────────────────────────────
+
+func _setup_momentum_trail() -> void:
+	pass  # Lazy init — _update_momentum_trail içinde gerekince oluşturulur
+
+func _create_momentum_trail() -> void:
+	_momentum_trail = CPUParticles2D.new()
+	_momentum_trail.emitting = false
+	_momentum_trail.one_shot = false
+	_momentum_trail.explosiveness = 0.0
+	_momentum_trail.direction = Vector2.ZERO
+	_momentum_trail.spread = 180.0
+	_momentum_trail.gravity = Vector2.ZERO
+	_momentum_trail.initial_velocity_min = 10.0
+	_momentum_trail.initial_velocity_max = 30.0
+	_momentum_trail.scale_amount_min = 0.6
+	_momentum_trail.scale_amount_max = 1.2
+	_momentum_trail.color = Color(0.2, 0.7, 1.0, 0.7)
+	_momentum_trail.lifetime = 0.18
+	_momentum_trail.amount = 4
+	_momentum_trail.z_index = 4
+	add_child(_momentum_trail)
+
+func _update_momentum_trail() -> void:
+	var p := _get_player()
+	if not (p and p.get("has_momentum_engine") and p.has_momentum_engine):
+		return
+	var stacks: int = p.momentum_stacks if p.get("momentum_stacks") != null else 0
+	if stacks <= 0 or state == "orbiting":
+		if is_instance_valid(_momentum_trail):
+			_momentum_trail.emitting = false
+		return
+	# İlk stack gelince trail'ı oluştur
+	if not is_instance_valid(_momentum_trail):
+		_create_momentum_trail()
+	_momentum_trail.emitting = true
+	var t: float = clamp(float(stacks) / 20.0, 0.0, 1.0)
+	_momentum_trail.amount = int(lerp(3.0, 20.0, t))
+	_momentum_trail.lifetime = lerp(0.12, 0.45, t)
+	_momentum_trail.initial_velocity_max = lerp(20.0, 60.0, t)
+	_momentum_trail.color = Color(
+		lerp(0.2, 0.8, t),
+		lerp(0.7, 0.95, t),
+		1.0,
+		lerp(0.5, 0.9, t))
 
 func _setup_trail() -> void:
 	return  # Trail devre dışı — test için

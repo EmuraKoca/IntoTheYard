@@ -1,13 +1,13 @@
-﻿extends CharacterBody2D
+extends CharacterBody2D
 
-static var _freeze_sf: SpriteFrames = null  # paylaşılan, bir kez yüklenir
+static var _freeze_sf: SpriteFrames = null  # payla��lan, bir kez y�klenir
 
 const SURGERY_EXIT := Vector2(850, 1000)  # The only exit point from the living area
 
 var speed = 28.0
-var health = 30
+var health = 15
 var is_dead = false
-var max_health = 30
+var max_health = 15
 var original_speed = 0.0
 var is_slowed = false
 var is_glitched = false
@@ -19,7 +19,7 @@ var _chip_node: Node2D  = null
 var attack_cooldown = 0.0
 var attack_rate = 1.0
 var is_electrified = false
-var chip_duration = 15.0  # Ally chip charge duration — upgradeable via card
+var chip_duration = 15.0  # Ally chip charge duration � upgradeable via card
 var _elem_indicator = null
 var _ally_timer = 0.0
 var _is_exiting = false
@@ -29,10 +29,10 @@ var _wander_velocity: Vector2 = Vector2.ZERO
 var _killed_by_ally: bool = false
 
 # Animasyon
-var _anim_dir: String = "S"   # başlangıç: güneye bakıyor (player'a doğru)
+var _anim_dir: String = "S"   # ba�lang��: g�neye bak�yor (player'a do�ru)
 var _punching: bool = false
 var _freeze_sprite: AnimatedSprite2D = null
-var _reactions_cancelled: bool = false  # ally/escape anında reaction coroutine keset
+var _reactions_cancelled: bool = false  # ally/escape an�nda reaction coroutine keset
 var _cryo_sprite: AnimatedSprite2D = null
 var _melt_frozen_sprite: AnimatedSprite2D = null
 var _electrocute_sprite: AnimatedSprite2D = null
@@ -246,7 +246,7 @@ func _check_reaction(incoming: String) -> void:
 	var player := game.get_node_or_null("Player") if game else null
 	var dmg_mult: float = 1.0
 
-	# Volatile Mixture — 3. element gelince aktif kombinasyondan anında reaksiyon
+	# Volatile Mixture � 3. element gelince aktif kombinasyondan an�nda reaksiyon
 	if player and player.get("has_volatile_mixture") and player.has_volatile_mixture:
 		var active := 0
 		if is_burning:     active += 1
@@ -281,7 +281,7 @@ func _check_reaction(incoming: String) -> void:
 		if active >= 2:
 			dmg_mult = 1.3
 
-	# wet + electric → Electrocute: ekstra hasar + kısa stun
+	# wet + electric � Electrocute: ekstra hasar + k�sa stun
 	if incoming == "electric" and is_wet:
 		is_wet = false
 		is_electrified = false
@@ -293,7 +293,7 @@ func _check_reaction(incoming: String) -> void:
 		_react_electrocute(dmg_mult, game, player)
 		return
 
-	# wet + cryo → Freeze
+	# wet + cryo � Freeze
 	if incoming == "cryo" and is_wet:
 		is_wet = false
 		is_slowed = false
@@ -310,12 +310,12 @@ func _check_reaction(incoming: String) -> void:
 		_notify_reaction(game, player)
 		return
 
-	# frozen + fire → melt the frozen
+	# frozen + fire � melt the frozen
 	if incoming == "fire" and is_frozen:
 		_react_melt_frozen(dmg_mult, game, player)
 		return
 
-	# frozen + electric → Shatter: yüksek hasar, ikisi söner
+	# frozen + electric � Shatter: y�ksek hasar, ikisi s�ner
 	if incoming == "electric" and is_frozen:
 		is_frozen = false
 		is_electrified = false
@@ -327,7 +327,7 @@ func _check_reaction(incoming: String) -> void:
 		_react_shatter(dmg_mult, game, player)
 		return
 
-	# slowed + electric → Cryostatic Shock: AoE slow yayılır + hasar
+	# slowed + electric � Cryostatic Shock: AoE slow yay�l�r + hasar
 	if incoming == "electric" and is_slowed and not is_frozen:
 		is_slowed = false
 		is_electrified = false
@@ -341,7 +341,7 @@ func _check_reaction(incoming: String) -> void:
 		_react_cryostatic(dmg_mult, game, player)
 		return
 
-	# burn + wet → Steam: burn söner, AoE hasar
+	# burn + wet � Steam: burn s�ner, AoE hasar
 	if incoming == "wet" and is_burning:
 		is_wet = false
 		is_burning = false
@@ -353,7 +353,7 @@ func _check_reaction(incoming: String) -> void:
 		_react_steam(dmg_mult, game, player)
 		return
 
-	# burn + cryo → Melt: ikisi söner, yüksek hasar
+	# burn + cryo � Melt: ikisi s�ner, y�ksek hasar
 	if incoming == "fire" and is_slowed:
 		is_burning = false
 		is_slowed = false
@@ -367,7 +367,7 @@ func _check_reaction(incoming: String) -> void:
 		_react_melt(dmg_mult)
 		return
 
-	# burn + electric → Overcharge: ikisi söner, AoE hasar
+	# burn + electric � Overcharge: ikisi s�ner, AoE hasar
 	if incoming == "fire" and is_electrified:
 		is_burning = false
 		is_electrified = false
@@ -384,12 +384,12 @@ func _react_electrocute(mult: float, game: Node, player: Node) -> void:
 	var dmg := int(12 * mult)
 	health -= dmg
 	_react_flash(Color(0.2, 0.5, 4.0))
-	# Yakındaki düşmanlara elektrik yay — wet ise zincirleme Electrocute tetiklenir
+	# Yak�ndaki d��manlara elektrik yay � wet ise zincirleme Electrocute tetiklenir
 	for body in get_tree().get_nodes_in_group("subjects"):
 		if body == self: continue
 		if is_instance_valid(body) and global_position.distance_to(body.global_position) < 100.0:
 			if body.get("apply_electrified"): body.apply_electrified()
-	# Kısa stun — hareket durdur
+	# K�sa stun � hareket durdur
 	var prev_speed: float = float(speed)
 	speed = 0.0
 	await get_tree().create_timer(0.8).timeout
@@ -727,7 +727,7 @@ func _update_subject_anim() -> void:
 func _update_anim_dir_from_velocity() -> void:
 	if velocity == Vector2.ZERO:
 		return
-	var angle := velocity.angle()      # radyan, +x = 0, saat yönü pozitif
+	var angle := velocity.angle()      # radyan, +x = 0, saat y�n� pozitif
 	var deg   := rad_to_deg(angle)
 	if   deg > -22.5  and deg <= 22.5:   _anim_dir = "E"
 	elif deg > 22.5   and deg <= 67.5:   _anim_dir = "SE"
@@ -768,7 +768,7 @@ func _physics_process(delta: float) -> void:
 				closest = z
 		target = closest
 	else:
-		# Enemies focus only on the player — allies are never targeted
+		# Enemies focus only on the player � allies are never targeted
 		var player = get_tree().get_first_node_in_group("player")
 		target = player
 
@@ -795,7 +795,7 @@ func _physics_process(delta: float) -> void:
 
 func take_damage(amount, from_ally: bool = false) -> void:
 	health -= amount
-	# Static Charge: electrified düşman hasar alınca yakın electrified düşmanlara da yayılır
+	# Static Charge: electrified d��man hasar al�nca yak�n electrified d��manlara da yay�l�r
 	if is_electrified and not from_ally:
 		var p := _get_player()
 		if p and p.get("has_static_charge") and p.has_static_charge:
@@ -828,7 +828,7 @@ func _collapse() -> void:
 	$CollisionShape2D.set_deferred("disabled", true)
 	await get_tree().create_timer(0.4).timeout
 
-	# Killed by an ally — just run left, never become an ally
+	# Killed by an ally � just run left, never become an ally
 	if _killed_by_ally:
 		var tween2 = create_tween()
 		tween2.tween_property(self, "global_position", Vector2(-200, global_position.y), 1.5)
@@ -915,7 +915,7 @@ func _become_ally() -> void:
 			_nearest = _ad
 	var _aspeed: float = max(speed * 4.5, 200.0)
 	$SubjectSprite.play("walk_W")
-	# Kapıya 80px kala küçülmeye başla
+	# Kap�ya 80px kala k���lmeye ba�la
 	var _pre_shrink_pos: Vector2 = _nearest + (_nearest - global_position).normalized() * -80.0
 	if global_position.distance_to(_nearest) > 80.0:
 		var _pre_tween = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_BOUND)
@@ -927,14 +927,14 @@ func _become_ally() -> void:
 	var _early_shrink = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_BOUND)
 	_early_shrink.tween_property(self, "scale", Vector2(0.35, 0.35), 0.4)
 
-	# 1 — Kapıya yürü
+	# 1 � Kap�ya y�r�
 	var _atween = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_BOUND)
 	_atween.tween_property(self, "global_position", _nearest,
 		global_position.distance_to(_nearest) / _aspeed)
 	await _atween.finished
 	if not is_instance_valid(self): return
 
-	# 2 — Kapıda küçül, yürümeye devam et, 1.5 sn sonra tribün altında eski boyuta dön
+	# 2 � Kap�da k���l, y�r�meye devam et, 1.5 sn sonra trib�n alt�nda eski boyuta d�n
 	var _dest: Vector2 = Vector2(randf_range(50.0, 680.0), randf_range(720.0, 1020.0))
 	var _walk_dur: float = _nearest.distance_to(_dest) / _aspeed
 	if is_instance_valid(_chip_node): _chip_node.queue_free()
@@ -1003,7 +1003,7 @@ func _clear_element() -> void:
 func _draw_chip() -> void:
 	if is_dead or is_in_group("allies"):
 		return
-	# Vücuda yayılmış elektrik kıvılcımları (sarı-turuncu + mor)
+	# V�cuda yay�lm�� elektrik k�v�lc�mlar� (sar�-turuncu + mor)
 	var t := _chip_t
 	var anchors := [
 		Vector2(-7.0, -22.0), Vector2( 7.0, -19.0),
@@ -1018,19 +1018,19 @@ func _draw_chip() -> void:
 		var ex: float   = sin(t * (11.0 + i * 3.1) + i) * 9.0
 		var ey: float   = cos(t * (9.0  + i * 2.5) + i) * 8.0
 		var a:  float   = flicker * 1.0
-		# Cyan ana kıvılcım
+		# Cyan ana k�v�lc�m
 		_chip_node.draw_line(p, p + Vector2(ex, ey),
 				Color(0.0, 0.9, 1.0, a * 0.9), 1.2)
-		# Neon mor üst katman
+		# Neon mor �st katman
 		_chip_node.draw_line(p, p + Vector2(ex, ey),
 				Color(0.55, 0.0, 0.85, a * 0.65), 0.7)
-		# İkinci segment — elektrik mavisi
+		# �kinci segment � elektrik mavisi
 		var ex2: float = ex + sin(t * 13.0 + i) * 4.0
 		var ey2: float = ey + cos(t * 10.0 + i) * 3.5
 		_chip_node.draw_line(p + Vector2(ex, ey),
 				p + Vector2(ex2, ey2),
 				Color(0.1, 0.75, 1.0, a * 0.75), 1.0)
-		# İkinci segment — neon mor
+		# �kinci segment � neon mor
 		_chip_node.draw_line(p + Vector2(ex, ey),
 				p + Vector2(ex2, ey2),
 				Color(0.45, 0.0, 0.75, a * 0.50), 0.6)

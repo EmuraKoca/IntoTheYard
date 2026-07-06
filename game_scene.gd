@@ -33,6 +33,14 @@ var _run_start_level: int = 0
 
 var _player_node: Node = null  # önbellek — her frame get_node çağrısını önler
 var _lmb_clear_pending: bool = false  # LMB bırakılınca bir kez daha redraw
+var _hex_east: Sprite2D = null
+var _hex_west: Sprite2D = null
+var _hex_textures_east: Array = []
+var _hex_textures_west: Array = []
+var _hex_anim_textures_east: Array = []
+var _hex_anim_textures_west: Array = []
+var _hex_anim_frame: int = 0
+var _hex_anim_timer: Timer = null
 
 const _CORE_FOLDER_MAP: Dictionary = {
 	"normal":     "normalBall",    "electric": "electricBall",
@@ -240,6 +248,14 @@ func screen_shake_heavy() -> void:
 	for i in range(4):
 		tween.tween_property(camera, "offset", Vector2(randf_range(-3, 3), randf_range(-3, 3)), 0.05)
 	tween.tween_property(camera, "offset", original_pos, 0.05)
+
+func _screen_shake_small() -> void:
+	var camera = get_node("Camera2D")
+	var original_pos = camera.offset
+	var tween = create_tween()
+	for i in range(3):
+		tween.tween_property(camera, "offset", Vector2(randf_range(-1, 1), randf_range(-1, 1)), 0.04)
+	tween.tween_property(camera, "offset", original_pos, 0.04)
 
 func show_boss_bar(boss_node: Node2D, boss_name: String = "CYBER 404") -> void:
 	boss = boss_node
@@ -883,6 +899,7 @@ func _spawn_hasmen_entrance() -> void:
 
 func _ready() -> void:
 	_player_node = get_node("Player")
+	_setup_hex_shield()
 	# UI sınırında görünmez duvar — düşmanların UI alanına girmesini engeller
 	var wall := StaticBody2D.new()
 	wall.name = "UIWall"
@@ -902,6 +919,7 @@ func _ready() -> void:
 		player_armor = 20
 		player_armor_cap = 20
 		player_max_armor = 20
+		_update_hex_shield()
 
 	$UI/BtnPause.pressed.connect(_show_pause_menu)
 	$UI/FusionEnergyBar.max_value = 50
@@ -1024,6 +1042,7 @@ func _update_armor_ui() -> void:
 	if player_max_armor <= 0 or player_armor <= 0:
 		_armor_bar.visible = false
 		_armor_label.visible = false
+		_update_hex_shield()
 		return
 	# Armor, max_hp üzerinden oran hesaplanır
 	# Örnek: max_hp=40, armor=20 → oran=0.5 → barın %50'si gri
@@ -1037,6 +1056,7 @@ func _update_armor_ui() -> void:
 	_armor_bar.visible = true
 	_armor_label.visible = false
 	$UI/IntegrityBar/LabelIntegrity.text = "♥ " + str(player_hp) + "/" + str(player_max_hp) + "   ⬡ " + str(player_armor)
+	_update_hex_shield()
 
 func heal_player(amount: int) -> void:
 	player_hp = min(player_hp + amount, player_max_hp)
@@ -1082,6 +1102,104 @@ func gain_armor(amount: int) -> void:
 			var _tw := create_tween()
 			_tw.tween_property(_spr, "modulate", Color(1.0, 0.9, 0.3, 1.0), 0.06)
 			_tw.tween_property(_spr, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.15)
+	_update_hex_shield()
+	if player_armor < player_armor_cap:
+		_spawn_hex_particles()
+
+func _setup_hex_shield() -> void:
+	for i in range(1, 6):
+		_hex_textures_east.append(load("res://assets/VFX/hexShieldWest/%d.png" % i))
+		_hex_textures_west.append(load("res://assets/VFX/hexShieldEast/%d.png" % i))
+	for i in range(6, 11):
+		_hex_anim_textures_east.append(load("res://assets/VFX/hexShieldWest/%d.png" % i))
+		_hex_anim_textures_west.append(load("res://assets/VFX/hexShieldEast/%d.png" % i))
+	_hex_east = Sprite2D.new()
+	_hex_east.centered = true
+	_hex_east.visible = false
+	_hex_east.z_index = 3
+	_hex_east.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_hex_east.position = Vector2(9, 0)
+	_player_node.add_child(_hex_east)
+	_hex_west = Sprite2D.new()
+	_hex_west.centered = true
+	_hex_west.visible = false
+	_hex_west.z_index = 3
+	_hex_west.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_hex_west.position = Vector2(-9, 0)
+	_player_node.add_child(_hex_west)
+	_hex_anim_timer = Timer.new()
+	_hex_anim_timer.wait_time = 0.1
+	_hex_anim_timer.autostart = false
+	_hex_anim_timer.timeout.connect(_on_hex_anim_tick)
+	add_child(_hex_anim_timer)
+	# Pulse tween — sürekli döner
+	_hex_pulse_loop()
+
+func _update_hex_shield() -> void:
+	if not is_instance_valid(_hex_east) or not is_instance_valid(_hex_west):
+		return
+	if player_armor <= 0 or player_armor_cap <= 0:
+		_hex_east.visible = false
+		_hex_west.visible = false
+		_hex_anim_timer.stop()
+		return
+	_hex_east.visible = true
+	_hex_west.visible = true
+	if player_armor >= 30:
+		# Animasyon modu — timer çalışıyorsa dokunma, yoksa başlat
+		if _hex_anim_timer.is_stopped():
+			_hex_anim_frame = 0
+			_hex_anim_timer.start()
+	else:
+		_hex_anim_timer.stop()
+		var frame_idx: int = clamp(player_armor / 6 - 1, 0, 4)
+		_hex_east.texture = _hex_textures_east[frame_idx]
+		_hex_west.texture = _hex_textures_west[frame_idx]
+
+func _on_hex_anim_tick() -> void:
+	if player_armor < 30:
+		_hex_anim_timer.stop()
+		_update_hex_shield()
+		return
+	_hex_east.texture = _hex_anim_textures_east[_hex_anim_frame]
+	_hex_west.texture = _hex_anim_textures_west[_hex_anim_frame]
+	_hex_anim_frame = (_hex_anim_frame + 1) % 5
+
+func _hex_pulse_loop() -> void:
+	if not is_instance_valid(_hex_east): return
+	for spr in [_hex_east, _hex_west]:
+		var tw := create_tween().set_loops()
+		tw.tween_property(spr, "scale", Vector2(1.06, 1.06), 0.9).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		tw.tween_property(spr, "scale", Vector2(1.0,  1.0),  0.9).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+func _hex_shield_hit_flash() -> void:
+	if not is_instance_valid(_hex_east): return
+	for spr in [_hex_east, _hex_west]:
+		var tw := create_tween()
+		tw.tween_property(spr, "modulate", Color(1.8, 1.8, 2.5, 1.0), 0.05)
+		tw.tween_property(spr, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.25).set_trans(Tween.TRANS_SINE)
+
+func _spawn_hex_particles() -> void:
+	if not is_instance_valid(_player_node): return
+	var count := 5
+	for i in range(count):
+		var angle := randf() * TAU
+		var dist: float = randf_range(55.0, 100.0)
+		var offset := Vector2(cos(angle), sin(angle)) * dist
+		var start_pos: Vector2 = _player_node.global_position + offset
+		var dot := ColorRect.new()
+		dot.size = Vector2(4, 4)
+		dot.color = Color(0.3, 0.65, 1.0, 1.0)
+		dot.z_index = 10
+		# Player'ın child'ı olarak eklenir — player hareket edince hedef de kayar
+		_player_node.add_child(dot)
+		# Başlangıç pozisyonu player'a göre relative
+		# İçten dışa: merkezden başlayıp dışa uçar
+		dot.position = -dot.size * 0.5
+		var duration: float = randf_range(0.25, 0.45)
+		var tw := create_tween()
+		tw.tween_property(dot, "position", offset - dot.size * 0.5, duration).set_ease(Tween.EASE_OUT)
+		tw.tween_callback(dot.queue_free)
 
 func _spawn_emergency_vfx() -> void:
 	if not is_instance_valid(_player_node): return
@@ -1536,6 +1654,7 @@ func player_damaged(amount: int = 1) -> void:
 		player_armor -= absorbed
 		amount -= absorbed
 		_update_armor_ui()
+		_hex_shield_hit_flash()
 	if amount <= 0:
 		return
 	# Risk Engine: HP hasarı kadar Momentum stack kazan

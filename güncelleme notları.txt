@@ -3219,3 +3219,43 @@ Yeni Parametreler:
 
   ✅ apply_slow() — source ve anchor_pos parametreleri eklendi
      — Anchor Core: cryo VFX atlanıyor, sadece element göstergesi çıkıyor
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+v0.0.9.9i — HexShield Sistemi, VFX & UI Düzeltmeleri (2026-07-06)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+HexShield Sistemi:
+
+  ✅ Hex Shield VFX — Vector'a özel east/west zırh görseli eklendi
+     — Her 6 Armor = +1 frame (1–5 arası static)
+     — 30+ Armor → frame 6–10 döngü animasyonu (10fps)
+     — Armor 0 olunca shield gizlenir (bug düzeltildi)
+  ✅ Hex Shield animasyonları:
+     — Pulse: shield'lar sürekli hafifçe büyüyüp küçülür
+     — Hasar flash: armor absorbe edince parlayıp söner
+  ✅ Nanobot parçacıkları — armor kazanınca içten dışa mavi noktalar
+     — Armor full olunca parçacık çıkmaz
+     — Player hareket edince parçacıklar takip eder
+
+Siege & Crusher Core Revizyonu:
+
+  ✅ Crusher Core — düşman çarpma efektleri kaldırıldı
+  ✅ Siege Core — düşman çarpma efektleri kaldırıldı
+     — Sadece sol duvara çarpınca: 1px sarsıntı + mor-mavi neon burst
+  ✅ screen_shake_small() eklendi (1px, 3 iterasyon)
+
+Momentum Trail:
+
+  ✅ Momentum trail — lazy init düzeltildi (kart alınınca oluşuyor)
+  ✅ Lambda capture hatası düzeltildi (CONNECT_ONE_SHOT)
+
+Energy Barrier VFX:
+
+  ✅ EnergyBarrier Line2D → animasyonlu sinüs dalgası ile değiştirildi
+     — Hareketli mor-mavi neon, glow katmanlı, pulsing
+
+Düşman Canları:
+
+  ✅ Tüm düşman HP'leri yarıya indirildi
+     — subject 30→15, armed 60→30, frantic 24→12, heavy 90→45
+     — cyber_rifle 36→18, cyber_shooter 45→23, cyber_shotgun 60→30, cyber_404 90→45
