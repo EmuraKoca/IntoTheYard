@@ -319,7 +319,7 @@ func _physics_process(delta: float) -> void:
 	if can_fire and state == "flying":
 		_fire_trail_timer -= delta
 		if _fire_trail_timer <= 0.0:
-			_fire_trail_timer = 0.06
+			_fire_trail_timer = 0.09
 			_spawn_fire_trail_particle(global_position)
 
 	match state:
@@ -1535,9 +1535,9 @@ func _spawn_fire_trail_particle(pos: Vector2) -> void:
 	p.one_shot = true
 	p.explosiveness = 1.0
 	p.amount = 2
-	p.lifetime = 0.28
-	p.initial_velocity_min = 8.0
-	p.initial_velocity_max = 25.0
+	p.lifetime = 0.14
+	p.initial_velocity_min = 5.0
+	p.initial_velocity_max = 15.0
 	p.spread = 60.0
 	p.direction = -move_direction
 	p.gravity = Vector2(0, -40)
