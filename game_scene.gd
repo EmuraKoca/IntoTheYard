@@ -14,6 +14,7 @@ var player_armor_gain: int = 1        # Armor Core başına kazanılan armor
 var player_armor_cap: int = 20        # Armor üst sınırı
 var player_armor_regen_rate: float = 0.0
 var _armor_regen_acc: float = 0.0
+var _armor_was_full: bool = false
 var _armor_bar: ColorRect = null
 var _armor_label: Label = null
 var _armor_gain_boost: float = 1.0    # Pain Converter / Emergency Protocol çarpanı
@@ -1138,8 +1139,11 @@ func gain_armor(amount: int) -> void:
 	_update_hex_shield()
 	if player_armor < player_armor_cap:
 		_spawn_hex_particles()
+		_armor_was_full = false
 	elif player_armor >= player_armor_cap and is_instance_valid(_player_node):
-		_spawn_armor_full_ring(_player_node.global_position)
+		if not _armor_was_full:
+			_armor_was_full = true
+			_spawn_armor_full_ring(_player_node.global_position)
 
 func _spawn_armor_full_ring(pos: Vector2) -> void:
 	var line := Line2D.new()
