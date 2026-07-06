@@ -24,6 +24,39 @@ var _core_panel: Control = null
 var _core_cells: Array = []
 var _pending_core_type: String = ""
 
+# ── Tooltip sistemi ────────────────────────────────────────────────────────────
+var _tooltip_label: Label = null
+var _calamity_cells: Array = []
+
+const _CORE_DISPLAY_NAMES: Dictionary = {
+	"normal":     "Normal Top",     "electric":   "Electric Core",
+	"arc":        "Arc Core",       "plasma":     "Plasma Core",
+	"steam":      "Steam Core",     "echo":       "Echo Core",
+	"orbit":      "Orbit Core",     "scatter":    "Scatter Core",
+	"catalyst":   "Catalyst Core",  "voltaic":    "Voltaic Core",
+	"tempest":    "Tempest Core",   "prismatic":  "Prismatic Core",
+	"pierce":     "Pierce Top",     "split":      "Split Top",
+	"cryo":       "Cryo Core",      "glitch":     "Glitch Core",
+	"water":      "Hydro Core",     "fire":       "Pyro Core",
+	"leech":      "Data Leech",     "mimic":      "Echo Ball",
+	"armor":      "Armor Core",     "anchor":     "Anchor Core",
+	"crusher":    "Crusher Core",   "kinetic":    "Kinetic Core",
+	"bulwark":    "Bulwark Core",   "siege":      "Siege Core",
+	"bloodbound": "Bloodbound Core","tempered":   "Tempered Core",
+}
+
+const _CALAMITY_DISPLAY_NAMES: Dictionary = {
+	"⚡":  "Calamity Lightning",
+	"🔥":  "Calamity Flame",
+	"🌀":  "Calamity Cyclone",
+	"🔮":  "Calamity Gravity",
+	"❄️": "Calamity Blizzard",
+	"🌊":  "Calamity Flood",
+	"🔋":  "Calamity Battery",
+	"🌋":  "Calamity Volcanic Rift",
+	"⛈️": "Calamity Storm",
+}
+
 # ── Upgrade kart takip sistemi ─────────────────────────────────────────────────
 var _seen_individualities: Array = []   # seçilen Individuality kart isimleri
 var _utility_levels: Dictionary = {}    # {kart_adı: int}  0-3
@@ -1356,8 +1389,92 @@ func _setup_core_panel() -> void:
 			icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			cell.add_child(icon)
 			_core_cells.append(cell)
+			var ci := _core_cells.size() - 1
+			cell.mouse_entered.connect(func(): _on_core_cell_hover(ci))
+			cell.mouse_exited.connect(_hide_tooltip)
 
 	_core_panel = panel
+	_setup_tooltip()
+	_setup_calamity_cells()
+
+func _setup_tooltip() -> void:
+	if _tooltip_label != null:
+		return
+	var lbl := Label.new()
+	lbl.name = "TooltipLabel"
+	lbl.visible = false
+	lbl.z_index = 100
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	lbl.add_theme_font_override("font", _font_bold)
+	lbl.add_theme_font_size_override("font_size", 11)
+	lbl.add_theme_color_override("font_color", Color(1.0, 1.0, 0.85, 1.0))
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.05, 0.05, 0.12, 0.95)
+	sb.corner_radius_top_left = 4; sb.corner_radius_top_right = 4
+	sb.corner_radius_bottom_right = 4; sb.corner_radius_bottom_left = 4
+	sb.border_width_top = 1; sb.border_width_bottom = 1
+	sb.border_width_left = 1; sb.border_width_right = 1
+	sb.border_color = Color(0.4, 0.7, 1.0, 0.7)
+	sb.content_margin_left = 6; sb.content_margin_right = 6
+	sb.content_margin_top = 3; sb.content_margin_bottom = 3
+	lbl.add_theme_stylebox_override("normal", sb)
+	$UI.add_child(lbl)
+	_tooltip_label = lbl
+
+func _setup_calamity_cells() -> void:
+	const CAL_PX := 1640.0
+	const CAL_PY := 636.0
+	const CELL_W := 72.0
+	const CELL_H := 26.0
+	const GAP    := 4.0
+	_calamity_cells = []
+	for i in range(3):
+		var cell := Panel.new()
+		var sb := StyleBoxEmpty.new()
+		cell.add_theme_stylebox_override("panel", sb)
+		cell.size = Vector2(CELL_W, CELL_H)
+		cell.position = Vector2(CAL_PX + i * (CELL_W + GAP), CAL_PY)
+		cell.mouse_filter = Control.MOUSE_FILTER_STOP
+		$UI.add_child(cell)
+		_calamity_cells.append(cell)
+		var ci := i
+		cell.mouse_entered.connect(func(): _on_calamity_cell_hover(ci))
+		cell.mouse_exited.connect(_hide_tooltip)
+
+func _on_core_cell_hover(index: int) -> void:
+	if _tooltip_label == null:
+		return
+	var balls := get_tree().get_nodes_in_group("player_balls")
+	balls = balls.filter(func(b): return is_instance_valid(b))
+	if index >= balls.size():
+		_hide_tooltip()
+		return
+	var btype := _get_ball_core_type(balls[index])
+	var display_name: String = _CORE_DISPLAY_NAMES.get(btype, btype.capitalize() + " Core")
+	var cell: Panel = _core_cells[index]
+	var pos := cell.global_position + Vector2(0, -28)
+	_show_tooltip(display_name, pos)
+
+func _on_calamity_cell_hover(index: int) -> void:
+	if _tooltip_label == null or index >= calamity_slots.size():
+		_hide_tooltip()
+		return
+	var emoji: String = calamity_slots[index]
+	var display_name: String = _CALAMITY_DISPLAY_NAMES.get(emoji, "Calamity")
+	var cell: Panel = _calamity_cells[index]
+	var pos := cell.global_position + Vector2(0, -28)
+	_show_tooltip(display_name, pos)
+
+func _show_tooltip(text: String, pos: Vector2) -> void:
+	if _tooltip_label == null:
+		return
+	_tooltip_label.text = text
+	_tooltip_label.position = pos
+	_tooltip_label.visible = true
+
+func _hide_tooltip() -> void:
+	if _tooltip_label != null:
+		_tooltip_label.visible = false
 
 func _update_core_panel() -> void:
 	if _core_panel == null:
