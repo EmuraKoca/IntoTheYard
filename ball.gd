@@ -49,6 +49,7 @@ var can_bulwark: bool = false
 var can_siege: bool = false
 var can_bloodbound: bool = false
 var _blood_trail_timer: float = 0.0
+var _fire_trail_timer: float = 0.0
 var can_tempered: bool = false
 # ── Leila yeni core flag'leri ─────────────────────────────────────────────────
 var can_plasma: bool   = false  # Electrified'a sekme
@@ -314,6 +315,12 @@ func _physics_process(delta: float) -> void:
 			var _gfx := get_tree().get_first_node_in_group("game")
 			if _gfx and _gfx.player_hp < _gfx.player_max_hp * 0.5:
 				_spawn_blood_drop(global_position)
+
+	if can_fire and state == "flying":
+		_fire_trail_timer -= delta
+		if _fire_trail_timer <= 0.0:
+			_fire_trail_timer = 0.06
+			_spawn_fire_trail_particle(global_position)
 
 	match state:
 		"orbiting":  _process_orbiting(delta); return
@@ -884,6 +891,8 @@ func _hit_subject(subject: Node2D) -> void:
 		global_position += _bn * 30.0
 
 	_spawn_shockwave(global_position, Color(1.0, 0.9, 0.7, 0.7))
+	if can_electric and is_instance_valid(subject):
+		_spawn_electric_arc(global_position, subject.global_position)
 
 	# Mimic reverts after 5 hits
 	if mimic_done and not is_mimic:
@@ -1517,6 +1526,54 @@ func _spawn_blood_drop(pos: Vector2) -> void:
 	get_tree().current_scene.add_child(p)
 	p.emitting = true
 	get_tree().create_timer(0.9).timeout.connect(p.queue_free)
+
+func _spawn_fire_trail_particle(pos: Vector2) -> void:
+	var p := CPUParticles2D.new()
+	p.top_level = true
+	p.global_position = pos + Vector2(randf_range(-3, 3), randf_range(-3, 3))
+	p.emitting = false
+	p.one_shot = true
+	p.explosiveness = 1.0
+	p.amount = 2
+	p.lifetime = 0.28
+	p.initial_velocity_min = 8.0
+	p.initial_velocity_max = 25.0
+	p.spread = 60.0
+	p.direction = -move_direction
+	p.gravity = Vector2(0, -40)
+	p.scale_amount_min = 2.5
+	p.scale_amount_max = 5.0
+	p.color = Color(1.0, 0.45, 0.05, 0.85)
+	p.z_index = -1
+	get_tree().current_scene.add_child(p)
+	p.emitting = true
+	get_tree().create_timer(0.5).timeout.connect(p.queue_free)
+
+func _spawn_electric_arc(from: Vector2, to: Vector2) -> void:
+	var line := Line2D.new()
+	line.top_level = true
+	line.width = 2.0
+	line.z_index = 10
+	var segments := 6
+	var pts := PackedVector2Array()
+	pts.append(from)
+	for i in range(1, segments):
+		var t := float(i) / segments
+		var mid := from.lerp(to, t)
+		mid += Vector2(randf_range(-14, 14), randf_range(-14, 14))
+		pts.append(mid)
+	pts.append(to)
+	line.points = pts
+	var gradient := Gradient.new()
+	gradient.add_point(0.0, Color(0.6, 0.9, 1.0, 0.0))
+	gradient.add_point(0.15, Color(0.8, 0.95, 1.0, 1.0))
+	gradient.add_point(0.85, Color(0.6, 0.85, 1.0, 1.0))
+	gradient.add_point(1.0, Color(0.5, 0.8, 1.0, 0.0))
+	line.gradient = gradient
+	get_tree().current_scene.add_child(line)
+	var tw := line.create_tween()
+	tw.tween_property(line, "modulate:a", 0.0, 0.18)
+	tw.tween_callback(line.queue_free)
 
 # ─────────────────────────────────────────────
 # CYBERPUNK TRAIL SYSTEM
