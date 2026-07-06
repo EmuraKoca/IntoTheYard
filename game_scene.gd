@@ -29,13 +29,13 @@ var _tooltip_label: Label = null
 var _calamity_cells: Array = []
 
 const _CORE_DISPLAY_NAMES: Dictionary = {
-	"normal":     "Normal Top",     "electric":   "Electric Core",
+	"normal":     "Normal Core",     "electric":   "Electric Core",
 	"arc":        "Arc Core",       "plasma":     "Plasma Core",
 	"steam":      "Steam Core",     "echo":       "Echo Core",
 	"orbit":      "Orbit Core",     "scatter":    "Scatter Core",
 	"catalyst":   "Catalyst Core",  "voltaic":    "Voltaic Core",
 	"tempest":    "Tempest Core",   "prismatic":  "Prismatic Core",
-	"pierce":     "Pierce Top",     "split":      "Split Top",
+	"pierce":     "Pierce Core",     "split":      "Split Core",
 	"cryo":       "Cryo Core",      "glitch":     "Glitch Core",
 	"water":      "Hydro Core",     "fire":       "Pyro Core",
 	"leech":      "Data Leech",     "mimic":      "Echo Ball",
