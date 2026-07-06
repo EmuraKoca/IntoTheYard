@@ -104,6 +104,14 @@ var _overclock_triggered: bool    = false # Overclock tetiklendi mi
 var has_chain_catalyst: bool      = false # 2+ element → +%30 reaksiyon hasarı
 var has_volatile_mixture: bool    = false # 3. element → anında reaksiyon
 
+# ── Cyclone — Rogue ──────────────────────────────────────────────────────────
+var has_ricochet_strike: bool     = false # Her duvar sekmesi → sonraki vuruşta +4 dmg
+var has_data_exploit: bool        = false # Glitch'li düşman → +3 bonus dmg
+var has_shadow_strike: bool       = false # İlk vuruş duvar sekmesi sonrası → ×1.5
+var has_exploit_network: bool     = false # Glitch yayılımı → 200px içindeki en yakına
+var has_phantom_circuit: bool     = false # Her 5. vuruş → düşmandan geç
+var _phantom_hit_counter: int     = 0     # Phantom Circuit sayacı
+
 # ── Leila — Elemental ────────────────────────────────────────────────────────
 var debuff_duration_mult: float   = 1.0   # Elemental Mastery, Arcane Mind, Arcane Focus
 var first_debuff_duration_mult: float = 1.0  # Arcane Focus / Arcane Mind (ilk debuff)

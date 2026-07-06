@@ -50,6 +50,7 @@ var can_siege: bool = false
 var can_bloodbound: bool = false
 var _blood_trail_timer: float = 0.0
 var _fire_trail_timer: float = 0.0
+var _shadow_primed: bool = false   # Shadow Strike: duvar sekmesi sonrası ilk vuruş
 var can_tempered: bool = false
 # ── Leila yeni core flag'leri ─────────────────────────────────────────────────
 var can_plasma: bool   = false  # Electrified'a sekme
@@ -405,6 +406,9 @@ func _physics_process(delta: float) -> void:
 			_wall_bounce_count += 1
 			_update_kinetic_vfx()
 			queue_redraw()
+		var _bp := _get_player()
+		if _bp and _bp.get("has_shadow_strike") and _bp.has_shadow_strike:
+			_shadow_primed = true
 
 	# Mimic
 	if mimic_done and not is_mimic:
@@ -893,6 +897,46 @@ func _hit_subject(subject: Node2D) -> void:
 	_spawn_shockwave(global_position, Color(1.0, 0.9, 0.7, 0.7))
 	if can_electric and is_instance_valid(subject):
 		_spawn_electric_arc(global_position, subject.global_position)
+
+	# ── Cyclone Rogue efektleri ───────────────────────────────────────────────
+	var _rp := _get_player()
+	if _rp and is_instance_valid(subject):
+		# Data Exploit: Glitch'li düşmana +3 bonus hasar
+		if _rp.get("has_data_exploit") and _rp.has_data_exploit:
+			if subject.get("is_glitched") and subject.is_glitched:
+				subject.take_damage(3)
+
+		# Ricochet Strike: Her duvar sekmesi → +4 hasar
+		if _rp.get("has_ricochet_strike") and _rp.has_ricochet_strike and _wall_bounce_count > 0:
+			subject.take_damage(_wall_bounce_count * 4)
+
+		# Shadow Strike: İlk vuruş duvar sekmesi sonrası → ×1.5
+		if _rp.get("has_shadow_strike") and _rp.has_shadow_strike and _shadow_primed:
+			_shadow_primed = false
+			subject.take_damage(int(total_damage * 0.5))
+
+		# Exploit Network: Glitch vurulunca yayıl
+		if _rp.get("has_exploit_network") and _rp.has_exploit_network and can_glitch:
+			if subject.get("is_glitched") and subject.is_glitched:
+				var _nearest_dist := 200.0
+				var _nearest_enemy = null
+				for _en in get_tree().get_nodes_in_group("subjects"):
+					if _en == subject or not is_instance_valid(_en): continue
+					if _en.get("is_glitched") and _en.is_glitched: continue
+					var _d := subject.global_position.distance_to(_en.global_position)
+					if _d < _nearest_dist:
+						_nearest_dist = _d
+						_nearest_enemy = _en
+				if is_instance_valid(_nearest_enemy) and _nearest_enemy.has_method("apply_glitch"):
+					_nearest_enemy.apply_glitch()
+
+		# Phantom Circuit: Her 5. vuruşta sek
+		if _rp.get("has_phantom_circuit") and _rp.has_phantom_circuit:
+			_rp._phantom_hit_counter += 1
+			if _rp._phantom_hit_counter >= 5:
+				_rp._phantom_hit_counter = 0
+				# Bu vuruşta sekmeyi geri al — bounce'u iptal et
+				move_direction = (move_direction + (subject.global_position - global_position).normalized() * 0.1).normalized()
 
 	# Mimic reverts after 5 hits
 	if mimic_done and not is_mimic:

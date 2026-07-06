@@ -2094,9 +2094,18 @@ func _build_all_upgrades() -> void:
 	{"name": "Volcanic Rift",      "category": "Calamity",      "color": Color(1.0, 0.3, 0.0), "desc": "Leaves lava trail on ground",                 "index": 97, "weight": 2,  "rarity": "legendary", "chars": ["leila"], "min_level": 4},
 	{"name": "Thunderstorm",       "category": "Calamity",      "color": Color(0.3, 0.5, 1.0), "desc": "Random lightning strikes for 5s",             "index": 98, "weight": 2,  "rarity": "legendary", "chars": ["leila"], "min_level": 5},
 	# ── Cyclone (Manipülasyon) ────────────────────────────────────────────────
-	{"name": "Glitch Core",         "category": "Identity",      "color": Color(0.8, 0.0, 0.8), "desc": "Disorients subject for 3s",                 "index": 16, "weight": 10, "rarity": "common", "chars": ["cyclone"], "min_level": 0},
-	{"name": "Echo Core",           "category": "Identity",      "color": Color(0.5, 0.5, 1.0), "desc": "Copies the nearest powered-up core",        "index": 19, "weight": 1,  "rarity": "epic",   "chars": ["cyclone"], "min_level": 0},
-	{"name": "Data Leech Core",     "category": "Identity",      "color": Color(0.6, 0.0, 0.2), "desc": "+2 Integrity on hit",                       "index": 22, "weight": 10, "rarity": "common", "chars": ["cyclone"], "min_level": 0},
+	# Lv0: Starter cores
+	{"name": "Glitch Core",         "category": "Identity",      "color": Color(0.8, 0.0, 0.8), "desc": "Disorients subject for 3s",                 "index": 16, "weight": 10, "rarity": "common",   "chars": ["cyclone"], "min_level": 0},
+	{"name": "Echo Core",           "category": "Identity",      "color": Color(0.5, 0.5, 1.0), "desc": "Copies the nearest powered-up core",        "index": 19, "weight": 1,  "rarity": "epic",     "chars": ["cyclone"], "min_level": 0},
+	{"name": "Data Leech Core",     "category": "Identity",      "color": Color(0.6, 0.0, 0.2), "desc": "+2 Integrity on hit",                       "index": 22, "weight": 10, "rarity": "common",   "chars": ["cyclone"], "min_level": 0},
+	{"name": "Data Exploit",        "category": "Utility",       "color": Color(0.7, 0.1, 0.5), "desc": "Glitched target takes\n+3 bonus dmg per hit",         "index": 115, "weight": 10, "rarity": "common",   "chars": ["cyclone"], "min_level": 0},
+	# Lv1: Early synergy
+	{"name": "Ricochet Strike",     "category": "Individuality", "color": Color(0.5, 0.2, 0.9), "desc": "Each wall bounce in flight:\nnext hit +4 dmg", "index": 114, "weight": 8,  "rarity": "uncommon", "chars": ["cyclone"], "min_level": 1},
+	{"name": "Exploit Network",     "category": "Utility",       "color": Color(0.9, 0.1, 0.8), "desc": "Glitch hit → spreads Glitch\nto nearest enemy (200px)", "index": 117, "weight": 7,  "rarity": "uncommon", "chars": ["cyclone"], "min_level": 1},
+	# Lv2: Mid-game
+	{"name": "Shadow Strike",       "category": "Individuality", "color": Color(0.3, 0.0, 0.5), "desc": "First hit after wall bounce:\n×1.5 damage",             "index": 116, "weight": 5,  "rarity": "rare",     "chars": ["cyclone"], "min_level": 2},
+	# Lv3: High-tier
+	{"name": "Phantom Circuit",     "category": "Individuality", "color": Color(0.3, 0.8, 0.9), "desc": "Every 5th hit: core passes\nthrough (no bounce)",        "index": 118, "weight": 3,  "rarity": "epic",     "chars": ["cyclone"], "min_level": 3},
 	# ── Herkese açık ─────────────────────────────────────────────────────────
 	{"name": "Core Mastery",        "category": "Utility",       "color": Color(0.2, 0.8, 0.2), "desc": "+1 damage to all cores",                    "index": 11, "weight": 10, "rarity": "common", "chars": [], "min_level": 0},
 	{"name": "Lightning",           "category": "Calamity",      "color": Color(1.0, 1.0, 0.0), "desc": "Lightning strikes selected point",          "index": 7,  "weight": 8,  "rarity": "common", "chars": [], "min_level": 0},
@@ -3309,6 +3318,18 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 		get_node("Player").has_chain_catalyst = true
 	elif index == 107:  # Volatile Mixture
 		get_node("Player").has_volatile_mixture = true
+
+	# ── Cyclone — Rogue ──────────────────────────────────────────────────────
+	elif index == 114:  # Ricochet Strike
+		get_node("Player").has_ricochet_strike = true
+	elif index == 115:  # Data Exploit
+		get_node("Player").has_data_exploit = true
+	elif index == 116:  # Shadow Strike
+		get_node("Player").has_shadow_strike = true
+	elif index == 117:  # Exploit Network
+		get_node("Player").has_exploit_network = true
+	elif index == 118:  # Phantom Circuit
+		get_node("Player").has_phantom_circuit = true
 
 	# ── Leila — Calamity ─────────────────────────────────────────────────────
 	elif index == 94:  # Blizzard
