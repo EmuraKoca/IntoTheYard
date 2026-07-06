@@ -152,7 +152,8 @@ const _CHAIN_DAMPING: float = 8.0
 const _CHAIN_TENSION: float = 120.0
 var _chain_velocities: Array[Vector2] = []
 var _vector_dead: bool = false
-var _lmb_was_pressed: bool = false  # melee sadece tıklama anında tetiklensin
+var _lmb_was_pressed: bool = false
+var _footstep_timer: float = 0.0  # melee sadece tıklama anında tetiklensin
 
 # Leila animation
 var _leila_anim_dir: String = "S"
@@ -428,6 +429,13 @@ func _physics_process(delta: float) -> void:
 
 	velocity = direction.normalized() * SPEED
 	move_and_slide()
+
+	# Vector footstep toz bulutu
+	if character_type == "vector" and direction != Vector2.ZERO and not is_dashing:
+		_footstep_timer -= delta
+		if _footstep_timer <= 0.0:
+			_footstep_timer = 0.18
+			_spawn_footstep_dust(global_position + Vector2(0, 22))
 
 	# Dash hareketi
 	if is_dashing:
@@ -886,3 +894,26 @@ func _draw() -> void:
 				draw_line(aim_direction * drawn, aim_direction * (drawn + seg), Color(0, 0.9, 1.0, 0.7), 2.0)
 			drawn += seg
 			draw_dash = not draw_dash
+
+
+func _spawn_footstep_dust(pos: Vector2) -> void:
+	var p := CPUParticles2D.new()
+	p.top_level = true
+	p.global_position = pos
+	p.emitting = false
+	p.one_shot = true
+	p.explosiveness = 0.85
+	p.amount = 5
+	p.lifetime = 0.4
+	p.initial_velocity_min = 15.0
+	p.initial_velocity_max = 45.0
+	p.spread = 70.0
+	p.direction = Vector2(0, -1)
+	p.gravity = Vector2(0, 80)
+	p.scale_amount_min = 2.5
+	p.scale_amount_max = 5.0
+	p.color = Color(0.55, 0.6, 0.7, 0.55)
+	p.z_index = -1
+	get_tree().current_scene.add_child(p)
+	p.emitting = true
+	get_tree().create_timer(0.7).timeout.connect(p.queue_free)

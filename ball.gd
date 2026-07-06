@@ -48,6 +48,7 @@ var can_kinetic: bool = false
 var can_bulwark: bool = false
 var can_siege: bool = false
 var can_bloodbound: bool = false
+var _blood_trail_timer: float = 0.0
 var can_tempered: bool = false
 # ── Leila yeni core flag'leri ─────────────────────────────────────────────────
 var can_plasma: bool   = false  # Electrified'a sekme
@@ -307,6 +308,12 @@ func _physics_process(delta: float) -> void:
 	_update_momentum_trail()
 	if can_bloodbound:
 		queue_redraw()
+		_blood_trail_timer -= delta
+		if _blood_trail_timer <= 0.0 and state == "flying":
+			_blood_trail_timer = 0.12
+			var _gfx := get_tree().get_first_node_in_group("game")
+			if _gfx and _gfx.player_hp < _gfx.player_max_hp * 0.5:
+				_spawn_blood_drop(global_position)
 
 	match state:
 		"orbiting":  _process_orbiting(delta); return
@@ -1463,7 +1470,7 @@ func _spawn_shockwave(pos: Vector2, color: Color) -> void:
 	get_tree().current_scene.add_child(line)
 	var tw := line.create_tween()
 	tw.set_parallel(true)
-	tw.tween_property(line, "scale", Vector2(10.0, 10.0), 0.22)
+	tw.tween_property(line, "scale", Vector2(5.0, 5.0), 0.22)
 	tw.tween_property(line, "modulate:a", 0.0, 0.22)
 	tw.set_parallel(false)
 	tw.tween_callback(line.queue_free)
@@ -1488,6 +1495,28 @@ func _spawn_siege_debris(pos: Vector2) -> void:
 	get_tree().current_scene.add_child(p)
 	p.emitting = true
 	get_tree().create_timer(1.2).timeout.connect(p.queue_free)
+
+func _spawn_blood_drop(pos: Vector2) -> void:
+	var p := CPUParticles2D.new()
+	p.top_level = true
+	p.global_position = pos + Vector2(randf_range(-6, 6), randf_range(-4, 4))
+	p.emitting = false
+	p.one_shot = true
+	p.explosiveness = 1.0
+	p.amount = 3
+	p.lifetime = 0.5
+	p.initial_velocity_min = 10.0
+	p.initial_velocity_max = 35.0
+	p.spread = 40.0
+	p.direction = Vector2(0, 1)
+	p.gravity = Vector2(0, 180)
+	p.scale_amount_min = 2.0
+	p.scale_amount_max = 4.0
+	p.color = Color(0.75, 0.05, 0.05, 0.9)
+	p.z_index = -1
+	get_tree().current_scene.add_child(p)
+	p.emitting = true
+	get_tree().create_timer(0.9).timeout.connect(p.queue_free)
 
 # ─────────────────────────────────────────────
 # CYBERPUNK TRAIL SYSTEM
