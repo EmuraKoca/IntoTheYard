@@ -903,6 +903,10 @@ func _hit_subject(subject: Node2D) -> void:
 	if _rp and is_instance_valid(subject):
 		var _is_glitched: bool = subject.get("is_glitched") and subject.is_glitched
 
+		# Interference: Glitch'li düşman +%20 hasar alır
+		if _rp.get("has_interference") and _rp.has_interference and _is_glitched:
+			subject.take_damage(int(total_damage * 0.2))
+
 		# Data Exploit: Glitch'li düşmana +3 (veya +6 Exploit Mastery ile) bonus hasar
 		if _rp.get("has_data_exploit") and _rp.has_data_exploit and _is_glitched:
 			var _de_bonus: int = 6 if (_rp.get("has_exploit_mastery") and _rp.has_exploit_mastery) else 3
