@@ -14,6 +14,11 @@ var is_dead = false
 var original_speed = 0.0
 var is_slowed = false
 var is_glitched = false
+
+var is_antivirused: bool = false
+var antivirus_stacks: int = 0
+var _antivirus_duration: float = 0.0
+var _antivirus_tick: float = 0.0
 var is_wet = false
 var is_frozen = false
 var is_burning = false
@@ -88,6 +93,7 @@ func _react_overheat() -> void:
 func apply_frozen() -> void:
 	if is_frozen:
 		return
+	_process_antivirus(delta)
 	is_frozen = true
 	is_wet = false
 	_set_element("frozen")
@@ -164,6 +170,37 @@ func apply_wet() -> void:
 		return
 	is_wet = false
 	_clear_element()
+
+
+func apply_antivirus(stacks: int = 1) -> void:
+	var _ap := get_tree().get_first_node_in_group("player")
+	var _cap: int = 5 if (_ap and _ap.get("has_stack_overflow") and _ap.has_stack_overflow) else 3
+	antivirus_stacks = min(antivirus_stacks + stacks, _cap)
+	var _dur: float = 8.0 if (_ap and _ap.get("has_memory_leak") and _ap.has_memory_leak) else 5.0
+	_antivirus_duration = max(_antivirus_duration, _dur)
+	_antivirus_tick = min(_antivirus_tick if _antivirus_tick > 0 else 0.5, 0.5)
+	is_antivirused = true
+
+func _process_antivirus(delta: float) -> void:
+	if not is_antivirused:
+		return
+	_antivirus_tick -= delta
+	_antivirus_duration -= delta
+	if _antivirus_tick <= 0.0:
+		_antivirus_tick = 0.5
+		health -= antivirus_stacks
+		var _ap2 := get_tree().get_first_node_in_group("player")
+		if _ap2 and _ap2.get("has_root_access") and _ap2.has_root_access:
+			var _cap2: int = 5 if (_ap2.get("has_stack_overflow") and _ap2.has_stack_overflow) else 3
+			if antivirus_stacks >= _cap2:
+				health -= 5
+		if _ap2 and _ap2.get("has_kernel_panic") and _ap2.has_kernel_panic:
+			if randf() < 0.05 and not is_glitched:
+				apply_glitch()
+		if health <= 0: die()
+	if _antivirus_duration <= 0.0:
+		is_antivirused = false
+		antivirus_stacks = 0
 
 func apply_glitch(duration: float = 3.0) -> void:
 	if is_glitched:
@@ -316,6 +353,7 @@ func _physics_process(delta: float) -> void:
 		_chip_node.queue_redraw()
 	if is_frozen:
 		return
+	_process_antivirus(delta)
 
 	var target
 	if is_glitched:

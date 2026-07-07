@@ -148,6 +148,16 @@ var has_circuit_breaker: bool     = false # Her 10. hit → tüm Glitch
 var _circuit_breaker_counter: int = 0
 # Cross-build
 var has_rogues_instinct: bool     = false # Arındırma → +1 HP
+# Antivirus sistemi
+var has_virus_injection: bool     = false # Core hit → Antivirus stack uygular
+var has_stack_overflow: bool      = false # Stack cap 3→5
+var has_viral_load: bool          = false # Glitch'li hedef 2× stack alır
+var has_memory_leak: bool         = false # Antivirus süresi 5→8s
+var has_corruption_protocol: bool = false # Antivirused → +%15 hasar alır
+var has_cascade_delete: bool      = false # Antivirus yayılır (150px)
+var has_root_access: bool         = false # Max stack → +5 burst
+var has_zero_day: bool            = false # Antivirused + Glitched → stack iki katı
+var has_kernel_panic: bool        = false # Her tick %5 Glitch şansı
 
 # ── Leila — Elemental ────────────────────────────────────────────────────────
 var debuff_duration_mult: float   = 1.0   # Elemental Mastery, Arcane Mind, Arcane Focus

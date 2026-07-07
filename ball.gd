@@ -995,6 +995,39 @@ func _hit_subject(subject: Node2D) -> void:
 			if is_instance_valid(_nearest_enemy) and _nearest_enemy.has_method("apply_glitch"):
 				_nearest_enemy.apply_glitch()
 
+		# Virus Injection: Core hit → Antivirus stack
+		if _rp.get("has_virus_injection") and _rp.has_virus_injection:
+			if subject.has_method("apply_antivirus"):
+				var _av_stacks: int = 1
+				# Viral Load: Glitched hedef 2× stack alır
+				if _is_glitched and _rp.get("has_viral_load") and _rp.has_viral_load:
+					_av_stacks = 2
+				# Zero Day: Antivirused + Glitched → stack iki katı
+				if _is_glitched and subject.get("is_antivirused") and subject.is_antivirused and _rp.get("has_zero_day") and _rp.has_zero_day:
+					var _cap_zd: int = 5 if (_rp.get("has_stack_overflow") and _rp.has_stack_overflow) else 3
+					subject.antivirus_stacks = min(subject.antivirus_stacks * 2, _cap_zd)
+				subject.apply_antivirus(_av_stacks)
+				# Cascade Delete: Antivirus yayılır
+				if _rp.get("has_cascade_delete") and _rp.has_cascade_delete:
+					var _nearest_av = null
+					var _nearest_av_dist := 150.0
+					for _en in get_tree().get_nodes_in_group("subjects"):
+						if _en == subject or not is_instance_valid(_en): continue
+						var _d := subject.global_position.distance_to(_en.global_position)
+						if _d < _nearest_av_dist:
+							_nearest_av_dist = _d
+							_nearest_av = _en
+					if is_instance_valid(_nearest_av) and _nearest_av.has_method("apply_antivirus"):
+						_nearest_av.apply_antivirus(1)
+				# Corruption Protocol: Antivirused → +%15 hasar
+				if subject.get("is_antivirused") and subject.is_antivirused and _rp.get("has_corruption_protocol") and _rp.has_corruption_protocol:
+					subject.take_damage(int(total_damage * 0.15))
+				# Root Access: Max stack → +5 burst
+				if subject.get("is_antivirused") and subject.is_antivirused and _rp.get("has_root_access") and _rp.has_root_access:
+					var _cap_ra: int = 5 if (_rp.get("has_stack_overflow") and _rp.has_stack_overflow) else 3
+					if subject.antivirus_stacks >= _cap_ra:
+						subject.take_damage(5)
+
 		# Phantom Circuit: Her 4. (Stealth Pass) veya 5. vuruşta sekmeden geç
 		if _rp.get("has_phantom_circuit") and _rp.has_phantom_circuit:
 			var _phantom_threshold: int = 4 if (_rp.get("has_stealth_pass") and _rp.has_stealth_pass) else 5

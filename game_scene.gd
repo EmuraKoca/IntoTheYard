@@ -60,6 +60,7 @@ const _CALAMITY_DISPLAY_NAMES: Dictionary = {
 	"👾":  "Backdoor",
 	"🎱":  "Bounce Barrage",
 	"🪞":  "Mirror Image",
+	"🧪":  "Systemic Failure",
 }
 
 # ── Upgrade kart takip sistemi ─────────────────────────────────────────────────
@@ -2137,6 +2138,22 @@ func _build_all_upgrades() -> void:
 	{"name": "Circuit Breaker",      "category": "Individuality", "color": Color(0.25, 0.75, 0.95),"desc": "Every 10th hit: all visible\nenemies Glitched for 2s",   "index": 143, "weight": 3,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3},
 	{"name": "Interference Cloak",   "category": "Utility",       "color": Color(0.2, 0.7, 0.85), "desc": "Phantom pass: target\nGlitched for 3s",                  "index": 142, "weight": 3,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3},
 	{"name": "Pinpoint Strike",      "category": "Individuality", "color": Color(0.4, 0.1, 1.0),  "desc": "After 5 wall bounces:\nnext hit ×2 (crit)",              "index": 137, "weight": 3,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3},
+	# ── Antivirus sistemi ────────────────────────────────────────────────────
+	# Lv0
+	{"name": "Virus Injection",      "category": "Utility",       "color": Color(0.1, 0.75, 0.3),  "desc": "Core hit → applies 1\nAntivirus stack (1 dmg/0.5s, 5s)", "index": 147, "weight": 9, "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
+	# Lv1
+	{"name": "Stack Overflow",       "category": "Utility",       "color": Color(0.1, 0.8, 0.35),  "desc": "Antivirus stack cap\n3 → 5",                              "index": 148, "weight": 7, "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
+	{"name": "Viral Load",           "category": "Individuality", "color": Color(0.15, 0.7, 0.4),  "desc": "Glitched target receives\n2× Antivirus stacks",            "index": 149, "weight": 7, "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
+	{"name": "Memory Leak",          "category": "Utility",       "color": Color(0.05, 0.65, 0.3), "desc": "Antivirus duration\n5s → 8s",                             "index": 150, "weight": 7, "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
+	{"name": "Cascade Delete",       "category": "Utility",       "color": Color(0.1, 0.7, 0.45),  "desc": "Antivirus hit → spreads\n1 stack to nearest (150px)",      "index": 152, "weight": 6, "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
+	# Lv2
+	{"name": "Corruption Protocol",  "category": "Utility",       "color": Color(0.0, 0.6, 0.3),   "desc": "Antivirused target takes\n+15% more damage",               "index": 151, "weight": 5, "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
+	{"name": "Root Access",          "category": "Individuality", "color": Color(0.05, 0.55, 0.25),"desc": "Target at max stacks:\n+5 bonus damage per hit",            "index": 153, "weight": 4, "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
+	# Lv3
+	{"name": "Zero Day",             "category": "Individuality", "color": Color(0.0, 0.85, 0.4),  "desc": "Antivirused + Glitched:\nstack count doubled instantly",    "index": 154, "weight": 3, "rarity": "epic",      "chars": ["cyclone"], "min_level": 3},
+	{"name": "Kernel Panic",         "category": "Individuality", "color": Color(0.05, 0.9, 0.35), "desc": "Each Antivirus tick:\n5% chance to Glitch target",          "index": 155, "weight": 3, "rarity": "epic",      "chars": ["cyclone"], "min_level": 3},
+	# Lv4: Calamity
+	{"name": "Systemic Failure",     "category": "Calamity",      "color": Color(0.0, 0.7, 0.35),  "desc": "Apply max Antivirus stacks\nto all enemies instantly",       "index": 156, "weight": 2, "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
 	# Lv4: Calamity endgame
 	{"name": "Data Storm",           "category": "Calamity",      "color": Color(0.7, 0.0, 0.8),  "desc": "All Glitched enemies\ntake 20 dmg instantly",            "index": 129, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 3},
 	{"name": "Backdoor",             "category": "Calamity",      "color": Color(0.6, 0.0, 0.7),  "desc": "All enemies Glitched\nfor 5s",                           "index": 130, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
@@ -2451,6 +2468,28 @@ func _activate_emp() -> void:
 			subject.take_damage(15)
 	_react_flash_screen(Color(0.3, 0.6, 1.0, 0.5))
 
+func _activate_data_storm() -> void:
+	var p := get_node_or_null("Player")
+	var _cap: int = 5 if (p and p.get("has_stack_overflow") and p.has_stack_overflow) else 3
+	for subject in get_tree().get_nodes_in_group("subjects"):
+		if is_instance_valid(subject) and subject.get("is_glitched") and subject.is_glitched:
+			subject.take_damage(20)
+	_react_flash_screen(Color(0.1, 0.8, 0.3, 0.45))
+
+func _activate_backdoor() -> void:
+	for subject in get_tree().get_nodes_in_group("subjects"):
+		if is_instance_valid(subject) and subject.has_method("apply_glitch"):
+			subject.apply_glitch(5.0)
+	_react_flash_screen(Color(0.6, 0.0, 0.7, 0.4))
+
+func _activate_systemic_failure() -> void:
+	var p := get_node_or_null("Player")
+	var _cap: int = 5 if (p and p.get("has_stack_overflow") and p.has_stack_overflow) else 3
+	for subject in get_tree().get_nodes_in_group("subjects"):
+		if is_instance_valid(subject) and subject.has_method("apply_antivirus"):
+			subject.apply_antivirus(_cap)
+	_react_flash_screen(Color(0.05, 0.9, 0.35, 0.45))
+
 func _react_flash_screen(color: Color) -> void:
 	var flash := ColorRect.new()
 	flash.color = color
@@ -2497,6 +2536,12 @@ func _input(event: InputEvent) -> void:
 				_activate_thunderstorm()
 			elif calamity == "🔋":
 				_activate_emp()
+			elif calamity == "💾":  # Data Storm
+				_activate_data_storm()
+			elif calamity == "👾":  # Backdoor
+				_activate_backdoor()
+			elif calamity == "🧪":  # Systemic Failure
+				_activate_systemic_failure()
 			calamity_slots.remove_at(calamity_index)
 			calamity_index = clamp(calamity_index, 0, max(calamity_slots.size() - 1, 0))
 			if _player_node and _player_node.get("has_mana_overflow") and _player_node.has_mana_overflow:
@@ -3392,6 +3437,19 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 			144: if calamity_slots.size() < max_calamity_slots: calamity_slots.append("🪞")
 			145: p.has_rogues_instinct    = true
 			146: p.has_shadow_dance       = true
+			# Antivirus
+			147: p.has_virus_injection    = true
+			148: p.has_stack_overflow     = true
+			149: p.has_viral_load         = true
+			150: p.has_memory_leak        = true
+			151: p.has_corruption_protocol = true
+			152: p.has_cascade_delete     = true
+			153: p.has_root_access        = true
+			154: p.has_zero_day           = true
+			155: p.has_kernel_panic       = true
+			156:
+				if calamity_slots.size() < max_calamity_slots:
+					calamity_slots.append("🧪")
 
 	# ── Leila — Calamity ─────────────────────────────────────────────────────
 	elif index == 94:  # Blizzard
