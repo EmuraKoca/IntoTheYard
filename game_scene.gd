@@ -1138,6 +1138,29 @@ func gain_armor(amount: int) -> void:
 	_update_hex_shield()
 	if player_armor < player_armor_cap:
 		_spawn_hex_particles()
+	elif player_armor >= player_armor_cap and is_instance_valid(_player_node):
+		_spawn_armor_full_ring(_player_node.global_position)
+
+func _spawn_armor_full_ring(pos: Vector2) -> void:
+	var line := Line2D.new()
+	line.top_level = true
+	line.global_position = pos
+	line.width = 3.0
+	line.default_color = Color(1.0, 0.85, 0.2, 0.9)
+	line.z_index = 15
+	var pts := PackedVector2Array()
+	var segs := 28
+	for i in range(segs + 1):
+		var angle := i * TAU / segs
+		pts.append(Vector2(cos(angle), sin(angle)) * 12.0)
+	line.points = pts
+	add_child(line)
+	var tw := line.create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(line, "scale", Vector2(7.5, 7.5), 0.38)
+	tw.tween_property(line, "modulate:a", 0.0, 0.38)
+	tw.set_parallel(false)
+	tw.tween_callback(line.queue_free)
 
 func _setup_hex_shield() -> void:
 	for i in range(1, 6):

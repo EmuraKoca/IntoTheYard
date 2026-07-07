@@ -368,6 +368,7 @@ func _physics_process(delta: float) -> void:
 			if _gfx:
 				_gfx._screen_shake_small()
 				_spawn_impact_burst(global_position, Color(0.5, 0.2, 1.0), 12)
+				_spawn_siege_debris(global_position)
 	if global_position.x >= 1580:
 		global_position.x = 1578
 		move_direction.x = -abs(move_direction.x)
@@ -874,6 +875,8 @@ func _hit_subject(subject: Node2D) -> void:
 			_bn = -move_direction
 		move_direction = move_direction.bounce(_bn).normalized()
 		global_position += _bn * 30.0
+
+	_spawn_shockwave(global_position, Color(1.0, 0.9, 0.7, 0.7))
 
 	# Mimic reverts after 5 hits
 	if mimic_done and not is_mimic:
@@ -1443,6 +1446,48 @@ func _spawn_impact_burst(pos: Vector2, color: Color, count: int) -> void:
 	get_tree().current_scene.add_child(p)
 	p.emitting = true
 	get_tree().create_timer(1.0).timeout.connect(p.queue_free)
+
+func _spawn_shockwave(pos: Vector2, color: Color) -> void:
+	var line := Line2D.new()
+	line.top_level = true
+	line.global_position = pos
+	line.width = 2.5
+	line.default_color = color
+	line.z_index = 12
+	var pts := PackedVector2Array()
+	var segs := 20
+	for i in range(segs + 1):
+		var angle := i * TAU / segs
+		pts.append(Vector2(cos(angle), sin(angle)) * 6.0)
+	line.points = pts
+	get_tree().current_scene.add_child(line)
+	var tw := line.create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(line, "scale", Vector2(10.0, 10.0), 0.22)
+	tw.tween_property(line, "modulate:a", 0.0, 0.22)
+	tw.set_parallel(false)
+	tw.tween_callback(line.queue_free)
+
+func _spawn_siege_debris(pos: Vector2) -> void:
+	var p := CPUParticles2D.new()
+	p.top_level = true
+	p.global_position = pos
+	p.emitting = false
+	p.one_shot = true
+	p.explosiveness = 0.9
+	p.amount = 10
+	p.lifetime = 0.7
+	p.initial_velocity_min = 60.0
+	p.initial_velocity_max = 160.0
+	p.direction = Vector2(1.0, -0.5)
+	p.spread = 55.0
+	p.gravity = Vector2(0, 520)
+	p.scale_amount_min = 3.0
+	p.scale_amount_max = 6.5
+	p.color = Color(0.55, 0.50, 0.45, 1.0)
+	get_tree().current_scene.add_child(p)
+	p.emitting = true
+	get_tree().create_timer(1.2).timeout.connect(p.queue_free)
 
 # ─────────────────────────────────────────────
 # CYBERPUNK TRAIL SYSTEM
