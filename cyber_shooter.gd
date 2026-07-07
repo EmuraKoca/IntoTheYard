@@ -233,7 +233,6 @@ func apply_slow(amount, duration: float = 3.0, source: String = "cryo", anchor_p
 func apply_frozen() -> void:
 	if is_frozen:
 		return
-	_process_antivirus(delta)
 	is_frozen = true
 	is_wet = false
 	_set_element("frozen")

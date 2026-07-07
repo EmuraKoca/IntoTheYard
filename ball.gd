@@ -898,6 +898,75 @@ func _hit_subject(subject: Node2D) -> void:
 	if can_electric and is_instance_valid(subject):
 		_spawn_electric_arc(global_position, subject.global_position)
 
+	# Mimic reverts after 5 hits
+	if mimic_done and not is_mimic:
+		mimic_hits += 1
+		if mimic_hits >= max_mimic_hits:
+			can_split = false
+			can_electric = false
+			can_pierce = false
+			can_cryo = false
+			can_glitch = false
+			can_water = false
+			can_fire = false
+			mimic_done = false
+			mimic_hits = 0
+			queue_redraw()
+	# Calculate damage based on speed
+	var base_damage = max_damage
+	if can_split and not has_split:
+		base_damage = 7
+	elif can_electric:
+		base_damage = 9
+	elif can_pierce:
+		base_damage = 10
+	elif can_cryo:
+		base_damage = 4
+	elif can_glitch:
+		base_damage = 4
+	elif can_water:
+		base_damage = 3
+	elif can_fire:
+		base_damage = 6
+	elif can_leech:
+		base_damage = 2
+	elif can_armor:
+		base_damage = 5
+	elif can_anchor:
+		base_damage = 8
+	elif can_crusher:
+		base_damage = 12
+	elif can_kinetic:
+		base_damage = 7
+	elif can_bulwark:
+		base_damage = 6
+	elif can_siege:
+		base_damage = 15
+	elif can_bloodbound:
+		base_damage = 8
+	elif can_tempered:
+		base_damage = 9
+	var total_damage = base_damage
+
+	# Chain Density: yeni düşmana çarpınca hasar artar
+	var _cd_player := _get_player()
+	if _cd_player and _cd_player.has_chain_density and not (subject in hit_subjects):
+		chain_density_unique_hits += 1
+		total_damage += chain_density_unique_hits * _cd_player.chain_density_bonus_per_hit
+
+# Crit check
+	var is_crit = randf() < crit_chance
+	if is_crit:
+		total_damage = int(total_damage * crit_multiplier)
+
+	# Fractured Frame: global damage multiplier
+	var _dmg_player := _get_player()
+	if _dmg_player:
+		if _dmg_player.damage_mult != 1.0:
+			total_damage = int(float(total_damage) * _dmg_player.damage_mult)
+
+	subject.take_damage(total_damage)
+
 	# ── Cyclone Rogue efektleri ───────────────────────────────────────────────
 	var _rp := _get_player()
 	if _rp and is_instance_valid(subject):
@@ -1042,75 +1111,6 @@ func _hit_subject(subject: Node2D) -> void:
 				if _rp.get("has_interference_cloak") and _rp.has_interference_cloak:
 					if subject.has_method("apply_glitch") and not (subject.get("is_glitched") and subject.is_glitched):
 						subject.apply_glitch()
-
-	# Mimic reverts after 5 hits
-	if mimic_done and not is_mimic:
-		mimic_hits += 1
-		if mimic_hits >= max_mimic_hits:
-			can_split = false
-			can_electric = false
-			can_pierce = false
-			can_cryo = false
-			can_glitch = false
-			can_water = false
-			can_fire = false
-			mimic_done = false
-			mimic_hits = 0
-			queue_redraw()
-	# Calculate damage based on speed
-	var base_damage = max_damage
-	if can_split and not has_split:
-		base_damage = 7
-	elif can_electric:
-		base_damage = 9
-	elif can_pierce:
-		base_damage = 10
-	elif can_cryo:
-		base_damage = 4
-	elif can_glitch:
-		base_damage = 4
-	elif can_water:
-		base_damage = 3
-	elif can_fire:
-		base_damage = 6
-	elif can_leech:
-		base_damage = 2
-	elif can_armor:
-		base_damage = 5
-	elif can_anchor:
-		base_damage = 8
-	elif can_crusher:
-		base_damage = 12
-	elif can_kinetic:
-		base_damage = 7
-	elif can_bulwark:
-		base_damage = 6
-	elif can_siege:
-		base_damage = 15
-	elif can_bloodbound:
-		base_damage = 8
-	elif can_tempered:
-		base_damage = 9
-	var total_damage = base_damage
-
-	# Chain Density: yeni düşmana çarpınca hasar artar
-	var _cd_player := _get_player()
-	if _cd_player and _cd_player.has_chain_density and not (subject in hit_subjects):
-		chain_density_unique_hits += 1
-		total_damage += chain_density_unique_hits * _cd_player.chain_density_bonus_per_hit
-
-# Crit check
-	var is_crit = randf() < crit_chance
-	if is_crit:
-		total_damage = int(total_damage * crit_multiplier)
-
-	# Fractured Frame: global damage multiplier
-	var _dmg_player := _get_player()
-	if _dmg_player:
-		if _dmg_player.damage_mult != 1.0:
-			total_damage = int(float(total_damage) * _dmg_player.damage_mult)
-
-	subject.take_damage(total_damage)
 
 	# Scatter parçası — tek vuruşta yok olur
 	if is_scatter_piece:

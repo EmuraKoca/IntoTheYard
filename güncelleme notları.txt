@@ -3272,3 +3272,41 @@ Hover Tooltip Sistemi:
   ✅ Calamity slotlarının üzerine gelindiğinde calamity adı görünüyor
      — "Calamity Lightning", "Calamity Flame", "Calamity Storm" vb.
   ✅ "Top" → "Core" isim düzeltmesi — Normal/Pierce/Split artık doğru yazıyor
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+v0.0.9.9k — Cyclone Kart Sistemi & Bugfix (2026-07-07)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Cyclone Kart Sistemi:
+
+  ✅ 47 Cyclone kartı eklendi (3 Core + 44 Upgrade)
+     — Build 1: Glitch Assassin (12 kart) — Glitch yayma, bonus hasar, Mind Hack
+     — Build 2: Ricochet Master (8 kart) — Duvar sekmesi, hız, kalıcı hasar bonusu
+     — Build 3: Phantom Infiltrator (6 kart) — Sekmeden geçiş, stun, Glitch tetik
+     — Antivirus sistemi (11 kart) — Stack zehir mekaniği, Glitch sinerji
+     — Cross-build (2 kart): Rogue's Instinct, Shadow Dance
+  ✅ 5 yeni Cyclone Calamity eklendi:
+     — 💾 Data Storm: Tüm Glitch'li düşmanlara 20 hasar
+     — 👾 Backdoor: Tüm düşmanları 5s Glitch'ler
+     — 🎱 Bounce Barrage: Core hızı ×3, ilk vuruş ×3 hasar (5s)
+     — 🪞 Mirror Image: 5s boyunca 2 hayalet core
+     — 🧪 Systemic Failure: Tüm düşmanlara max Antivirus stack
+  ✅ Antivirus DoT mekaniği — düşman başına stack tabanlı, 0.5s'de bir hasar
+     — Stack Overflow, Viral Load, Memory Leak, Cascade Delete sinerji kartları
+     — Zero Day, Kernel Panic epic sinerji kartları
+
+Vector VFX:
+
+  ✅ Shockwave halkası — her vuruşta altın Line2D halka (0.22s)
+  ✅ Bloodbound blood trail — uçarken kırmızı parçacık izi
+  ✅ Footstep dust — Vector koşarken gri-mavi toz bulutu
+  ✅ Electric arc — Electric Core vuruşunda zigzag şimşek çizgisi (0.18s)
+  ✅ Fire trail — Fire Core uçuşunda turuncu parçacık kuyruğu (kısaltıldı)
+  ✅ Siege debris — Siege Core duvar çarpmasında gri moloz parçacıkları
+  ✅ Armor Full halkası — sadece ilk fullendiğinde gösterilir (tekrar tetik düzeltildi)
+
+Bugfix:
+
+  ✅ Pierce Core bug — sonraki core'lar pierce gibi davranıyordu (0.5s → 0.1s disable)
+  ✅ apply_frozen() içindeki delta scope hatası düzeltildi (7 düşman dosyası)
+  ✅ total_damage scope hatası — Cyclone bloğu hesaplama sonrasına taşındı

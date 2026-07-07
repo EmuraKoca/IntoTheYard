@@ -97,7 +97,6 @@ func _react_overheat() -> void:
 func apply_frozen() -> void:
 	if is_frozen:
 		return
-	_process_antivirus(delta)
 	is_frozen = true
 	is_wet = false
 	_set_element("frozen")
