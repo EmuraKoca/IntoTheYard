@@ -162,12 +162,16 @@ func apply_wet() -> void:
 	is_wet = false
 	_clear_element()
 
-func apply_glitch() -> void:
+func apply_glitch(duration: float = 3.0) -> void:
 	if is_glitched:
 		return
+	var _gp := get_tree().get_first_node_in_group("player")
+	var _dur := duration
+	if _gp and _gp.get("has_extended_glitch") and _gp.has_extended_glitch:
+		_dur = max(_dur, 5.0)
 	is_glitched = true
 	_set_element("glitch")
-	await get_tree().create_timer(3.0).timeout
+	await get_tree().create_timer(_dur).timeout
 	if not is_instance_valid(self):
 		return
 	is_glitched = false

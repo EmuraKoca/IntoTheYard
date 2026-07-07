@@ -105,12 +105,49 @@ var has_chain_catalyst: bool      = false # 2+ element → +%30 reaksiyon hasar�
 var has_volatile_mixture: bool    = false # 3. element → anında reaksiyon
 
 # ── Cyclone — Rogue ──────────────────────────────────────────────────────────
-var has_ricochet_strike: bool     = false # Her duvar sekmesi → sonraki vuruşta +4 dmg
-var has_data_exploit: bool        = false # Glitch'li düşman → +3 bonus dmg
-var has_shadow_strike: bool       = false # İlk vuruş duvar sekmesi sonrası → ×1.5
-var has_exploit_network: bool     = false # Glitch yayılımı → 200px içindeki en yakına
-var has_phantom_circuit: bool     = false # Her 5. vuruş → düşmandan geç
-var _phantom_hit_counter: int     = 0     # Phantom Circuit sayacı
+var has_ricochet_strike: bool     = false
+var has_data_exploit: bool        = false
+var has_shadow_strike: bool       = false
+var has_exploit_network: bool     = false
+var has_phantom_circuit: bool     = false
+var _phantom_hit_counter: int     = 0
+# Glitch Assassin
+var has_extended_glitch: bool     = false # Glitch 3→5s
+var has_signal_jam: bool          = false # Glitch → -25% move speed
+var has_data_siphon: bool         = false # Data Leech +2 on Glitched
+var has_exploit_stack: bool       = false # Konsekütif Glitch vur → +1 (max +5)
+var _exploit_stack_target         = null  # Son Glitch hedefi
+var _exploit_stack_count: int     = 0
+var has_virus_spread: bool        = false # Network range 350px
+var has_interference: bool        = false # Glitch'li → -%20 dmg
+var has_exploit_mastery: bool     = false # Data Exploit +3→+6
+var has_system_overload: bool     = false # 3+ Glitch aktif → +%20 dmg
+var has_mind_hack: bool           = false # 3 ardışık hit → ally saldırsın
+var _mind_hack_target             = null
+var _mind_hack_count: int         = 0
+var has_neural_overwrite: bool    = false # Glitch timer reset
+var has_data_siphon_active: bool  = false # (internal flag, not card)
+# Ricochet Master
+var has_angular_precision: bool   = false # İlk vuruş +%15
+var has_wallrunner: bool          = false # +%8 speed per bounce
+var has_bounce_mastery: bool      = false # Ricochet +4→+7
+var has_pinball_protocol: bool    = false # 3+ bounce → pierce
+var has_ricochet_memory: bool     = false # Ricochet bonus sıfırlanmaz
+var has_kinetic_rogue: bool       = false # Her 3 bounce → +1 kalıcı base dmg
+var _kinetic_rogue_bounce_acc: int = 0
+var kinetic_rogue_bonus: int      = 0     # Kalıcı biriken bonus
+var has_pinpoint_strike: bool     = false # 5 bounce → ×2 crit
+var has_shadow_dance: bool        = false # 2 bounce same flight → +3% speed kalıcı
+var _shadow_dance_acc: float      = 0.0   # Biriken hız bonusu
+# Phantom Infiltrator
+var has_stealth_pass: bool        = false # Phantom 4. (5 yerine)
+var has_ghost_protocol: bool      = false # Phantom → 1.5s stun
+var has_phase_shift: bool         = false # Phantom → ×2 dmg
+var has_interference_cloak: bool  = false # Phantom → Glitch 3s
+var has_circuit_breaker: bool     = false # Her 10. hit → tüm Glitch
+var _circuit_breaker_counter: int = 0
+# Cross-build
+var has_rogues_instinct: bool     = false # Arındırma → +1 HP
 
 # ── Leila — Elemental ────────────────────────────────────────────────────────
 var debuff_duration_mult: float   = 1.0   # Elemental Mastery, Arcane Mind, Arcane Focus

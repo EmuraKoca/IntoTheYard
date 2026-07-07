@@ -901,42 +901,110 @@ func _hit_subject(subject: Node2D) -> void:
 	# ── Cyclone Rogue efektleri ───────────────────────────────────────────────
 	var _rp := _get_player()
 	if _rp and is_instance_valid(subject):
-		# Data Exploit: Glitch'li düşmana +3 bonus hasar
-		if _rp.get("has_data_exploit") and _rp.has_data_exploit:
-			if subject.get("is_glitched") and subject.is_glitched:
-				subject.take_damage(3)
+		var _is_glitched: bool = subject.get("is_glitched") and subject.is_glitched
 
-		# Ricochet Strike: Her duvar sekmesi → +4 hasar
+		# Data Exploit: Glitch'li düşmana +3 (veya +6 Exploit Mastery ile) bonus hasar
+		if _rp.get("has_data_exploit") and _rp.has_data_exploit and _is_glitched:
+			var _de_bonus: int = 6 if (_rp.get("has_exploit_mastery") and _rp.has_exploit_mastery) else 3
+			subject.take_damage(_de_bonus)
+
+		# Exploit Stack: Aynı Glitch hedefine ardışık hit → +1 hasar (max +5)
+		if _rp.get("has_exploit_stack") and _rp.has_exploit_stack and _is_glitched:
+			if _rp._exploit_stack_target == subject:
+				_rp._exploit_stack_count = min(_rp._exploit_stack_count + 1, 5)
+			else:
+				_rp._exploit_stack_target = subject
+				_rp._exploit_stack_count = 0
+			if _rp._exploit_stack_count > 0:
+				subject.take_damage(_rp._exploit_stack_count)
+
+		# Neural Overwrite: Glitch timer sıfırla
+		if _rp.get("has_neural_overwrite") and _rp.has_neural_overwrite and _is_glitched:
+			if subject.has_method("apply_glitch"):
+				subject.is_glitched = false
+				subject.apply_glitch()
+
+		# Mind Hack: 3 ardışık hit → ally saldırsın
+		if _rp.get("has_mind_hack") and _rp.has_mind_hack and _is_glitched:
+			if _rp._mind_hack_target == subject:
+				_rp._mind_hack_count += 1
+			else:
+				_rp._mind_hack_target = subject
+				_rp._mind_hack_count = 1
+			if _rp._mind_hack_count >= 3:
+				_rp._mind_hack_count = 0
+				subject.is_glitched = false
+				subject.apply_glitch()
+
+		# Ricochet Strike: Her duvar sekmesi → +4 (veya +7 Bounce Mastery ile) hasar
 		if _rp.get("has_ricochet_strike") and _rp.has_ricochet_strike and _wall_bounce_count > 0:
-			subject.take_damage(_wall_bounce_count * 4)
+			var _rc_bonus: int = 7 if (_rp.get("has_bounce_mastery") and _rp.has_bounce_mastery) else 4
+			subject.take_damage(_wall_bounce_count * _rc_bonus)
 
 		# Shadow Strike: İlk vuruş duvar sekmesi sonrası → ×1.5
 		if _rp.get("has_shadow_strike") and _rp.has_shadow_strike and _shadow_primed:
 			_shadow_primed = false
 			subject.take_damage(int(total_damage * 0.5))
 
-		# Exploit Network: Glitch vurulunca yayıl
-		if _rp.get("has_exploit_network") and _rp.has_exploit_network and can_glitch:
-			if subject.get("is_glitched") and subject.is_glitched:
-				var _nearest_dist := 200.0
-				var _nearest_enemy = null
-				for _en in get_tree().get_nodes_in_group("subjects"):
-					if _en == subject or not is_instance_valid(_en): continue
-					if _en.get("is_glitched") and _en.is_glitched: continue
-					var _d := subject.global_position.distance_to(_en.global_position)
-					if _d < _nearest_dist:
-						_nearest_dist = _d
-						_nearest_enemy = _en
-				if is_instance_valid(_nearest_enemy) and _nearest_enemy.has_method("apply_glitch"):
-					_nearest_enemy.apply_glitch()
+		# Angular Precision: Her flight'ın ilk vuruşu +%15
+		if _rp.get("has_angular_precision") and _rp.has_angular_precision and hit_subjects.size() == 1:
+			subject.take_damage(int(total_damage * 0.15))
 
-		# Phantom Circuit: Her 5. vuruşta sek
+		# Pinball Protocol: 3+ bounce → pierce (bounce yapma)
+		if _rp.get("has_pinball_protocol") and _rp.has_pinball_protocol and _wall_bounce_count >= 3:
+			move_direction = (global_position - subject.global_position + move_direction * 2.0).normalized()
+
+		# Pinpoint Strike: 5 bounce sonrası ×2 crit
+		if _rp.get("has_pinpoint_strike") and _rp.has_pinpoint_strike and _wall_bounce_count >= 5:
+			subject.take_damage(total_damage)
+
+		# Kinetic Rogue: Her 3 bounce → kalıcı +1 base hasar
+		if _rp.get("has_kinetic_rogue") and _rp.has_kinetic_rogue and _wall_bounce_count > 0:
+			_rp._kinetic_rogue_bounce_acc += _wall_bounce_count
+			if _rp._kinetic_rogue_bounce_acc >= 3:
+				_rp._kinetic_rogue_bounce_acc -= 3
+				_rp.kinetic_rogue_bonus += 1
+			if _rp.kinetic_rogue_bonus > 0:
+				subject.take_damage(_rp.kinetic_rogue_bonus)
+
+		# Circuit Breaker: Her 10. hit → tüm düşmanlar Glitch
+		if _rp.get("has_circuit_breaker") and _rp.has_circuit_breaker:
+			_rp._circuit_breaker_counter += 1
+			if _rp._circuit_breaker_counter >= 10:
+				_rp._circuit_breaker_counter = 0
+				for _cb_en in get_tree().get_nodes_in_group("subjects"):
+					if is_instance_valid(_cb_en) and _cb_en.has_method("apply_glitch"):
+						_cb_en.apply_glitch()
+
+		# Exploit Network: Glitch vurulunca yayıl (Virus Spread ile 350px)
+		if _rp.get("has_exploit_network") and _rp.has_exploit_network and can_glitch and _is_glitched:
+			var _net_range: float = 350.0 if (_rp.get("has_virus_spread") and _rp.has_virus_spread) else 200.0
+			var _nearest_dist := _net_range
+			var _nearest_enemy = null
+			for _en in get_tree().get_nodes_in_group("subjects"):
+				if _en == subject or not is_instance_valid(_en): continue
+				if _en.get("is_glitched") and _en.is_glitched: continue
+				var _d := subject.global_position.distance_to(_en.global_position)
+				if _d < _nearest_dist:
+					_nearest_dist = _d
+					_nearest_enemy = _en
+			if is_instance_valid(_nearest_enemy) and _nearest_enemy.has_method("apply_glitch"):
+				_nearest_enemy.apply_glitch()
+
+		# Phantom Circuit: Her 4. (Stealth Pass) veya 5. vuruşta sekmeden geç
 		if _rp.get("has_phantom_circuit") and _rp.has_phantom_circuit:
+			var _phantom_threshold: int = 4 if (_rp.get("has_stealth_pass") and _rp.has_stealth_pass) else 5
 			_rp._phantom_hit_counter += 1
-			if _rp._phantom_hit_counter >= 5:
+			if _rp._phantom_hit_counter >= _phantom_threshold:
 				_rp._phantom_hit_counter = 0
-				# Bu vuruşta sekmeyi geri al — bounce'u iptal et
 				move_direction = (move_direction + (subject.global_position - global_position).normalized() * 0.1).normalized()
+				# Phase Shift: Phantom vuruşta ×2 hasar
+				if _rp.get("has_phase_shift") and _rp.has_phase_shift:
+					subject.take_damage(total_damage)
+				# Interference Cloak: Phantom → Glitch 3s
+				if _rp.get("has_interference_cloak") and _rp.has_interference_cloak:
+					if subject.has_method("apply_glitch") and not (subject.get("is_glitched") and subject.is_glitched):
+						subject.apply_glitch()
 
 	# Mimic reverts after 5 hits
 	if mimic_done and not is_mimic:
