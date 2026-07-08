@@ -19,7 +19,7 @@ func _ready() -> void:
 
 	_sprite = AnimatedSprite2D.new()
 	_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	_sprite.scale          = Vector2(0.9, 0.9)
+	_sprite.scale          = Vector2(0.47, 0.47)
 	_sprite.visible        = false
 	add_child(_sprite)
 
