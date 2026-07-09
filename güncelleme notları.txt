@@ -3372,3 +3372,37 @@ Teknik:
      — 3 karakter de artık ortak _update_anim_dir() (WASD) kullanıyor
   ✅ _get_vector_scale / _resolve_anim kaldırıldı (artık gerekmiyor)
   ✅ Scale: 0.58–0.60 → 1.0 (128px frame boyutuna göre)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+v0.0.9.9n — Karakter Sprite & Animasyon Düzeltmeleri (2026-07-10)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Animasyon:
+
+  ✅ Leila North walk: frame_001–008 (8 frame), sıralama düzeltildi
+  ✅ Leila idle: 2 aşamalı animasyon sistemi kuruldu
+     — idle_N_intro: frame_000 bir kez oynar
+     — idle_N_loop: frame_001–008 sonsuz döngü
+     — Hareket edip durulduğunda intro yeniden başlar
+  ✅ 3 karakterin scale'i 0.55 → 0.71 olarak güncellendi
+
+Character Select Ekranı:
+
+  ✅ Sprite sheet + AtlasTexture sisteminden rotations/ PNG sistemine geçildi
+  ✅ 8 yönlü dönüş animasyonu (spin) character select'te gösteriliyor
+  ✅ c["sheet"] referansı kaldırıldı (KeyError düzeltildi)
+  ✅ Sprite boyutu 2.5× olarak ayarlandı
+
+Hasmen NPC:
+
+  ✅ Scale 0.9 → 0.47 (yeni 244px sprite'a göre)
+  ✅ sit_idle animasyon hızı 8.0 → 5.0 FPS
+
+Cyclone:
+
+  ✅ Test için boss yenmeden Cyclone açık geliyor
+     (game_data.gd varsayılan + load_game() guard)
+
+Test:
+
+  ✅ Tüm değişiklikler oyun içinde test edildi, başarılı geçti

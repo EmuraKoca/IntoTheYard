@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bepw0f1h5kvme"
-path="res://.godot/imported/frame_006.png-fedc0ac273a7667228dcf2b4ebc26fc3.ctex"
+uid="uid://dt13bl25fpp4c"
+path="res://.godot/imported/frame_008.png-b418bb44c6faef1851de0c1cf7343a33.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/charsRedesign/leila/animations/walk/south/frame_006.png"
-dest_files=["res://.godot/imported/frame_006.png-fedc0ac273a7667228dcf2b4ebc26fc3.ctex"]
+source_file="res://assets/charsRedesign/leila/animations/walk/north/frame_008.png"
+dest_files=["res://.godot/imported/frame_008.png-b418bb44c6faef1851de0c1cf7343a33.ctex"]
 
 [params]
 

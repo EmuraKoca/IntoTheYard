@@ -3,7 +3,7 @@ extends Node
 const SAVE_PATH := "user://ity_save.cfg"
 
 var selected_character := "vector"
-var unlocked_characters: Array[String] = ["vector"]
+var unlocked_characters: Array[String] = ["vector", "cyclone"]
 
 # Kümülatif XP eşikleri — level 2,3,4,5,6 için gereken toplam XP
 const XP_THRESHOLDS: Array[int] = [0, 2100, 5250, 9600, 15000, 22000]
@@ -89,6 +89,8 @@ func load_data() -> void:
 				unlocked_characters.append(c)
 	if "vector" not in unlocked_characters:
 		unlocked_characters.append("vector")
+	if "cyclone" not in unlocked_characters:
+		unlocked_characters.append("cyclone")
 	char_xp["vector"]  = cfg.get_value("progress", "char_xp_vector",  0)
 	char_xp["leila"]   = cfg.get_value("progress", "char_xp_leila",   0)
 	char_xp["cyclone"] = cfg.get_value("progress", "char_xp_cyclone", 0)

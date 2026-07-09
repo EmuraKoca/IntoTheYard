@@ -627,7 +627,7 @@ func _setup_cyclone_sprite() -> void:
 
 	sprite.sprite_frames  = frames
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	sprite.scale          = Vector2(1.0, 1.0)
+	sprite.scale          = Vector2(0.71, 0.71)
 	sprite.play("idle_N")
 
 
@@ -657,7 +657,7 @@ func _setup_vector_sprite_new() -> void:
 
 	sprite.sprite_frames  = frames
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	sprite.scale          = Vector2(1.0, 1.0)
+	sprite.scale          = Vector2(0.71, 0.71)
 	sprite.animation_finished.connect(_on_vector_anim_finished)
 	sprite.play("idle_N")
 
@@ -672,36 +672,46 @@ func _setup_leila_sprite() -> void:
 	var dirs := ["N","NE","E","SE","S","SW","W","NW"]
 	var dir_folder := {"N":"north","NE":"north-east","E":"east","SE":"south-east","S":"south","SW":"south-west","W":"west","NW":"north-west"}
 
-	# idle — north only, 4 frames (klasör adı Türkçe ı ile: ıdle/North)
-	frames.add_animation("idle_N")
-	frames.set_animation_speed("idle_N", 8.0)
-	frames.set_animation_loop("idle_N", true)
-	for i in range(4):
-		frames.add_frame("idle_N", load(base + "ıdle/North/frame_%03d.png" % i))
+	# idle intro — sadece frame_000, tek seferlik
+	frames.add_animation("idle_N_intro")
+	frames.set_animation_speed("idle_N_intro", 8.0)
+	frames.set_animation_loop("idle_N_intro", false)
+	frames.add_frame("idle_N_intro", load(base + "ıdle/North/frame_000.png"))
+	# idle loop — frame_001-008, döngü
+	frames.add_animation("idle_N_loop")
+	frames.set_animation_speed("idle_N_loop", 8.0)
+	frames.set_animation_loop("idle_N_loop", true)
+	for i in range(1, 9):
+		frames.add_frame("idle_N_loop", load(base + "ıdle/North/frame_%03d.png" % i))
 
-	# walk — 8 yön; north=4 frame, diğerleri=8 frame
+	# walk — 8 yön; north=8 frame (001-008), diğerleri=8 frame (000-007)
 	for d in dirs:
 		var key: String = "walk_" + d
-		var count: int = 4 if d == "N" else 8
 		frames.add_animation(key)
 		frames.set_animation_speed(key, 10.0)
 		frames.set_animation_loop(key, true)
-		for i in range(count):
+		var start: int = 1 if d == "N" else 0
+		for i in range(start, start + 8):
 			frames.add_frame(key, load(base + "walk/" + dir_folder[d] + "/frame_%03d.png" % i))
 
 	sprite.sprite_frames  = frames
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	sprite.scale          = Vector2(1.0, 1.0)
+	sprite.scale          = Vector2(0.71, 0.71)
 	sprite.animation_finished.connect(_on_leila_anim_finished)
-	sprite.play("idle_N")
+	sprite.play("idle_N_intro")
 
 func _update_leila_animation() -> void:
 	if _leila_oneshot:
 		return
 	var sprite: AnimatedSprite2D = $LeilaSprite
-	var anim: String = ("walk_" + _anim_dir) if velocity != Vector2.ZERO else "idle_N"
-	if sprite.animation != anim:
-		sprite.play(anim)
+	if velocity != Vector2.ZERO:
+		var anim: String = "walk_" + _anim_dir
+		if sprite.animation != anim:
+			sprite.play(anim)
+	else:
+		# Idle'a yeni giriyorsa intro'dan başla
+		if sprite.animation != "idle_N_intro" and sprite.animation != "idle_N_loop":
+			sprite.play("idle_N_intro")
 
 func _update_cyclone_animation() -> void:
 	_cyclone_crouched = Input.is_key_pressed(KEY_CTRL)
@@ -722,6 +732,10 @@ func _play_leila_oneshot(anim_name: String) -> void:
 		sprite.play(anim_name)
 
 func _on_leila_anim_finished() -> void:
+	var sprite: AnimatedSprite2D = $LeilaSprite
+	if sprite.animation == "idle_N_intro":
+		sprite.play("idle_N_loop")
+		return
 	_leila_oneshot = false
 
 func _update_anim_dir() -> void:

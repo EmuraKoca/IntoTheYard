@@ -4,9 +4,9 @@ var _font_bold    = preload("res://assets/orbitronfont/Orbitron-Bold.ttf")
 var _font_regular = preload("res://assets/orbitronfont/Orbitron-Regular.ttf")
 
 const CHARS: Array = [
-	{"id":"vector",  "name":"Vector",  "theme":"Kinetik",      "color":Color(0,0.75,1,1),    "passive":"Normal Ball +3 hasar",             "balls":["Normal Ball","Split Ball","Pierce Ball"],             "sheet":"res://assets/selectCharacters/vector_sheet.png",  "fw":208,"fc":8,"sc":1.65},
-	{"id":"leila",   "name":"Leila",   "theme":"Elemental",    "color":Color(1,0.18,0.47,1), "passive":"Elemental top %20 ekstra patlama", "balls":["Fire Ball","Water Ball","Cryo Ball","Electric Ball"], "sheet":"res://assets/selectCharacters/leila_sheet.png",   "fw":224,"fc":8,"sc":1.50},
-	{"id":"cyclone", "name":"Cyclone", "theme":"Manipülasyon", "color":Color(0.22,1,0.08,1), "passive":"Glitch ölünce başkasına sıçrar",   "balls":["Glitch Ball","Mimic Ball","Data Leech Ball"],         "sheet":"res://assets/selectCharacters/cyclone_sheet.png", "fw":224,"fc":8,"sc":1.50},
+	{"id":"vector",  "name":"Vector",  "theme":"Kinetik",      "color":Color(0,0.75,1,1),    "passive":"Normal Ball +3 hasar",             "balls":["Normal Ball","Split Ball","Pierce Ball"],             "sc":2.5},
+	{"id":"leila",   "name":"Leila",   "theme":"Elemental",    "color":Color(1,0.18,0.47,1), "passive":"Elemental top %20 ekstra patlama", "balls":["Fire Ball","Water Ball","Cryo Ball","Electric Ball"], "sc":2.5},
+	{"id":"cyclone", "name":"Cyclone", "theme":"Manipülasyon", "color":Color(0.22,1,0.08,1), "passive":"Glitch ölünce başkasına sıçrar",   "balls":["Glitch Ball","Mimic Ball","Data Leech Ball"],         "sc":2.5},
 ]
 
 var _cur: int = 0
@@ -99,7 +99,7 @@ func _refresh() -> void:
 	_update_dots()
 	_update_info()
 	var c: Dictionary = CHARS[_cur]
-	if not _is_locked(c) and c["sheet"] != "":
+	if not _is_locked(c):
 		_start_matrix(_center_card, c["color"])
 	else:
 		_stop_matrix()
@@ -120,10 +120,10 @@ func _fill_side(card: Panel, c: Dictionary) -> void:
 	card.add_theme_stylebox_override("panel", sb)
 	card.modulate = Color(1, 1, 1, 0.55)
 
-	if not locked and c["sheet"] != "":
+	if not locked:
 		var sprite := AnimatedSprite2D.new()
 		sprite.position = card.size / 2 + Vector2(0, -30)
-		_setup_sprite(sprite, c["sheet"], c["fw"], c["fc"], c["sc"] * 0.52)
+		_setup_sprite(sprite, c["id"], c["sc"] * 0.52)
 		card.add_child(sprite)
 	elif locked:
 		var lk := Label.new()
@@ -162,10 +162,10 @@ func _fill_center(card: Panel, c: Dictionary) -> void:
 	card.add_theme_stylebox_override("panel", sb)
 	card.modulate = Color(1, 1, 1, 1)
 
-	if not locked and c["sheet"] != "":
+	if not locked:
 		var sprite := AnimatedSprite2D.new()
 		sprite.position = card.size / 2 + Vector2(0, -55)
-		_setup_sprite(sprite, c["sheet"], c["fw"], c["fc"], c["sc"] * 0.88)
+		_setup_sprite(sprite, c["id"], c["sc"] * 0.88)
 		sprite.play("spin")
 		card.add_child(sprite)
 	elif locked:
@@ -277,19 +277,17 @@ func _update_info() -> void:
 		info.get_node("LabelTalent").visible = false
 
 # ── Sprite kurulum ────────────────────────────────────────────────────────────
-func _setup_sprite(sprite: AnimatedSprite2D, sheet: String, fw: int, fc: int, sc: float) -> void:
+func _setup_sprite(sprite: AnimatedSprite2D, char_id: String, sc: float) -> void:
 	var frames := SpriteFrames.new()
 	if frames.has_animation("default"):
 		frames.remove_animation("default")
-	var tex: Texture2D = load(sheet)
+	var base := "res://assets/charsRedesign/%s/rotations/" % char_id
+	var dirs := ["north", "north-east", "east", "south-east", "south", "south-west", "west", "north-west"]
 	frames.add_animation("spin")
 	frames.set_animation_speed("spin", 8.0)
 	frames.set_animation_loop("spin", true)
-	for i in range(fc):
-		var atlas := AtlasTexture.new()
-		atlas.atlas  = tex
-		atlas.region = Rect2(i * fw, 0, fw, fw)
-		frames.add_frame("spin", atlas)
+	for d in dirs:
+		frames.add_frame("spin", load(base + d + ".png"))
 	sprite.sprite_frames  = frames
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	sprite.scale          = Vector2(sc, sc)
