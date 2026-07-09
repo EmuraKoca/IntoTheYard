@@ -3310,3 +3310,31 @@ Bugfix:
   ✅ Pierce Core bug — sonraki core'lar pierce gibi davranıyordu (0.5s → 0.1s disable)
   ✅ apply_frozen() içindeki delta scope hatası düzeltildi (7 düşman dosyası)
   ✅ total_damage scope hatası — Cyclone bloğu hesaplama sonrasına taşındı
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+v0.0.9.9l — Düşman Mimarisi Refactor (2026-07-09)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Düşman Sınıf Hiyerarşisi:
+
+  ✅ base_enemy.gd oluşturuldu — tüm ortak kod tek yerde
+     — Element sistemi (burn, wet, freeze, electrified, slow, glitch, antivirus)
+     — Reaksiyon sistemi (_check_reaction, tüm _react_* fonksiyonları)
+     — VFX spawn fonksiyonları (steam, freeze, electrocute, overheat vb.)
+     — Hasar, ölüm, kaçış, ally dönüşümü
+     — Chip çizimi, element göstergesi
+     — Virtual pattern: get_sprite(), get_walk_anim_prefix(), _enemy_process()
+  ✅ melee_enemy.gd oluşturuldu — yakın dövüş ortak mantığı
+     — Wander/ally davranışı
+     — _killed_by_ally koruması
+     — _collapse override
+  ✅ ranged_enemy.gd oluşturuldu — uzak mesafe ortak mantığı
+     — Ateş sistemi iskeleti
+     — Ally hedefleme davranışı
+  ✅ boss_enemy.gd oluşturuldu — boss iskeleti (Smiler için hazır)
+     — Phase sistemi (HP eşiğine göre phase geçişi)
+     — _on_phase_change() virtual hook
+  ✅ 7 düşman dosyası sadece özgün kodu içeriyor (~80 satır, eskiden ~1000)
+     — subject, armed_subject, heavy_subject, frantic_subject
+     — cyber_shotgun, cyber_shooter, cyber_rifle
+  ✅ Yeni düşman eklemek: extends melee/ranged/boss_enemy + özgün kod

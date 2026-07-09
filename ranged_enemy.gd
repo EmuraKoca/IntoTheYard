@@ -10,8 +10,6 @@ func _elem_indicator_y_offset() -> float:
 func _update_anim(_moving: bool) -> void:
 	pass  # child override: walk_ veya idle_ prefix ile anim oynat
 
-func _shoot() -> void:
-	pass  # child override
 
 func _ally_behavior() -> void:
 	var delta = get_physics_process_delta_time()
