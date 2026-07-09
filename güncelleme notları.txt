@@ -3338,3 +3338,37 @@ Düşman Sınıf Hiyerarşisi:
      — subject, armed_subject, heavy_subject, frantic_subject
      — cyber_shotgun, cyber_shooter, cyber_rifle
   ✅ Yeni düşman eklemek: extends melee/ranged/boss_enemy + özgün kod
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+v0.0.9.9m — Karakter Sprite Yeniden Tasarımı (2026-07-09)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Yeni Karakter Görselleri (assets/charsRedesign/):
+
+  ✅ 3 karakter (Cyclone, Leila, Vector) sıfırdan çizildi — 128px frame
+  ✅ Sprite sheet sisteminden tek tek PNG sistemine geçildi
+  ✅ Idle animasyonu artık sabit North yönüne bakıyor (fare takibi kaldırıldı)
+  ✅ Take damage animasyonu kaldırıldı (3 karakter için)
+  ✅ punch / throw / run animasyonları kaldırıldı
+
+Cyclone:
+  — idle: North yönü, 4 frame (Breathing_Idle)
+  — walk: 8 yön, 6 frame/yön
+  — crouched_walk: 8 yön, SE/SW=4 frame, diğerleri=6 frame
+  — Eğilerek yürüme: CTRL tuşu ile tetiklenir
+
+Leila:
+  — idle: North yönü, 4 frame
+  — walk: 8 yön; North=4 frame, diğerleri=8 frame
+
+Vector:
+  — idle: North yönü, 8 frame
+  — walk: 8 yön, 6 frame/yön
+
+Teknik:
+
+  ✅ _setup_cyclone_sprite / _setup_leila_sprite / _setup_vector_sprite_new yeniden yazıldı
+  ✅ _update_leila_anim_dir / _update_cyclone_anim_dir kaldırıldı
+     — 3 karakter de artık ortak _update_anim_dir() (WASD) kullanıyor
+  ✅ _get_vector_scale / _resolve_anim kaldırıldı (artık gerekmiyor)
+  ✅ Scale: 0.58–0.60 → 1.0 (128px frame boyutuna göre)

@@ -216,6 +216,7 @@ var _leila_oneshot: bool = false
 
 # Cyclone animation
 var _cyclone_anim_dir: String = "S"
+var _cyclone_crouched: bool = false
 const LEILA_RUN_SPEED: float = 200.0  # Bu hızın üstünde run animasyonu oynar
 
 # Dash trail
@@ -429,9 +430,7 @@ func _process(_delta: float) -> void:
 	if not sprite.is_playing():
 		if _vector_oneshot:
 			_vector_oneshot = false
-		var moving = velocity != Vector2.ZERO
-		var anim = _resolve_anim(("run" if moving else "idle"), _anim_dir)
-		sprite.scale = _get_vector_scale(anim)
+		var anim = ("walk_" + _anim_dir) if velocity != Vector2.ZERO else "idle_N"
 		sprite.play(anim)
 		# Frame'i anında 0'a ayarla — play() iç gecikmesi olmadan
 		sprite.set_frame_and_progress(0, 0.0)
@@ -568,12 +567,7 @@ func _physics_process(delta: float) -> void:
 		orbit_balls[i].global_position = global_position + Vector2(cos(angle), sin(angle)) * ORBIT_RADIUS + orbit_balls[i].strike_offset
 
 	# ── Animasyon yön güncellemeleri ──────────────────────────────────────────
-	if character_type == "vector":
-		_update_anim_dir()
-	elif character_type == "leila":
-		_update_leila_anim_dir()
-	elif character_type == "cyclone":
-		_update_cyclone_anim_dir()
+	_update_anim_dir()
 
 	# ── Animasyon oynatma ─────────────────────────────────────────────────────
 	if character_type == "vector":
@@ -599,40 +593,42 @@ func _physics_process(delta: float) -> void:
 
 
 func _setup_cyclone_sprite() -> void:
-	var sprite: AnimatedSprite2D = $CycloneSprite  # tscn'de ColorRect yerine eklendi
+	var sprite: AnimatedSprite2D = $CycloneSprite
 	var frames := SpriteFrames.new()
 	if frames.has_animation("default"):
 		frames.remove_animation("default")
 
-	var base  := "res://assets/characters/cyclone/sheets/"
-	var dirs  := ["N","NE","E","SE","S","SW","W","NW"]
+	var base := "res://assets/charsRedesign/cyclone/animations/"
+	var dirs := ["N","NE","E","SE","S","SW","W","NW"]
+	var dir_folder := {"N":"north","NE":"north-east","E":"east","SE":"south-east","S":"south","SW":"south-west","W":"west","NW":"north-west"}
 
-	var anims := [
-		["idle", 8,  8.0,  true],
-		["run",  6, 10.0, true],
-	]
+	frames.add_animation("idle_N")
+	frames.set_animation_speed("idle_N", 8.0)
+	frames.set_animation_loop("idle_N", true)
+	for i in range(4):
+		frames.add_frame("idle_N", load(base + "Breathing_Idle/north/frame_%03d.png" % i))
 
-	for a in anims:
-		var anim_key: String  = str(a[0])
-		var frame_count: int  = int(a[1])
-		var fps: float        = float(a[2])
-		var looping: bool     = bool(a[3])
-		for d in dirs:
-			var key: String = anim_key + "_" + d
-			var tex: Texture2D = load(base + "cyclone_" + anim_key + "_" + d + ".png")
-			frames.add_animation(key)
-			frames.set_animation_speed(key, fps)
-			frames.set_animation_loop(key, looping)
-			for i in range(frame_count):
-				var atlas := AtlasTexture.new()
-				atlas.atlas  = tex
-				atlas.region = Rect2(i * 224, 0, 224, 224)
-				frames.add_frame(key, atlas)
+	for d in dirs:
+		var key: String = "walk_" + d
+		frames.add_animation(key)
+		frames.set_animation_speed(key, 10.0)
+		frames.set_animation_loop(key, true)
+		for i in range(6):
+			frames.add_frame(key, load(base + "walk/" + dir_folder[d] + "/frame_%03d.png" % i))
+
+	for d in dirs:
+		var key: String = "crouched_walk_" + d
+		var count: int = 4 if d in ["SE","SW"] else 6
+		frames.add_animation(key)
+		frames.set_animation_speed(key, 10.0)
+		frames.set_animation_loop(key, true)
+		for i in range(count):
+			frames.add_frame(key, load(base + "Crouched_Walking/" + dir_folder[d] + "/frame_%03d.png" % i))
 
 	sprite.sprite_frames  = frames
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	sprite.scale          = Vector2(0.58, 0.58)
-	sprite.play("idle_S")
+	sprite.scale          = Vector2(1.0, 1.0)
+	sprite.play("idle_N")
 
 
 func _setup_vector_sprite_new() -> void:
@@ -641,36 +637,29 @@ func _setup_vector_sprite_new() -> void:
 	if frames.has_animation("default"):
 		frames.remove_animation("default")
 
-	var base  := "res://assets/characters/vector/sheets/"
-	var dirs  := ["N","NE","E","SE","S","SW","W","NW"]
+	var base := "res://assets/charsRedesign/vector/animations/"
+	var dirs := ["N","NE","E","SE","S","SW","W","NW"]
+	var dir_folder := {"N":"north","NE":"north-east","E":"east","SE":"south-east","S":"south","SW":"south-west","W":"west","NW":"north-west"}
 
-	var anims := [
-		["idle", 4,  8.0,  true],
-		["run",  6, 10.0, true],
-	]
+	frames.add_animation("idle_N")
+	frames.set_animation_speed("idle_N", 8.0)
+	frames.set_animation_loop("idle_N", true)
+	for i in range(8):
+		frames.add_frame("idle_N", load(base + "Idle/north/frame_%03d.png" % i))
 
-	for a in anims:
-		var anim_key: String  = str(a[0])
-		var frame_count: int  = int(a[1])
-		var fps: float        = float(a[2])
-		var looping: bool     = bool(a[3])
-		for d in dirs:
-			var key: String = anim_key + "_" + d
-			var tex: Texture2D = load(base + "vector_" + anim_key + "_" + d + ".png")
-			frames.add_animation(key)
-			frames.set_animation_speed(key, fps)
-			frames.set_animation_loop(key, looping)
-			for i in range(frame_count):
-				var atlas := AtlasTexture.new()
-				atlas.atlas  = tex
-				atlas.region = Rect2(i * 208, 0, 208, 208)
-				frames.add_frame(key, atlas)
+	for d in dirs:
+		var key: String = "walk_" + d
+		frames.add_animation(key)
+		frames.set_animation_speed(key, 10.0)
+		frames.set_animation_loop(key, true)
+		for i in range(6):
+			frames.add_frame(key, load(base + "Walk/" + dir_folder[d] + "/frame_%03d.png" % i))
 
 	sprite.sprite_frames  = frames
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	sprite.scale          = Vector2(0.60, 0.60)
+	sprite.scale          = Vector2(1.0, 1.0)
 	sprite.animation_finished.connect(_on_vector_anim_finished)
-	sprite.play("idle_S")
+	sprite.play("idle_N")
 
 
 func _setup_leila_sprite() -> void:
@@ -679,88 +668,49 @@ func _setup_leila_sprite() -> void:
 	if frames.has_animation("default"):
 		frames.remove_animation("default")
 
-	var base := "res://assets/characters/leila/sheets/"
-	var dirs  := ["N","NE","E","SE","S","SW","W","NW"]
+	var base := "res://assets/charsRedesign/leila/animations/"
+	var dirs := ["N","NE","E","SE","S","SW","W","NW"]
+	var dir_folder := {"N":"north","NE":"north-east","E":"east","SE":"south-east","S":"south","SW":"south-west","W":"west","NW":"north-west"}
 
-	# [key, frame_count, fps, loop]
-	var anims := [
-		["idle",        4,  8.0,  true],
-		["walk",        6,  10.0, true],
-		["run",         6,  13.0, true],
-		["punch",       6,  14.0, false],
-		["throw",       7,  14.0, false],
-		["take_damage", 6,  12.0, false],
-	]
+	# idle — north only, 4 frames (klasör adı Türkçe ı ile: ıdle/North)
+	frames.add_animation("idle_N")
+	frames.set_animation_speed("idle_N", 8.0)
+	frames.set_animation_loop("idle_N", true)
+	for i in range(4):
+		frames.add_frame("idle_N", load(base + "ıdle/North/frame_%03d.png" % i))
 
-	for a in anims:
-		var anim_key: String  = str(a[0])
-		var frame_count: int  = int(a[1])
-		var fps: float        = float(a[2])
-		var looping: bool     = bool(a[3])
-		for d in dirs:
-			var dd: String = str(d)
-			var key: String = anim_key + "_" + dd
-			var tex: Texture2D = load(base + "leila_" + anim_key + "_" + dd + ".png")
-			frames.add_animation(key)
-			frames.set_animation_speed(key, fps)
-			frames.set_animation_loop(key, looping)
-			for i in range(frame_count):
-				var atlas := AtlasTexture.new()
-				atlas.atlas  = tex
-				atlas.region = Rect2(i * 224, 0, 224, 224)
-				frames.add_frame(key, atlas)
+	# walk — 8 yön; north=4 frame, diğerleri=8 frame
+	for d in dirs:
+		var key: String = "walk_" + d
+		var count: int = 4 if d == "N" else 8
+		frames.add_animation(key)
+		frames.set_animation_speed(key, 10.0)
+		frames.set_animation_loop(key, true)
+		for i in range(count):
+			frames.add_frame(key, load(base + "walk/" + dir_folder[d] + "/frame_%03d.png" % i))
 
 	sprite.sprite_frames  = frames
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	sprite.scale          = Vector2(0.58, 0.58)
+	sprite.scale          = Vector2(1.0, 1.0)
 	sprite.animation_finished.connect(_on_leila_anim_finished)
-	sprite.play("idle_S")
-
-func _update_leila_anim_dir() -> void:
-	var deg: float
-	if velocity != Vector2.ZERO:
-		deg = rad_to_deg(velocity.angle())
-	else:
-		deg = rad_to_deg(aim_direction.angle())
-	if   deg > -22.5  and deg <= 22.5:   _leila_anim_dir = "E"
-	elif deg > 22.5   and deg <= 67.5:   _leila_anim_dir = "SE"
-	elif deg > 67.5   and deg <= 112.5:  _leila_anim_dir = "S"
-	elif deg > 112.5  and deg <= 157.5:  _leila_anim_dir = "SW"
-	elif deg > 157.5  or  deg <= -157.5: _leila_anim_dir = "W"
-	elif deg > -157.5 and deg <= -112.5: _leila_anim_dir = "NW"
-	elif deg > -112.5 and deg <= -67.5:  _leila_anim_dir = "N"
-	elif deg > -67.5  and deg <= -22.5:  _leila_anim_dir = "NE"
+	sprite.play("idle_N")
 
 func _update_leila_animation() -> void:
 	if _leila_oneshot:
 		return
 	var sprite: AnimatedSprite2D = $LeilaSprite
-	var anim: String
-	if velocity != Vector2.ZERO:
-		anim = ("run_" if SPEED >= LEILA_RUN_SPEED else "walk_") + _leila_anim_dir
-	else:
-		anim = "idle_" + _leila_anim_dir
+	var anim: String = ("walk_" + _anim_dir) if velocity != Vector2.ZERO else "idle_N"
 	if sprite.animation != anim:
 		sprite.play(anim)
 
-func _update_cyclone_anim_dir() -> void:
-	var deg: float
-	if velocity != Vector2.ZERO:
-		deg = rad_to_deg(velocity.angle())
-	else:
-		deg = rad_to_deg(aim_direction.angle())
-	if   deg > -22.5  and deg <= 22.5:   _cyclone_anim_dir = "E"
-	elif deg > 22.5   and deg <= 67.5:   _cyclone_anim_dir = "SE"
-	elif deg > 67.5   and deg <= 112.5:  _cyclone_anim_dir = "S"
-	elif deg > 112.5  and deg <= 157.5:  _cyclone_anim_dir = "SW"
-	elif deg > 157.5  or  deg <= -157.5: _cyclone_anim_dir = "W"
-	elif deg > -157.5 and deg <= -112.5: _cyclone_anim_dir = "NW"
-	elif deg > -112.5 and deg <= -67.5:  _cyclone_anim_dir = "N"
-	elif deg > -67.5  and deg <= -22.5:  _cyclone_anim_dir = "NE"
-
 func _update_cyclone_animation() -> void:
+	_cyclone_crouched = Input.is_key_pressed(KEY_CTRL)
 	var sprite: AnimatedSprite2D = $CycloneSprite
-	var anim: String = ("run_" if velocity != Vector2.ZERO else "idle_") + _cyclone_anim_dir
+	var anim: String
+	if velocity != Vector2.ZERO:
+		anim = ("crouched_walk_" if _cyclone_crouched else "walk_") + _anim_dir
+	else:
+		anim = "idle_N"
 	if sprite.animation != anim:
 		sprite.play(anim)
 
@@ -790,39 +740,11 @@ func _update_anim_dir() -> void:
 	else:         _anim_dir = "N"
 
 
-func _get_vector_scale(anim_name: String) -> Vector2:
-	# Piksel art modu: küçük scale + NEAREST filter → blursuz keskin pikseller
-	# Oranlar korunuyor, sadece baz değer 0.60 → 0.18'e düşürüldü
-	var s: float
-	if   "melee_kick"  in anim_name: s = 0.46
-	elif "throw_ball"  in anim_name: s = 0.51
-	elif "take_damage" in anim_name: s = 0.53
-	elif "death"       in anim_name: s = 0.55
-	elif "idle"        in anim_name: s = 0.54
-	else:                             s = 0.60  # run
-	return Vector2(s, s)
-
-
-# Animasyon adı + yön → mevcut spritesheet yoksa en yakın yöne düşer
-# idle/run: 8 yön tam mevcut
-# throw_ball / take_damage: sadece N, NE, NW → E/SE/S/SW/W → N'e eşlenir
-func _resolve_anim(base: String, dir: String) -> String:
-	var full = base + "_" + dir
-	if $VectorSprite.sprite_frames.has_animation(full):
-		return full
-	# Fallback tablosu: mevcut olmayan yönü en yakın mevcut yöne eşle
-	var fallback := {"E": "NE", "SE": "NE", "S": "N", "SW": "NW", "W": "NW"}
-	var fb_dir: String = fallback.get(dir, "N")
-	return base + "_" + fb_dir
-
-
 func _update_vector_animation() -> void:
 	if _vector_dead or _vector_oneshot:
 		return
-	var moving = velocity != Vector2.ZERO
-	var anim = _resolve_anim(("run" if moving else "idle"), _anim_dir)
+	var anim := ("walk_" + _anim_dir) if velocity != Vector2.ZERO else "idle_N"
 	if $VectorSprite.animation != anim:
-		$VectorSprite.scale = _get_vector_scale(anim)
 		$VectorSprite.play(anim)
 
 
@@ -832,7 +754,6 @@ func _play_vector_oneshot(anim_name: String) -> void:
 	if not $VectorSprite.sprite_frames.has_animation(anim_name):
 		return
 	_vector_oneshot = true
-	$VectorSprite.scale = _get_vector_scale(anim_name)
 	$VectorSprite.play(anim_name)
 
 
@@ -892,10 +813,8 @@ func take_damage(amount) -> void:
 	if invincible:
 		return
 	invincible = true
-	if character_type == "vector" and not _vector_dead:
-		_play_vector_oneshot(_resolve_anim("take_damage", _anim_dir))
-	elif character_type == "leila":
-		_play_leila_oneshot("take_damage_" + _leila_anim_dir)
+	if false:
+		pass  # take_damage animasyonları kaldırıldı
 	var game = get_parent()
 	if game.has_method("player_damaged"):
 		game.player_damaged(amount)
