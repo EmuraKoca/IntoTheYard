@@ -3406,3 +3406,28 @@ Cyclone:
 Test:
 
   ✅ Tüm değişiklikler oyun içinde test edildi, başarılı geçti
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+v0.0.9.9o — Kart Sistemi & Calamity Düzeltmeleri (2026-07-11)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Kart Sistemi:
+
+  ✅ Prerequisite sistemi eklendi — base kart alınmadan upgrade teklif edilmez
+     — Arc Amplifier → Arc Core
+     — Exploit Mastery, Data Siphon, Exploit Stack → Data Exploit
+     — Virus Spread → Exploit Network
+     — Bounce Mastery → Ricochet Strike
+     — Stack Overflow, Viral Load, Memory Leak, Cascade Delete,
+       Corruption Protocol, Root Access, Zero Day, Kernel Panic → Virus Injection
+     — Stealth Pass, Ghost Protocol, Phase Shift, Interference Cloak → Phantom Circuit
+
+Calamity:
+
+  ✅ "Tüm düşmanlar" → "Sahada ki tüm düşmanlar" (Into the Yard teması)
+     — Blizzard, Monsoon, EMP Pulse, Data Storm, Backdoor, Systemic Failure
+  ✅ Street'teki düşmanlar Calamity'den etkilenmiyor (x >= 875 kontrolü)
+
+Animasyon:
+
+  ✅ Vector North walk: 6 frame → 7 frame (000–006)

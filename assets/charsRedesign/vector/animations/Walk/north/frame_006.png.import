@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d07wdl8hb1qhl"
-path="res://.godot/imported/frame_000.png-614ee83717de08560737bc098b33231c.ctex"
+uid="uid://jy5i3ug4pek6"
+path="res://.godot/imported/frame_006.png-4f983aedbd1d48dcefb19775c8a15580.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/charsRedesign/vector/animations/Walk/north/frame_000.png"
-dest_files=["res://.godot/imported/frame_000.png-614ee83717de08560737bc098b33231c.ctex"]
+source_file="res://assets/charsRedesign/vector/animations/Walk/north/frame_006.png"
+dest_files=["res://.godot/imported/frame_006.png-4f983aedbd1d48dcefb19775c8a15580.ctex"]
 
 [params]
 

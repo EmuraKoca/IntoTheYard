@@ -667,10 +667,11 @@ func _setup_vector_sprite_new() -> void:
 
 	for d in dirs:
 		var key: String = "walk_" + d
+		var count: int = 7 if d == "N" else 6
 		frames.add_animation(key)
 		frames.set_animation_speed(key, 10.0)
 		frames.set_animation_loop(key, true)
-		for i in range(6):
+		for i in range(count):
 			frames.add_frame(key, load(base + "Walk/" + dir_folder[d] + "/frame_%03d.png" % i))
 
 	sprite.sprite_frames  = frames
