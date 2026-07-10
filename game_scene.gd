@@ -170,7 +170,7 @@ const _UPGRADE_META: Dictionary = {
 var subject_scene = preload("res://subject.tscn")
 var upgrading = false
 var heavy_subject_scene = preload("res://heavy_subject.tscn")
-var armed_subject_scene = preload("res://armed_subject.tscn")
+var armored_subject_scene = preload("res://armored_subject.tscn")
 var frantic_subject_scene = preload("res://frantic_subject.tscn")
 var next_ball_upgrade = ""
 var calamity_slots = []
@@ -2901,7 +2901,7 @@ func _spawn_subject() -> void:
 	match pool[randi() % pool.size()]:
 		"subject":       subject = subject_scene.instantiate()
 		"frantic":       subject = frantic_subject_scene.instantiate()
-		"armed":         subject = armed_subject_scene.instantiate()
+		"armed":         subject = armored_subject_scene.instantiate()
 		"heavy":         subject = heavy_subject_scene.instantiate()
 		"cyber_shooter": subject = cyber_shooter_scene.instantiate()
 		"cyber_rifle":   subject = cyber_rifle_scene.instantiate()
