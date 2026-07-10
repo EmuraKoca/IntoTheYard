@@ -211,7 +211,7 @@ func _launch_typed_ball(ball_type: String) -> void:
 	var _current_balls := get_tree().get_nodes_in_group("player_balls")
 	_current_balls = _current_balls.filter(func(b): return is_instance_valid(b))
 	# İç yörünge core'ları MAX_ORBIT limitine dahil değil
-	var is_inner := ball_type in ["antivirus"]
+	var is_inner := ball_type in []
 	if not is_inner and _current_balls.size() >= player_node.MAX_ORBIT:
 		return
 
@@ -306,10 +306,6 @@ func _launch_typed_ball(ball_type: String) -> void:
 		"prismatic":
 			ball.can_prismatic = true
 			ball.max_damage    = 5 + player_node.ball_mastery
-		# ── Cyclone iç yörünge core'ları ─────────────────────────────────────
-		"antivirus":
-			ball.is_inner_core = true
-			ball.max_damage    = 0  # Hasar vermez, sadece Antivirus uygular
 
 	var direction  = (player.global_position - global_position).normalized()
 	var spawn_pos  = _get_muzzle_global()
