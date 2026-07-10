@@ -2106,6 +2106,7 @@ func _build_all_upgrades() -> void:
 	{"name": "Glitch Core",          "category": "Identity",      "color": Color(0.8, 0.0, 0.8),  "desc": "Disorients subject for 3s",                           "index": 16,  "weight": 10, "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
 	{"name": "Echo Core",            "category": "Identity",      "color": Color(0.5, 0.5, 1.0),  "desc": "Copies the nearest powered-up core",                  "index": 19,  "weight": 1,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 0},
 	{"name": "Data Leech Core",      "category": "Identity",      "color": Color(0.6, 0.0, 0.2),  "desc": "+2 Integrity on hit",                                 "index": 22,  "weight": 10, "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
+	{"name": "AntiVirus Core",       "category": "Identity",      "color": Color(0.1, 0.75, 0.3), "desc": "İç yörüngede döner\nİsabette 1 Antivirus yığını",     "index": 157, "weight": 8,  "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
 	{"name": "Data Exploit",         "category": "Utility",       "color": Color(0.7, 0.1, 0.5),  "desc": "Glitched target takes\n+3 bonus dmg per hit",         "index": 115, "weight": 10, "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
 	{"name": "Extended Glitch",      "category": "Utility",       "color": Color(0.75, 0.0, 0.7), "desc": "Glitch duration\n3s → 5s",                            "index": 119, "weight": 9,  "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
 	{"name": "Signal Jam",           "category": "Utility",       "color": Color(0.6, 0.0, 0.6),  "desc": "Glitched enemies move\n25% slower",                   "index": 120, "weight": 9,  "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
@@ -3447,6 +3448,7 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 			153: p.has_root_access        = true
 			154: p.has_zero_day           = true
 			155: p.has_kernel_panic       = true
+			157: $BallLauncher.queue_upgrade_ball("antivirus")
 			156:
 				if calamity_slots.size() < max_calamity_slots:
 					calamity_slots.append("🧪")

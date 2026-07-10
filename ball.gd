@@ -59,6 +59,7 @@ var can_arc: bool      = false  # Electrified düşmana çarptığında debuff 2
 var can_echo: bool     = false  # Düşmanın elementini kopyala, dönüşte uygula
 var _echo_element: String = ""  # Echo Core'un kopyaladığı element
 var can_orbit: bool    = false  # Orbit'te kalır, random element uygular
+var is_inner_core: bool = false  # İç yörüngede kalır, hiç fırlatılmaz
 var can_scatter: bool  = false  # Vuruşta 3 küçük elemental parça
 var can_catalyst: bool = false  # Mevcut debuff süresini uzatır
 var can_voltaic: bool  = false  # Electrified düşman ölünce zincir
@@ -322,6 +323,10 @@ func _physics_process(delta: float) -> void:
 		if _fire_trail_timer <= 0.0:
 			_fire_trail_timer = 0.09
 			_spawn_fire_trail_particle(global_position)
+
+	# İç yörünge: yakın düşmanlara Antivirus uygula
+	if is_inner_core and state == "orbiting":
+		_inner_core_tick(delta)
 
 	match state:
 		"orbiting":  _process_orbiting(delta); return
@@ -604,11 +609,28 @@ func _defense_hit(subject: Node2D) -> void:
 		_auto_fire()
 
 func _auto_fire() -> void:
-	if can_orbit: return  # Orbit Core orbit'te kalır, fırlatılmaz
+	if can_orbit or is_inner_core: return  # Bu core'lar orbit'te kalır
 	var player := _get_player()
 	if not is_instance_valid(player): return
 	player.remove_from_orbit(self)
 	launch(player.aim_direction, 650.0)
+
+var _inner_tick_timer: float = 0.0
+const INNER_TICK_INTERVAL: float = 1.0  # saniyede bir Antivirus uygula
+const INNER_TICK_RADIUS: float = 50.0   # iç yörünge etki alanı
+
+func _inner_core_tick(delta: float) -> void:
+	_inner_tick_timer -= delta
+	if _inner_tick_timer > 0.0: return
+	_inner_tick_timer = INNER_TICK_INTERVAL
+	var player := _get_player()
+	if not is_instance_valid(player): return
+	var cap: int = 5 if player.get("has_stack_overflow") and player.has_stack_overflow else 3
+	for subject in get_tree().get_nodes_in_group("subjects"):
+		if not is_instance_valid(subject): continue
+		if global_position.distance_to(subject.global_position) <= INNER_TICK_RADIUS:
+			if subject.has_method("apply_antivirus"):
+				subject.apply_antivirus(cap)
 
 func _reset_defense_life() -> void:
 	defense_damage    = _get_defense_base_damage()

@@ -36,10 +36,14 @@ var _firing_all: bool = false
 
 # ── Orbit sistemi ─────────────────────────────────────────────────────────────
 var orbit_balls: Array  = []
+var inner_orbit_balls: Array = []
 const MAX_ORBIT: int    = 8
 const ORBIT_RADIUS: float = 65.0
+const INNER_ORBIT_RADIUS: float = 35.0
 const ORBIT_SPEED: float  = 2.2   # rad/s
+const INNER_ORBIT_SPEED: float = 3.5  # rad/s — iç yörünge biraz daha hızlı döner
 var orbit_angle: float  = 0.0
+var inner_orbit_angle: float = 0.0
 var fire_index: int     = 0
 
 # Legacy — bazı upgrade kodları hâlâ bunları okuyabilir
@@ -230,23 +234,27 @@ var character_type = "vector"
 
 # ── Orbit API ────────────────────────────────────────────────────────────────
 func add_to_orbit(ball: Node2D) -> void:
-	if ball in orbit_balls: return
-	if orbit_balls.size() >= MAX_ORBIT: return
-	orbit_balls.append(ball)
+	if ball in orbit_balls or ball in inner_orbit_balls: return
 	ball.state         = "orbiting"
 	ball.moving        = false
 	ball.scale         = Vector2(1.0, 1.0)
-	ball.z_index       = 5
+	ball.z_index       = 4
 	ball.strike_offset = Vector2.ZERO
 	ball._is_striking  = false
 	ball.get_node("CollisionShape2D").disabled = true
 	ball._reset_defense_life()
+	if ball.get("is_inner_core"):
+		inner_orbit_balls.append(ball)
+		return
+	if orbit_balls.size() >= MAX_ORBIT: return
+	orbit_balls.append(ball)
 	# Auto mode: orbit'e giren top hemen fırlatılır (Orbit Core hariç)
 	if auto_mode and not ball.get("can_orbit"):
 		_fire_ball()
 
 func remove_from_orbit(ball: Node2D) -> void:
 	orbit_balls.erase(ball)
+	inner_orbit_balls.erase(ball)
 	if fire_index >= orbit_balls.size() and orbit_balls.size() > 0:
 		fire_index = 0
 
@@ -566,6 +574,16 @@ func _physics_process(delta: float) -> void:
 		var angle: float = orbit_angle + (TAU / max(n, 1)) * i
 		orbit_balls[i].global_position = global_position + Vector2(cos(angle), sin(angle)) * ORBIT_RADIUS + orbit_balls[i].strike_offset
 
+	# İç yörünge
+	inner_orbit_angle += INNER_ORBIT_SPEED * delta
+	var ni := inner_orbit_balls.size()
+	for i in range(ni - 1, -1, -1):
+		if not is_instance_valid(inner_orbit_balls[i]):
+			inner_orbit_balls.remove_at(i)
+			continue
+		var angle: float = inner_orbit_angle + (TAU / max(ni, 1)) * i
+		inner_orbit_balls[i].global_position = global_position + Vector2(cos(angle), sin(angle)) * INNER_ORBIT_RADIUS
+
 	# ── Animasyon yön güncellemeleri ──────────────────────────────────────────
 	_update_anim_dir()
 
@@ -870,6 +888,9 @@ func _draw() -> void:
 	# Orbit halkası — soluk gösterge
 	if orbit_balls.size() > 0:
 		draw_arc(Vector2.ZERO, ORBIT_RADIUS, 0, TAU, 64, Color(0.0, 0.9, 1.0, 0.08), 1.5)
+	# İç orbit halkası
+	if inner_orbit_balls.size() > 0:
+		draw_arc(Vector2.ZERO, INNER_ORBIT_RADIUS, 0, TAU, 48, Color(0.8, 0.4, 1.0, 0.10), 1.2)
 
 	# Nişan çizgisi — sol tık basılıyken
 	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) and not orbit_balls.is_empty():
