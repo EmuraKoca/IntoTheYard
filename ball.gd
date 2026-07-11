@@ -69,6 +69,7 @@ var _tempest_elements: Array = ["electric", "cryo", "water", "fire"]
 var _tempest_index: int = 0
 var trail: Line2D = null
 var _wall_bounce_count: int = 0  # sonsuz sekme önlemi
+var _backstab_ready: bool = false  # North duvarına çarptı, sonraki isabet crit
 var trail_positions: Array = []
 var trail_max_length: int = 24
 
@@ -397,6 +398,10 @@ func _physics_process(delta: float) -> void:
 		global_position.y = 262
 		move_direction.y = abs(move_direction.y)
 		_bounced = true
+		# Backstab Protocol: North duvarı → sonraki isabet crit
+		var _bp_check := _get_player()
+		if _bp_check and _bp_check.get("has_backstab_protocol") and _bp_check.has_backstab_protocol:
+			_backstab_ready = true
 	if global_position.y >= 1040:
 		global_position.y = 1038
 		move_direction.y = -abs(move_direction.y)
@@ -1052,6 +1057,11 @@ func _hit_subject(subject: Node2D) -> void:
 		# Pinpoint Strike: 5 bounce sonrası ×2 crit
 		if _rp.get("has_pinpoint_strike") and _rp.has_pinpoint_strike and _wall_bounce_count >= 5:
 			subject.take_damage(total_damage)
+
+		# Backstab Protocol: North duvarı sekmesi sonrası ilk isabet ×1.5 crit
+		if _backstab_ready and _rp.get("has_backstab_protocol") and _rp.has_backstab_protocol:
+			_backstab_ready = false
+			subject.take_damage(int(total_damage * 0.5))
 
 		# Kinetic Rogue: Her 3 bounce → kalıcı +1 base hasar
 		if _rp.get("has_kinetic_rogue") and _rp.has_kinetic_rogue and _wall_bounce_count > 0:

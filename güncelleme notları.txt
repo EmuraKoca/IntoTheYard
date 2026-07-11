@@ -3408,6 +3408,21 @@ Test:
   ✅ Tüm değişiklikler oyun içinde test edildi, başarılı geçti
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+v0.0.9.9p — Backstab Protocol & Momentum Zone (2026-07-11)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Yeni Kart:
+
+  ✅ Backstab Protocol (Cyclone, Utility, index 158, uncommon, Lv1)
+     — North duvarına çarpan core, sonraki isabette ×1.5 hasar verir
+     — ball.gd: _backstab_ready flag sistemi, y <= 260 bounce tespiti
+
+Momentum Zone:
+
+  ✅ Momentum Zone sistemi geçici olarak devre dışı bırakıldı
+     — momentum_zone.gd dosyası korundu, game_scene.gd bağlantıları kaldırıldı
+     — Fikir yeniden tasarlanacak
+
 v0.0.9.9o — Kart Sistemi & Calamity Düzeltmeleri (2026-07-11)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

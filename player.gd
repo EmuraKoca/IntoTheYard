@@ -152,6 +152,7 @@ var has_circuit_breaker: bool     = false # Her 10. hit → tüm Glitch
 var _circuit_breaker_counter: int = 0
 # Cross-build
 var has_rogues_instinct: bool     = false # Arındırma → +1 HP
+var has_backstab_protocol: bool   = false # North bounce → sonraki isabet ×1.5
 # Antivirus sistemi
 var has_virus_injection: bool     = false # Core hit → Antivirus stack uygular
 var has_stack_overflow: bool      = false # Stack cap 3→5

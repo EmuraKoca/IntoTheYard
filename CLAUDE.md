@@ -16,6 +16,23 @@ köprüsü olarak kullanılır. Her oturum başında oku, her oturum sonunda gü
 - [ ] Steam VFX scale/pozisyon tüm 7 düşman için test et
 - [ ] v0.0.9.9f güncelleme notu yaz
 
+## Kart Dengesi — Hedefler (2026-07-11)
+
+Her karakter hedef: **65 kart**
+
+| Kategori     | Vector | Leila | Cyclone |
+|--------------|--------|-------|---------|
+| Identity     | 9      | 14    | 3       |
+| Utility      | 7      | 21    | 21      |
+| Individuality| 19     | 5     | 18      |
+| Calamity     | 0      | 5     | 5       |
+| **Toplam**   | **35** | **45**| **47**  |
+| **Eksik**    | **+30**| **+20**| **+18**|
+
+- Vector: öncelik Calamity (0 → en az 4-5) + Identity
+- Leila: Utility'yi kırp veya doldur, Identity/Individuality dengele
+- Cyclone: Identity'yi artır (3 → en az 8-10), Ricochet/Static/Decay/Mirror eklenecek
+
 ## Bilinen sorunlar / takip edilmesi gerekenler
 
 ### Kritik Bug Riskleri (Playtester Raporu 2026-07-05)

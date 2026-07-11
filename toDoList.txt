@@ -21,7 +21,25 @@ INTO THE YARD — YAPILACAKLAR LİSTESİ
       — Override sinerjisi: enfekte düşmana bonus hasar
 
 ────────────────────────────────────────────────────────────────────────────────
-2. OYUN DENGESİ
+2. KART DENGESİ — HEDEF: HER KARAKTER 65 KART (2026-07-11)
+────────────────────────────────────────────────────────────────────────────────
+
+  Kategori       Vector   Leila   Cyclone
+  ─────────────────────────────────────────
+  Identity          9      14        3
+  Utility           7      21       21
+  Individuality    19       5       18
+  Calamity          0       5        5
+  ─────────────────────────────────────────
+  Toplam           35      45       47
+  Eksik           +30     +20      +18
+
+[ ] Vector: +30 kart — öncelik Calamity (0→4-5) ve Identity
+[ ] Leila: +20 kart — Utility dengele, Identity/Individuality artır
+[ ] Cyclone: +18 kart — Identity artır (3→8-10), Ricochet/Static/Decay/Mirror ekle
+
+────────────────────────────────────────────────────────────────────────────────
+3. OYUN DENGESİ
 ────────────────────────────────────────────────────────────────────────────────
 
 [ ] Level hızı dengesi

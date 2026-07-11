@@ -72,9 +72,6 @@ var _owned_indices: Array = []  # alınan kart index'leri — requires filtresi 
 var _run_start_level: int = 0
 
 var _player_node: Node = null  # önbellek — her frame get_node çağrısını önler
-var _momentum_zone: Node2D = null
-var _momentum_zone_scene = preload("res://momentum_zone.gd")
-var _momentum_zone_cooldown: float = 0.0  # zone bitti → yeni zone öncesi bekleme
 var _lmb_clear_pending: bool = false  # LMB bırakılınca bir kez daha redraw
 var _hex_east: Sprite2D = null
 var _hex_west: Sprite2D = null
@@ -1157,56 +1154,6 @@ func gain_armor(amount: int) -> void:
 			_armor_was_full = true
 			_spawn_armor_full_ring(_player_node.global_position)
 
-func _update_momentum_zone(delta: float) -> void:
-	var p := _player_node
-	if p == null or p.character_type != "vector": return
-	if not p.get("has_momentum_engine") or not p.has_momentum_engine: return
-	# Zone aktif değilse cooldown say, sonra yenisini spawn et
-	if _momentum_zone == null or not is_instance_valid(_momentum_zone):
-		_momentum_zone_cooldown -= delta
-		if _momentum_zone_cooldown <= 0.0:
-			_spawn_momentum_zone()
-
-func _spawn_momentum_zone() -> void:
-	var p := _player_node
-	if p == null: return
-	# Spawn pozisyonu: oyuncu ile düşmanların orta noktası, biraz rastgele offset
-	var subjects := get_tree().get_nodes_in_group("subjects")
-	var target_pos: Vector2
-	if subjects.size() > 0:
-		var closest : Node2D = null
-		var closest_d := INF
-		for s in subjects:
-			if not is_instance_valid(s): continue
-			var d: float = p.global_position.distance_to(s.global_position)
-			if d < closest_d:
-				closest_d = d
-				closest = s
-		if closest:
-			target_pos = (p.global_position + closest.global_position) * 0.5
-		else:
-			target_pos = p.global_position + Vector2(-300, -200)
-	else:
-		target_pos = p.global_position + Vector2(-300, -200)
-	# Rastgele küçük offset — her seferinde farklı yer
-	target_pos += Vector2(randf_range(-120, 120), randf_range(-80, 80))
-	# Oyun alanı sınırları içinde tut
-	target_pos.x = clamp(target_pos.x, 150, 1550)
-	target_pos.y = clamp(target_pos.y, 150, 900)
-
-	var zone := Node2D.new()
-	zone.set_script(_momentum_zone_scene)
-	zone.position = target_pos
-	add_child(zone)
-	zone.activate()
-	_momentum_zone = zone
-	zone.zone_finished.connect(_on_momentum_zone_finished.bind(zone))
-
-func _on_momentum_zone_finished(zone: Node2D) -> void:
-	if is_instance_valid(zone):
-		zone.queue_free()
-	_momentum_zone = null
-	_momentum_zone_cooldown = 5.0  # 5s bekle, sonra yeni zone
 
 func _spawn_armor_full_ring(pos: Vector2) -> void:
 	var line := Line2D.new()
@@ -2062,7 +2009,7 @@ func _build_all_upgrades() -> void:
 	{"name": "Anchor Core",         "category": "Identity",      "color": Color(0.3, 0.4, 0.6), "desc": "Hit → slow enemy 60% (3s)",                 "index": 41, "weight": 10, "rarity": "common",   "chars": ["vector"], "min_level": 0},
 	{"name": "Crusher Core",        "category": "Identity",      "color": Color(0.6, 0.3, 0.1), "desc": "High damage, breaks Armor",                 "index": 42, "weight": 10, "rarity": "common",   "chars": ["vector"], "min_level": 0},
 	{"name": "Siege Core",          "category": "Identity",      "color": Color(0.4, 0.4, 0.5), "desc": "Highest damage core",                       "index": 45, "weight": 6,  "rarity": "uncommon", "chars": ["vector"], "min_level": 2},
-	{"name": "Momentum Engine",     "category": "Utility",       "color": Color(0.0, 0.7, 1.0), "desc": "Hit → +1 Stack\n+3% Core Speed per stack\n(max 20 stacks)", "index": 35, "weight": 8, "rarity": "common", "chars": ["vector"], "min_level": 0},
+	{"name": "Momentum Engine",     "category": "Utility",       "color": Color(0.0, 0.7, 1.0), "desc": "Hit → +1 Stack\n+3% Core Speed per stack\n(max 20 stacks)", "index": 35, "weight": 999, "rarity": "common", "chars": ["vector"], "min_level": 0},
 	{"name": "Chain Density",       "category": "Utility",       "color": Color(0.0, 0.9, 0.5), "desc": "New enemy hit mid-flight:\n+dmg ramp, resets on return",     "index": 37, "weight": 8, "rarity": "common", "chars": ["vector"], "min_level": 0},
 	{"name": "Reinforced Frame",    "category": "Individuality", "color": Color(0.5, 0.7, 0.5), "desc": "+20 Max Armor / Core Speed -%10",           "index": 48, "weight": 8, "rarity": "common",   "chars": ["vector"], "min_level": 1},
 	{"name": "Iron Constitution",   "category": "Individuality", "color": Color(0.7, 0.8, 0.6), "desc": "Armor gain efficiency +%25",                 "index": 49, "weight": 8, "rarity": "common",   "chars": ["vector"], "min_level": 1},
@@ -2209,6 +2156,7 @@ func _build_all_upgrades() -> void:
 	{"name": "Kernel Panic",         "category": "Individuality", "color": Color(0.05, 0.9, 0.35), "desc": "Each Antivirus tick:\n5% chance to Glitch target",          "index": 155, "weight": 3, "rarity": "epic",      "chars": ["cyclone"], "min_level": 3, "requires": [147]},
 	# Lv4: Calamity
 	{"name": "Systemic Failure",     "category": "Calamity",      "color": Color(0.0, 0.7, 0.35),  "desc": "All enemies in the Yard\nget max Antivirus stacks",         "index": 156, "weight": 2, "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
+	{"name": "Backstab Protocol",   "category": "Utility",       "color": Color(0.15, 0.55, 0.35),"desc": "North wall bounce:\nnext hit deals ×1.5 damage",           "index": 158, "weight": 6, "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
 	# Lv4: Calamity endgame
 	{"name": "Data Storm",           "category": "Calamity",      "color": Color(0.7, 0.0, 0.8),  "desc": "All Glitched enemies\nin the Yard take 20 dmg",          "index": 129, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 3},
 	{"name": "Backdoor",             "category": "Calamity",      "color": Color(0.6, 0.0, 0.7),  "desc": "All enemies in the Yard\nGlitched for 5s",               "index": 130, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
@@ -3034,7 +2982,6 @@ func _draw_dashed_line(from: Vector2, to: Vector2, color: Color, width: float) -
 
 func _process(delta: float) -> void:
 	_update_core_panel()   # her frame güncelle — deferred add_child'ı yakala
-	_update_momentum_zone(delta)
 
 	var p := _player_node
 
@@ -3292,7 +3239,6 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 	elif index == 35:  # Momentum Engine
 		var p := get_node("Player")
 		p.has_momentum_engine = true
-		_momentum_zone_cooldown = 2.0  # kart alındıktan 2s sonra ilk zone çıkar
 	elif index == 36:  # Impact Feedback
 		var p := get_node("Player")
 		p.has_impact_feedback = true
@@ -3516,6 +3462,7 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 			156:
 				if calamity_slots.size() < max_calamity_slots:
 					calamity_slots.append("🧪")
+			158: p.has_backstab_protocol = true
 
 	# ── Leila — Calamity ─────────────────────────────────────────────────────
 	elif index == 94:  # Blizzard
