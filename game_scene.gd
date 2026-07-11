@@ -72,6 +72,9 @@ var _owned_indices: Array = []  # alınan kart index'leri — requires filtresi 
 var _run_start_level: int = 0
 
 var _player_node: Node = null  # önbellek — her frame get_node çağrısını önler
+var _momentum_zone: Node2D = null
+var _momentum_zone_scene = preload("res://momentum_zone.gd")
+var _momentum_zone_cooldown: float = 0.0  # zone bitti → yeni zone öncesi bekleme
 var _lmb_clear_pending: bool = false  # LMB bırakılınca bir kez daha redraw
 var _hex_east: Sprite2D = null
 var _hex_west: Sprite2D = null
@@ -1153,6 +1156,57 @@ func gain_armor(amount: int) -> void:
 		if not _armor_was_full:
 			_armor_was_full = true
 			_spawn_armor_full_ring(_player_node.global_position)
+
+func _update_momentum_zone(delta: float) -> void:
+	var p := _player_node
+	if p == null or p.character_type != "vector": return
+	if not p.get("has_momentum_engine") or not p.has_momentum_engine: return
+	# Zone aktif değilse cooldown say, sonra yenisini spawn et
+	if _momentum_zone == null or not is_instance_valid(_momentum_zone):
+		_momentum_zone_cooldown -= delta
+		if _momentum_zone_cooldown <= 0.0:
+			_spawn_momentum_zone()
+
+func _spawn_momentum_zone() -> void:
+	var p := _player_node
+	if p == null: return
+	# Spawn pozisyonu: oyuncu ile düşmanların orta noktası, biraz rastgele offset
+	var subjects := get_tree().get_nodes_in_group("subjects")
+	var target_pos: Vector2
+	if subjects.size() > 0:
+		var closest : Node2D = null
+		var closest_d := INF
+		for s in subjects:
+			if not is_instance_valid(s): continue
+			var d := p.global_position.distance_to(s.global_position)
+			if d < closest_d:
+				closest_d = d
+				closest = s
+		if closest:
+			target_pos = (p.global_position + closest.global_position) * 0.5
+		else:
+			target_pos = p.global_position + Vector2(-300, -200)
+	else:
+		target_pos = p.global_position + Vector2(-300, -200)
+	# Rastgele küçük offset — her seferinde farklı yer
+	target_pos += Vector2(randf_range(-120, 120), randf_range(-80, 80))
+	# Oyun alanı sınırları içinde tut
+	target_pos.x = clamp(target_pos.x, 150, 1550)
+	target_pos.y = clamp(target_pos.y, 150, 900)
+
+	var zone := Node2D.new()
+	zone.set_script(_momentum_zone_scene)
+	zone.position = target_pos
+	add_child(zone)
+	zone.activate()
+	_momentum_zone = zone
+	zone.zone_finished.connect(_on_momentum_zone_finished.bind(zone))
+
+func _on_momentum_zone_finished(zone: Node2D) -> void:
+	if is_instance_valid(zone):
+		zone.queue_free()
+	_momentum_zone = null
+	_momentum_zone_cooldown = 5.0  # 5s bekle, sonra yeni zone
 
 func _spawn_armor_full_ring(pos: Vector2) -> void:
 	var line := Line2D.new()
@@ -2980,6 +3034,7 @@ func _draw_dashed_line(from: Vector2, to: Vector2, color: Color, width: float) -
 
 func _process(delta: float) -> void:
 	_update_core_panel()   # her frame güncelle — deferred add_child'ı yakala
+	_update_momentum_zone(delta)
 
 	var p := _player_node
 
@@ -3237,6 +3292,7 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 	elif index == 35:  # Momentum Engine
 		var p := get_node("Player")
 		p.has_momentum_engine = true
+		_momentum_zone_cooldown = 2.0  # kart alındıktan 2s sonra ilk zone çıkar
 	elif index == 36:  # Impact Feedback
 		var p := get_node("Player")
 		p.has_impact_feedback = true
