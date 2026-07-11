@@ -1178,7 +1178,7 @@ func _spawn_momentum_zone() -> void:
 		var closest_d := INF
 		for s in subjects:
 			if not is_instance_valid(s): continue
-			var d := p.global_position.distance_to(s.global_position)
+			var d: float = p.global_position.distance_to(s.global_position)
 			if d < closest_d:
 				closest_d = d
 				closest = s
