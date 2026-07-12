@@ -64,6 +64,16 @@ INTO THE YARD — YAPILACAKLAR LİSTESİ
 4. GÖRSEL & EFEKTLER
 ────────────────────────────────────────────────────────────────────────────────
 
+  ── Top Sprite Eksikleri (assets/balls/ klasörü yok) ──────────────────────────
+  [ ] mimicBall          — Mimic topu (tüm karakterler)
+  [ ] phantomCircuitCore — Phantom Circuit Core (Cyclone, index 159)
+  [ ] antivirusCore      — AntiVirus Core (Cyclone, index 160)
+  [ ] decayCore          — Decay Core (Cyclone, index 161)
+  [ ] staticCore         — Static Core (Cyclone, index 162)
+  [ ] ricochetCore       — Ricochet Core (Cyclone, index 163)
+  Not: Her top icin assets/balls/<klasorIsmi>/frame_000.png ... frame_XXX.png
+  ──────────────────────────────────────────────────────────────────────────────
+
 [✓] Fused Core sprite sistemi (21 fusion tipi)
 [✓] Element göstergesi PNG sprite sistemine geçiş
 [✓] Chip arıza efekti (mavi-mor elektrik kıvılcımları)
