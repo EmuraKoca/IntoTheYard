@@ -113,7 +113,7 @@ var has_ricochet_strike: bool     = false
 var has_data_exploit: bool        = false
 var has_shadow_strike: bool       = false
 var has_exploit_network: bool     = false
-var has_phantom_circuit: bool     = false
+var has_phantom_circuit: bool     = false  # eski Individuality (geriye uyumluluk)
 var _phantom_hit_counter: int     = 0
 # Glitch Assassin
 var has_extended_glitch: bool     = false # Glitch 3→5s
@@ -125,7 +125,7 @@ var _exploit_stack_count: int     = 0
 var has_virus_spread: bool        = false # Network range 350px
 var has_interference: bool        = false # Glitch'li → -%20 dmg
 var has_exploit_mastery: bool     = false # Data Exploit +3→+6
-var has_system_overload: bool     = false # 3+ Glitch aktif → +%20 dmg
+var has_system_overload: bool     = false # 5+ Glitch aktif → +%20 dmg
 var has_mind_hack: bool           = false # 3 ardışık hit → ally saldırsın
 var _mind_hack_target             = null
 var _mind_hack_count: int         = 0
@@ -141,7 +141,7 @@ var has_kinetic_rogue: bool       = false # Her 3 bounce → +1 kalıcı base dm
 var _kinetic_rogue_bounce_acc: int = 0
 var kinetic_rogue_bonus: int      = 0     # Kalıcı biriken bonus
 var has_pinpoint_strike: bool     = false # 5 bounce → ×2 crit
-var has_shadow_dance: bool        = false # 2 bounce same flight → +3% speed kalıcı
+var has_shadow_dance: bool        = false # 7 bounce same flight → +3% speed kalıcı
 var _shadow_dance_acc: float      = 0.0   # Biriken hız bonusu
 # Phantom Infiltrator
 var has_stealth_pass: bool        = false # Phantom 4. (5 yerine)
@@ -154,7 +154,7 @@ var _circuit_breaker_counter: int = 0
 var has_rogues_instinct: bool     = false # Arındırma → +1 HP
 var has_backstab_protocol: bool   = false # North bounce → sonraki isabet ×1.5
 # Antivirus sistemi
-var has_virus_injection: bool     = false # Core hit → Antivirus stack uygular
+var has_antivirus_core: bool      = false # Core hit → Antivirus stack uygular
 var has_stack_overflow: bool      = false # Stack cap 3→5
 var has_viral_load: bool          = false # Glitch'li hedef 2× stack alır
 var has_memory_leak: bool         = false # Antivirus süresi 5→8s

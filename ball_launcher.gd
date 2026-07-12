@@ -306,12 +306,31 @@ func _launch_typed_ball(ball_type: String) -> void:
 		"prismatic":
 			ball.can_prismatic = true
 			ball.max_damage    = 5 + player_node.ball_mastery
+		# ── Cyclone yeni core'lar ─────────────────────────────────────────────
+		"antivirus_core":
+			ball.can_antivirus_core = true
+			ball.max_damage         = 4 + player_node.ball_mastery
+		"decay":
+			ball.can_decay   = true
+			ball.max_damage  = 4 + player_node.ball_mastery
+		"static_core":
+			ball.can_static_core = true
+			ball.max_damage      = 5 + player_node.ball_mastery
+		"ricochet_core":
+			ball.can_ricochet_core = true
+			ball.max_damage        = 4 + player_node.ball_mastery
+		"phantom_circuit":
+			ball.can_phantom_circuit = true
+			ball.max_damage          = 5 + player_node.ball_mastery
 
 	var direction  = (player.global_position - global_position).normalized()
 	var spawn_pos  = _get_muzzle_global()
 	if spawn_pos.x < 875.0 and direction.x > 0.0:
 		var t = (875.0 - spawn_pos.x) / direction.x
 		spawn_pos += direction * (t + 2.0)
+
+	if player_node.get("has_shadow_dance") and player_node.has_shadow_dance and player_node._shadow_dance_acc > 0.0:
+		ball.speed = 600.0 * (1.0 + player_node._shadow_dance_acc)
 
 	ball.global_position = spawn_pos
 	ball.add_to_group("player_balls")

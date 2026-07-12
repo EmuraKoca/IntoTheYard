@@ -19,6 +19,10 @@ var is_wet: bool = false
 var is_frozen: bool = false
 var is_burning: bool = false
 var is_electrified: bool = false
+var is_stunned: bool = false
+var _stun_timer: float = 0.0
+var decay_stacks: int = 0
+var _decay_slow_applied: float = 0.0
 var _chip_t: float = 0.0
 var _chip_node: Node2D = null
 var attack_cooldown: float = 0.0
@@ -81,7 +85,11 @@ func _physics_process(delta: float) -> void:
 	if not is_dead:
 		_chip_t += delta
 		_chip_node.queue_redraw()
-	if is_frozen:
+	if is_frozen or is_stunned:
+		if is_stunned:
+			_stun_timer -= delta
+			if _stun_timer <= 0.0:
+				is_stunned = false
 		return
 	_process_antivirus(delta)
 	_enemy_process(delta)
@@ -131,6 +139,7 @@ func take_damage(amount, from_ally: bool = false) -> void:
 		die()
 
 func die() -> void:
+	_on_decay_death()
 	is_dead = true
 	if is_in_group("allies"):
 		set_physics_process(false)
@@ -446,6 +455,32 @@ func apply_slow(amount, duration: float = 3.0, source: String = "cryo", anchor_p
 	_clear_element()
 
 # ── Reaksiyon sistemi ────────────────────────────────────────────────────────
+
+func apply_stun(duration: float = 1.0) -> void:
+	if is_dead: return
+	is_stunned = true
+	_stun_timer = maxf(_stun_timer, duration)
+
+func apply_decay() -> void:
+	if is_dead: return
+	var _max_stacks: int = 3
+	if decay_stacks >= _max_stacks: return
+	decay_stacks += 1
+	var _slow_per_stack: float = 0.05
+	var _new_slow: float = decay_stacks * _slow_per_stack
+	var _delta_slow: float = _new_slow - _decay_slow_applied
+	_decay_slow_applied = _new_slow
+	if original_speed == 0.0:
+		original_speed = speed
+	speed = maxf(speed * (1.0 - _delta_slow), original_speed * 0.1)
+
+func _on_decay_death() -> void:
+	if decay_stacks <= 0: return
+	var _dmg: int = decay_stacks * 2
+	for body in get_tree().get_nodes_in_group("subjects"):
+		if body == self or not is_instance_valid(body): continue
+		if global_position.distance_to(body.global_position) < 80.0:
+			body.take_damage(_dmg)
 
 func _check_reaction(incoming: String) -> void:
 	var game := get_node_or_null("/root/GameScene")

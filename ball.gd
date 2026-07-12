@@ -67,6 +67,13 @@ var can_tempest: bool    = false  # Her duvar sekmesinde element değişir
 var can_prismatic: bool  = false  # Her düşman isabetinde random element değişir
 var _tempest_elements: Array = ["electric", "cryo", "water", "fire"]
 var _tempest_index: int = 0
+# ── Cyclone yeni core flag'leri ───────────────────────────────────────────────
+var can_antivirus_core: bool   = false  # İsabette 1 Antivirus stack
+var can_decay: bool            = false  # İsabette 1 Decay stack (max 3)
+var can_static_core: bool      = false  # İsabette 0.5s slow (%40); Glitch'li → 1s
+var can_ricochet_core: bool    = false  # Duvar sekmesinde +%5 hız (max +%30)
+var can_phantom_circuit: bool  = false  # 3 düşmana çarparsa hepsini sersemletir
+var _phantom_hit_enemies: Array = []    # Bu fırlatışta çarpılan düşmanlar
 var trail: Line2D = null
 var _wall_bounce_count: int = 0  # sonsuz sekme önlemi
 var _backstab_ready: bool = false  # North duvarına çarptı, sonraki isabet crit
@@ -416,7 +423,11 @@ func _physics_process(delta: float) -> void:
 			_wall_bounce_count += 1
 			_update_kinetic_vfx()
 			queue_redraw()
+		if can_ricochet_core:
+			speed = min(speed * 1.05, 600.0 * 1.30)
 		var _bp := _get_player()
+		if _bp and _bp.get("has_shadow_dance") and _bp.has_shadow_dance and _wall_bounce_count >= 7:
+			_bp._shadow_dance_acc += 0.03
 		if _bp and _bp.get("has_shadow_strike") and _bp.has_shadow_strike:
 			_shadow_primed = true
 
@@ -630,7 +641,7 @@ func _inner_core_tick(delta: float) -> void:
 	_inner_tick_timer = INNER_TICK_INTERVAL
 	var player := _get_player()
 	if not is_instance_valid(player): return
-	var cap: int = 5 if player.get("has_stack_overflow") and player.has_stack_overflow else 3
+	var cap: int = 4 if player.get("has_stack_overflow") and player.has_stack_overflow else 3
 	for subject in get_tree().get_nodes_in_group("subjects"):
 		if not is_instance_valid(subject): continue
 		if global_position.distance_to(subject.global_position) <= INNER_TICK_RADIUS:
@@ -992,7 +1003,20 @@ func _hit_subject(subject: Node2D) -> void:
 		if _dmg_player.damage_mult != 1.0:
 			total_damage = int(float(total_damage) * _dmg_player.damage_mult)
 
+	# System Overload: 5+ Glitch aktif düşman → +%20 hasar
+	if _dmg_player and _dmg_player.get("has_system_overload") and _dmg_player.has_system_overload:
+		var _glitch_count: int = 0
+		for _s in get_tree().get_nodes_in_group("subjects"):
+			if is_instance_valid(_s) and _s.get("is_glitched") and _s.is_glitched:
+				_glitch_count += 1
+		if _glitch_count >= 5:
+			total_damage = int(float(total_damage) * 1.2)
+
 	subject.take_damage(total_damage)
+
+	# Ricochet Core: düşmana çarpınca hızı sıfırla
+	if can_ricochet_core:
+		speed = 600.0
 
 	# ── Cyclone Rogue efektleri ───────────────────────────────────────────────
 	var _rp := _get_player()
@@ -1066,7 +1090,7 @@ func _hit_subject(subject: Node2D) -> void:
 		# Kinetic Rogue: Her 3 bounce → kalıcı +1 base hasar
 		if _rp.get("has_kinetic_rogue") and _rp.has_kinetic_rogue and _wall_bounce_count > 0:
 			_rp._kinetic_rogue_bounce_acc += _wall_bounce_count
-			if _rp._kinetic_rogue_bounce_acc >= 3:
+			if _rp._kinetic_rogue_bounce_acc >= 5:
 				_rp._kinetic_rogue_bounce_acc -= 3
 				_rp.kinetic_rogue_bonus += 1
 			if _rp.kinetic_rogue_bonus > 0:
@@ -1075,7 +1099,7 @@ func _hit_subject(subject: Node2D) -> void:
 		# Circuit Breaker: Her 10. hit → tüm düşmanlar Glitch
 		if _rp.get("has_circuit_breaker") and _rp.has_circuit_breaker:
 			_rp._circuit_breaker_counter += 1
-			if _rp._circuit_breaker_counter >= 10:
+			if _rp._circuit_breaker_counter >= 25:
 				_rp._circuit_breaker_counter = 0
 				for _cb_en in get_tree().get_nodes_in_group("subjects"):
 					if is_instance_valid(_cb_en) and _cb_en.has_method("apply_glitch"):
@@ -1097,7 +1121,7 @@ func _hit_subject(subject: Node2D) -> void:
 				_nearest_enemy.apply_glitch()
 
 		# Virus Injection: Core hit → Antivirus stack
-		if _rp.get("has_virus_injection") and _rp.has_virus_injection:
+		if _rp.get("has_antivirus_core") and _rp.has_antivirus_core:
 			if subject.has_method("apply_antivirus"):
 				var _av_stacks: int = 1
 				# Viral Load: Glitched hedef 2× stack alır
@@ -1105,13 +1129,13 @@ func _hit_subject(subject: Node2D) -> void:
 					_av_stacks = 2
 				# Zero Day: Antivirused + Glitched → stack iki katı
 				if _is_glitched and subject.get("is_antivirused") and subject.is_antivirused and _rp.get("has_zero_day") and _rp.has_zero_day:
-					var _cap_zd: int = 5 if (_rp.get("has_stack_overflow") and _rp.has_stack_overflow) else 3
+					var _cap_zd: int = 4 if (_rp.get("has_stack_overflow") and _rp.has_stack_overflow) else 3
 					subject.antivirus_stacks = min(subject.antivirus_stacks * 2, _cap_zd)
 				subject.apply_antivirus(_av_stacks)
 				# Cascade Delete: Antivirus yayılır
 				if _rp.get("has_cascade_delete") and _rp.has_cascade_delete:
 					var _nearest_av = null
-					var _nearest_av_dist := 150.0
+					var _nearest_av_dist := 75.0
 					for _en in get_tree().get_nodes_in_group("subjects"):
 						if _en == subject or not is_instance_valid(_en): continue
 						var _d := subject.global_position.distance_to(_en.global_position)
@@ -1125,7 +1149,7 @@ func _hit_subject(subject: Node2D) -> void:
 					subject.take_damage(int(total_damage * 0.15))
 				# Root Access: Max stack → +5 burst
 				if subject.get("is_antivirused") and subject.is_antivirused and _rp.get("has_root_access") and _rp.has_root_access:
-					var _cap_ra: int = 5 if (_rp.get("has_stack_overflow") and _rp.has_stack_overflow) else 3
+					var _cap_ra: int = 4 if (_rp.get("has_stack_overflow") and _rp.has_stack_overflow) else 3
 					if subject.antivirus_stacks >= _cap_ra:
 						subject.take_damage(5)
 
@@ -1136,13 +1160,57 @@ func _hit_subject(subject: Node2D) -> void:
 			if _rp._phantom_hit_counter >= _phantom_threshold:
 				_rp._phantom_hit_counter = 0
 				move_direction = (move_direction + (subject.global_position - global_position).normalized() * 0.1).normalized()
-				# Phase Shift: Phantom vuruşta ×2 hasar
+				# Phase Shift: Phantom vuruşta ×1.5 hasar
 				if _rp.get("has_phase_shift") and _rp.has_phase_shift:
-					subject.take_damage(total_damage)
-				# Interference Cloak: Phantom → Glitch 3s
-				if _rp.get("has_interference_cloak") and _rp.has_interference_cloak:
-					if subject.has_method("apply_glitch") and not (subject.get("is_glitched") and subject.is_glitched):
-						subject.apply_glitch()
+					subject.take_damage(int(total_damage * 0.5))
+
+		# ── Cyclone yeni core efektleri ──────────────────────────────────────────
+		# AntiVirus Core: isabette 1 Antivirus stack
+		if can_antivirus_core and subject.has_method("apply_antivirus"):
+			var _av: int = 1
+			var _is_gl: bool = subject.get("is_glitched") and subject.is_glitched
+			if _is_gl and _rp.get("has_viral_load") and _rp.has_viral_load:
+				_av = 2
+			if _is_gl and subject.get("is_antivirused") and subject.is_antivirused and _rp.get("has_zero_day") and _rp.has_zero_day:
+				var _cap_av: int = 4 if (_rp.get("has_stack_overflow") and _rp.has_stack_overflow) else 3
+				subject.antivirus_stacks = min(subject.antivirus_stacks * 2, _cap_av)
+			subject.apply_antivirus(_av)
+			if _rp.get("has_cascade_delete") and _rp.has_cascade_delete:
+				var _near_av = null
+				var _near_dist := 75.0
+				for _en in get_tree().get_nodes_in_group("subjects"):
+					if _en == subject or not is_instance_valid(_en): continue
+					var _d := subject.global_position.distance_to(_en.global_position)
+					if _d < _near_dist:
+						_near_dist = _d
+						_near_av = _en
+				if is_instance_valid(_near_av) and _near_av.has_method("apply_antivirus"):
+					_near_av.apply_antivirus(1)
+			if subject.get("is_antivirused") and subject.is_antivirused and _rp.get("has_corruption_protocol") and _rp.has_corruption_protocol:
+				subject.take_damage(int(total_damage * 0.15))
+
+		# Static Core: isabette slow
+		if can_static_core and subject.has_method("apply_slow"):
+			var _sl_dur: float = 1.0 if (subject.get("is_glitched") and subject.is_glitched) else 0.5
+			subject.apply_slow(_sl_dur)
+
+		# Decay Core: isabette 1 Decay stack
+		if can_decay and subject.has_method("apply_decay"):
+			subject.apply_decay()
+
+		# Phantom Circuit Core: çarpılan düşmanı kaydet; 3 farklı düşmana çarpınca sersemlet
+		if can_phantom_circuit:
+			if subject not in _phantom_hit_enemies:
+				_phantom_hit_enemies.append(subject)
+			if _phantom_hit_enemies.size() >= (2 if (_rp.get("has_stealth_pass") and _rp.has_stealth_pass) else 3):
+				var _stun_dur: float = 1.5 if (_rp.get("has_ghost_protocol") and _rp.has_ghost_protocol) else 1.0
+				for _se in _phantom_hit_enemies:
+					if is_instance_valid(_se) and _se.has_method("apply_stun"):
+						_se.apply_stun(_stun_dur)
+						# Phase Shift: sersemlemiş düşmana ×1.5 hasar
+						if _rp.get("has_phase_shift") and _rp.has_phase_shift:
+							_se.take_damage(int(total_damage * 0.5))
+				_phantom_hit_enemies.clear()
 
 	# Scatter parçası — tek vuruşta yok olur
 	if is_scatter_piece:

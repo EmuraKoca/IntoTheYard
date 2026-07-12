@@ -44,6 +44,9 @@ const _CORE_DISPLAY_NAMES: Dictionary = {
 	"crusher":    "Crusher Core",   "kinetic":    "Kinetic Core",
 	"bulwark":    "Bulwark Core",   "siege":      "Siege Core",
 	"bloodbound": "Bloodbound Core","tempered":   "Tempered Core",
+	"antivirus_core": "AntiVirus Core", "decay":   "Decay Core",
+	"static_core":    "Static Core",    "ricochet_core": "Ricochet Core",
+	"phantom_circuit": "Phantom Circuit Core",
 }
 
 const _CALAMITY_DISPLAY_NAMES: Dictionary = {
@@ -2104,64 +2107,58 @@ func _build_all_upgrades() -> void:
 	{"name": "Volcanic Rift",      "category": "Calamity",      "color": Color(1.0, 0.3, 0.0), "desc": "Leaves lava trail on ground",                 "index": 97, "weight": 2,  "rarity": "legendary", "chars": ["leila"], "min_level": 4},
 	{"name": "Thunderstorm",       "category": "Calamity",      "color": Color(0.3, 0.5, 1.0), "desc": "Random lightning strikes for 5s",             "index": 98, "weight": 2,  "rarity": "legendary", "chars": ["leila"], "min_level": 5},
 	# ── Cyclone (Manipülasyon) ────────────────────────────────────────────────
-	# Lv0: Starter
-	{"name": "Glitch Core",          "category": "Identity",      "color": Color(0.8, 0.0, 0.8),  "desc": "Disorients subject for 3s",                           "index": 16,  "weight": 10, "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
-	{"name": "Echo Core",            "category": "Identity",      "color": Color(0.5, 0.5, 1.0),  "desc": "Copies the nearest powered-up core",                  "index": 19,  "weight": 1,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 0},
-	{"name": "Data Leech Core",      "category": "Identity",      "color": Color(0.6, 0.0, 0.2),  "desc": "+2 Integrity on hit",                                 "index": 22,  "weight": 10, "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
-	{"name": "Data Exploit",         "category": "Utility",       "color": Color(0.7, 0.1, 0.5),  "desc": "Glitched target takes\n+3 bonus dmg per hit",         "index": 115, "weight": 10, "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
-	{"name": "Extended Glitch",      "category": "Utility",       "color": Color(0.75, 0.0, 0.7), "desc": "Glitch duration\n3s → 5s",                            "index": 119, "weight": 9,  "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
-	{"name": "Signal Jam",           "category": "Utility",       "color": Color(0.6, 0.0, 0.6),  "desc": "Glitched enemies move\n25% slower",                   "index": 120, "weight": 9,  "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
-	{"name": "Angular Precision",    "category": "Utility",       "color": Color(0.45, 0.2, 0.8), "desc": "First hit of each flight:\n+15% dmg",                 "index": 131, "weight": 8,  "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
-	# Lv1: Early synergy
-	{"name": "Ricochet Strike",      "category": "Individuality", "color": Color(0.5, 0.2, 0.9),  "desc": "Each wall bounce in flight:\nnext hit +4 dmg",         "index": 114, "weight": 8,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
-	{"name": "Exploit Network",      "category": "Utility",       "color": Color(0.9, 0.1, 0.8),  "desc": "Glitch hit → spreads Glitch\nto nearest enemy (200px)","index": 117, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
-	{"name": "Data Siphon",          "category": "Individuality", "color": Color(0.6, 0.0, 0.35), "desc": "Data Leech heals +2 extra\nwhen target is Glitched",   "index": 121, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [115]},
-	{"name": "Exploit Stack",        "category": "Utility",       "color": Color(0.8, 0.05, 0.55),"desc": "Consecutive hits on same\nGlitched target: +1 dmg (max +5)","index": 122,"weight": 7,"rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [115]},
-	{"name": "Virus Spread",         "category": "Utility",       "color": Color(0.85, 0.0, 0.75),"desc": "Exploit Network range\n200px → 350px",                 "index": 123, "weight": 6,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [117]},
-	{"name": "Interference",         "category": "Utility",       "color": Color(0.5, 0.0, 0.5),  "desc": "Glitched enemies take\n+20% more damage",             "index": 124, "weight": 6,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
-	{"name": "Wallrunner",           "category": "Individuality", "color": Color(0.4, 0.15, 0.85),"desc": "Core Speed +8% per wall bounce\n(resets on enemy hit)", "index": 132, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
-	{"name": "Bounce Mastery",       "category": "Utility",       "color": Color(0.45, 0.1, 0.9), "desc": "Ricochet Strike bonus:\n+4 → +7 per bounce",           "index": 133, "weight": 6,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [114]},
-	{"name": "Rogue's Instinct",     "category": "Individuality", "color": Color(0.6, 0.15, 0.4), "desc": "Enemy purified:\n+1 Integrity",                       "index": 145, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
-	# Lv2: Mid-game
-	{"name": "Shadow Strike",        "category": "Individuality", "color": Color(0.3, 0.0, 0.5),  "desc": "First hit after wall bounce:\n×1.5 damage",            "index": 116, "weight": 5,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
-	{"name": "Exploit Mastery",      "category": "Utility",       "color": Color(0.75, 0.0, 0.55),"desc": "Data Exploit bonus dmg\n+3 → +6",                      "index": 125, "weight": 5,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2, "requires": [115]},
-	{"name": "System Overload",      "category": "Individuality", "color": Color(0.85, 0.1, 0.7), "desc": "3+ Glitched enemies alive:\nall your dmg +20%",         "index": 126, "weight": 5,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
-	{"name": "Mind Hack",            "category": "Individuality", "color": Color(0.7, 0.0, 0.6),  "desc": "3 hits on same Glitched target:\nenemy attacks nearest ally 3s","index": 127,"weight": 4,"rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
-	{"name": "Pinball Protocol",     "category": "Utility",       "color": Color(0.4, 0.1, 0.95), "desc": "3+ bounces without hit:\nnext hit pierces",             "index": 134, "weight": 5,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
-	{"name": "Ricochet Memory",      "category": "Individuality", "color": Color(0.5, 0.2, 0.95), "desc": "Ricochet bonus persists\nbetween hits (resets on orbit)","index": 135, "weight": 4,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
-	{"name": "Kinetic Rogue",        "category": "Individuality", "color": Color(0.45, 0.15, 0.9),"desc": "Every 3 wall bounces:\n+1 permanent base dmg",          "index": 136, "weight": 4,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
-	{"name": "Stealth Pass",         "category": "Utility",       "color": Color(0.25, 0.7, 0.85),"desc": "Phantom Circuit activates\nevery 4th hit (was 5th)",      "index": 139, "weight": 5,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 2, "requires": [118]},
-	{"name": "Ghost Protocol",       "category": "Utility",       "color": Color(0.2, 0.75, 0.9), "desc": "Phantom pass: target\nstunned 1.5s (no attack)",         "index": 140, "weight": 4,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2, "requires": [118]},
-	{"name": "Phase Shift",          "category": "Individuality", "color": Color(0.3, 0.8, 0.9),  "desc": "Phantom Circuit hit\ndeals ×2 damage",                  "index": 141, "weight": 4,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2, "requires": [118]},
-	{"name": "Shadow Dance",         "category": "Individuality", "color": Color(0.35, 0.05, 0.6),"desc": "2 wall bounces in same flight:\nCore Speed +3% permanently","index": 146,"weight": 4, "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
-	# Lv3: High-tier
-	{"name": "Phantom Circuit",      "category": "Individuality", "color": Color(0.3, 0.8, 0.9),  "desc": "Every 5th hit: core passes\nthrough (no bounce)",        "index": 118, "weight": 3,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3},
-	{"name": "Neural Overwrite",     "category": "Utility",       "color": Color(0.8, 0.0, 0.65), "desc": "Hitting Glitched enemy:\nresets Glitch timer to full",   "index": 128, "weight": 3,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3},
-	{"name": "Circuit Breaker",      "category": "Individuality", "color": Color(0.25, 0.75, 0.95),"desc": "Every 10th hit: all visible\nenemies Glitched for 2s",   "index": 143, "weight": 3,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3},
-	{"name": "Interference Cloak",   "category": "Utility",       "color": Color(0.2, 0.7, 0.85), "desc": "Phantom pass: target\nGlitched for 3s",                  "index": 142, "weight": 3,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3, "requires": [118]},
-	{"name": "Pinpoint Strike",      "category": "Individuality", "color": Color(0.4, 0.1, 1.0),  "desc": "After 5 wall bounces:\nnext hit ×2 (crit)",              "index": 137, "weight": 3,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3},
-	# ── Antivirus sistemi ────────────────────────────────────────────────────
-	# Lv0
-	{"name": "Virus Injection",      "category": "Utility",       "color": Color(0.1, 0.75, 0.3),  "desc": "Core hit → applies 1\nAntivirus stack (1 dmg/0.5s, 5s)", "index": 147, "weight": 9, "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
-	# Lv1
-	{"name": "Stack Overflow",       "category": "Utility",       "color": Color(0.1, 0.8, 0.35),  "desc": "Antivirus stack cap\n3 → 5",                              "index": 148, "weight": 7, "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [147]},
-	{"name": "Viral Load",           "category": "Individuality", "color": Color(0.15, 0.7, 0.4),  "desc": "Glitched target receives\n2× Antivirus stacks",            "index": 149, "weight": 7, "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [147]},
-	{"name": "Memory Leak",          "category": "Utility",       "color": Color(0.05, 0.65, 0.3), "desc": "Antivirus duration\n5s → 8s",                             "index": 150, "weight": 7, "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [147]},
-	{"name": "Cascade Delete",       "category": "Utility",       "color": Color(0.1, 0.7, 0.45),  "desc": "Antivirus hit → spreads\n1 stack to nearest (150px)",      "index": 152, "weight": 6, "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [147]},
-	# Lv2
-	{"name": "Corruption Protocol",  "category": "Utility",       "color": Color(0.0, 0.6, 0.3),   "desc": "Antivirused target takes\n+15% more damage",               "index": 151, "weight": 5, "rarity": "rare",      "chars": ["cyclone"], "min_level": 2, "requires": [147]},
-	{"name": "Root Access",          "category": "Individuality", "color": Color(0.05, 0.55, 0.25),"desc": "Target at max stacks:\n+5 bonus damage per hit",            "index": 153, "weight": 4, "rarity": "rare",      "chars": ["cyclone"], "min_level": 2, "requires": [147]},
-	# Lv3
-	{"name": "Zero Day",             "category": "Individuality", "color": Color(0.0, 0.85, 0.4),  "desc": "Antivirused + Glitched:\nstack count doubled instantly",    "index": 154, "weight": 3, "rarity": "epic",      "chars": ["cyclone"], "min_level": 3, "requires": [147]},
-	{"name": "Kernel Panic",         "category": "Individuality", "color": Color(0.05, 0.9, 0.35), "desc": "Each Antivirus tick:\n5% chance to Glitch target",          "index": 155, "weight": 3, "rarity": "epic",      "chars": ["cyclone"], "min_level": 3, "requires": [147]},
-	# Lv4: Calamity
-	{"name": "Systemic Failure",     "category": "Calamity",      "color": Color(0.0, 0.7, 0.35),  "desc": "All enemies in the Yard\nget max Antivirus stacks",         "index": 156, "weight": 2, "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
-	{"name": "Backstab Protocol",   "category": "Utility",       "color": Color(0.15, 0.55, 0.35),"desc": "North wall bounce:\nnext hit deals ×1.5 damage",           "index": 158, "weight": 6, "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
-	# Lv4: Calamity endgame
-	{"name": "Data Storm",           "category": "Calamity",      "color": Color(0.7, 0.0, 0.8),  "desc": "All Glitched enemies\nin the Yard take 20 dmg",          "index": 129, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 3},
-	{"name": "Backdoor",             "category": "Calamity",      "color": Color(0.6, 0.0, 0.7),  "desc": "All enemies in the Yard\nGlitched for 5s",               "index": 130, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
-	{"name": "Bounce Barrage",       "category": "Calamity",      "color": Color(0.35, 0.0, 0.9),  "desc": "Core Speed ×3 for 5s\nFirst hit: triple damage",        "index": 138, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
-	{"name": "Mirror Image",         "category": "Calamity",      "color": Color(0.2, 0.65, 0.9),  "desc": "Spawn 2 phantom cores\nfor 5s",                         "index": 144, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
+	# Identity — Core kartları
+	{"name": "Glitch Core",          "category": "Identity",      "color": Color(0.8, 0.0, 0.8),  "desc": "Disorients subject for 3s",                                "index": 16,  "weight": 10, "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
+	{"name": "Echo Core",            "category": "Identity",      "color": Color(0.5, 0.5, 1.0),  "desc": "Copies the nearest powered-up core",                       "index": 19,  "weight": 1,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 0},
+	{"name": "Data Leech Core",      "category": "Identity",      "color": Color(0.6, 0.0, 0.2),  "desc": "+2 Integrity on hit",                                      "index": 22,  "weight": 10, "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
+	{"name": "AntiVirus Core",       "category": "Identity",      "color": Color(0.1, 0.75, 0.3),  "desc": "Hit → 1 Antivirus stack\n(1 dmg/s, 3s, stackable)",       "index": 160, "weight": 9,  "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
+	{"name": "Decay Core",           "category": "Identity",      "color": Color(0.5, 0.3, 0.0),  "desc": "Hit → 1 Decay stack (max 3)\n5% slow/stack; death: 2 dmg/stack","index": 161, "weight": 8,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
+	{"name": "Static Core",          "category": "Identity",      "color": Color(0.8, 0.8, 0.2),  "desc": "Hit → slow 40% for 0.5s\nGlitched target: 1s instead",     "index": 162, "weight": 8,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
+	{"name": "Ricochet Core",        "category": "Identity",      "color": Color(0.45, 0.1, 0.9),  "desc": "Wall bounce → +5% speed (max +30%)\nResets on enemy hit", "index": 163, "weight": 8,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
+	{"name": "Phantom Circuit Core", "category": "Identity",      "color": Color(0.3, 0.8, 0.9),  "desc": "Hits 3 enemies → all stunned 1s\nOtherwise: no stun",       "index": 159, "weight": 6,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
+	# Utility — Lv0
+	{"name": "Data Exploit",         "category": "Utility",       "color": Color(0.7, 0.1, 0.5),  "desc": "Glitched target takes\n+3 bonus dmg per hit",              "index": 115, "weight": 10, "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
+	{"name": "Extended Glitch",      "category": "Utility",       "color": Color(0.75, 0.0, 0.7), "desc": "Glitch duration\n3s → 5s",                                 "index": 119, "weight": 9,  "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
+	{"name": "Signal Jam",           "category": "Utility",       "color": Color(0.6, 0.0, 0.6),  "desc": "Glitched enemies move\n25% slower",                        "index": 120, "weight": 9,  "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
+	{"name": "Angular Precision",    "category": "Utility",       "color": Color(0.45, 0.2, 0.8), "desc": "First hit of each flight:\n+15% dmg",                      "index": 131, "weight": 8,  "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
+	# Utility — Lv1
+	{"name": "Exploit Stack",        "category": "Utility",       "color": Color(0.8, 0.05, 0.55),"desc": "Consecutive hits on same\nGlitched target: +1 dmg (max +5)", "index": 122, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [115]},
+	{"name": "Interference",         "category": "Utility",       "color": Color(0.5, 0.0, 0.5),  "desc": "Glitched enemies take\n+20% more damage",                 "index": 124, "weight": 6,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
+	{"name": "Bounce Mastery",       "category": "Utility",       "color": Color(0.45, 0.1, 0.9), "desc": "Ricochet Strike bonus:\n+4 → +7 per bounce",               "index": 133, "weight": 6,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [114]},
+	{"name": "Backstab Protocol",    "category": "Utility",       "color": Color(0.15, 0.55, 0.35),"desc": "North wall bounce:\nnext hit deals ×1.5 damage",           "index": 158, "weight": 6,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
+	{"name": "Stack Overflow",       "category": "Utility",       "color": Color(0.1, 0.8, 0.35),  "desc": "Antivirus stack cap\n3 → 4",                              "index": 148, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [160]},
+	{"name": "Memory Leak",          "category": "Utility",       "color": Color(0.05, 0.65, 0.3), "desc": "Antivirus duration\n3s → 4s",                             "index": 150, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [160]},
+	{"name": "Cascade Delete",       "category": "Utility",       "color": Color(0.1, 0.7, 0.45),  "desc": "Antivirus hit → spreads\n1 stack to nearest (75px)",       "index": 152, "weight": 6,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [160]},
+	# Utility — Lv2
+	{"name": "Exploit Mastery",      "category": "Utility",       "color": Color(0.75, 0.0, 0.55),"desc": "Data Exploit bonus dmg\n+3 → +6",                          "index": 125, "weight": 5,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2, "requires": [115]},
+	{"name": "Pinball Protocol",     "category": "Utility",       "color": Color(0.4, 0.1, 0.95), "desc": "3+ bounces without hit:\nnext hit pierces",                 "index": 134, "weight": 5,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
+	{"name": "Stealth Pass",         "category": "Utility",       "color": Color(0.25, 0.7, 0.85),"desc": "Phantom Circuit Core:\n3 enemy req → 2",                   "index": 139, "weight": 5,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 2, "requires": [159]},
+	{"name": "Ghost Protocol",       "category": "Utility",       "color": Color(0.2, 0.75, 0.9), "desc": "Phantom Circuit Core\nstun: 1s → 1.5s",                    "index": 140, "weight": 4,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2, "requires": [159]},
+	{"name": "Corruption Protocol",  "category": "Utility",       "color": Color(0.0, 0.6, 0.3),  "desc": "Antivirused target takes\n+15% more damage",               "index": 151, "weight": 5,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2, "requires": [160]},
+	# Individuality — Lv1
+	{"name": "Ricochet Strike",      "category": "Individuality", "color": Color(0.5, 0.2, 0.9),  "desc": "Each wall bounce in flight:\nnext hit +4 dmg",             "index": 114, "weight": 8,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
+	{"name": "Wallrunner",           "category": "Individuality", "color": Color(0.4, 0.15, 0.85),"desc": "Core Speed +8% per wall bounce\n(resets on enemy hit)",     "index": 132, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
+	{"name": "Rogue's Instinct",     "category": "Individuality", "color": Color(0.6, 0.15, 0.4), "desc": "Enemy purified:\n+1 Integrity",                            "index": 145, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
+	{"name": "Data Siphon",          "category": "Individuality", "color": Color(0.6, 0.0, 0.35), "desc": "Data Leech heals +1 extra\nwhen target is Glitched",        "index": 121, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [115]},
+	{"name": "Viral Load",           "category": "Individuality", "color": Color(0.15, 0.7, 0.4),  "desc": "Glitched target receives\n2× Antivirus stacks",            "index": 149, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [160]},
+	# Individuality — Lv2
+	{"name": "Shadow Strike",        "category": "Individuality", "color": Color(0.3, 0.0, 0.5),  "desc": "First hit after wall bounce:\n×1.5 damage",                "index": 116, "weight": 5,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
+	{"name": "System Overload",      "category": "Individuality", "color": Color(0.85, 0.1, 0.7), "desc": "5+ Glitched enemies alive:\nall your dmg +20%",             "index": 126, "weight": 5,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
+	{"name": "Ricochet Memory",      "category": "Individuality", "color": Color(0.5, 0.2, 0.95), "desc": "Ricochet bonus persists\nbetween hits (resets on orbit)",   "index": 135, "weight": 4,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
+	{"name": "Kinetic Rogue",        "category": "Individuality", "color": Color(0.45, 0.15, 0.9),"desc": "Every 5 wall bounces:\n+1 permanent base dmg",              "index": 136, "weight": 4,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
+	{"name": "Phase Shift",          "category": "Individuality", "color": Color(0.3, 0.8, 0.9),  "desc": "Stunned enemy hit:\n×1.5 damage",                          "index": 141, "weight": 4,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2, "requires": [159]},
+	{"name": "Shadow Dance",         "category": "Individuality", "color": Color(0.35, 0.05, 0.6),"desc": "7 wall bounces in same flight:\nCore Speed +3% permanently", "index": 146, "weight": 4,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
+	# Individuality — Lv3
+	{"name": "Circuit Breaker",      "category": "Individuality", "color": Color(0.25, 0.75, 0.95),"desc": "Every 25th hit: all enemies\nin the Yard Glitched for 2s", "index": 143, "weight": 3,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3},
+	{"name": "Pinpoint Strike",      "category": "Individuality", "color": Color(0.4, 0.1, 1.0),  "desc": "After 5 wall bounces:\nnext hit ×1.5 (crit)",               "index": 137, "weight": 3,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3},
+	{"name": "Zero Day",             "category": "Individuality", "color": Color(0.0, 0.85, 0.4),  "desc": "Antivirused + Glitched:\nstack count doubled instantly",   "index": 154, "weight": 3,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3, "requires": [160]},
+	{"name": "Kernel Panic",         "category": "Individuality", "color": Color(0.05, 0.9, 0.35), "desc": "Each Antivirus tick:\n5% chance to Glitch target",         "index": 155, "weight": 3,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3, "requires": [160]},
+	# Calamity
+	{"name": "Data Storm",           "category": "Calamity",      "color": Color(0.7, 0.0, 0.8),  "desc": "All Glitched enemies\nin the Yard take 10 dmg",             "index": 129, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 3},
+	{"name": "Backdoor",             "category": "Calamity",      "color": Color(0.6, 0.0, 0.7),  "desc": "All enemies in the Yard\nGlitched for 3s",                  "index": 130, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
+	{"name": "Bounce Barrage",       "category": "Calamity",      "color": Color(0.35, 0.0, 0.9),  "desc": "Core Speed ×3 for 5s",                                   "index": 138, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
+	{"name": "Mirror Image",         "category": "Calamity",      "color": Color(0.2, 0.65, 0.9),  "desc": "Spawn 2 phantom cores\nfor 5s",                          "index": 144, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
+	{"name": "Systemic Failure",     "category": "Calamity",      "color": Color(0.0, 0.7, 0.35),  "desc": "All enemies in the Yard\nget 2× Antivirus stacks",        "index": 156, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
 	# ── Herkese açık ─────────────────────────────────────────────────────────
 	{"name": "Core Mastery",        "category": "Utility",       "color": Color(0.2, 0.8, 0.2), "desc": "+1 damage to all cores",                    "index": 11, "weight": 10, "rarity": "common", "chars": [], "min_level": 0},
 	{"name": "Lightning",           "category": "Calamity",      "color": Color(1.0, 1.0, 0.0), "desc": "Lightning strikes selected point",          "index": 7,  "weight": 8,  "rarity": "common", "chars": [], "min_level": 0},
@@ -2483,13 +2480,13 @@ func _activate_data_storm() -> void:
 	var _cap: int = 5 if (p and p.get("has_stack_overflow") and p.has_stack_overflow) else 3
 	for subject in get_tree().get_nodes_in_group("subjects"):
 		if is_instance_valid(subject) and subject.global_position.x >= 875.0 and subject.get("is_glitched") and subject.is_glitched:
-			subject.take_damage(20)
+			subject.take_damage(10)
 	_react_flash_screen(Color(0.1, 0.8, 0.3, 0.45))
 
 func _activate_backdoor() -> void:
 	for subject in get_tree().get_nodes_in_group("subjects"):
 		if is_instance_valid(subject) and subject.global_position.x >= 875.0 and subject.has_method("apply_glitch"):
-			subject.apply_glitch(5.0)
+			subject.apply_glitch(3.0)
 	_react_flash_screen(Color(0.6, 0.0, 0.7, 0.4))
 
 func _activate_systemic_failure() -> void:
@@ -2497,7 +2494,7 @@ func _activate_systemic_failure() -> void:
 	var _cap: int = 5 if (p and p.get("has_stack_overflow") and p.has_stack_overflow) else 3
 	for subject in get_tree().get_nodes_in_group("subjects"):
 		if is_instance_valid(subject) and subject.global_position.x >= 875.0 and subject.has_method("apply_antivirus"):
-			subject.apply_antivirus(_cap)
+			subject.apply_antivirus(subject.antivirus_stacks * 2 if subject.get("antivirus_stacks") and subject.antivirus_stacks > 0 else _cap)
 	_react_flash_screen(Color(0.05, 0.9, 0.35, 0.45))
 
 func _react_flash_screen(color: Color) -> void:
@@ -3417,52 +3414,49 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 		var p := get_node("Player")
 		match index:
 			114: p.has_ricochet_strike    = true
-			115: p.has_data_exploit       = true
-			116: p.has_shadow_strike      = true
-			117: p.has_exploit_network    = true
-			118: p.has_phantom_circuit    = true
-			119: p.has_extended_glitch    = true
-			120: p.has_signal_jam         = true
-			121: p.has_data_siphon        = true
-			122: p.has_exploit_stack      = true
-			123: p.has_virus_spread       = true
-			124: p.has_interference       = true
-			125: p.has_exploit_mastery    = true
-			126: p.has_system_overload    = true
-			127: p.has_mind_hack          = true
-			128: p.has_neural_overwrite   = true
+			115: p.has_data_exploit        = true
+			116: p.has_shadow_strike       = true
+			119: p.has_extended_glitch     = true
+			120: p.has_signal_jam          = true
+			121: p.has_data_siphon         = true
+			122: p.has_exploit_stack       = true
+			124: p.has_interference        = true
+			125: p.has_exploit_mastery     = true
+			126: p.has_system_overload     = true
 			129: if calamity_slots.size() < max_calamity_slots: calamity_slots.append("💾")
 			130: if calamity_slots.size() < max_calamity_slots: calamity_slots.append("👾")
-			131: p.has_angular_precision  = true
-			132: p.has_wallrunner         = true
-			133: p.has_bounce_mastery     = true
-			134: p.has_pinball_protocol   = true
-			135: p.has_ricochet_memory    = true
-			136: p.has_kinetic_rogue      = true
-			137: p.has_pinpoint_strike    = true
+			131: p.has_angular_precision   = true
+			132: p.has_wallrunner          = true
+			133: p.has_bounce_mastery      = true
+			134: p.has_pinball_protocol    = true
+			135: p.has_ricochet_memory     = true
+			136: p.has_kinetic_rogue       = true
+			137: p.has_pinpoint_strike     = true
 			138: if calamity_slots.size() < max_calamity_slots: calamity_slots.append("🎱")
-			139: p.has_stealth_pass       = true
-			140: p.has_ghost_protocol     = true
-			141: p.has_phase_shift        = true
-			142: p.has_interference_cloak = true
-			143: p.has_circuit_breaker    = true
+			139: p.has_stealth_pass        = true
+			140: p.has_ghost_protocol      = true
+			141: p.has_phase_shift         = true
+			143: p.has_circuit_breaker     = true
 			144: if calamity_slots.size() < max_calamity_slots: calamity_slots.append("🪞")
-			145: p.has_rogues_instinct    = true
-			146: p.has_shadow_dance       = true
-			# Antivirus
-			147: p.has_virus_injection    = true
-			148: p.has_stack_overflow     = true
-			149: p.has_viral_load         = true
-			150: p.has_memory_leak        = true
+			145: p.has_rogues_instinct     = true
+			146: p.has_shadow_dance        = true
+			148: p.has_stack_overflow      = true
+			149: p.has_viral_load          = true
+			150: p.has_memory_leak         = true
 			151: p.has_corruption_protocol = true
-			152: p.has_cascade_delete     = true
-			153: p.has_root_access        = true
-			154: p.has_zero_day           = true
-			155: p.has_kernel_panic       = true
+			152: p.has_cascade_delete      = true
+			154: p.has_zero_day            = true
+			155: p.has_kernel_panic        = true
 			156:
 				if calamity_slots.size() < max_calamity_slots:
 					calamity_slots.append("🧪")
-			158: p.has_backstab_protocol = true
+			158: p.has_backstab_protocol   = true
+			# Yeni Identity Core'lar
+			159: $BallLauncher.queue_upgrade_ball("phantom_circuit")
+			160: $BallLauncher.queue_upgrade_ball("antivirus_core")
+			161: $BallLauncher.queue_upgrade_ball("decay")
+			162: $BallLauncher.queue_upgrade_ball("static_core")
+			163: $BallLauncher.queue_upgrade_ball("ricochet_core")
 
 	# ── Leila — Calamity ─────────────────────────────────────────────────────
 	elif index == 94:  # Blizzard
