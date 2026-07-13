@@ -12,9 +12,14 @@ köprüsü olarak kullanılır. Her oturum başında oku, her oturum sonunda gü
 - [ ] Living Storm + Static Charge sonsuz döngü riskini kır
 - [ ] Calamity Lightning/Flame tam test (hasar + durum efekti doğrula)
 - [ ] Leila reaksiyon zinciri tam test (Perfect Catalyst, Volatile Mixture, Catalyst Mind)
-- [ ] Freeze VFX scale/pozisyon oyunda test et, karaktere göre ayarla
-- [ ] Steam VFX scale/pozisyon tüm 7 düşman için test et
+- [x] Freeze VFX scale/pozisyon oyunda test et, karaktere göre ayarla
+- [x] Steam VFX scale/pozisyon tüm 7 düşman için test et
 - [ ] v0.0.9.9f güncelleme notu yaz
+
+**Devam eden (2026-07-13):**
+- [ ] Vector +30 kart (öncelik: Calamity 0→4-5, Identity)
+- [ ] Leila +20 kart
+- [ ] Cyclone +18 kart (Ricochet/Static/Decay/Mirror implementasyonu)
 
 ## Kart Dengesi — Hedefler (2026-07-11)
 

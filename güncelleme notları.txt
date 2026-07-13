@@ -3408,6 +3408,51 @@ Test:
   ✅ Tüm değişiklikler oyun içinde test edildi, başarılı geçti
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+v0.0.9.9q — Vector Kart Genişlemesi & Momentum Düzeltmesi (2026-07-13)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Momentum Sistemi:
+
+  ✅ Momentum stacks artık Core dönüşünde sıfırlanmıyor (kalıcı birikir, cap: 20)
+  ✅ Kinetic Nervous System → Momentum cap +10 (20 → 30) olarak yeniden tasarlandı
+
+Vector — Yeni Kartlar (56 toplam):
+
+  Utility (9 yeni):
+  ✅ Armor Rush       — Armor kazanınca +1 Momentum Stack
+  ✅ Combat Rhythm    — 3 ardışık isabet → Core anında döner
+  ✅ Shield Bash      — Core dönüş hızı Armor ile orantılı artar
+  ✅ Siege Protocol   — Siege Core: her bounce +1 hasar (isabette sıfır)
+  ✅ Bulwark Echo     — Bulwark isabet: 2s sonra Armor kazanımının yarısı tekrar
+  ✅ Momentum Transfer— Armor sıfırlanırsa +3 Momentum Stack
+  ✅ Tactical Reload  — Her isabet +1 max bounce (bu uçuş, max +3)
+  ✅ Kinetic Surge    — 15+ Momentum: Core orbit'ten max hızda çıkar
+  ✅ Armor Conduit    — Armor = Cap iken isabet: +2 bonus hasar
+
+  Calamity (5 yeni):
+  ✅ Iron Fortress    — Tüm Momentum → Armor (stack başına +1, 8s)
+  ✅ Shockwave        — Mevcut Armor/2 kadar AoE hasar (tüm düşmanlar)
+  ✅ Full Breach      — Armor sıfırlanır, 8s Core Damage ×2.5
+  ✅ Momentum Burst   — Tüm Momentum harca: +2 Core Speed/stack (10s)
+  ✅ Rampart Collapse — Armor Cap kadar hasar (tek hedef), Armor sıfırlanır
+
+  Connected Cores — İç Yörünge (7 yeni, fırlatılamaz):
+  ✅ Iron Aura Core      — Her 2s: 60px'e 1 + Armor×%5 hasar
+  ✅ Momentum Field Core — Hareket edince her 1s +1 Momentum
+  ✅ Regen Pulse Core    — Her 15s: 1 Armor yeniler
+  ✅ Fortress Core       — Armor %75+: 90px düşmanları %25 yavaşlatır
+  ✅ Bloodwall Core      — HP %50 altı: her 9s'de 1 HP yeniler
+  ✅ Overcharge Core     — Momentum 15+: her 4s 60px'e 2 hasar pulse
+  ✅ Anchor Pulse Core   — 5s hareketsiz: her 1s +1 Armor
+
+  Sprite eksikleri (178-184): Connected Core görselleri yapım aşamasında
+
+Cyclone — Core Görselleri:
+
+  ✅ phantomCircuitCore, antivirusCore, decayCore, staticCore, ricochetCore
+     sprite'ları eklendi ve ball.gd'ye bağlandı
+  ✅ Ricochet Core: hız oranına göre 7 animasyon segmenti (0%-30%)
+
 v0.0.9.9p — Backstab Protocol & Momentum Zone (2026-07-11)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

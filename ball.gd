@@ -60,6 +60,7 @@ var can_echo: bool     = false  # Düşmanın elementini kopyala, dönüşte uyg
 var _echo_element: String = ""  # Echo Core'un kopyaladığı element
 var can_orbit: bool    = false  # Orbit'te kalır, random element uygular
 var is_inner_core: bool = false  # İç yörüngede kalır, hiç fırlatılmaz
+var inner_core_type: String = ""
 var can_scatter: bool  = false  # Vuruşta 3 küçük elemental parça
 var can_catalyst: bool = false  # Mevcut debuff süresini uzatır
 var can_voltaic: bool  = false  # Electrified düşman ölünce zincir
@@ -217,7 +218,44 @@ func _setup_ball_sprite() -> void:
 	elif can_tempest:
 		folder = "tempestCore";     frame_count = 17
 	elif can_prismatic:
-		folder = "prismaticCore";   frame_count = 17
+		folder = "prismaticCore";      frame_count = 17
+	elif can_antivirus_core:
+		folder = "antivirusCore";      frame_count = 17
+	elif can_decay:
+		folder = "decayCore";          frame_count = 17
+	elif can_static_core:
+		folder = "staticCore";         frame_count = 17
+	elif can_phantom_circuit:
+		folder = "phantomCircuitCore"; frame_count = 17
+	elif can_ricochet_core:
+		# Hız oranına göre 7 segment: %0/%5/%10/%15/%20/%25/%30
+		const RC_SEGS: Array = [
+			["rc_0",  0,  3],
+			["rc_5",  3,  5],
+			["rc_10", 5,  7],
+			["rc_15", 7,  9],
+			["rc_20", 9,  11],
+			["rc_25", 11, 14],
+			["rc_30", 14, 17],
+		]
+		var rc_frames := SpriteFrames.new()
+		if rc_frames.has_animation("default"):
+			rc_frames.remove_animation("default")
+		for seg in RC_SEGS:
+			rc_frames.add_animation(seg[0])
+			rc_frames.set_animation_speed(seg[0], 12.0)
+			rc_frames.set_animation_loop(seg[0], true)
+			for i in range(seg[1], seg[2]):
+				var tex: Texture2D = load("res://assets/balls/ricochetCore/frame_%03d.png" % i)
+				rc_frames.add_frame(seg[0], tex)
+		_sprite = AnimatedSprite2D.new()
+		_sprite.sprite_frames  = rc_frames
+		_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		var _rc_size: float = float(rc_frames.get_frame_texture("rc_0", 0).get_width())
+		_sprite.scale = Vector2.ONE * (0.57375 * (48.0 / _rc_size))
+		_sprite.play("rc_0")
+		add_child(_sprite)
+		return
 	else:
 		folder = "normalBall";      frame_count = 9
 
@@ -255,6 +293,11 @@ func _get_player() -> Node2D:
 
 func launch(direction: Vector2, spd: float = 600.0) -> void:
 	move_direction = direction.normalized()
+	# Kinetic Surge: 15+ Momentum → max hızda başla
+	var _ks := _get_player()
+	if _ks and _ks.get("has_kinetic_surge") and _ks.has_kinetic_surge:
+		if _ks.momentum_stacks >= 15:
+			spd = max(spd, 600.0)
 	speed = spd
 	moving = true
 	state = "flying"
@@ -425,6 +468,12 @@ func _physics_process(delta: float) -> void:
 			queue_redraw()
 		if can_ricochet_core:
 			speed = min(speed * 1.05, 600.0 * 1.30)
+			_update_ricochet_anim()
+		# Siege Protocol — Siege Core: duvar sekmesinde +1 hasar
+		if can_siege:
+			var _sp := _get_player()
+			if _sp and _sp.get("has_siege_protocol") and _sp.has_siege_protocol:
+				set_meta("siege_bonus", get_meta("siege_bonus", 0) + 1)
 		var _bp := _get_player()
 		if _bp and _bp.get("has_shadow_dance") and _bp.has_shadow_dance and _wall_bounce_count >= 7:
 			_bp._shadow_dance_acc += 0.03
@@ -632,21 +681,89 @@ func _auto_fire() -> void:
 	launch(player.aim_direction, 650.0)
 
 var _inner_tick_timer: float = 0.0
-const INNER_TICK_INTERVAL: float = 1.0  # saniyede bir Antivirus uygula
-const INNER_TICK_RADIUS: float = 50.0   # iç yörünge etki alanı
+var _inner_tick_timer_b: float = 0.0  # ikincil cooldown (core tipine özel)
+var _anchor_still_time: float = 0.0   # Anchor Pulse Core: hareketsizlik sayacı
+const INNER_TICK_INTERVAL: float = 1.0
+const INNER_TICK_RADIUS: float = 50.0
 
 func _inner_core_tick(delta: float) -> void:
 	_inner_tick_timer -= delta
+	_inner_tick_timer_b -= delta
 	if _inner_tick_timer > 0.0: return
 	_inner_tick_timer = INNER_TICK_INTERVAL
 	var player := _get_player()
 	if not is_instance_valid(player): return
-	var cap: int = 4 if player.get("has_stack_overflow") and player.has_stack_overflow else 3
-	for subject in get_tree().get_nodes_in_group("subjects"):
-		if not is_instance_valid(subject): continue
-		if global_position.distance_to(subject.global_position) <= INNER_TICK_RADIUS:
-			if subject.has_method("apply_antivirus"):
-				subject.apply_antivirus(cap)
+	var gfx := get_tree().get_first_node_in_group("game")
+
+	match inner_core_type:
+		"iron_aura_core":
+			# Her 2s: 60px içindeki düşmanlara 1 + armor*%5 hasar
+			if _inner_tick_timer_b > 0.0: return
+			_inner_tick_timer_b = 2.0
+			var armor_bonus: int = 0
+			if gfx: armor_bonus = int(gfx.player_armor * 0.05)
+			for subject in get_tree().get_nodes_in_group("subjects"):
+				if not is_instance_valid(subject): continue
+				if global_position.distance_to(subject.global_position) <= 60.0:
+					subject.take_damage(1 + armor_bonus, false)
+
+		"momentum_field_core":
+			# Her 1s: oyuncu hareket ediyorsa +1 Momentum (25s cooldown → zaten 1s tick)
+			if player.velocity.length() > 10.0:
+				player.momentum_stacks = min(player.momentum_stacks + 1, player.momentum_max)
+
+		"regen_pulse_core":
+			# Her 15s: 1 Armor yenile
+			if _inner_tick_timer_b > 0.0: return
+			_inner_tick_timer_b = 15.0
+			if gfx: gfx.gain_armor(1)
+
+		"fortress_core":
+			# Her 1s: Armor %75+ doluysa 90px düşmanları %25 yavaşlat
+			if gfx and gfx.player_armor_cap > 0:
+				var ratio: float = float(gfx.player_armor) / float(gfx.player_armor_cap)
+				if ratio >= 0.75:
+					for subject in get_tree().get_nodes_in_group("subjects"):
+						if not is_instance_valid(subject): continue
+						if global_position.distance_to(subject.global_position) <= 90.0:
+							if subject.has_method("apply_slow"):
+								subject.apply_slow(0.25, 1.2)
+
+		"bloodwall_core":
+			# Her 9s: HP %50 altındaysa 1 HP yenile
+			if _inner_tick_timer_b > 0.0: return
+			_inner_tick_timer_b = 9.0
+			if gfx and float(gfx.player_hp) / float(max(gfx.player_max_hp, 1)) < 0.5:
+				gfx.player_hp = min(gfx.player_hp + 1, gfx.player_max_hp)
+				gfx.update_ui()
+
+		"overcharge_core":
+			# Her 4s: Momentum 15+ ise 60px çevresine 2 hasar pulse
+			if _inner_tick_timer_b > 0.0: return
+			_inner_tick_timer_b = 4.0
+			if player.momentum_stacks >= 15:
+				for subject in get_tree().get_nodes_in_group("subjects"):
+					if not is_instance_valid(subject): continue
+					if global_position.distance_to(subject.global_position) <= 60.0:
+						subject.take_damage(2, false)
+
+		"anchor_pulse_core":
+			# Her 1s: oyuncu 5s hareketsizse +1 Armor
+			if player.velocity.length() < 10.0:
+				_anchor_still_time += 1.0
+				if _anchor_still_time >= 5.0 and gfx:
+					gfx.gain_armor(1)
+			else:
+				_anchor_still_time = 0.0
+
+		_:
+			# Eski fallback: Antivirus core (type atanmamış)
+			var cap: int = 4 if player.get("has_stack_overflow") and player.has_stack_overflow else 3
+			for subject in get_tree().get_nodes_in_group("subjects"):
+				if not is_instance_valid(subject): continue
+				if global_position.distance_to(subject.global_position) <= INNER_TICK_RADIUS:
+					if subject.has_method("apply_antivirus"):
+						subject.apply_antivirus(cap)
 
 func _reset_defense_life() -> void:
 	defense_damage    = _get_defense_base_damage()
@@ -701,7 +818,13 @@ func _start_returning() -> void:
 	state         = "returning"
 	moving        = true
 	var _rp := _get_player()
-	speed         = 200.0 * (_rp.return_speed_mult if _rp else 1.0)
+	var _base_return: float = 200.0 * (_rp.return_speed_mult if _rp else 1.0)
+	# Shield Bash: dönüş hızı Armor miktarıyla orantılı artar
+	if _rp and _rp.get("has_shield_bash") and _rp.has_shield_bash:
+		var _gfx := _get_game()
+		if _gfx and _gfx.get("player_armor"):
+			_base_return += _gfx.player_armor * 1.5
+	speed         = _base_return
 	scale         = Vector2(1.0, 1.0)
 	z_index       = 2
 	strike_offset = Vector2.ZERO
@@ -709,9 +832,7 @@ func _start_returning() -> void:
 	$CollisionShape2D.disabled = false
 	hit_subjects.clear()
 	chain_density_unique_hits = 0
-	# Kinetic Nervous System: dönüşte momentum reset olmaz
-	if _rp and not _rp.has_kinetic_nervous:
-		_rp.momentum_stacks = 0
+	# Momentum stacks dönüşte sıfırlanmaz — max cap (momentum_max) korunur
 	# Echo Core: dönüşte kopyalanan elementi aktifleştir
 	if can_echo and not _echo_element.is_empty():
 		match _echo_element:
@@ -986,6 +1107,11 @@ func _hit_subject(subject: Node2D) -> void:
 		base_damage = 9
 	var total_damage = base_damage
 
+	# Siege Protocol: Siege Core bounce bonus
+	if can_siege and has_meta("siege_bonus"):
+		total_damage += get_meta("siege_bonus", 0)
+		set_meta("siege_bonus", 0)
+
 	# Chain Density: yeni düşmana çarpınca hasar artar
 	var _cd_player := _get_player()
 	if _cd_player and _cd_player.has_chain_density and not (subject in hit_subjects):
@@ -1017,6 +1143,7 @@ func _hit_subject(subject: Node2D) -> void:
 	# Ricochet Core: düşmana çarpınca hızı sıfırla
 	if can_ricochet_core:
 		speed = 600.0
+		_update_ricochet_anim()
 
 	# ── Cyclone Rogue efektleri ───────────────────────────────────────────────
 	var _rp := _get_player()
@@ -1225,6 +1352,12 @@ func _hit_subject(subject: Node2D) -> void:
 		game_node_fx.gain_armor(1)
 	if can_bulwark and is_instance_valid(player_node) and game_node_fx:
 		game_node_fx.gain_armor(2)
+		# Bulwark Echo: 2s sonra yarı armor kazanımı tekrar
+		if player_node.get("has_bulwark_echo") and player_node.has_bulwark_echo:
+			var _gfx := game_node_fx
+			get_tree().create_timer(2.0).timeout.connect(func():
+				if is_instance_valid(_gfx): _gfx.gain_armor(1)
+			)
 	if can_bloodbound and game_node_fx:
 		var missing: int = game_node_fx.player_max_hp - game_node_fx.player_hp
 		var bonus: int = missing / 5
@@ -1266,6 +1399,22 @@ func _hit_subject(subject: Node2D) -> void:
 						player_node._pressure_valve_acc = 0
 						if game_node_fx:
 							game_node_fx.gain_armor(1)
+		# Combat Rhythm — 3 ardışık isabet → Core anında geri döner
+		if player_node.get("has_combat_rhythm") and player_node.has_combat_rhythm:
+			player_node._combat_rhythm_count += 1
+			if player_node._combat_rhythm_count >= 3:
+				player_node._combat_rhythm_count = 0
+				_return_to_orbit()
+		# Tactical Reload — her isabet +1 max bounce (bu uçuş, max +3)
+		if player_node.get("has_tactical_reload") and player_node.has_tactical_reload:
+			if not get_meta("tactical_reload_bonus", 0) >= 3:
+				var _tr_b: int = get_meta("tactical_reload_bonus", 0)
+				set_meta("tactical_reload_bonus", _tr_b + 1)
+				max_bounces += 1
+		# Armor Conduit — Armor = Cap → +2 bonus hasar
+		if player_node.get("has_armor_conduit") and player_node.has_armor_conduit and game_node_fx:
+			if game_node_fx.player_armor >= game_node_fx.player_armor_cap and game_node_fx.player_armor_cap > 0:
+				subject.take_damage(2, false)
 		# Impact Feedback — threshold'a göre +1 Impact Stack → +1 Armor Gain
 		if player_node.has_impact_feedback:
 			player_node.impact_hit_count += 1
@@ -1678,6 +1827,22 @@ func _electric_blast() -> void:
 # ─────────────────────────────────────────────
 # KINETIC CORE VFX
 # ─────────────────────────────────────────────
+func _update_ricochet_anim() -> void:
+	if not is_instance_valid(_sprite): return
+	if not _sprite.sprite_frames: return
+	# Hız oranı: base 600, max 780 (+%30)
+	var ratio: float = clamp((speed - 600.0) / 600.0, 0.0, 0.30)
+	var seg: String
+	if   ratio < 0.05: seg = "rc_0"
+	elif ratio < 0.10: seg = "rc_5"
+	elif ratio < 0.15: seg = "rc_10"
+	elif ratio < 0.20: seg = "rc_15"
+	elif ratio < 0.25: seg = "rc_20"
+	elif ratio < 0.30: seg = "rc_25"
+	else:              seg = "rc_30"
+	if _sprite.animation != seg:
+		_sprite.play(seg)
+
 func _update_kinetic_vfx() -> void:
 	if not is_instance_valid(_kinetic_vfx): return
 	if _wall_bounce_count <= 0:

@@ -211,7 +211,7 @@ func _launch_typed_ball(ball_type: String) -> void:
 	var _current_balls := get_tree().get_nodes_in_group("player_balls")
 	_current_balls = _current_balls.filter(func(b): return is_instance_valid(b))
 	# İç yörünge core'ları MAX_ORBIT limitine dahil değil
-	var is_inner := ball_type in []
+	var is_inner := ball_type in ["iron_aura_core", "momentum_field_core", "regen_pulse_core", "fortress_core", "bloodwall_core", "overcharge_core", "anchor_pulse_core"]
 	if not is_inner and _current_balls.size() >= player_node.MAX_ORBIT:
 		return
 
@@ -322,6 +322,28 @@ func _launch_typed_ball(ball_type: String) -> void:
 		"phantom_circuit":
 			ball.can_phantom_circuit = true
 			ball.max_damage          = 5 + player_node.ball_mastery
+		# ── Vector Connected Cores (iç yörünge, fırlatılmaz) ──────────────────
+		"iron_aura_core":
+			ball.is_inner_core       = true
+			ball.inner_core_type     = "iron_aura_core"
+		"momentum_field_core":
+			ball.is_inner_core       = true
+			ball.inner_core_type     = "momentum_field_core"
+		"regen_pulse_core":
+			ball.is_inner_core       = true
+			ball.inner_core_type     = "regen_pulse_core"
+		"fortress_core":
+			ball.is_inner_core       = true
+			ball.inner_core_type     = "fortress_core"
+		"bloodwall_core":
+			ball.is_inner_core       = true
+			ball.inner_core_type     = "bloodwall_core"
+		"overcharge_core":
+			ball.is_inner_core       = true
+			ball.inner_core_type     = "overcharge_core"
+		"anchor_pulse_core":
+			ball.is_inner_core       = true
+			ball.inner_core_type     = "anchor_pulse_core"
 
 	var direction  = (player.global_position - global_position).normalized()
 	var spawn_pos  = _get_muzzle_global()

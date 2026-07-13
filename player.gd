@@ -153,6 +153,17 @@ var _circuit_breaker_counter: int = 0
 # Cross-build
 var has_rogues_instinct: bool     = false # Arındırma → +1 HP
 var has_backstab_protocol: bool   = false # North bounce → sonraki isabet ×1.5
+# ── Vector — Yeni Utility ────────────────────────────────────────────────────
+var has_armor_rush: bool          = false # Armor kazanınca +1 Momentum
+var has_combat_rhythm: bool       = false # 3 ardışık isabet → Core anında döner
+var _combat_rhythm_count: int     = 0
+var has_shield_bash: bool         = false # Dönüş hızı Armor ile orantılı
+var has_siege_protocol: bool      = false # Siege Core bounce → +1 hasar
+var has_bulwark_echo: bool        = false # Bulwark isabet → 2s sonra yarı Armor tekrar
+var has_momentum_transfer: bool   = false # Armor sıfırlanırsa +3 Momentum
+var has_tactical_reload: bool     = false # Her düşman isabeti +1 max bounce (max +3)
+var has_kinetic_surge: bool       = false # 15+ Momentum → Core max hızda çıkar
+var has_armor_conduit: bool       = false # Armor = Cap → +2 bonus hasar
 # Antivirus sistemi
 var has_antivirus_core: bool      = false # Core hit → Antivirus stack uygular
 var has_stack_overflow: bool      = false # Stack cap 3→5

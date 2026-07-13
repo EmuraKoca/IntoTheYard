@@ -66,11 +66,11 @@ INTO THE YARD — YAPILACAKLAR LİSTESİ
 
   ── Top Sprite Eksikleri (assets/balls/ klasörü yok) ──────────────────────────
   [ ] mimicBall          — Mimic topu (tüm karakterler)
-  [ ] phantomCircuitCore — Phantom Circuit Core (Cyclone, index 159)
-  [ ] antivirusCore      — AntiVirus Core (Cyclone, index 160)
-  [ ] decayCore          — Decay Core (Cyclone, index 161)
-  [ ] staticCore         — Static Core (Cyclone, index 162)
-  [ ] ricochetCore       — Ricochet Core (Cyclone, index 163)
+  [✓] phantomCircuitCore — Phantom Circuit Core (Cyclone, index 159)
+  [✓] antivirusCore      — AntiVirus Core (Cyclone, index 160)
+  [✓] decayCore          — Decay Core (Cyclone, index 161)
+  [✓] staticCore         — Static Core (Cyclone, index 162)
+  [✓] ricochetCore       — Ricochet Core (Cyclone, index 163)
   Not: Her top icin assets/balls/<klasorIsmi>/frame_000.png ... frame_XXX.png
   ──────────────────────────────────────────────────────────────────────────────
 
@@ -120,3 +120,53 @@ INTO THE YARD — YAPILACAKLAR LİSTESİ
 [ ] Versiyon numarası güncel tutulması
 
 ════════════════════════════════════════════════════════════════════════════════
+
+BAKILACAK 
+
+
+Calamity (3 kart)
+
+Iron Wall (legendary, Lv4)
+6s boyunca gelen tüm hasar HP yerine Armor'ı düşürür (Armor bitince normal devam)
+Sinerji: Scar Tissue, Glass Engine — kritik anlarda tam koruma
+Pulse Wave (epic, Lv3)
+Mevcut Momentum stack sayısı kadar hasar, sahada ki tüm düşmanlara eşit
+Sinerji: Momentum Engine, Kinetic Nervous System — birikim = patlama
+Overclock (legendary, Lv5)
+8s boyunca Core Speed ×2, dönüş sonrası Momentum sıfırlanır
+Sinerji: Bulwark Surge, Kinetic Surge — hız finisher
+Utility (4 kart)
+
+Momentum Bleed (rare, Lv3)
+Her 10 Momentum stack'te Core base hasarı kalıcı +1 (max +3)
+Sinerji: Momentum Engine, Overclock Threshold
+Recovery Drive (uncommon, Lv1)
+Core her dönüşte return speed +%5 birikiyor (max +%30, run boyunca)
+Sinerji: Hyper Recovery Loop
+Armor Lock (rare, Lv2)
+Armor'ın düşebileceği minimum değeri mevcut Armor'ın %25'ine kilitler
+Sinerji: Fortified Core System, Iron Constitution — floor guarantee
+Shield Pulse (uncommon, Lv2)
+Core fırlatılınca 1 Armor kazanılır
+Sinerji: Armor Rush ile birlikte → her ateşlemede çift Momentum
+Identity (2 kart)
+
+Vanguard Core (rare, Lv2)
+Düşmana çarptığında 40px splash, 2 hasar
+Sinerji: Pulse Core, Tempered Core — AoE baskı
+Ironclad Core (uncommon, Lv1)
+Orbit'teyken her 5s'de +1 Armor kazanır (Regen Pulse Core'dan bağımsız)
+Sinerji: Regen Pulse Core, Armor build — pasif zırh biriktirme
+
+
+----------------------------------
+
+Sprite oluşturulacak = 
+
+Iron Aura	60px AoE: 1 + Armor×%5 hasar	2s
+Momentum Field	Hareket edince +1 Momentum	1s
+Regen Pulse	+1 Armor yenile	15s
+Fortress	Armor %75+: 90px slow %25	1s
+Bloodwall	HP %50 altı: +1 HP	9s
+Overcharge	Momentum 15+: 60px 2 hasar	4s
+Anchor Pulse	5s hareketsiz: +1 Armor/s	1s

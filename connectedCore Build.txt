@@ -1,54 +1,42 @@
 ⚔️ VECTOR — Armor/Momentum Tank (10 öneri)
 
-1. Iron Aura Core
+Iron Aura Core
 
 Efekt: Her 2 saniyede, 60px içindeki düşmanlara 1 hasar + mevcut armor miktarının %5'i kadar ekstra hasar
 Sinerji: Armor Core, Bulwark Core, Tempered Core — armor ne kadar yüksekse o kadar güçlü
 Tema: "Zırhım silahım"
 
-2. Momentum Field Core
+Momentum Field Core
 
-Efekt: Oyuncu hareket ettiği sürece her saniye +1 momentum kazanır (pasif)
+Efekt: Oyuncu hareket ettiği sürece her saniye 25 saniyede +1 momentum kazanır (pasif)
 Sinerji: Momentum Engine, Overclocked Reflex, Kinetic Nervous System ile direkt birikim
 Tema: Durmayan Vector daha güçlü olur
 
-3. Regen Pulse Core
+Regen Pulse Core
 
-Efekt: Her 11 saniyede bir 1 armor yeniler (armor cap'e kadar)
+Efekt: Her 15 saniyede bir 1 armor yeniler (armor cap'e kadar)
 Sinerji: Scar Tissue, Last Stand, Pain Converter — sustain build için temel taş
 Tema: Pasif savunma yenilenmesi
 
-4. Shockplate Core
+Fortress Core
 
-Efekt: Oyuncu hasar alırsa iç yörüngede 0.5s elektrik parıltısı — 80px çevresindeki düşmanlara 3 hasar
-Sinerji: Glass Engine, Pain Converter — hasar almak avantaja dönüşür
-Tema: "Bana vurursan pişman olursun"
-
-5. Fortress Core
-
-Efekt: Armor cap'in %75'i doluyken, yakın düşmanlar %15 yavaşlar (90px)
+Efekt: Armor cap'in %75'i doluyken, yakın düşmanlar %25 yavaşlar (90px)
 Sinerji: Bulwark Surge, Reinforced Frame — tam zırhlı Vector yavaşlatma alanı oluşturur
 Tema: Ağır tank, etrafındakileri yavaşlatır
 
-6. Weight Core
-
-Efekt: Her fırlatılan core geri döndüğünde +1 armor kazandırır
-Sinerji: Armor Core, Bulwark Core — ne kadar çok core varsa o kadar hızlı birikim
-Tema: Her vuruş bir zırh parçası
-
-7. Bloodwall Core
+Bloodwall Core
 
 Efekt: HP %50'nin altındayken 9 saniyede bir 1 HP yeniler
 Sinerji: Last Stand, Blood for Steel, Glass Engine — düşük HP build'leri için yaşam hattı
 Tema: Son nefese kadar ayakta dur
 
-8. Overcharge Core
+Overcharge Core
 
 Efekt: Momentum 15'i geçince 4 saniyede bir 60px çevresine 2 hasar pulse atar
 Sinerji: Momentum Engine, Overclock Threshold — momentum zirveye ulaşınca saldırgana döner
 Tema: Biriken güç patlaması
 
-9. Anchor Pulse Core
+Anchor Pulse Core
 
 Efekt: Oyuncu durduğunda (5s hareketsiz) her saniye +1 armor kazanır
 Sinerji: Reinforced Frame, Fortress Core — sabitlenen Vector zırhlanır

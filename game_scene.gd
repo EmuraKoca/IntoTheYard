@@ -64,6 +64,11 @@ const _CALAMITY_DISPLAY_NAMES: Dictionary = {
 	"🎱":  "Bounce Barrage",
 	"🪞":  "Mirror Image",
 	"🧪":  "Systemic Failure",
+	"🛡️": "Iron Fortress",
+	"💥":  "Shockwave",
+	"🔓":  "Full Breach",
+	"⚡":  "Momentum Burst",
+	"🏚️": "Rampart Collapse",
 }
 
 # ── Upgrade kart takip sistemi ─────────────────────────────────────────────────
@@ -1136,6 +1141,9 @@ func gain_armor(amount: int) -> void:
 	var boosted := int(float(amount) * mult)
 	player_armor = min(player_armor + boosted, player_armor_cap)
 	player_max_armor = max(player_max_armor, player_armor_cap)
+	# Armor Rush: Armor kazanınca +1 Momentum
+	if boosted > 0 and p and p.get("has_armor_rush") and p.has_armor_rush:
+		p.momentum_stacks = min(p.momentum_stacks + 1, p.momentum_max)
 	_update_armor_ui()
 	# Armor/Bulwark Core: kazanım anında altın shield flash
 	if is_instance_valid(_player_node):
@@ -1812,6 +1820,11 @@ func player_damaged(amount: int = 1) -> void:
 		amount -= absorbed
 		_update_armor_ui()
 		_hex_shield_hit_flash()
+		# Momentum Transfer: Armor sıfırlandıysa +3 Momentum
+		if player_armor <= 0:
+			var _mt := get_node_or_null("Player")
+			if _mt and _mt.get("has_momentum_transfer") and _mt.has_momentum_transfer:
+				_mt.momentum_stacks = mini(_mt.momentum_stacks + 3, _mt.momentum_max)
 	if amount <= 0:
 		return
 	# Risk Engine: HP hasarı kadar Momentum stack kazan
@@ -2012,7 +2025,7 @@ func _build_all_upgrades() -> void:
 	{"name": "Anchor Core",         "category": "Identity",      "color": Color(0.3, 0.4, 0.6), "desc": "Hit → slow enemy 60% (3s)",                 "index": 41, "weight": 10, "rarity": "common",   "chars": ["vector"], "min_level": 0},
 	{"name": "Crusher Core",        "category": "Identity",      "color": Color(0.6, 0.3, 0.1), "desc": "High damage, breaks Armor",                 "index": 42, "weight": 10, "rarity": "common",   "chars": ["vector"], "min_level": 0},
 	{"name": "Siege Core",          "category": "Identity",      "color": Color(0.4, 0.4, 0.5), "desc": "Highest damage core",                       "index": 45, "weight": 6,  "rarity": "uncommon", "chars": ["vector"], "min_level": 2},
-	{"name": "Momentum Engine",     "category": "Utility",       "color": Color(0.0, 0.7, 1.0), "desc": "Hit → +1 Stack\n+3% Core Speed per stack\n(max 20 stacks)", "index": 35, "weight": 999, "rarity": "common", "chars": ["vector"], "min_level": 0},
+	{"name": "Momentum Engine",     "category": "Utility",       "color": Color(0.0, 0.7, 1.0), "desc": "Hit → +1 Stack\n+3% Core Speed per stack\n(max 20 stacks)", "index": 35, "weight": 8,   "rarity": "common", "chars": ["vector"], "min_level": 0},
 	{"name": "Chain Density",       "category": "Utility",       "color": Color(0.0, 0.9, 0.5), "desc": "New enemy hit mid-flight:\n+dmg ramp, resets on return",     "index": 37, "weight": 8, "rarity": "common", "chars": ["vector"], "min_level": 0},
 	{"name": "Reinforced Frame",    "category": "Individuality", "color": Color(0.5, 0.7, 0.5), "desc": "+20 Max Armor / Core Speed -%10",           "index": 48, "weight": 8, "rarity": "common",   "chars": ["vector"], "min_level": 1},
 	{"name": "Iron Constitution",   "category": "Individuality", "color": Color(0.7, 0.8, 0.6), "desc": "Armor gain efficiency +%25",                 "index": 49, "weight": 8, "rarity": "common",   "chars": ["vector"], "min_level": 1},
@@ -2033,7 +2046,7 @@ func _build_all_upgrades() -> void:
 	{"name": "Pain Converter",      "category": "Individuality", "color": Color(0.8, 0.2, 0.3), "desc": "HP <50%  →  Armor Gain +50%",                "index": 31, "weight": 5, "rarity": "rare",     "chars": ["vector"], "min_level": 3},
 	{"name": "Scar Tissue",         "category": "Individuality", "color": Color(0.6, 0.1, 0.1), "desc": "-5 HP  |  +Armor Cap  |  +Armor Regen",      "index": 33, "weight": 5, "rarity": "rare",     "chars": ["vector"], "min_level": 3},
 	{"name": "Blood Circuit",       "category": "Individuality", "color": Color(0.8, 0.1, 0.1), "desc": "HP <= %70: Core Speed scales up to +%50",    "index": 51, "weight": 5, "rarity": "rare",     "chars": ["vector"], "min_level": 3},
-	{"name": "Kinetic Nervous System","category":"Individuality", "color": Color(0.2, 0.9, 0.6), "desc": "Momentum doesn't reset on return / Max Armor -10", "index": 55, "weight": 4, "rarity": "rare", "chars": ["vector"], "min_level": 3},
+	{"name": "Kinetic Nervous System","category":"Individuality", "color": Color(0.2, 0.9, 0.6), "desc": "Momentum cap +10\n(20 → 30)", "index": 55, "weight": 4, "rarity": "rare", "chars": ["vector"], "min_level": 3},
 	# Lv3: Risk / Ödül
 	{"name": "Tempered Core",       "category": "Identity",      "color": Color(0.9, 0.7, 0.2), "desc": "Armor active → +3 dmg",                      "index": 47, "weight": 5, "rarity": "rare",     "chars": ["vector"], "min_level": 4},
 	{"name": "Glass Engine",        "category": "Individuality", "color": Color(0.5, 0.8, 0.9), "desc": "Low HP: Armor +%50 | High HP: Armor -%30",   "index": 53, "weight": 4, "rarity": "rare",     "chars": ["vector"], "min_level": 4},
@@ -2054,6 +2067,30 @@ func _build_all_upgrades() -> void:
 	{"name": "Severance Protocol", "category": "Individuality", "color": Color(0.9, 0.2, 0.15), "desc": "HP drops below 40%:\nArmor Cap +10 (once)",      "index": 111, "weight": 4, "rarity": "rare",     "chars": ["vector"], "min_level": 3},
 	{"name": "Inertia Plating",    "category": "Individuality", "color": Color(0.35, 0.5, 0.75),"desc": "Max Armor +5 per 5 Momentum\n(on pickup, once)", "index": 112, "weight": 4, "rarity": "rare",     "chars": ["vector"], "min_level": 4},
 	{"name": "Overclock Threshold","category": "Individuality", "color": Color(1.0, 0.75, 0.1), "desc": "20 Momentum stacks:\nCore Damage ×1.3 permanently", "index": 113, "weight": 3, "rarity": "epic",  "chars": ["vector"], "min_level": 5},
+	# ── Vector — Utility (yeni) ───────────────────────────────────────────────
+	{"name": "Armor Rush",        "category": "Utility",       "color": Color(0.3, 0.8, 0.6),  "desc": "Armor kazandığında:\n+1 Momentum Stack",                    "index": 164, "weight": 8,  "rarity": "common",    "chars": ["vector"], "min_level": 0},
+	{"name": "Combat Rhythm",     "category": "Utility",       "color": Color(0.4, 0.7, 0.9),  "desc": "3 ardışık isabet:\nCore anında geri döner",                 "index": 165, "weight": 7,  "rarity": "uncommon",  "chars": ["vector"], "min_level": 1},
+	{"name": "Shield Bash",       "category": "Utility",       "color": Color(0.5, 0.6, 0.8),  "desc": "Core dönüş hızı\nArmor miktarıyla artar",                  "index": 166, "weight": 7,  "rarity": "uncommon",  "chars": ["vector"], "min_level": 1},
+	{"name": "Siege Protocol",    "category": "Utility",       "color": Color(0.4, 0.4, 0.5),  "desc": "Siege Core: her duvar sekmesinde\n+1 hasar (isabette sıfır)","index": 167, "weight": 5,  "rarity": "rare",      "chars": ["vector"], "min_level": 2, "requires": [45]},
+	{"name": "Bulwark Echo",      "category": "Utility",       "color": Color(0.4, 0.5, 0.7),  "desc": "Bulwark Core isabeti: 2s sonra\nArmor kazanımının yarısı tekrar", "index": 168, "weight": 5, "rarity": "rare",   "chars": ["vector"], "min_level": 2, "requires": [44]},
+	{"name": "Momentum Transfer", "category": "Utility",       "color": Color(0.0, 0.8, 0.9),  "desc": "Armor sıfırlanırsa:\n+3 Momentum Stack",                    "index": 169, "weight": 6,  "rarity": "uncommon",  "chars": ["vector"], "min_level": 1},
+	{"name": "Tactical Reload",   "category": "Utility",       "color": Color(0.5, 0.7, 0.5),  "desc": "Her düşman isabeti:\n+1 max bounce (bu uçuş, max +3)",      "index": 170, "weight": 6,  "rarity": "uncommon",  "chars": ["vector"], "min_level": 1},
+	{"name": "Kinetic Surge",     "category": "Utility",       "color": Color(0.0, 0.9, 1.0),  "desc": "15+ Momentum:\nCore orbit'ten max hızda çıkar",             "index": 171, "weight": 4,  "rarity": "rare",      "chars": ["vector"], "min_level": 3},
+	{"name": "Armor Conduit",     "category": "Utility",       "color": Color(0.5, 0.7, 0.8),  "desc": "Armor = Cap iken isabet:\n+2 bonus hasar",                  "index": 172, "weight": 5,  "rarity": "rare",      "chars": ["vector"], "min_level": 2},
+	# ── Vector — Connected Cores (iç yörünge, fırlatılmaz) ───────────────────
+	{"name": "Iron Aura Core",      "category": "Identity",      "color": Color(0.5, 0.65, 0.9),  "desc": "Her 2s: 60px'deki düşmanlara\n1 + Armor×%5 hasar",              "index": 178, "weight": 5, "rarity": "rare",      "chars": ["vector"], "min_level": 2},
+	{"name": "Momentum Field Core", "category": "Identity",      "color": Color(0.0, 0.85, 1.0),  "desc": "Hareket ederken her 1s:\n+1 Momentum Stack (pasif)",            "index": 179, "weight": 5, "rarity": "rare",      "chars": ["vector"], "min_level": 2},
+	{"name": "Regen Pulse Core",    "category": "Identity",      "color": Color(0.4, 0.7, 0.55),  "desc": "Her 15s: 1 Armor yeniler",                                      "index": 180, "weight": 6, "rarity": "uncommon",  "chars": ["vector"], "min_level": 1},
+	{"name": "Fortress Core",       "category": "Identity",      "color": Color(0.4, 0.5, 0.75),  "desc": "Armor %75+ doluyken:\n90px düşmanlar %25 yavaşlar",             "index": 181, "weight": 5, "rarity": "rare",      "chars": ["vector"], "min_level": 2},
+	{"name": "Bloodwall Core",      "category": "Identity",      "color": Color(0.7, 0.1, 0.1),   "desc": "HP %50 altındayken:\nher 9s'de 1 HP yeniler",                   "index": 182, "weight": 5, "rarity": "rare",      "chars": ["vector"], "min_level": 3},
+	{"name": "Overcharge Core",     "category": "Identity",      "color": Color(0.0, 0.7, 1.0),   "desc": "Momentum 15+: her 4s\n60px'e 2 hasar pulse",                    "index": 183, "weight": 4, "rarity": "rare",      "chars": ["vector"], "min_level": 3},
+	{"name": "Anchor Pulse Core",   "category": "Identity",      "color": Color(0.35, 0.5, 0.75), "desc": "5s hareketsiz: her 1s\n+1 Armor kazanır",                       "index": 184, "weight": 5, "rarity": "uncommon",  "chars": ["vector"], "min_level": 1},
+	# ── Vector — Calamity ─────────────────────────────────────────────────────
+	{"name": "Iron Fortress",     "category": "Calamity",      "color": Color(0.4, 0.6, 0.8),  "desc": "Tüm Momentum → Armor\n(stack başına +1, 8s)",               "index": 173, "weight": 2,  "rarity": "epic",      "chars": ["vector"], "min_level": 3},
+	{"name": "Shockwave",         "category": "Calamity",      "color": Color(0.5, 0.5, 0.9),  "desc": "Mevcut Armor/2 kadar AoE hasar\n(tüm düşmanlar)",           "index": 174, "weight": 2,  "rarity": "epic",      "chars": ["vector"], "min_level": 3},
+	{"name": "Full Breach",       "category": "Calamity",      "color": Color(0.9, 0.2, 0.1),  "desc": "Armor sıfırlanır, 8s:\nCore Damage ×2.5",                   "index": 175, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 4},
+	{"name": "Momentum Burst",    "category": "Calamity",      "color": Color(0.0, 0.8, 1.0),  "desc": "Tüm Momentum harca:\n+2 Core Speed/stack (10s)",            "index": 176, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 4},
+	{"name": "Rampart Collapse",  "category": "Calamity",      "color": Color(0.7, 0.4, 0.2),  "desc": "Armor Cap kadar hasar (tek hedef)\nArmor sıfırlanır",       "index": 177, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 5},
 	# ── Leila (Elemental) ─────────────────────────────────────────────────────
 	{"name": "Electric Core",       "category": "Identity",      "color": Color(0.2, 0.5, 1.0), "desc": "Core gains electricity",                    "index": 1,  "weight": 10, "rarity": "common", "chars": ["leila"], "min_level": 0},
 	{"name": "Cryo Core",           "category": "Identity",      "color": Color(0.5, 0.8, 1.0), "desc": "Slows subject by 25%",                      "index": 15, "weight": 10, "rarity": "common", "chars": ["leila"], "min_level": 0},
@@ -2497,6 +2534,62 @@ func _activate_systemic_failure() -> void:
 			subject.apply_antivirus(subject.antivirus_stacks * 2 if subject.get("antivirus_stacks") and subject.antivirus_stacks > 0 else _cap)
 	_react_flash_screen(Color(0.05, 0.9, 0.35, 0.45))
 
+# ── Vector Calamity ───────────────────────────────────────────────────────────
+func _activate_iron_fortress() -> void:
+	var p := get_node_or_null("Player")
+	if p == null: return
+	var stacks: int = p.momentum_stacks
+	if stacks <= 0: return
+	p.momentum_stacks = 0
+	gain_armor(stacks)
+	_react_flash_screen(Color(0.4, 0.6, 0.9, 0.4))
+
+func _activate_shockwave() -> void:
+	var dmg: int = max(1, player_armor / 2)
+	for subject in get_tree().get_nodes_in_group("subjects"):
+		if is_instance_valid(subject) and subject.global_position.x >= 875.0:
+			subject.take_damage(dmg, false)
+	_react_flash_screen(Color(0.6, 0.6, 1.0, 0.5))
+
+func _activate_full_breach() -> void:
+	var p := get_node_or_null("Player")
+	if p == null: return
+	player_armor = 0
+	_update_armor_ui()
+	p.set_meta("full_breach_timer", 8.0)
+	p.set_meta("full_breach_active", true)
+	_react_flash_screen(Color(1.0, 0.2, 0.1, 0.5))
+
+func _activate_momentum_burst() -> void:
+	var p := get_node_or_null("Player")
+	if p == null: return
+	var stacks: int = p.momentum_stacks
+	if stacks <= 0: return
+	p.momentum_stacks = 0
+	var bonus: float = stacks * 2.0
+	p.set_meta("momentum_burst_bonus", bonus)
+	p.set_meta("momentum_burst_timer", 10.0)
+	_react_flash_screen(Color(0.0, 0.9, 1.0, 0.4))
+
+func _activate_rampart_collapse() -> void:
+	var p := get_node_or_null("Player")
+	if p == null: return
+	var dmg: int = player_armor_cap
+	var subjects := get_tree().get_nodes_in_group("subjects")
+	var closest: Node2D = null
+	var closest_d := INF
+	for s in subjects:
+		if not is_instance_valid(s) or s.global_position.x < 875.0: continue
+		var d: float = p.global_position.distance_to(s.global_position)
+		if d < closest_d:
+			closest_d = d
+			closest = s
+	if closest:
+		closest.take_damage(dmg, false)
+	player_armor = 0
+	_update_armor_ui()
+	_react_flash_screen(Color(0.8, 0.4, 0.1, 0.5))
+
 func _react_flash_screen(color: Color) -> void:
 	var flash := ColorRect.new()
 	flash.color = color
@@ -2549,6 +2642,16 @@ func _input(event: InputEvent) -> void:
 				_activate_backdoor()
 			elif calamity == "🧪":  # Systemic Failure
 				_activate_systemic_failure()
+			elif calamity == "🛡️":  # Iron Fortress
+				_activate_iron_fortress()
+			elif calamity == "💥":  # Shockwave
+				_activate_shockwave()
+			elif calamity == "🔓":  # Full Breach
+				_activate_full_breach()
+			elif calamity == "⚡":  # Momentum Burst
+				_activate_momentum_burst()
+			elif calamity == "🏚️":  # Rampart Collapse
+				_activate_rampart_collapse()
 			calamity_slots.remove_at(calamity_index)
 			calamity_index = clamp(calamity_index, 0, max(calamity_slots.size() - 1, 0))
 			if _player_node and _player_node.get("has_mana_overflow") and _player_node.has_mana_overflow:
@@ -3284,10 +3387,7 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 		get_node("Player").orbit_speed_mult *= 1.2
 		get_node("Player").armor_gain_mult  *= 0.85
 	elif index == 55:  # Kinetic Nervous System
-		player_armor_cap -= 10
-		player_armor = mini(player_armor, player_armor_cap)
-		get_node("Player").has_kinetic_nervous = true
-		_update_armor_ui()
+		get_node("Player").momentum_max += 10
 	elif index == 56:  # Hyper Recovery Loop
 		get_node("Player").return_speed_mult     = 1.5
 		get_node("Player").hyper_loop_max_bounce = 4
@@ -3325,6 +3425,40 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 		_update_armor_ui()
 	elif index == 113:  # Overclock Threshold
 		get_node("Player").has_overclock_threshold = true
+	# ── Vector — Utility (yeni) ───────────────────────────────────────────────
+	elif index == 164: get_node("Player").has_armor_rush        = true
+	elif index == 165: get_node("Player").has_combat_rhythm     = true
+	elif index == 166: get_node("Player").has_shield_bash       = true
+	elif index == 167: get_node("Player").has_siege_protocol    = true
+	elif index == 168: get_node("Player").has_bulwark_echo      = true
+	elif index == 169: get_node("Player").has_momentum_transfer = true
+	elif index == 170: get_node("Player").has_tactical_reload   = true
+	elif index == 171: get_node("Player").has_kinetic_surge     = true
+	elif index == 172: get_node("Player").has_armor_conduit     = true
+	# ── Vector — Connected Cores ─────────────────────────────────────────────
+	elif index == 178: $BallLauncher.queue_upgrade_ball("iron_aura_core")
+	elif index == 179: $BallLauncher.queue_upgrade_ball("momentum_field_core")
+	elif index == 180: $BallLauncher.queue_upgrade_ball("regen_pulse_core")
+	elif index == 181: $BallLauncher.queue_upgrade_ball("fortress_core")
+	elif index == 182: $BallLauncher.queue_upgrade_ball("bloodwall_core")
+	elif index == 183: $BallLauncher.queue_upgrade_ball("overcharge_core")
+	elif index == 184: $BallLauncher.queue_upgrade_ball("anchor_pulse_core")
+	# ── Vector — Calamity ─────────────────────────────────────────────────────
+	elif index == 173:  # Iron Fortress
+		if calamity_slots.size() < max_calamity_slots:
+			calamity_slots.append("🛡️")
+	elif index == 174:  # Shockwave
+		if calamity_slots.size() < max_calamity_slots:
+			calamity_slots.append("💥")
+	elif index == 175:  # Full Breach
+		if calamity_slots.size() < max_calamity_slots:
+			calamity_slots.append("🔓")
+	elif index == 176:  # Momentum Burst
+		if calamity_slots.size() < max_calamity_slots:
+			calamity_slots.append("⚡")
+	elif index == 177:  # Rampart Collapse
+		if calamity_slots.size() < max_calamity_slots:
+			calamity_slots.append("🏚️")
 
 	# ── Leila — Identity Cores ───────────────────────────────────────────────
 	elif index == 61:  # Plasma Core
