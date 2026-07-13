@@ -8,7 +8,7 @@ Tema: "Zırhım silahım"
 
 Momentum Field Core
 
-Efekt: Oyuncu hareket ettiği sürece her saniye 25 saniyede +1 momentum kazanır (pasif)
+Efekt: Oyuncu hareket ettiği sürece her 25 saniyede +1 momentum kazanır (pasif)
 Sinerji: Momentum Engine, Overclocked Reflex, Kinetic Nervous System ile direkt birikim
 Tema: Durmayan Vector daha güçlü olur
 
@@ -50,6 +50,7 @@ Tema: Mevzi tutan tank
 Efekt: Her 3 saniyede 70px içindeki 1 düşmana Burn uygular
 Sinerji: Elemental Mastery, Perfect Catalyst, Calamity Blizzard (Burn+Wet→Steam)
 Tema: Pasif ateş kaynağı, reaksiyon için zemin hazırlar
+
 2. Mist Core
 
 Efekt: Her 4 saniyede 70px içindeki 1 düşmana Wet uygular
