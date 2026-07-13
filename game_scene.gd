@@ -67,7 +67,7 @@ const _CALAMITY_DISPLAY_NAMES: Dictionary = {
 	"🛡️": "Iron Fortress",
 	"💥":  "Shockwave",
 	"🔓":  "Full Breach",
-	"⚡":  "Momentum Burst",
+	"💨":  "Momentum Burst",
 	"🏚️": "Rampart Collapse",
 }
 
@@ -2648,7 +2648,7 @@ func _input(event: InputEvent) -> void:
 				_activate_shockwave()
 			elif calamity == "🔓":  # Full Breach
 				_activate_full_breach()
-			elif calamity == "⚡":  # Momentum Burst
+			elif calamity == "💨":  # Momentum Burst
 				_activate_momentum_burst()
 			elif calamity == "🏚️":  # Rampart Collapse
 				_activate_rampart_collapse()
@@ -3455,7 +3455,7 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 			calamity_slots.append("🔓")
 	elif index == 176:  # Momentum Burst
 		if calamity_slots.size() < max_calamity_slots:
-			calamity_slots.append("⚡")
+			calamity_slots.append("💨")
 	elif index == 177:  # Rampart Collapse
 		if calamity_slots.size() < max_calamity_slots:
 			calamity_slots.append("🏚️")

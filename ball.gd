@@ -227,6 +227,22 @@ func _setup_ball_sprite() -> void:
 		folder = "staticCore";         frame_count = 17
 	elif can_phantom_circuit:
 		folder = "phantomCircuitCore"; frame_count = 17
+	elif is_inner_core:
+		var inner_folders := {
+			"iron_aura_core":      ["ironAuraCore",      9],
+			"momentum_field_core": ["momentumFieldCore", 9],
+			"regen_pulse_core":    ["regenPulseCore",    9],
+			"fortress_core":       ["fortressCore",      9],
+			"bloodwall_core":      ["bloodWallCore",     9],
+			"overcharge_core":     ["overchargeCore",    9],
+			"anchor_pulse_core":   ["anchorPulseCore",   9],
+		}
+		if inner_folders.has(inner_core_type):
+			var info = inner_folders[inner_core_type]
+			folder      = info[0]
+			frame_count = info[1]
+		else:
+			folder = "normalBall"; frame_count = 9
 	elif can_ricochet_core:
 		# Hız oranına göre 7 segment: %0/%5/%10/%15/%20/%25/%30
 		const RC_SEGS: Array = [
