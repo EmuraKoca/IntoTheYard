@@ -158,18 +158,14 @@ func die() -> void:
 			if ball.get("is_inner_core") and ball.is_inner_core and ball.get("inner_core_type") and ball.inner_core_type == "virus_beacon_core":
 				if ball.global_position.distance_to(global_position) <= 80.0:
 					var _vb_ref := ball
-					var _vb_ticks := 0
-					get_tree().create_timer(0.0).timeout.connect(func _vb_burst():
-						if not is_instance_valid(_vb_ref): return
+					for _vb_tick in range(3):
+						await get_tree().create_timer(_vb_tick * 1.0).timeout
+						if not is_instance_valid(_vb_ref): break
 						for s in _vb_ref.get_tree().get_nodes_in_group("subjects"):
 							if not is_instance_valid(s): continue
 							if _vb_ref.global_position.distance_to(s.global_position) <= 100.0:
 								if s.has_method("apply_antivirus"):
 									s.apply_antivirus(1)
-						_vb_ticks += 1
-						if _vb_ticks < 3 and is_instance_valid(_vb_ref):
-							_vb_ref.get_tree().create_timer(1.0).timeout.connect(_vb_burst)
-					)
 				break
 	_on_decay_death()
 	# Leech Nova Core: öldürünce +2 HP + 80px Glitch

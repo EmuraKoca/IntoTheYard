@@ -546,7 +546,8 @@ func _physics_process(delta: float) -> void:
 	if Input.is_key_pressed(KEY_A): direction.x = -1
 	if Input.is_key_pressed(KEY_D): direction.x = 1
 
-	velocity = direction.normalized() * SPEED * _ss_speed
+	var _ss_speed_move: float = 1.15 if (has_steam_surge and _steam_surge_timer > 0.0) else 1.0
+	velocity = direction.normalized() * SPEED * _ss_speed_move
 	move_and_slide()
 
 	# Vector footstep toz bulutu
@@ -601,10 +602,6 @@ func _physics_process(delta: float) -> void:
 			if _bfe.get("is_burning") and _bfe.is_burning:
 				_bf_bonus += 0.02
 		_bf_bonus = minf(_bf_bonus, 0.14)
-	# ── Steam Surge: 3s boyunca +15% hareket hızı ─────────────────────────────
-	var _ss_speed: float = 1.0
-	if has_steam_surge and _steam_surge_timer > 0.0:
-		_ss_speed = 1.15
 	# ── Orbit pozisyonlama ────────────────────────────────────────────────────
 	var _effective_orbit_speed: float = ORBIT_SPEED * orbit_speed_mult * (1.0 + _bf_bonus)
 	var game_node := get_tree().get_first_node_in_group("game")
