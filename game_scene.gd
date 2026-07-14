@@ -82,6 +82,8 @@ const _CALAMITY_DISPLAY_NAMES: Dictionary = {
 	"🔓":  "Full Breach",
 	"💨":  "Momentum Burst",
 	"🏚️": "Rampart Collapse",
+	"🌀🕳️": "WormHole",
+	"🌧️": "Siege Rain",
 }
 
 # ── Upgrade kart takip sistemi ─────────────────────────────────────────────────
@@ -135,6 +137,8 @@ const _CORE_INDEX_MAP: Dictionary = {
 	192: "glitch_pulse_core", 193: "shadow_core", 194: "data_drain_core",
 	195: "virus_beacon_core", 196: "rogues_eye_core", 197: "circuit_overload_core",
 }
+
+
 
 # index → {name, category}  (Identity kart izleme gerekmez, sadece Individuality+Utility)
 const _UPGRADE_META: Dictionary = {
@@ -2117,6 +2121,8 @@ func _build_all_upgrades() -> void:
 	{"name": "Full Breach",       "category": "Calamity",      "color": Color(0.9, 0.2, 0.1),  "desc": "Armor sıfırlanır, 8s:\nCore Damage ×2.5",                   "index": 175, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 4},
 	{"name": "Momentum Burst",    "category": "Calamity",      "color": Color(0.0, 0.8, 1.0),  "desc": "Tüm Momentum harca:\n+2 Core Speed/stack (10s)",            "index": 176, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 4},
 	{"name": "Rampart Collapse",  "category": "Calamity",      "color": Color(0.7, 0.4, 0.2),  "desc": "Armor Cap kadar hasar (tek hedef)\nArmor sıfırlanır",       "index": 177, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 5},
+	{"name": "WormHole",          "category": "Calamity",      "color": Color(0.4, 0.0, 0.8),  "desc": "5s: önünde solucan deliği açılır\nYaklaşan düşmanlar ışınlanır (Boss hariç)", "index": 198, "weight": 2, "rarity": "legendary", "chars": ["vector"], "min_level": 4},
+	{"name": "Siege Rain",        "category": "Calamity",      "color": Color(0.4, 0.4, 0.5),  "desc": "7s boyunca hedef alana\nher 0.5s'de Siege Core düşer",     "index": 199, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 4},
 	# ── Leila (Elemental) ─────────────────────────────────────────────────────
 	{"name": "Electric Core",       "category": "Identity",      "color": Color(0.2, 0.5, 1.0), "desc": "Core gains electricity",                    "index": 1,  "weight": 10, "rarity": "common", "chars": ["leila"], "min_level": 0},
 	{"name": "Cryo Core",           "category": "Identity",      "color": Color(0.5, 0.8, 1.0), "desc": "Slows subject by 25%",                      "index": 15, "weight": 10, "rarity": "common", "chars": ["leila"], "min_level": 0},
@@ -2631,6 +2637,121 @@ func _activate_rampart_collapse() -> void:
 	_update_armor_ui()
 	_react_flash_screen(Color(0.8, 0.4, 0.1, 0.5))
 
+func _activate_wormhole() -> void:
+	var player := get_node_or_null("Player")
+	if not player: return
+	# Delik pozisyonu: player'ın önünde 120px
+	var worm_pos: Vector2 = player.global_position + Vector2(120, 0)
+
+	# Görsel: mor çember, 5s boyunca titreşerek bekler
+	var worm_circle := ColorRect.new()
+	worm_circle.color = Color(0.5, 0.0, 1.0, 0.0)
+	worm_circle.size = Vector2(120, 120)
+	worm_circle.position = worm_pos - Vector2(60, 60)
+	worm_circle.z_index = 5
+	add_child(worm_circle)
+
+	var tw_in := worm_circle.create_tween()
+	tw_in.tween_property(worm_circle, "color:a", 0.7, 0.3)
+
+	# 5 saniye boyunca yaklaşan düşmanları ışınla
+	var elapsed := 0.0
+	var check_timer := get_tree().create_timer(0.2)
+	while elapsed < 5.0:
+		await check_timer.timeout
+		elapsed += 0.2
+		check_timer = get_tree().create_timer(0.2)
+		if not is_instance_valid(worm_circle): break
+		for s in get_tree().get_nodes_in_group("subjects"):
+			if not is_instance_valid(s): continue
+			if s.get("is_boss") and s.is_boss: continue  # Boss etkilenmez
+			if s.get("is_dead") and s.is_dead: continue
+			if worm_pos.distance_to(s.global_position) <= 70.0:
+				# Skor'un yarısını ver
+				var score_val: int = s.get("score_value") if s.get("score_value") else 0
+				subject_died(score_val / 2, s.global_position)
+				s.queue_free()
+
+	# Deliği kapat
+	if is_instance_valid(worm_circle):
+		var tw_out := worm_circle.create_tween()
+		tw_out.tween_property(worm_circle, "color:a", 0.0, 0.4)
+		tw_out.tween_callback(worm_circle.queue_free)
+	_react_flash_screen(Color(0.4, 0.0, 0.8, 0.3))
+
+func _activate_siege_rain(pos: Vector2) -> void:
+	# 7s boyunca her 0.5s'de bir Siege Core düşürür (14 darbe)
+	var siege_dmg: int = 8
+	var siege_radius: float = 55.0
+	for i in range(14):
+		await get_tree().create_timer(0.5).timeout
+		# Rastgele küçük sapma (±40px) etrafında
+		var hit_pos := pos + Vector2(randf_range(-40, 40), randf_range(-40, 40))
+		_spawn_siege_rain_impact(hit_pos, siege_dmg, siege_radius)
+
+func _spawn_siege_rain_impact(pos: Vector2, dmg: int, radius: float) -> void:
+	# Gölge uyarısı — büyükten küçüğe (Smiler sistemiyle aynı mantık)
+	var warn_time := 0.6
+	var shadow_node := Node2D.new()
+	shadow_node.z_index = 3
+	add_child(shadow_node)
+
+	var warn_elapsed := 0.0
+	var warn_tick := get_tree().create_timer(0.05)
+	while warn_elapsed < warn_time:
+		await warn_tick.timeout
+		warn_elapsed += 0.05
+		warn_tick = get_tree().create_timer(0.05)
+		if not is_instance_valid(shadow_node): return
+		var t: float = warn_elapsed / warn_time  # 0→1
+		shadow_node.queue_redraw()
+
+	# Siege Core görseli tepeden düşer
+	var core_vfx := AnimatedSprite2D.new()
+	core_vfx.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	core_vfx.z_index = 4
+	core_vfx.scale = Vector2(1.5, 1.5)
+	core_vfx.global_position = Vector2(pos.x, pos.y - 300.0)
+	var sf := SpriteFrames.new()
+	if sf.has_animation("default"): sf.remove_animation("default")
+	sf.add_animation("spin")
+	sf.set_animation_speed("spin", 15.0)
+	sf.set_animation_loop("spin", true)
+	for i in range(9):
+		sf.add_frame("spin", load("res://assets/balls/siegeCore/frame_%03d.png" % i))
+	core_vfx.sprite_frames = sf
+	add_child(core_vfx)
+	core_vfx.play("spin")
+
+	# Düşüş tweeni
+	var fall := core_vfx.create_tween()
+	fall.tween_property(core_vfx, "global_position:y", pos.y, 0.35)\
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+
+	await get_tree().create_timer(0.35).timeout
+
+	# Çarpma: ekran sarsıntısı + hasar
+	_screen_shake()
+	if is_instance_valid(core_vfx): core_vfx.queue_free()
+	if is_instance_valid(shadow_node): shadow_node.queue_free()
+
+	# Alan hasarı
+	for s in get_tree().get_nodes_in_group("subjects"):
+		if not is_instance_valid(s): continue
+		if pos.distance_to(s.global_position) <= radius:
+			s.take_damage(dmg, false)
+
+	# Zemin çatlağı VFX (geçici kırmızı daire)
+	var crack := ColorRect.new()
+	crack.color = Color(0.9, 0.3, 0.0, 0.6)
+	crack.size = Vector2(radius * 2, radius * 2)
+	crack.position = pos - Vector2(radius, radius)
+	crack.z_index = 2
+	add_child(crack)
+	var tw := crack.create_tween()
+	tw.tween_property(crack, "color:a", 0.0, 0.5)
+	tw.tween_callback(crack.queue_free)
+
 func _react_flash_screen(color: Color) -> void:
 	var flash := ColorRect.new()
 	flash.color = color
@@ -2693,6 +2814,10 @@ func _input(event: InputEvent) -> void:
 				_activate_momentum_burst()
 			elif calamity == "🏚️":  # Rampart Collapse
 				_activate_rampart_collapse()
+			elif calamity == "🌀🕳️":  # WormHole
+				_activate_wormhole()
+			elif calamity == "🌧️":  # Siege Rain
+				_activate_siege_rain(mouse_pos)
 			calamity_slots.remove_at(calamity_index)
 			calamity_index = clamp(calamity_index, 0, max(calamity_slots.size() - 1, 0))
 			if _player_node and _player_node.get("has_mana_overflow") and _player_node.has_mana_overflow:
@@ -3240,6 +3365,12 @@ func _process(delta: float) -> void:
 		elif calamity == "🔮":
 			$UI/CalamityCircle.color = Color(0.8, 0.8, 1.0, 0.2)
 			$UI/CalamityCircle.radius = 200
+		elif calamity == "🌀🕳️":  # WormHole
+			$UI/CalamityCircle.color = Color(0.5, 0.0, 1.0, 0.2)
+			$UI/CalamityCircle.radius = 70
+		elif calamity == "🌧️":  # Siege Rain
+			$UI/CalamityCircle.color = Color(0.4, 0.4, 0.5, 0.2)
+			$UI/CalamityCircle.radius = 80
 		$UI/CalamityCircle.queue_redraw()
 	else:
 		$UI/CalamityCircle.visible = false
@@ -3515,6 +3646,12 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 	elif index == 177:  # Rampart Collapse
 		if calamity_slots.size() < max_calamity_slots:
 			calamity_slots.append("🏚️")
+	elif index == 198:  # WormHole
+		if calamity_slots.size() < max_calamity_slots:
+			calamity_slots.append("🌀🕳️")
+	elif index == 199:  # Siege Rain
+		if calamity_slots.size() < max_calamity_slots:
+			calamity_slots.append("🌧️")
 
 	# ── Leila — Identity Cores ───────────────────────────────────────────────
 	elif index == 61:  # Plasma Core
