@@ -227,6 +227,12 @@ func _setup_ball_sprite() -> void:
 		folder = "staticCore";         frame_count = 17
 	elif can_phantom_circuit:
 		folder = "phantomCircuitCore"; frame_count = 17
+	elif ball_type == "tracer_core":
+		folder = "traceCore";          frame_count = 9
+	elif ball_type == "spike_core":
+		folder = "spikeCore";          frame_count = 9
+	elif ball_type == "leech_nova_core":
+		folder = "leechNovaCore";      frame_count = 4
 	elif is_inner_core:
 		if inner_core_type == "elemental_shield_core":
 			# none:5 / cryo:3 / electro:2 / wet:3 / fire:4  → toplam 17 frame
@@ -1479,7 +1485,8 @@ func _hit_subject(subject: Node2D) -> void:
 
 		# Circuit Breaker: Her 10. hit → tüm düşmanlar Glitch
 		if _rp.get("has_circuit_breaker") and _rp.has_circuit_breaker:
-			_rp._circuit_breaker_counter += 1
+			var _cb_inc: int = 2 if (_rp.get("has_overclock_protocol") and _rp.has_overclock_protocol) else 1
+			_rp._circuit_breaker_counter += _cb_inc
 			if _rp._circuit_breaker_counter >= 25:
 				_rp._circuit_breaker_counter = 0
 				for _cb_en in get_tree().get_nodes_in_group("subjects"):
@@ -1582,6 +1589,10 @@ func _hit_subject(subject: Node2D) -> void:
 		# Decay Core: isabette 1 Decay stack
 		if can_decay and subject.has_method("apply_decay"):
 			subject.apply_decay()
+
+		# Tracer Core: isabette vuruş noktasında 1s iz bırakır, izden geçen düşman 0.5s yavaşlar
+		if ball_type == "tracer_core":
+			_spawn_tracer_trail(subject.global_position)
 
 		# Phantom Circuit Core: çarpılan düşmanı kaydet; 3 farklı düşmana çarpınca sersemlet
 		if can_phantom_circuit:
@@ -2402,3 +2413,30 @@ func _update_trail(_delta: float) -> void:
 			trail.points = PackedVector2Array(trail_positions)
 			if trail_positions.is_empty():
 				trail.visible = false
+
+func _spawn_tracer_trail(pos: Vector2) -> void:
+	var game := get_node_or_null("/root/GameScene")
+	if not game: return
+	# İz görsel: yarı saydam mor çember
+	var zone := ColorRect.new()
+	zone.color = Color(0.7, 0.2, 1.0, 0.28)
+	var r := 22.0
+	zone.size = Vector2(r * 2, r * 2)
+	zone.position = pos - Vector2(r, r)
+	zone.z_index = 1
+	game.add_child(zone)
+	# 1s boyunca her 0.1s düşman kontrolü
+	var elapsed := 0
+	var _slowed_set: Array = []
+	var _tick := func():
+		if not is_instance_valid(zone): return
+		for e in game.get_tree().get_nodes_in_group("subjects"):
+			if not is_instance_valid(e): continue
+			if e in _slowed_set: continue
+			if e.global_position.distance_to(pos) <= r:
+				if e.get("apply_slow"): e.apply_slow(0.4, 0.5, "tracer")
+				_slowed_set.append(e)
+	for i in range(10):
+		await game.get_tree().create_timer(0.1 * (i + 1)).timeout
+		_tick.call()
+	if is_instance_valid(zone): zone.queue_free()

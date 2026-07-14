@@ -45,53 +45,44 @@ Tema: Mevzi tutan tank
 
 🌊 LEİLA — Elementalist (10 öneri)
 
-1. Ember Core (zaten Orbit Core var, bu ayrı)
-
-Efekt: Her 3 saniyede 70px içindeki 1 düşmana Burn uygular
-Sinerji: Elemental Mastery, Perfect Catalyst, Calamity Blizzard (Burn+Wet→Steam)
-Tema: Pasif ateş kaynağı, reaksiyon için zemin hazırlar
-
-2. Mist Core
+Mist Core
 
 Efekt: Her 4 saniyede 70px içindeki 1 düşmana Wet uygular
 Sinerji: Steam reaksiyonu (Ember Core + Mist Core = anında steam), Arc Core
 Tema: Sürekli ıslatan pasif kaynak
-3. Frost Aura Core
+
+Frost Aura Core
 
 Efekt: 50px içine giren düşmanlar otomatik Slow alır
 Sinerji: Freeze reaksiyonu, Catalyst Core, Cryostasis utility
 Tema: Leila'nın soğuk alanı — yaklaşamazsın
-4. Static Aura Core
 
-Efekt: 60px içine giren düşmanlar Electrified olur (2s cooldown/düşman)
+Static Aura Core
+
+Efekt: 60px içine giren düşmanlar Electrified olur (3s cooldown/düşman)
 Sinerji: Electrocute reaksiyonu (Static Aura + Mist Core = electrocute), Arc Core, Plasma Core
 Tema: Elektrik alan — yakınına gelirsen elektrik çarpar
-5. Catalyst Pulse Core
+
+Catalyst Pulse Core
 
 Efekt: Her 5 saniyede bir aktif debuff'ları olan tüm düşmanların debuff sürelerini +1s uzatır (120px)
 Sinerji: Elemental Mastery, Perfect Catalyst, tüm element core'ları
 Tema: Elementleri besleyen pasif güç
-6. Echo Resonance Core
+
+Echo Resonance Core
 
 Efekt: Leila bir reaksiyon tetiklediğinde, iç core 1s boyunca aynı elementi 80px çevresine uygular
 Sinerji: Echo Core, tüm reaksiyon zincirleri — reaksiyon reaksiyonu doğurur
 Tema: Elementlerin yankısı
-7. Prismatic Aura Core
 
-Efekt: Her 6 saniyede random bir element uygular (70px, 1 düşman)
-Sinerji: Tempest Core, Prismatic Core — ne geleceği belli olmayan kaos build
-Tema: Kontrol edilemez elementalist
-8. Cryo Pulse Core
 
-Efekt: Her 5 saniyede 90px içindeki tüm Wet düşmanlara Freeze uygular
-Sinerji: Mist Core + Cryo Pulse = pasif freeze zinciri, Cryostasis, Frozen Time
-Tema: Su + soğuk = buz tuzağı
-9. Volatile Aura Core
+Volatile Aura Core
 
 Efekt: Leila reaksiyon tetiklediğinde 2 hasar pulse atar (80px)
 Sinerji: Volatile Mixture, Living Storm, tüm reaksiyon build'leri
 Tema: Her reaksiyon bir mini patlama
-10. Elemental Shield Core
+
+Elemental Shield Core
 
 Efekt: Leila'nın aktif elementi (en son uyguladığı) o elementin hasarına karşı %20 direnç sağlar
 Sinerji: Echo Core, Tempest Core — sürekli element değiştiren Leila farklı dirençler kazanır
@@ -99,52 +90,38 @@ Tema: Elementleri hem saldırı hem savunma için kullanmak
 
 🎭 CYCLONE — Rogue (10 öneri)
 
-1. Glitch Pulse Core
+Glitch Pulse Core
 
 Efekt: Her 4 saniyede 80px içindeki 1 düşmana Glitch uygular
 Sinerji: System Overload (3+ Glitch → +%20 hasar), Data Exploit, Neural Overwrite
 Tema: Pasif Glitch kaynağı — hiç vurmadan düşmanları Glitch'ler
-2. Antivirus Core
 
-Efekt: Her 2 saniyede 60px içindeki düşmanlara 1 Antivirus yığını uygular
-Sinerji: Stack Overflow, Viral Load, Zero Day, Kernel Panic — tüm Antivirus build'i
-Tema: Pasif DoT kaynağı, kalabalık düşmanlarda sürekli yığın
-3. Shadow Core
+Shadow Core
 
-Efekt: Cyclone dash attıktan sonra 3s boyunca iç core hızlanır ve 50px çevresine mini hasar (1) uygular
+Efekt: Cyclone dash attıktan sonra 3s boyunca orbit hızlanır ve 50px çevresine mini hasar (1) uygular
 Sinerji: Shadow Strike, Shadow Dance — dash mekaniklerini güçlendirir
 Tema: Gölge gibi geç, iz bırak
-4. Phantom Aura Core
 
-Efekt: Phantom Circuit tetiklendiğinde iç core 2s boyunca 80px içindeki düşmanlara Glitch uygular
-Sinerji: Phantom Circuit, Interference Cloak, Ghost Protocol — Phantom her tetiklendiğinde ekstra etki
-Tema: Hayalet geçişin dalgası
-5. Data Drain Core
+Data Drain Core
 
 Efekt: Glitch'li düşman 60px içindeyse her saniye +1 HP kazanır
 Sinerji: Data Leech Core, Data Siphon — Glitch'li düşman hem hasar alır hem can verir
 Tema: Düşmanın verisi hayat enerjine dönüşür
-6. Static Interference Core
 
-Efekt: 70px içindeki Glitch'li düşmanlar %20 yavaşlar (pasif, sürekli)
-Sinerji: Signal Jam (zaten %25 yavaşlatıyor — birikmez ama garantiler), Exploit Stack
-Tema: Glitch'li düşman donup kalır
-7. Bounce Echo Core
 
-Efekt: Core her duvar sekmesinde iç core 1s boyunca parlar ve +1 hasar bonus biriktirir (maks +3, isabette sıfırlanır)
-Sinerji: Ricochet Strike, Wallrunner, Kinetic Rogue — sekme build'i için pasif güç kaynağı
-Tema: Her sekme enerji biriktiriyor
-8. Virus Beacon Core
+Virus Beacon Core
 
 Efekt: Antivirus'lü düşman 80px içinde ölürse, iç core 3s boyunca 100px çevresine 1 yığın yayar
 Sinerji: Cascade Delete, Zero Day, Kernel Panic — ölüm zinciri reaksiyonu
 Tema: Ölüm bulaşıcıdır
-9. Rogue's Eye Core
 
-Efekt: Her 6 saniyede en yakın düşmanı işaretler (3s) — işaretli düşman %10 daha fazla hasar alır
+Rogue's Eye Core
+
+Efekt: Her 7 saniyede en yakın düşmanı işaretler (3s) — işaretli düşman %10 daha fazla hasar alır
 Sinerji: Mind Hack, System Overload, Data Exploit — hedefe kilitlenen Rogue
 Tema: Her Rogue'un bir hedefi var
-10. Circuit Overload Core
+
+Circuit Overload Core
 
 Efekt: Circuit Breaker tetiklendiğinde (her 25. isabet) iç core 3s boyunca 90px çevresine sürekli Glitch uygular
 Sinerji: Circuit Breaker, Backdoor Calamity, System Overload

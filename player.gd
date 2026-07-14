@@ -108,6 +108,26 @@ var _overclock_triggered: bool    = false # Overclock tetiklendi mi
 var has_chain_catalyst: bool      = false # 2+ element → +%30 reaksiyon hasarı
 var has_volatile_mixture: bool    = false # 3. element → anında reaksiyon
 
+# ── Leila — Individuality (yeni) ─────────────────────────────────────────────
+var has_wet_armor: bool           = false # Islak düşman varken %10 az hasar
+var has_burn_frenzy: bool         = false # Her Yanan düşman → +2% Core hızı
+var has_steam_surge: bool         = false # Steam reaksiyonu → 3s +15% hareket hızı
+var _steam_surge_timer: float     = 0.0
+var has_shock_reflex: bool        = false # Electrocute → 3s +8% kaçınma
+var _shock_reflex_timer: float    = 0.0
+var has_frost_barrier: bool       = false # Freeze → 5 HP kalkan (4s)
+var _frost_barrier_timer: float   = 0.0
+var frost_barrier_hp: int         = 0
+var has_primal_instinct: bool     = false # Dalgada 3 farklı reaksiyon → +10% hasar 5s
+var _primal_instinct_timer: float = 0.0
+var _wave_reaction_types: Array   = []   # bu dalgadaki farklı reaksiyon tipleri
+var has_melt_spiral: bool         = false # Melt → 2s alev bırakır
+var has_void_resonance: bool      = false # 4 farklı reaksiyon → sonraki Calamity ücretsiz
+var _void_resonance_ready: bool   = false
+# ── Leila — Utility (yeni) ────────────────────────────────────────────────────
+var has_cryo_burst: bool          = false # Yavaşlatılmış düşmana +8 bonus hasar (1 kez/düşman)
+var has_arc_overload: bool        = false # Electrocute zinciri +2 düşmana sıçrar
+
 # ── Cyclone — Rogue ──────────────────────────────────────────────────────────
 var has_ricochet_strike: bool     = false
 var has_data_exploit: bool        = false
@@ -176,6 +196,16 @@ var has_cascade_delete: bool      = false # Antivirus yayılır (150px)
 var has_root_access: bool         = false # Max stack → +5 burst
 var has_zero_day: bool            = false # Antivirused + Glitched → stack iki katı
 var has_kernel_panic: bool        = false # Her tick %5 Glitch şansı
+# Cyclone — yeni kartlar
+var has_tracer_core: bool         = false # Vuruşta 1s iz, izden geçen 0.5s yavaşlar
+var has_spike_core: bool          = false # 3 Decay stack → anında patlama
+var has_leech_nova_core: bool     = false # Öldürünce +2 HP + 80px Glitch
+var has_decay_harvest: bool       = false # Decay patlaması → +2 HP
+var has_ghost_step: bool          = false # Dash sonrası 1.5s bağışıklık (5s CD)
+var _ghost_step_cooldown: float   = 0.0
+var has_overclock_protocol: bool  = false # Circuit Breaker sayacı 2× hızlı
+var has_decay_amp: bool           = false # Decay patlaması: 2 → 3 hasar/stack
+var has_static_link: bool         = false # Glitch'li düşmana Static slow 2× uzar
 
 # ── Leila — Elemental ────────────────────────────────────────────────────────
 var debuff_duration_mult: float   = 1.0   # Elemental Mastery, Arcane Mind, Arcane Focus
@@ -490,6 +520,19 @@ func _dash() -> void:
 func _physics_process(delta: float) -> void:
 	if catalyst_mind_cooldown > 0.0:
 		catalyst_mind_cooldown -= delta
+	# ── Leila Individuality timers ────────────────────────────────────────────
+	if _steam_surge_timer > 0.0:
+		_steam_surge_timer -= delta
+	if _shock_reflex_timer > 0.0:
+		_shock_reflex_timer -= delta
+	if _frost_barrier_timer > 0.0:
+		_frost_barrier_timer -= delta
+	else:
+		frost_barrier_hp = 0
+	if _primal_instinct_timer > 0.0:
+		_primal_instinct_timer -= delta
+	if _ghost_step_cooldown > 0.0:
+		_ghost_step_cooldown -= delta
 	# RTS modu — en yakın düşmana otomatik ateş
 	if rts_mode and not orbit_balls.is_empty():
 		_rts_fire_timer -= delta
@@ -503,7 +546,7 @@ func _physics_process(delta: float) -> void:
 	if Input.is_key_pressed(KEY_A): direction.x = -1
 	if Input.is_key_pressed(KEY_D): direction.x = 1
 
-	velocity = direction.normalized() * SPEED
+	velocity = direction.normalized() * SPEED * _ss_speed
 	move_and_slide()
 
 	# Vector footstep toz bulutu
@@ -528,6 +571,13 @@ func _physics_process(delta: float) -> void:
 			dash_velocity = Vector2.ZERO
 			_dash_trail_timer = 0.0
 			$CollisionShape2D.disabled = false
+			# Ghost Step: dash bitişi → 1.5s bağışıklık (5s cooldown)
+			if has_ghost_step and _ghost_step_cooldown <= 0.0:
+				invincible = true
+				_ghost_step_cooldown = 5.0
+				get_tree().create_timer(1.5).timeout.connect(func():
+					if is_instance_valid(self): invincible = false
+				)
 
 	# Wall boundaries
 	global_position.x = clamp(global_position.x, 910, 1580)
@@ -544,8 +594,19 @@ func _physics_process(delta: float) -> void:
 
 	_update_pranga(delta)
 
+	# ── Burn Frenzy: Her Yanan düşman için +2% Core hızı ─────────────────────
+	var _bf_bonus: float = 0.0
+	if has_burn_frenzy:
+		for _bfe in get_tree().get_nodes_in_group("subjects"):
+			if _bfe.get("is_burning") and _bfe.is_burning:
+				_bf_bonus += 0.02
+		_bf_bonus = minf(_bf_bonus, 0.14)
+	# ── Steam Surge: 3s boyunca +15% hareket hızı ─────────────────────────────
+	var _ss_speed: float = 1.0
+	if has_steam_surge and _steam_surge_timer > 0.0:
+		_ss_speed = 1.15
 	# ── Orbit pozisyonlama ────────────────────────────────────────────────────
-	var _effective_orbit_speed: float = ORBIT_SPEED * orbit_speed_mult
+	var _effective_orbit_speed: float = ORBIT_SPEED * orbit_speed_mult * (1.0 + _bf_bonus)
 	var game_node := get_tree().get_first_node_in_group("game")
 	if has_momentum_engine and momentum_stacks > 0:
 		# Last Stand: eksik HP başına ekstra bonus

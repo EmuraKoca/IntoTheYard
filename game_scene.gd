@@ -84,6 +84,12 @@ const _CALAMITY_DISPLAY_NAMES: Dictionary = {
 	"🏚️": "Rampart Collapse",
 	"🌀🕳️": "WormHole",
 	"🌧️": "Siege Rain",
+	"🧊":   "Deep Freeze",
+	"🔥💥": "Wildfire",
+	"💣":   "Glitch Bomb",
+	"💻💥": "System Crash",
+	"🦠":   "Antivirus Rain",
+	"☠️":  "Decay Field",
 }
 
 # ── Upgrade kart takip sistemi ─────────────────────────────────────────────────
@@ -1835,6 +1841,23 @@ func subject_rescued() -> void:
 	GameData.add_xp(GameData.selected_character, 2)
 
 func player_damaged(amount: int = 1) -> void:
+	var _p := get_node_or_null("Player")
+	# Shock Reflex: Electrocute sonrası 3s için %8 kaçınma
+	if _p and _p.get("has_shock_reflex") and _p.has_shock_reflex and _p._shock_reflex_timer > 0.0:
+		if randf() < 0.08:
+			return
+	# Frost Barrier: 5 HP kalkan absorbe eder
+	if _p and _p.get("has_frost_barrier") and _p.has_frost_barrier and _p.frost_barrier_hp > 0:
+		_p.frost_barrier_hp = maxi(0, _p.frost_barrier_hp - amount)
+		return
+	# Wet Armor: Islak düşman varken %10 az hasar
+	if _p and _p.get("has_wet_armor") and _p.has_wet_armor:
+		var has_wet_enemy := false
+		for _we in get_tree().get_nodes_in_group("subjects"):
+			if _we.get("is_wet") and _we.is_wet:
+				has_wet_enemy = true; break
+		if has_wet_enemy:
+			amount = maxi(1, int(amount * 0.9))
 	# Elemental Shield Core: aktif element varsa hasarı %20 azalt
 	for _esb in get_tree().get_nodes_in_group("player_balls"):
 		if not is_instance_valid(_esb): continue
@@ -2183,6 +2206,21 @@ func _build_all_upgrades() -> void:
 	{"name": "Echo Resonance Core",   "category": "Identity",      "color": Color(0.4, 0.7, 1.0),  "desc": "Her 5s: 1s boyunca 80px'e\nson uyguladığın elementi yayar",       "index": 189, "weight": 4, "rarity": "epic",      "chars": ["leila"], "min_level": 3},
 	{"name": "Volatile Aura Core",    "category": "Identity",      "color": Color(0.95, 0.4, 0.9), "desc": "Reaksiyon tetiklince:\n80px'e 2 hasar pulse",                     "index": 190, "weight": 4, "rarity": "epic",      "chars": ["leila"], "min_level": 3},
 	{"name": "Elemental Shield Core", "category": "Identity",      "color": Color(0.3, 0.9, 0.6),  "desc": "Son uyguladığın element:\no elementin hasarına %20 direnç",        "index": 191, "weight": 4, "rarity": "rare",      "chars": ["leila"], "min_level": 2},
+	# Individuality
+	{"name": "Wet Armor",       "category": "Individuality", "color": Color(0.1, 0.5, 0.9),  "desc": "Islak düşman varken\n%10 az hasar alırsın",                    "index": 200, "weight": 8,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 0},
+	{"name": "Burn Frenzy",     "category": "Individuality", "color": Color(1.0, 0.4, 0.1),  "desc": "Her Yanan düşman için\n+2% Core Hızı (maks +14%)",             "index": 201, "weight": 8,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 1},
+	{"name": "Steam Surge",     "category": "Individuality", "color": Color(0.7, 0.9, 1.0),  "desc": "Steam reaksiyonu:\n3s boyunca +15% hareket hızı",              "index": 202, "weight": 8,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 1},
+	{"name": "Shock Reflex",    "category": "Individuality", "color": Color(0.4, 0.6, 1.0),  "desc": "Electrocute reaksiyonu:\n3s için +8% hasar kaçınma",            "index": 203, "weight": 7,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 2},
+	{"name": "Frost Barrier",   "category": "Individuality", "color": Color(0.6, 0.9, 1.0),  "desc": "Freeze reaksiyonu:\n4s süren 5 HP kalkanı",                    "index": 204, "weight": 6,  "rarity": "rare",      "chars": ["leila"], "min_level": 2},
+	{"name": "Primal Instinct", "category": "Individuality", "color": Color(0.9, 0.7, 1.0),  "desc": "Bir dalgada 3 farklı reaksiyon:\n5s için +10% hasar",           "index": 205, "weight": 5,  "rarity": "rare",      "chars": ["leila"], "min_level": 3},
+	{"name": "Melt Spiral",     "category": "Individuality", "color": Color(1.0, 0.5, 0.2),  "desc": "Melt reaksiyonu:\ndüşmanın konumunda 2s alev bırakır (1/s)",  "index": 206, "weight": 5,  "rarity": "rare",      "chars": ["leila"], "min_level": 3},
+	{"name": "Void Resonance",  "category": "Individuality", "color": Color(0.7, 0.3, 1.0),  "desc": "Dalgada 4 farklı reaksiyon:\nsonraki Calamity slot tüketmez",  "index": 207, "weight": 2,  "rarity": "epic",      "chars": ["leila"], "min_level": 5},
+	# Calamity
+	{"name": "Deep Freeze",     "category": "Calamity",      "color": Color(0.5, 0.85, 1.0), "desc": "Tüm Islak düşmanları\nanında Dondurur",                        "index": 208, "weight": 4,  "rarity": "rare",      "chars": ["leila"], "min_level": 3},
+	{"name": "Wildfire",        "category": "Calamity",      "color": Color(1.0, 0.3, 0.0),  "desc": "Tüm Yanan düşmanlar patlar\n(10 hasar, 2 yakına yayılır)",     "index": 209, "weight": 3,  "rarity": "epic",      "chars": ["leila"], "min_level": 4},
+	# Utility
+	{"name": "Cryo Burst",      "category": "Utility",       "color": Color(0.6, 0.85, 1.0), "desc": "Yavaşlatılmış düşmana\nsonraki vuruş +8 bonus hasar",          "index": 210, "weight": 5,  "rarity": "rare",      "chars": ["leila"], "min_level": 2},
+	{"name": "Arc Overload",    "category": "Utility",       "color": Color(0.3, 0.5, 1.0),  "desc": "Electrocute zinciri\n2 ek düşmana daha sıçrar",                "index": 211, "weight": 4,  "rarity": "rare",      "chars": ["leila"], "min_level": 3},
 	# ── Cyclone (Manipülasyon) ────────────────────────────────────────────────
 	# Identity — Core kartları
 	{"name": "Glitch Core",          "category": "Identity",      "color": Color(0.8, 0.0, 0.8),  "desc": "Disorients subject for 3s",                                "index": 16,  "weight": 10, "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
@@ -2243,6 +2281,22 @@ func _build_all_upgrades() -> void:
 	{"name": "Virus Beacon Core",    "category": "Identity",      "color": Color(0.1, 0.75, 0.3),  "desc": "Antivirus'lü düşman 80px'te ölürse\n3s: 100px'e 1 stack yayar", "index": 195, "weight": 4, "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
 	{"name": "Rogue's Eye Core",     "category": "Identity",      "color": Color(0.9, 0.6, 0.1),   "desc": "Her 7s: en yakın düşmanı işaretle\n(3s, %10 fazla hasar alır)",  "index": 196, "weight": 4, "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
 	{"name": "Circuit Overload Core","category": "Identity",      "color": Color(0.25, 0.75, 0.95),"desc": "Circuit Breaker tetiklenince\n3s: 90px çevresine sürekli Glitch",  "index": 197, "weight": 3, "rarity": "epic",      "chars": ["cyclone"], "min_level": 3},
+	# Identity — yeni Core'lar
+	{"name": "Tracer Core",    "category": "Identity",      "color": Color(0.7, 0.2, 1.0),  "desc": "Vuruşta 1s takip izi bırakır\nİzden geçen düşman 0.5s yavaşlar",  "index": 212, "weight": 8,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
+	{"name": "Spike Core",     "category": "Identity",      "color": Color(0.5, 0.15, 0.0), "desc": "3 Decay stack varsa:\nanında Decay patlaması tetiklenir",          "index": 213, "weight": 6,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
+	{"name": "Leech Nova Core","category": "Identity",      "color": Color(0.6, 0.0, 0.3),  "desc": "Öldürünce: +2 HP\n80px çevresine 1s Glitch",                        "index": 214, "weight": 4,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3},
+	# Calamity — Rare/Epic
+	{"name": "Glitch Bomb",    "category": "Calamity",      "color": Color(0.75, 0.0, 0.85),"desc": "Seçilen 120px alana 4s Glitch uygular",                              "index": 215, "weight": 5,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
+	{"name": "System Crash",   "category": "Calamity",      "color": Color(0.8, 0.1, 0.6),  "desc": "Tüm Glitch'li düşmanlar\nmevcut HP'nin %%30'unu kaybeder",          "index": 216, "weight": 4,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3},
+	{"name": "Antivirus Rain", "category": "Calamity",      "color": Color(0.1, 0.85, 0.4),  "desc": "3s boyunca her 0.5s:\ntüm düşmanlara 1 Antivirus stack",           "index": 217, "weight": 5,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
+	{"name": "Decay Field",    "category": "Calamity",      "color": Color(0.45, 0.2, 0.0),  "desc": "5s: seçilen 100px alana aura\ngiren düşmanlar her 1s'de 1 Decay alır","index": 218, "weight": 4,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3},
+	# Individuality
+	{"name": "Decay Harvest",       "category": "Individuality", "color": Color(0.5, 0.25, 0.0), "desc": "Decay patlaması tetiklenince:\n+2 HP kazan",                    "index": 219, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
+	{"name": "Ghost Step",          "category": "Individuality", "color": Color(0.3, 0.8, 0.9),  "desc": "Dash sonrası 1.5s hasar bağışıklığı\n(5s bekleme süresi)",     "index": 220, "weight": 5,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
+	{"name": "Overclock Protocol",  "category": "Individuality", "color": Color(0.25, 0.9, 0.95),"desc": "Circuit Breaker sayacı\n2× hızlı dolar",                       "index": 221, "weight": 3,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 4},
+	# Utility
+	{"name": "Decay Amp",   "category": "Utility", "color": Color(0.55, 0.25, 0.0), "desc": "Decay patlaması: stack başına\n2 → 3 hasar",                              "index": 222, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
+	{"name": "Static Link", "category": "Utility", "color": Color(0.75, 0.75, 0.2), "desc": "Static Core: hedef Glitch'liyse\nslow süresi 2× uzar",                    "index": 223, "weight": 5,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
 	# ── Herkese açık ─────────────────────────────────────────────────────────
 	{"name": "Core Mastery",        "category": "Utility",       "color": Color(0.2, 0.8, 0.2), "desc": "+1 damage to all cores",                    "index": 11, "weight": 10, "rarity": "common", "chars": [], "min_level": 0},
 	{"name": "Lightning",           "category": "Calamity",      "color": Color(1.0, 1.0, 0.0), "desc": "Lightning strikes selected point",          "index": 7,  "weight": 8,  "rarity": "common", "chars": ["leila"], "min_level": 0},
@@ -2268,6 +2322,11 @@ func _build_all_upgrades() -> void:
 
 func show_upgrade_menu() -> void:
 	upgrading = true
+	# Void Resonance: her dalga başında reaksiyon sayacı sıfırla
+	var _vr_p := get_node_or_null("Player")
+	if _vr_p:
+		_vr_p._wave_reaction_types.clear()
+		# Void Resonance ücretsiz Calamity hazırsa slot tüketmeme flag'i zaten set
 	_build_all_upgrades()
 	var char_id: String = get_node("Player").character_type
 	var char_level: int = GameData.get_level(char_id)
@@ -2752,6 +2811,77 @@ func _spawn_siege_rain_impact(pos: Vector2, dmg: int, radius: float) -> void:
 	tw.tween_property(crack, "color:a", 0.0, 0.5)
 	tw.tween_callback(crack.queue_free)
 
+func _activate_glitch_bomb(pos: Vector2) -> void:
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if not is_instance_valid(e): continue
+		if e.global_position.distance_to(pos) <= 120.0:
+			if e.get("apply_glitch"): e.apply_glitch()
+	_react_flash_screen(Color(0.75, 0.0, 0.85, 0.2))
+
+func _activate_system_crash() -> void:
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if not is_instance_valid(e): continue
+		if e.get("is_glitched") and e.is_glitched:
+			var loss := int(e.health * 0.3)
+			e.take_damage(maxi(loss, 1), false)
+	_react_flash_screen(Color(0.8, 0.1, 0.6, 0.25))
+
+func _activate_antivirus_rain() -> void:
+	var ticks := 6  # 3s × her 0.5s = 6 tick
+	var tick_index := 0
+	var _do_tick := func():
+		for e in get_tree().get_nodes_in_group("enemies"):
+			if not is_instance_valid(e): continue
+			if e.get("apply_antivirus"): e.apply_antivirus()
+	_do_tick.call()
+	for i in range(1, ticks):
+		await get_tree().create_timer(0.5 * i).timeout
+		_do_tick.call()
+	_react_flash_screen(Color(0.1, 0.85, 0.4, 0.2))
+
+func _activate_decay_field(pos: Vector2) -> void:
+	var field_duration := 5.0
+	var field_radius := 100.0
+	var zone := ColorRect.new()
+	zone.color = Color(0.45, 0.2, 0.0, 0.3)
+	zone.size = Vector2(field_radius * 2, field_radius * 2)
+	zone.position = pos - Vector2(field_radius, field_radius)
+	zone.z_index = 1
+	add_child(zone)
+	var elapsed := 0.0
+	while elapsed < field_duration:
+		await get_tree().create_timer(1.0).timeout
+		elapsed += 1.0
+		if not is_instance_valid(zone): break
+		for e in get_tree().get_nodes_in_group("enemies"):
+			if not is_instance_valid(e): continue
+			if e.global_position.distance_to(pos) <= field_radius:
+				if e.get("apply_decay"): e.apply_decay()
+	if is_instance_valid(zone): zone.queue_free()
+
+func _activate_deep_freeze() -> void:
+	# Tüm Islak düşmanları anında Dondurur
+	var enemies := get_tree().get_nodes_in_group("enemies")
+	for e in enemies:
+		if e.get("is_wet") and e.is_wet:
+			e.apply_frozen()
+	_react_flash_screen(Color(0.6, 0.9, 1.0, 0.25))
+
+func _activate_wildfire() -> void:
+	# Tüm Yanan düşmanlar patlar: 10 hasar + 2 yakın düşmana yangın yayar
+	var enemies := get_tree().get_nodes_in_group("enemies")
+	for e in enemies:
+		if e.get("is_burning") and e.is_burning:
+			e.take_damage(10, false)
+			var spread_count := 0
+			for other in enemies:
+				if other == e or spread_count >= 2:
+					break
+				if other.global_position.distance_to(e.global_position) <= 120.0:
+					other.apply_burn()
+					spread_count += 1
+	_react_flash_screen(Color(1.0, 0.3, 0.0, 0.3))
+
 func _react_flash_screen(color: Color) -> void:
 	var flash := ColorRect.new()
 	flash.color = color
@@ -2818,7 +2948,27 @@ func _input(event: InputEvent) -> void:
 				_activate_wormhole()
 			elif calamity == "🌧️":  # Siege Rain
 				_activate_siege_rain(mouse_pos)
-			calamity_slots.remove_at(calamity_index)
+			elif calamity == "🧊":  # Deep Freeze
+				_activate_deep_freeze()
+			elif calamity == "🔥💥":  # Wildfire
+				_activate_wildfire()
+			elif calamity == "💣":  # Glitch Bomb
+				_activate_glitch_bomb(mouse_pos)
+			elif calamity == "💻💥":  # System Crash
+				_activate_system_crash()
+			elif calamity == "🦠":  # Antivirus Rain
+				_activate_antivirus_rain()
+			elif calamity == "☠️":  # Decay Field
+				_activate_decay_field(mouse_pos)
+			# Void Resonance: 4 farklı reaksiyon olduysa slot tüketme
+			var _vr_skip := false
+			if _player_node and _player_node.get("has_void_resonance") and _player_node.has_void_resonance:
+				if _player_node.get("_void_resonance_ready") and _player_node._void_resonance_ready:
+					_vr_skip = true
+					_player_node._void_resonance_ready = false
+					_player_node._wave_reaction_types.clear()
+			if not _vr_skip:
+				calamity_slots.remove_at(calamity_index)
 			calamity_index = clamp(calamity_index, 0, max(calamity_slots.size() - 1, 0))
 			if _player_node and _player_node.get("has_mana_overflow") and _player_node.has_mana_overflow:
 				_player_node.mana_overflow_timer = 5.0
@@ -3371,6 +3521,20 @@ func _process(delta: float) -> void:
 		elif calamity == "🌧️":  # Siege Rain
 			$UI/CalamityCircle.color = Color(0.4, 0.4, 0.5, 0.2)
 			$UI/CalamityCircle.radius = 80
+		elif calamity == "🧊":  # Deep Freeze — hedef yok, tüm Islak düşmanlar
+			$UI/CalamityCircle.visible = false
+		elif calamity == "🔥💥":  # Wildfire — hedef yok, tüm Yanan düşmanlar
+			$UI/CalamityCircle.visible = false
+		elif calamity == "💣":  # Glitch Bomb
+			$UI/CalamityCircle.color = Color(0.75, 0.0, 0.85, 0.2)
+			$UI/CalamityCircle.radius = 120
+		elif calamity == "💻💥":  # System Crash — hedef yok
+			$UI/CalamityCircle.visible = false
+		elif calamity == "🦠":  # Antivirus Rain — hedef yok
+			$UI/CalamityCircle.visible = false
+		elif calamity == "☠️":  # Decay Field
+			$UI/CalamityCircle.color = Color(0.45, 0.2, 0.0, 0.2)
+			$UI/CalamityCircle.radius = 100
 		$UI/CalamityCircle.queue_redraw()
 	else:
 		$UI/CalamityCircle.visible = false
@@ -3735,6 +3899,62 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 		get_node("Player").has_chain_catalyst = true
 	elif index == 107:  # Volatile Mixture
 		get_node("Player").has_volatile_mixture = true
+	elif index == 200:  # Wet Armor
+		get_node("Player").has_wet_armor = true
+	elif index == 201:  # Burn Frenzy
+		get_node("Player").has_burn_frenzy = true
+	elif index == 202:  # Steam Surge
+		get_node("Player").has_steam_surge = true
+	elif index == 203:  # Shock Reflex
+		get_node("Player").has_shock_reflex = true
+	elif index == 204:  # Frost Barrier
+		get_node("Player").has_frost_barrier = true
+	elif index == 205:  # Primal Instinct
+		get_node("Player").has_primal_instinct = true
+	elif index == 206:  # Melt Spiral
+		get_node("Player").has_melt_spiral = true
+	elif index == 207:  # Void Resonance
+		get_node("Player").has_void_resonance = true
+	elif index == 210:  # Cryo Burst
+		get_node("Player").has_cryo_burst = true
+	elif index == 211:  # Arc Overload
+		get_node("Player").has_arc_overload = true
+	# ── Cyclone — yeni kartlar ────────────────────────────────────────────────
+	elif index == 212:  # Tracer Core
+		get_node("Player").has_tracer_core = true
+		$BallLauncher.queue_upgrade_ball("tracer_core")
+	elif index == 213:  # Spike Core
+		get_node("Player").has_spike_core = true
+		$BallLauncher.queue_upgrade_ball("spike_core")
+	elif index == 214:  # Leech Nova Core
+		get_node("Player").has_leech_nova_core = true
+		$BallLauncher.queue_upgrade_ball("leech_nova_core")
+	elif index == 215:  # Glitch Bomb
+		if calamity_slots.size() < max_calamity_slots:
+			calamity_slots.append("💣")
+			update_ui()
+	elif index == 216:  # System Crash
+		if calamity_slots.size() < max_calamity_slots:
+			calamity_slots.append("💻💥")
+			update_ui()
+	elif index == 217:  # Antivirus Rain
+		if calamity_slots.size() < max_calamity_slots:
+			calamity_slots.append("🦠")
+			update_ui()
+	elif index == 218:  # Decay Field
+		if calamity_slots.size() < max_calamity_slots:
+			calamity_slots.append("☠️")
+			update_ui()
+	elif index == 219:  # Decay Harvest
+		get_node("Player").has_decay_harvest = true
+	elif index == 220:  # Ghost Step
+		get_node("Player").has_ghost_step = true
+	elif index == 221:  # Overclock Protocol
+		get_node("Player").has_overclock_protocol = true
+	elif index == 222:  # Decay Amp
+		get_node("Player").has_decay_amp = true
+	elif index == 223:  # Static Link
+		get_node("Player").has_static_link = true
 
 	# ── Cyclone — Rogue ──────────────────────────────────────────────────────
 	elif index >= 114 and index <= 146:
@@ -3805,6 +4025,14 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 	elif index == 98:  # Thunderstorm
 		if calamity_slots.size() < max_calamity_slots:
 			calamity_slots.append("⛈️")
+			update_ui()
+	elif index == 208:  # Deep Freeze
+		if calamity_slots.size() < max_calamity_slots:
+			calamity_slots.append("🧊")
+			update_ui()
+	elif index == 209:  # Wildfire
+		if calamity_slots.size() < max_calamity_slots:
+			calamity_slots.append("🔥💥")
 			update_ui()
 
 	update_ui()

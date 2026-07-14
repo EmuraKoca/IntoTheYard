@@ -383,6 +383,12 @@ func _launch_typed_ball(ball_type: String) -> void:
 		"circuit_overload_core":
 			ball.is_inner_core       = true
 			ball.inner_core_type     = "circuit_overload_core"
+		"tracer_core":
+			ball.ball_type = "tracer_core"
+		"spike_core":
+			ball.ball_type = "spike_core"
+		"leech_nova_core":
+			ball.ball_type = "leech_nova_core"
 
 	var direction  = (player.global_position - global_position).normalized()
 	var spawn_pos  = _get_muzzle_global()

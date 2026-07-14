@@ -1,3 +1,93 @@
+v0.1.0.0 — Büyük Kart Genişlemesi & Connected Core Sistemi (2026-07-14)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Connected Core Sistemi (iç yörünge):
+
+  ✅ Oyunun geneline İç Yörünge (Connected Core) sistemi eklendi.
+     — Alınan Connected Core'lar karakterin etrafında ayrı bir yörüngede döner,
+       diğer core'lar gibi fırlatılmaz; pasif veya zaman bazlı etki uygular.
+  ✅ ball.gd: is_inner_core flag + inner_core_type string sistemi
+  ✅ ball_launcher.gd: is_inner[] listesi + match bloğu ile yönlendirme
+  ✅ _inner_core_tick(delta): 1s tabanlı genel tick + _inner_tick_timer_b (core bazlı CD)
+  ✅ Orbit Core → Prism Core olarak yeniden adlandırıldı
+
+Vector — Connected Cores (7 kart, index 178-184):
+  ✅ Iron Aura Core      — Her 2s: 60px çevresine 1+Armor×%%5 hasar
+  ✅ Momentum Field Core — Hareket ederken her 1s: +1 Momentum
+  ✅ Regen Pulse Core    — Her 15s: 1 Armor yeniler
+  ✅ Fortress Core       — Armor %%75+: 90px düşmanları %%25 yavaşlatır
+  ✅ Bloodwall Core      — HP %%50 altı: her 9s: +1 HP
+  ✅ Overcharge Core     — Momentum 15+: her 4s 60px'e 2 hasar pulse
+  ✅ Anchor Pulse Core   — 5s hareketsiz kalınca her 1s: +1 Armor
+
+Leila — Connected Cores (7 kart, index 185-191):
+  ✅ Mist Core           — Her 4s: 70px içinde 1 düşmana Wet uygular
+  ✅ Frost Aura Core     — 50px içine giren düşmanlar otomatik Slow alır
+  ✅ Static Aura Core    — 60px içine giren düşmanlar Electrified olur (3s CD/düşman)
+  ✅ Catalyst Pulse Core — Her 5s: 120px'teki debufflı düşmanların süresi +1s uzar
+  ✅ Echo Resonance Core — Her 5s: 1s boyunca 80px'e son uyguladığın elementi yayar
+  ✅ Volatile Aura Core  — Reaksiyon tetiklenince: 80px'e 2 hasar pulse
+  ✅ Elemental Shield Core — Son uyguladığın elementin hasarına %%20 direnç
+  ✅ ElementalShieldCore: 5 animasyon segmenti (none/cryo/electro/wet/fire)
+
+Cyclone — Connected Cores (6 kart, index 192-197):
+  ✅ Glitch Pulse Core   — Her 4s: 80px'e 1 düşmana Glitch uygular
+  ✅ Shadow Core         — Dash sonrası 3s: orbit hızlanır, 50px çevresine 1 hasar/s
+  ✅ Data Drain Core     — Glitch'li düşman 60px içindeyse her 1s: +1 HP
+  ✅ Virus Beacon Core   — Antivirus'lü düşman 80px'te ölürse 3s: 100px'e stack yayar
+  ✅ Rogue's Eye Core   — Her 7s: en yakın düşmanı 3s işaretle (%%10 fazla hasar)
+  ✅ Circuit Overload Core — Circuit Breaker tetiklenince 3s: 90px'e sürekli Glitch
+     (5 animasyon segmenti: CB sayacına göre görsel ilerleme)
+
+Vector — Yeni Calamity (2 kart, index 198-199):
+  ✅ WormHole (🌀🕳️, Legendary)  — 5s: önde solucan deliği açar, düşmanlar ışınlanır
+     Boss bağışıklı; ışınlanan düşmanın skoru ×0.5 gelir
+  ✅ Siege Rain (🌧️, Legendary) — 7s: her 0.5s seçili alana Siege Core düşer
+     Gölge uyarısı → Core düşüşü → ekran sarsıntısı + zemin çatlağı VFX
+
+Leila — Yeni Kartlar (12 kart, index 200-211):
+  Individuality:
+  ✅ Wet Armor (200)      — Islak düşman varken %%10 az hasar alırsın
+  ✅ Burn Frenzy (201)    — Her Yanan düşman için +2%% Core Hızı (maks +14%%)
+  ✅ Steam Surge (202)    — Steam reaksiyonu → 3s %%15 hareket hızı
+  ✅ Shock Reflex (203)   — Electrocute → 3s için %%8 hasar kaçınma
+  ✅ Frost Barrier (204)  — Freeze reaksiyonu → 4s süren 5 HP kalkanı
+  ✅ Primal Instinct (205) — Bir dalgada 3 farklı reaksiyon → 5s %%10 hasar
+  ✅ Melt Spiral (206)    — Melt reaksiyonu → düşman konumunda 2s alev (1/s)
+  ✅ Void Resonance (207) — Dalgada 4 farklı reaksiyon → sonraki Calamity slot tüketmez
+  Calamity:
+  ✅ Deep Freeze (208, 🧊) — Tüm Islak düşmanları anında Dondurur
+  ✅ Wildfire (209, 🔥💥)  — Tüm Yanan düşmanlar patlar (10 hasar, 2 yakına yayılır)
+  Utility:
+  ✅ Cryo Burst (210)     — Yavaşlatılmış düşmana sonraki vuruş +8 bonus hasar
+  ✅ Arc Overload (211)   — Electrocute zinciri 2 ek düşmana sıçrar
+
+Cyclone — Yeni Kartlar (12 kart, index 212-223):
+  Identity:
+  ✅ Tracer Core (212)    — Vuruşta 1s iz bırakır; izden geçen düşman 0.5s yavaşlar
+  ✅ Spike Core (213)     — 3. Decay stack'te anında Decay patlaması tetiklenir
+  ✅ Leech Nova Core (214) — Öldürünce: +2 HP + 80px'e 1s Glitch
+  Calamity:
+  ✅ Glitch Bomb (215, 💣)   — Seçilen 120px alana 4s Glitch uygular
+  ✅ System Crash (216, 💻💥) — Tüm Glitch'li düşmanlar mevcut HP'nin %%30'unu kaybeder
+  ✅ Antivirus Rain (217, 🦠) — 3s boyunca her 0.5s: tüm düşmanlara 1 Antivirus stack
+  ✅ Decay Field (218, ☠️)   — 5s: seçilen 100px alana Decay aura (giren düşman +1 stack/s)
+  Individuality:
+  ✅ Decay Harvest (219)   — Decay patlaması → +2 HP
+  ✅ Ghost Step (220)      — Dash sonrası 1.5s hasar bağışıklığı (5s bekleme süresi)
+  ✅ Overclock Protocol (221) — Circuit Breaker sayacı 2× hızlı dolar
+  Utility:
+  ✅ Decay Amp (222)      — Decay patlaması: stack başına 2 → 3 hasar
+  ✅ Static Link (223)    — Glitch'li düşmana Static Core slow 2× uzar
+
+Diğer:
+  ✅ Momentum Burst emoji 💨 olarak güncellendi (Calamity Lightning ile ⚡ çakışması giderildi)
+  ✅ base_enemy.gd: is_marked flag + Rogue's Eye Core %%10 hasar bonusu
+  ✅ base_enemy.gd: _last_reaction_type takibi (Primal Instinct / Void Resonance için)
+  ✅ player.gd: circuit_overload_active, circuit_overload_timer eklendi
+  ✅ Excel kart dosyaları güncellendi (vectorCards, leilaCards, cycloneCards)
+
+
 
 
 0.0.0.1

@@ -33,6 +33,7 @@ var _elem_indicator = null
 var _anim_dir: String = "S"
 var _freeze_sprite: AnimatedSprite2D = null
 var _reactions_cancelled: bool = false
+var _last_reaction_type: String = ""  # Primal Instinct / Void Resonance takibi
 var _cryo_sprite: AnimatedSprite2D = null
 var _melt_frozen_sprite: AnimatedSprite2D = null
 var _electrocute_sprite: AnimatedSprite2D = null
@@ -128,6 +129,14 @@ func _update_anim_dir_from_velocity() -> void:
 func take_damage(amount, from_ally: bool = false) -> void:
 	if get("is_marked") and is_marked:
 		amount = int(amount * 1.1)
+	# Primal Instinct: 3 farklı reaksiyon tetiklendiyse +10% hasar (5s)
+	var _pi_player := _get_player()
+	if _pi_player and _pi_player.get("has_primal_instinct") and _pi_player.has_primal_instinct and _pi_player._primal_instinct_timer > 0.0:
+		amount = int(amount * 1.1)
+	# Cryo Burst: Yavaşlatılmış düşmana +8 bonus hasar (1 kez / vuruş)
+	if not from_ally and _pi_player and _pi_player.get("has_cryo_burst") and _pi_player.has_cryo_burst:
+		if get("is_slowed") and is_slowed:
+			amount += 8
 	health -= amount
 	if is_electrified and not from_ally:
 		var p := _get_player()
@@ -163,6 +172,15 @@ func die() -> void:
 					)
 				break
 	_on_decay_death()
+	# Leech Nova Core: öldürünce +2 HP + 80px Glitch
+	var _lnc_player := _get_player()
+	if _lnc_player and _lnc_player.get("has_leech_nova_core") and _lnc_player.has_leech_nova_core:
+		var _lnc_game := get_node_or_null("/root/GameScene")
+		if _lnc_game and _lnc_game.has_method("heal_player"): _lnc_game.heal_player(2)
+		for s in get_tree().get_nodes_in_group("subjects"):
+			if not is_instance_valid(s): continue
+			if global_position.distance_to(s.global_position) <= 80.0:
+				if s.get("apply_glitch"): s.apply_glitch()
 	is_dead = true
 	if is_in_group("allies"):
 		set_physics_process(false)
@@ -467,6 +485,10 @@ func apply_slow(amount, duration: float = 3.0, source: String = "cryo", anchor_p
 		dur *= 2.0
 	if p and p.get("first_debuff_duration_mult") and not _had_any_element():
 		dur *= p.first_debuff_duration_mult
+	# Static Link: Glitch'li hedef ise slow süresi 2× uzar
+	if p and p.get("has_static_link") and p.has_static_link:
+		if get("is_glitched") and is_glitched:
+			dur *= 2.0
 	await get_tree().create_timer(dur).timeout
 	if not is_instance_valid(self):
 		return
@@ -496,14 +518,27 @@ func apply_decay() -> void:
 	if original_speed == 0.0:
 		original_speed = speed
 	speed = maxf(speed * (1.0 - _delta_slow), original_speed * 0.1)
+	# Spike Core: 3. stack'e ulaşınca anında patlama tetikle
+	if decay_stacks >= _max_stacks:
+		var _sp := _get_player()
+		if _sp and _sp.get("has_spike_core") and _sp.has_spike_core:
+			_on_decay_death()
+			decay_stacks = 0
+			_decay_slow_applied = 0.0
 
 func _on_decay_death() -> void:
 	if decay_stacks <= 0: return
-	var _dmg: int = decay_stacks * 2
+	var _p := _get_player()
+	var _dmg_per_stack: int = 3 if (_p and _p.get("has_decay_amp") and _p.has_decay_amp) else 2
+	var _dmg: int = decay_stacks * _dmg_per_stack
 	for body in get_tree().get_nodes_in_group("subjects"):
 		if body == self or not is_instance_valid(body): continue
 		if global_position.distance_to(body.global_position) < 80.0:
 			body.take_damage(_dmg)
+	# Decay Harvest: patlama → +2 HP
+	if _p and _p.get("has_decay_harvest") and _p.has_decay_harvest:
+		var _g := get_node_or_null("/root/GameScene")
+		if _g and _g.has_method("heal_player"): _g.heal_player(2)
 
 func _check_reaction(incoming: String) -> void:
 	var game := get_node_or_null("/root/GameScene")
@@ -602,14 +637,22 @@ func _check_reaction(incoming: String) -> void:
 		_react_overcharge(dmg_mult, game, player); return
 
 func _react_electrocute(mult: float, game: Node, player: Node) -> void:
+	_last_reaction_type = "electrocute"
 	_spawn_electrocute_vfx()
 	var dmg := int(12 * mult)
 	health -= dmg
 	_react_flash(Color(0.2, 0.5, 4.0))
+	var _ao_limit: int = 1 if (player and player.get("has_arc_overload") and player.has_arc_overload) else 0
+	var _ao_spread: int = 0
 	for body in get_tree().get_nodes_in_group("subjects"):
 		if body == self: continue
 		if is_instance_valid(body) and global_position.distance_to(body.global_position) < 100.0:
 			if body.get("apply_electrified"): body.apply_electrified()
+		# Arc Overload: +2 ek düşmana 5 hasar zinciri
+		if _ao_spread < _ao_limit and is_instance_valid(body) and global_position.distance_to(body.global_position) < 180.0:
+			body.health -= 5
+			if body.health <= 0: body.die()
+			_ao_spread += 1
 	var prev_speed: float = float(speed)
 	speed = 0.0
 	await get_tree().create_timer(0.8).timeout
@@ -617,10 +660,13 @@ func _react_electrocute(mult: float, game: Node, player: Node) -> void:
 	if _reactions_cancelled: _reactions_cancelled = false; return
 	speed = prev_speed
 	_clear_element()
+	if player and player.get("has_shock_reflex") and player.has_shock_reflex:
+		player._shock_reflex_timer = 3.0
 	_notify_reaction(game, player)
 	if health <= 0: die()
 
 func _react_steam(mult: float, game: Node, player: Node) -> void:
+	_last_reaction_type = "steam"
 	_spawn_steam_vfx()
 	var dmg := int(8 * mult)
 	var _steam_radius := 120.0
@@ -636,10 +682,13 @@ func _react_steam(mult: float, game: Node, player: Node) -> void:
 	health -= dmg
 	_react_flash(Color(0.9, 0.9, 1.0))
 	_clear_element()
+	if player and player.get("has_steam_surge") and player.has_steam_surge:
+		player._steam_surge_timer = 3.0
 	_notify_reaction(game, player)
 	if health <= 0: die()
 
 func _react_cryostatic(mult: float, game: Node, player: Node) -> void:
+	_last_reaction_type = "freeze"
 	_spawn_cryostatic_vfx()
 	var dmg := int(10 * mult)
 	var aoe_radius := 120.0
@@ -652,6 +701,9 @@ func _react_cryostatic(mult: float, game: Node, player: Node) -> void:
 	health -= dmg
 	_react_flash(Color(0.5, 0.8, 1.0))
 	_clear_element()
+	if player and player.get("has_frost_barrier") and player.has_frost_barrier:
+		player.frost_barrier_hp = 5
+		player._frost_barrier_timer = 4.0
 	_notify_reaction(game, player)
 	if health <= 0: die()
 
@@ -693,6 +745,7 @@ func _react_overcharge(mult: float, game: Node, player: Node) -> void:
 	if health <= 0: die()
 
 func _react_melt(mult: float) -> void:
+	_last_reaction_type = "melt"
 	_spawn_melt_vfx()
 	var dmg := int(18 * mult)
 	health -= dmg
@@ -739,6 +792,47 @@ func _notify_reaction(game: Node, player: Node) -> void:
 				if not is_instance_valid(s): continue
 				if ball.global_position.distance_to(s.global_position) <= 80.0:
 					s.take_damage(2, false)
+	# Melt Spiral: Melt reaksiyonu → düşman konumunda 2s alev bırakır
+	if _last_reaction_type == "melt" and player.get("has_melt_spiral") and player.has_melt_spiral:
+		var spiral_pos := global_position
+		var fire_zone := ColorRect.new()
+		fire_zone.color = Color(1.0, 0.3, 0.0, 0.35)
+		fire_zone.size = Vector2(30, 30)
+		fire_zone.position = spiral_pos - Vector2(15, 15)
+		fire_zone.z_index = 2
+		if game: game.add_child(fire_zone)
+		var spiral_timer := game.get_tree().create_timer(2.0)
+		spiral_timer.timeout.connect(func():
+			if is_instance_valid(fire_zone): fire_zone.queue_free()
+		)
+		var tick_count := 0
+		var tick_timer := game.get_tree().create_timer(0.5)
+		tick_timer.timeout.connect(func():
+			tick_count += 1
+			if not is_instance_valid(fire_zone): return
+			for s in game.get_tree().get_nodes_in_group("subjects"):
+				if s.global_position.distance_to(spiral_pos) <= 20.0:
+					s.take_damage(1, false)
+			if tick_count < 4:
+				var t2 := game.get_tree().create_timer(0.5)
+				t2.timeout.connect(func():
+					if not is_instance_valid(fire_zone): return
+					for s2 in game.get_tree().get_nodes_in_group("subjects"):
+						if s2.global_position.distance_to(spiral_pos) <= 20.0:
+							s2.take_damage(1, false)
+				)
+		)
+	# Primal Instinct + Void Resonance: reaksiyon tipi takibi
+	if player.get("has_primal_instinct") and player.has_primal_instinct:
+		if not player._wave_reaction_types.has(_last_reaction_type) and _last_reaction_type != "":
+			player._wave_reaction_types.append(_last_reaction_type)
+		if player._wave_reaction_types.size() >= 3 and player._primal_instinct_timer <= 0.0:
+			player._primal_instinct_timer = 5.0
+	if player.get("has_void_resonance") and player.has_void_resonance:
+		if not player._wave_reaction_types.has(_last_reaction_type) and _last_reaction_type != "":
+			pass  # _wave_reaction_types already updated above
+		if player._wave_reaction_types.size() >= 4:
+			player._void_resonance_ready = true
 
 # ── VFX ──────────────────────────────────────────────────────────────────────
 
