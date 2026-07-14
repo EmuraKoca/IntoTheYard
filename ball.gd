@@ -375,6 +375,7 @@ func _setup_ball_sprite() -> void:
 
 func _get_player() -> Node2D:
 	if not is_instance_valid(_cached_player):
+		if not is_inside_tree(): return null
 		_cached_player = get_tree().get_first_node_in_group("player")
 	return _cached_player
 
