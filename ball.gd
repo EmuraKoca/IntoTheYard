@@ -229,13 +229,20 @@ func _setup_ball_sprite() -> void:
 		folder = "phantomCircuitCore"; frame_count = 17
 	elif is_inner_core:
 		var inner_folders := {
-			"iron_aura_core":      ["ironAuraCore",      9],
-			"momentum_field_core": ["momentumFieldCore", 9],
-			"regen_pulse_core":    ["regenPulseCore",    9],
-			"fortress_core":       ["fortressCore",      9],
-			"bloodwall_core":      ["bloodWallCore",     9],
-			"overcharge_core":     ["overchargeCore",    9],
-			"anchor_pulse_core":   ["anchorPulseCore",   9],
+			"iron_aura_core":        ["ironAuraCore",        9],
+			"momentum_field_core":   ["momentumFieldCore",   9],
+			"regen_pulse_core":      ["regenPulseCore",      9],
+			"fortress_core":         ["fortressCore",        9],
+			"bloodwall_core":        ["bloodWallCore",       9],
+			"overcharge_core":       ["overchargeCore",      9],
+			"anchor_pulse_core":     ["anchorPulseCore",     9],
+			"mist_core":             ["mistCore",            9],
+			"frost_aura_core":       ["frostAuraCore",       9],
+			"static_aura_core":      ["staticAuraCore",      9],
+			"catalyst_pulse_core":   ["catalystPulseCore",   9],
+			"echo_resonance_core":   ["echoResonanceCore",   9],
+			"volatile_aura_core":    ["volatileAuraCore",    9],
+			"elemental_shield_core": ["elementalShieldCore", 9],
 		}
 		if inner_folders.has(inner_core_type):
 			var info = inner_folders[inner_core_type]
@@ -771,6 +778,66 @@ func _inner_core_tick(delta: float) -> void:
 					gfx.gain_armor(1)
 			else:
 				_anchor_still_time = 0.0
+
+		"mist_core":
+			# Her 4s: 70px içinde rastgele 1 düşmana Wet uygula
+			if _inner_tick_timer_b > 0.0: return
+			_inner_tick_timer_b = 4.0
+			var nearby: Array = []
+			for subject in get_tree().get_nodes_in_group("subjects"):
+				if not is_instance_valid(subject): continue
+				if global_position.distance_to(subject.global_position) <= 70.0:
+					nearby.append(subject)
+			if nearby.size() > 0:
+				var target = nearby[randi() % nearby.size()]
+				if target.has_method("apply_wet"):
+					target.apply_wet()
+
+		"frost_aura_core":
+			# Her 1s: 50px içindeki düşmanlara Slow uygula
+			for subject in get_tree().get_nodes_in_group("subjects"):
+				if not is_instance_valid(subject): continue
+				if global_position.distance_to(subject.global_position) <= 50.0:
+					if subject.has_method("apply_slow") and not subject.get("is_slowed"):
+						subject.apply_slow(0.3, 2.0)
+
+		"static_aura_core":
+			# Her 1s: 60px içindeki düşmanlara Electrified uygula (3s CD/düşman)
+			for subject in get_tree().get_nodes_in_group("subjects"):
+				if not is_instance_valid(subject): continue
+				if global_position.distance_to(subject.global_position) <= 60.0:
+					if subject.has_method("apply_electrified") and not subject.get("is_electrified"):
+						subject.apply_electrified()
+
+		"catalyst_pulse_core":
+			# Her 5s: 120px'teki debufflı düşmanların sürelerini +1s uzat
+			if _inner_tick_timer_b > 0.0: return
+			_inner_tick_timer_b = 5.0
+			for subject in get_tree().get_nodes_in_group("subjects"):
+				if not is_instance_valid(subject): continue
+				if global_position.distance_to(subject.global_position) > 120.0: continue
+				if subject.get("burn_ticks") and subject.burn_ticks > 0:
+					subject.burn_ticks += 2  # ~+1s (burn tick her 0.5s)
+				if subject.get("wet_duration") and subject.wet_duration > 0:
+					subject.wet_duration += 1.0
+				if subject.get("electrified_duration") and subject.electrified_duration > 0:
+					subject.electrified_duration += 1.0
+				if subject.get("slow_duration") and subject.slow_duration > 0:
+					subject.slow_duration += 1.0
+
+		"echo_resonance_core":
+			# Reaksiyon tetiklenince 1s boyunca 80px'e aynı elementi uygular
+			# Bu core tick tabanlı değil — _on_reaction_triggered() üzerinden çalışır
+			pass
+
+		"volatile_aura_core":
+			# Reaksiyon tetiklenince 80px'e 2 hasar pulse atar
+			# Bu core tick tabanlı değil — _on_reaction_triggered() üzerinden çalışır
+			pass
+
+		"elemental_shield_core":
+			# Pasif direnç — tick gerekmez, game_scene.gd player_damaged() üzerinden kontrol eder
+			pass
 
 		_:
 			# Eski fallback: Antivirus core (type atanmamış)

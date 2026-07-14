@@ -707,6 +707,27 @@ func _notify_reaction(game: Node, player: Node) -> void:
 	if player.get("has_catalyst_mind") and player.has_catalyst_mind and player.catalyst_mind_cooldown <= 0.0:
 		player.catalyst_mind_ready = true
 		player.catalyst_mind_cooldown = 5.0
+	# Echo Resonance Core & Volatile Aura Core hooks
+	for ball in get_tree().get_nodes_in_group("player_balls"):
+		if not is_instance_valid(ball): continue
+		if not ball.get("is_inner_core") or not ball.is_inner_core: continue
+		var last_elem: String = player.get("last_applied_element") if player.get("last_applied_element") else ""
+		if ball.inner_core_type == "echo_resonance_core" and last_elem != "":
+			get_tree().create_timer(0.0).timeout.connect(func():
+				for s in get_tree().get_nodes_in_group("subjects"):
+					if not is_instance_valid(s): continue
+					if ball.global_position.distance_to(s.global_position) > 80.0: continue
+					match last_elem:
+						"fire":     if not s.get("is_burning"):     s.apply_burn()
+						"wet":      if not s.get("is_wet"):         s.apply_wet()
+						"electric": if not s.get("is_electrified"): s.apply_electrified()
+						"cryo":     if not s.get("is_slowed"):      s.apply_slow(0.25)
+			)
+		elif ball.inner_core_type == "volatile_aura_core":
+			for s in get_tree().get_nodes_in_group("subjects"):
+				if not is_instance_valid(s): continue
+				if ball.global_position.distance_to(s.global_position) <= 80.0:
+					s.take_damage(2, false)
 
 # ── VFX ──────────────────────────────────────────────────────────────────────
 

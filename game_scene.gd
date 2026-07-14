@@ -33,7 +33,7 @@ const _CORE_DISPLAY_NAMES: Dictionary = {
 	"normal":     "Normal Core",     "electric":   "Electric Core",
 	"arc":        "Arc Core",       "plasma":     "Plasma Core",
 	"steam":      "Steam Core",     "echo":       "Echo Core",
-	"orbit":      "Orbit Core",     "scatter":    "Scatter Core",
+	"orbit":      "Prism Core",     "scatter":    "Scatter Core",
 	"catalyst":   "Catalyst Core",  "voltaic":    "Voltaic Core",
 	"tempest":    "Tempest Core",   "prismatic":  "Prismatic Core",
 	"pierce":     "Pierce Core",     "split":      "Split Core",
@@ -47,6 +47,13 @@ const _CORE_DISPLAY_NAMES: Dictionary = {
 	"antivirus_core": "AntiVirus Core", "decay":   "Decay Core",
 	"static_core":    "Static Core",    "ricochet_core": "Ricochet Core",
 	"phantom_circuit": "Phantom Circuit Core",
+	"mist_core":             "Mist Core",
+	"frost_aura_core":       "Frost Aura Core",
+	"static_aura_core":      "Static Aura Core",
+	"catalyst_pulse_core":   "Catalyst Pulse Core",
+	"echo_resonance_core":   "Echo Resonance Core",
+	"volatile_aura_core":    "Volatile Aura Core",
+	"elemental_shield_core": "Elemental Shield Core",
 }
 
 const _CALAMITY_DISPLAY_NAMES: Dictionary = {
@@ -116,6 +123,9 @@ const _CORE_INDEX_MAP: Dictionary = {
 	61: "plasma", 62: "steam",   63: "arc",     64: "echo",
 	65: "orbit",  77: "scatter", 78: "catalyst",87: "voltaic",
 	88: "tempest",103: "prismatic",
+	185: "mist_core", 186: "frost_aura_core", 187: "static_aura_core",
+	188: "catalyst_pulse_core", 189: "echo_resonance_core",
+	190: "volatile_aura_core", 191: "elemental_shield_core",
 }
 
 # index → {name, category}  (Identity kart izleme gerekmez, sadece Individuality+Utility)
@@ -1813,6 +1823,14 @@ func subject_rescued() -> void:
 	GameData.add_xp(GameData.selected_character, 2)
 
 func player_damaged(amount: int = 1) -> void:
+	# Elemental Shield Core: aktif element varsa hasarı %20 azalt
+	for _esb in get_tree().get_nodes_in_group("player_balls"):
+		if not is_instance_valid(_esb): continue
+		if _esb.get("is_inner_core") and _esb.is_inner_core and _esb.get("inner_core_type") and _esb.inner_core_type == "elemental_shield_core":
+			var _lae: String = get_node_or_null("Player").get("last_applied_element") if get_node_or_null("Player") else ""
+			if _lae != "":
+				amount = maxi(1, int(amount * 0.8))
+			break
 	# Armor önce absorbe eder
 	if player_armor > 0:
 		var absorbed: int = mini(player_armor, amount)
@@ -2123,7 +2141,7 @@ func _build_all_upgrades() -> void:
 	{"name": "Resonance Engine",   "category": "Utility",       "color": Color(0.6, 0.4, 1.0), "desc": "Each Reaction → +1 Momentum\nEach Momentum → +3% Core Speed", "index": 81, "weight": 5, "rarity": "rare", "chars": ["leila"], "min_level": 2},
 	{"name": "Pyroblast",          "category": "Utility",       "color": Color(1.0, 0.4, 0.0), "desc": "Burn explosions gain Area\nbased on Burn Stacks",       "index": 102, "weight": 3, "rarity": "rare",  "chars": ["leila"], "min_level": 2},
 	# Lv3: Rare core'lar + Calamity giriş
-	{"name": "Orbit Core",         "category": "Identity",      "color": Color(0.5, 0.7, 1.0), "desc": "Stays in orbit, applies random element\nto nearby enemies",           "index": 65, "weight": 5, "rarity": "rare",     "chars": ["leila"], "min_level": 3},
+	{"name": "Prism Core",         "category": "Identity",      "color": Color(0.5, 0.7, 1.0), "desc": "Stays in orbit, applies random element\nto nearby enemies",           "index": 65, "weight": 5, "rarity": "rare",     "chars": ["leila"], "min_level": 3},
 	{"name": "Scatter Core",       "category": "Identity",      "color": Color(0.5, 0.8, 0.7), "desc": "On hit → splits into 3 small\nrandom Elemental Cores", "index": 77, "weight": 6, "rarity": "rare", "chars": ["leila"], "min_level": 3},
 	{"name": "Catalyst Core",      "category": "Identity",      "color": Color(0.8, 0.6, 1.0), "desc": "Extends duration of existing\nstatus effects on hit",   "index": 78, "weight": 6, "rarity": "rare", "chars": ["leila"], "min_level": 3},
 	{"name": "Monsoon",            "category": "Calamity",      "color": Color(0.1, 0.5, 1.0), "desc": "All enemies in the Yard\ngain Wet",           "index": 95, "weight": 3,  "rarity": "epic",      "chars": ["leila"], "min_level": 3},
@@ -2143,6 +2161,14 @@ func _build_all_upgrades() -> void:
 	{"name": "Blizzard",           "category": "Calamity",      "color": Color(0.6, 0.9, 1.0), "desc": "The entire Yard freezes\nfor 3s",              "index": 94, "weight": 2,  "rarity": "legendary", "chars": ["leila"], "min_level": 4},
 	{"name": "Volcanic Rift",      "category": "Calamity",      "color": Color(1.0, 0.3, 0.0), "desc": "Leaves lava trail on ground",                 "index": 97, "weight": 2,  "rarity": "legendary", "chars": ["leila"], "min_level": 4},
 	{"name": "Thunderstorm",       "category": "Calamity",      "color": Color(0.3, 0.5, 1.0), "desc": "Random lightning strikes for 5s",             "index": 98, "weight": 2,  "rarity": "legendary", "chars": ["leila"], "min_level": 5},
+	# ── Leila Connected Cores (iç yörünge) ───────────────────────────────────
+	{"name": "Mist Core",             "category": "Identity",      "color": Color(0.3, 0.6, 1.0),  "desc": "Her 4s: 70px içinde 1 düşmana\nWet uygular",                    "index": 185, "weight": 5, "rarity": "uncommon",  "chars": ["leila"], "min_level": 1},
+	{"name": "Frost Aura Core",       "category": "Identity",      "color": Color(0.5, 0.85, 1.0), "desc": "50px içine giren düşmanlar\notomatik Slow alır",                 "index": 186, "weight": 5, "rarity": "rare",      "chars": ["leila"], "min_level": 2},
+	{"name": "Static Aura Core",      "category": "Identity",      "color": Color(0.9, 0.9, 0.2),  "desc": "60px içine giren düşmanlar\nElectrified olur (3s CD/düşman)",    "index": 187, "weight": 5, "rarity": "rare",      "chars": ["leila"], "min_level": 2},
+	{"name": "Catalyst Pulse Core",   "category": "Identity",      "color": Color(0.7, 0.4, 1.0),  "desc": "Her 5s: 120px'teki debufflı\ndüşmanların süresi +1s uzar",        "index": 188, "weight": 4, "rarity": "rare",      "chars": ["leila"], "min_level": 2},
+	{"name": "Echo Resonance Core",   "category": "Identity",      "color": Color(0.4, 0.7, 1.0),  "desc": "Reaksiyon tetiklince:\n1s boyunca 80px'e aynı element",          "index": 189, "weight": 4, "rarity": "epic",      "chars": ["leila"], "min_level": 3},
+	{"name": "Volatile Aura Core",    "category": "Identity",      "color": Color(0.95, 0.4, 0.9), "desc": "Reaksiyon tetiklince:\n80px'e 2 hasar pulse",                     "index": 190, "weight": 4, "rarity": "epic",      "chars": ["leila"], "min_level": 3},
+	{"name": "Elemental Shield Core", "category": "Identity",      "color": Color(0.3, 0.9, 0.6),  "desc": "Son uyguladığın element:\no elementin hasarına %20 direnç",        "index": 191, "weight": 4, "rarity": "rare",      "chars": ["leila"], "min_level": 2},
 	# ── Cyclone (Manipülasyon) ────────────────────────────────────────────────
 	# Identity — Core kartları
 	{"name": "Glitch Core",          "category": "Identity",      "color": Color(0.8, 0.0, 0.8),  "desc": "Disorients subject for 3s",                                "index": 16,  "weight": 10, "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
@@ -3443,6 +3469,14 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 	elif index == 182: $BallLauncher.queue_upgrade_ball("bloodwall_core")
 	elif index == 183: $BallLauncher.queue_upgrade_ball("overcharge_core")
 	elif index == 184: $BallLauncher.queue_upgrade_ball("anchor_pulse_core")
+	# ── Leila Connected Cores ─────────────────────────────────────────────────
+	elif index == 185: $BallLauncher.queue_upgrade_ball("mist_core")
+	elif index == 186: $BallLauncher.queue_upgrade_ball("frost_aura_core")
+	elif index == 187: $BallLauncher.queue_upgrade_ball("static_aura_core")
+	elif index == 188: $BallLauncher.queue_upgrade_ball("catalyst_pulse_core")
+	elif index == 189: $BallLauncher.queue_upgrade_ball("echo_resonance_core")
+	elif index == 190: $BallLauncher.queue_upgrade_ball("volatile_aura_core")
+	elif index == 191: $BallLauncher.queue_upgrade_ball("elemental_shield_core")
 	# ── Vector — Calamity ─────────────────────────────────────────────────────
 	elif index == 173:  # Iron Fortress
 		if calamity_slots.size() < max_calamity_slots:
@@ -3469,7 +3503,7 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 		$BallLauncher.queue_upgrade_ball("arc")
 	elif index == 64:  # Echo Core (Leila)
 		$BallLauncher.queue_upgrade_ball("echo")
-	elif index == 65:  # Orbit Core
+	elif index == 65:  # Prism Core
 		$BallLauncher.queue_upgrade_ball("orbit")
 	elif index == 77:  # Scatter Core
 		$BallLauncher.queue_upgrade_ball("scatter")

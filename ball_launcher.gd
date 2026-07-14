@@ -211,7 +211,7 @@ func _launch_typed_ball(ball_type: String) -> void:
 	var _current_balls := get_tree().get_nodes_in_group("player_balls")
 	_current_balls = _current_balls.filter(func(b): return is_instance_valid(b))
 	# İç yörünge core'ları MAX_ORBIT limitine dahil değil
-	var is_inner := ball_type in ["iron_aura_core", "momentum_field_core", "regen_pulse_core", "fortress_core", "bloodwall_core", "overcharge_core", "anchor_pulse_core"]
+	var is_inner := ball_type in ["iron_aura_core", "momentum_field_core", "regen_pulse_core", "fortress_core", "bloodwall_core", "overcharge_core", "anchor_pulse_core", "mist_core", "frost_aura_core", "static_aura_core", "catalyst_pulse_core", "echo_resonance_core", "volatile_aura_core", "elemental_shield_core"]
 	if not is_inner and _current_balls.size() >= player_node.MAX_ORBIT:
 		return
 
@@ -344,6 +344,27 @@ func _launch_typed_ball(ball_type: String) -> void:
 		"anchor_pulse_core":
 			ball.is_inner_core       = true
 			ball.inner_core_type     = "anchor_pulse_core"
+		"mist_core":
+			ball.is_inner_core       = true
+			ball.inner_core_type     = "mist_core"
+		"frost_aura_core":
+			ball.is_inner_core       = true
+			ball.inner_core_type     = "frost_aura_core"
+		"static_aura_core":
+			ball.is_inner_core       = true
+			ball.inner_core_type     = "static_aura_core"
+		"catalyst_pulse_core":
+			ball.is_inner_core       = true
+			ball.inner_core_type     = "catalyst_pulse_core"
+		"echo_resonance_core":
+			ball.is_inner_core       = true
+			ball.inner_core_type     = "echo_resonance_core"
+		"volatile_aura_core":
+			ball.is_inner_core       = true
+			ball.inner_core_type     = "volatile_aura_core"
+		"elemental_shield_core":
+			ball.is_inner_core       = true
+			ball.inner_core_type     = "elemental_shield_core"
 
 	var direction  = (player.global_position - global_position).normalized()
 	var spawn_pos  = _get_muzzle_global()
