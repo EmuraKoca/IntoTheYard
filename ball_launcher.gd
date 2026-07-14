@@ -322,6 +322,15 @@ func _launch_typed_ball(ball_type: String) -> void:
 		"phantom_circuit":
 			ball.can_phantom_circuit = true
 			ball.max_damage          = 5 + player_node.ball_mastery
+		"tracer_core":
+			ball.can_tracer_core = true
+			ball.max_damage      = 4 + player_node.ball_mastery
+		"spike_core":
+			ball.can_spike_core = true
+			ball.max_damage     = 4 + player_node.ball_mastery
+		"leech_nova_core":
+			ball.can_leech_nova_core = true
+			ball.max_damage          = 4 + player_node.ball_mastery
 		# ── Vector Connected Cores (iç yörünge, fırlatılmaz) ──────────────────
 		"iron_aura_core":
 			ball.is_inner_core       = true

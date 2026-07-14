@@ -75,6 +75,9 @@ var can_static_core: bool      = false  # İsabette 0.5s slow (%40); Glitch'li �
 var can_ricochet_core: bool    = false  # Duvar sekmesinde +%5 hız (max +%30)
 var can_phantom_circuit: bool  = false  # 3 düşmana çarparsa hepsini sersemletir
 var _phantom_hit_enemies: Array = []    # Bu fırlatışta çarpılan düşmanlar
+var can_tracer_core: bool      = false  # İsabette iz bırakır, izden geçen yavaşlar
+var can_spike_core: bool       = false  # 3. Decay stack'te anında patlama
+var can_leech_nova_core: bool  = false  # Öldürünce +2 HP + 80px Glitch
 var trail: Line2D = null
 var _wall_bounce_count: int = 0  # sonsuz sekme önlemi
 var _backstab_ready: bool = false  # North duvarına çarptı, sonraki isabet crit
@@ -227,11 +230,11 @@ func _setup_ball_sprite() -> void:
 		folder = "staticCore";         frame_count = 17
 	elif can_phantom_circuit:
 		folder = "phantomCircuitCore"; frame_count = 17
-	elif ball_type == "tracer_core":
+	elif can_tracer_core:
 		folder = "traceCore";          frame_count = 9
-	elif ball_type == "spike_core":
+	elif can_spike_core:
 		folder = "spikeCore";          frame_count = 9
-	elif ball_type == "leech_nova_core":
+	elif can_leech_nova_core:
 		folder = "leechNovaCore";      frame_count = 4
 	elif is_inner_core:
 		if inner_core_type == "elemental_shield_core":
@@ -895,9 +898,9 @@ func _inner_core_tick(delta: float) -> void:
 			var _elem: String = _player.get("last_applied_element") if _player.get("last_applied_element") else ""
 			if _elem == "": return
 			var _ball_ref := self
-			var _ticks := 0
-			get_tree().create_timer(0.0).timeout.connect(func _echo_burst():
-				if not is_instance_valid(_ball_ref): return
+			for _tick_i in range(5):
+				await get_tree().create_timer(_tick_i * 0.2).timeout
+				if not is_instance_valid(_ball_ref): break
 				for s in _ball_ref.get_tree().get_nodes_in_group("subjects"):
 					if not is_instance_valid(s): continue
 					if _ball_ref.global_position.distance_to(s.global_position) > 80.0: continue
@@ -906,10 +909,6 @@ func _inner_core_tick(delta: float) -> void:
 						"wet":      if not s.get("is_wet"):         s.apply_wet()
 						"electric": if not s.get("is_electrified"): s.apply_electrified()
 						"cryo":     if not s.get("is_slowed"):      s.apply_slow(0.25)
-				_ticks += 1
-				if _ticks < 5 and is_instance_valid(_ball_ref):
-					_ball_ref.get_tree().create_timer(0.2).timeout.connect(_echo_burst)
-			)
 
 		"volatile_aura_core":
 			# Reaksiyon tetiklenince 80px'e 2 hasar pulse atar
@@ -1081,7 +1080,7 @@ func _start_returning() -> void:
 	var _base_return: float = 200.0 * (_rp.return_speed_mult if _rp else 1.0)
 	# Shield Bash: dönüş hızı Armor miktarıyla orantılı artar
 	if _rp and _rp.get("has_shield_bash") and _rp.has_shield_bash:
-		var _gfx := _get_game()
+		var _gfx := get_tree().get_first_node_in_group("game")
 		if _gfx and _gfx.get("player_armor"):
 			_base_return += _gfx.player_armor * 1.5
 	speed         = _base_return
@@ -1591,7 +1590,7 @@ func _hit_subject(subject: Node2D) -> void:
 			subject.apply_decay()
 
 		# Tracer Core: isabette vuruş noktasında 1s iz bırakır, izden geçen düşman 0.5s yavaşlar
-		if ball_type == "tracer_core":
+		if can_tracer_core:
 			_spawn_tracer_trail(subject.global_position)
 
 		# Phantom Circuit Core: çarpılan düşmanı kaydet; 3 farklı düşmana çarpınca sersemlet
@@ -1673,13 +1672,12 @@ func _hit_subject(subject: Node2D) -> void:
 			player_node._combat_rhythm_count += 1
 			if player_node._combat_rhythm_count >= 3:
 				player_node._combat_rhythm_count = 0
-				_return_to_orbit()
+				state = "returning"
 		# Tactical Reload — her isabet +1 max bounce (bu uçuş, max +3)
 		if player_node.get("has_tactical_reload") and player_node.has_tactical_reload:
-			if not get_meta("tactical_reload_bonus", 0) >= 3:
+			if get_meta("tactical_reload_bonus", 0) < 3:
 				var _tr_b: int = get_meta("tactical_reload_bonus", 0)
 				set_meta("tactical_reload_bonus", _tr_b + 1)
-				max_bounces += 1
 		# Armor Conduit — Armor = Cap → +2 bonus hasar
 		if player_node.get("has_armor_conduit") and player_node.has_armor_conduit and game_node_fx:
 			if game_node_fx.player_armor >= game_node_fx.player_armor_cap and game_node_fx.player_armor_cap > 0:
