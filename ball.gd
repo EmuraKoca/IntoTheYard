@@ -307,11 +307,6 @@ func _setup_ball_sprite() -> void:
 			"catalyst_pulse_core":   ["catalystPulseCore",   9],
 			"echo_resonance_core":   ["echoResonanceCore",   9],
 			"volatile_aura_core":    ["volatileAuraCore",    9],
-			"glitch_pulse_core":     ["glitchPulseCore",     9],
-			"shadow_core":           ["shadowCore",          9],
-			"data_drain_core":       ["dataDrainCore",       9],
-			"virus_beacon_core2":    ["virusBeaconCore",     9],
-			"rogues_eye_core2":      ["roguesEyeCore",       9],
 			"circuit_overload_core": ["circuitOverloadCore", 18],
 		}
 		if inner_folders.has(inner_core_type):
