@@ -254,13 +254,37 @@ func _setup_ball_sprite() -> void:
 			_sprite.play("none")
 			add_child(_sprite)
 			return
+		if inner_core_type == "circuit_overload_core":
+			const CO_SEGS: Array = [
+				["co_0",  "0-5",   4],
+				["co_6",  "6-11",  3],
+				["co_12", "12-17", 4],
+				["co_18", "18-24", 4],
+				["co_25", "25",    2],
+			]
+			var co_frames := SpriteFrames.new()
+			if co_frames.has_animation("default"):
+				co_frames.remove_animation("default")
+			for seg in CO_SEGS:
+				co_frames.add_animation(seg[0])
+				co_frames.set_animation_speed(seg[0], 12.0)
+				co_frames.set_animation_loop(seg[0], true)
+				for i in range(seg[2]):
+					co_frames.add_frame(seg[0], load("res://assets/balls/circuitOverloadCore/%s/frame_%03d.png" % [seg[1], i]))
+			_sprite = AnimatedSprite2D.new()
+			_sprite.sprite_frames  = co_frames
+			_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			var _co_size: float = float(co_frames.get_frame_texture("co_0", 0).get_width())
+			_sprite.scale = Vector2.ONE * (0.57375 * (48.0 / _co_size))
+			_sprite.play("co_0")
+			add_child(_sprite)
+			return
 		var inner_folders := {
 			"glitch_pulse_core":     ["glitchPulseCore",     9],
 			"shadow_core":           ["shadowCore",          9],
 			"data_drain_core":       ["dataDrainCore",       9],
 			"virus_beacon_core":     ["virusBeaconCore",     9],
 			"rogues_eye_core":       ["roguesEyeCore",       9],
-			"circuit_overload_core": ["circuitOverloadCore", 9],
 			"iron_aura_core":        ["ironAuraCore",        9],
 			"momentum_field_core":   ["momentumFieldCore",   9],
 			"regen_pulse_core":      ["regenPulseCore",      9],
@@ -947,6 +971,18 @@ func _inner_core_tick(delta: float) -> void:
 				)
 
 		"circuit_overload_core":
+			# Animasyonu Circuit Breaker sayacına göre güncelle
+			if is_instance_valid(_sprite) and _sprite.sprite_frames:
+				var _cnt: int = player.get("_circuit_breaker_counter") if player.get("_circuit_breaker_counter") != null else 0
+				var _co_anim: String
+				if player.get("circuit_overload_active") and player.circuit_overload_active:
+					_co_anim = "co_25"
+				elif _cnt >= 18: _co_anim = "co_18"
+				elif _cnt >= 12: _co_anim = "co_12"
+				elif _cnt >= 6:  _co_anim = "co_6"
+				else:            _co_anim = "co_0"
+				if _sprite.animation != _co_anim:
+					_sprite.play(_co_anim)
 			# Circuit Breaker tetiklenince 3s boyunca her 1s'de 90px'e Glitch
 			if not player.get("circuit_overload_active"): return
 			if not player.circuit_overload_active: return
