@@ -826,9 +826,29 @@ func _inner_core_tick(delta: float) -> void:
 					subject.slow_duration += 1.0
 
 		"echo_resonance_core":
-			# Reaksiyon tetiklenince 1s boyunca 80px'e aynı elementi uygular
-			# Bu core tick tabanlı değil — _on_reaction_triggered() üzerinden çalışır
-			pass
+			# Her 5s: 1s boyunca her tick'te 80px içindeki düşmanlara last_applied_element uygular
+			if _inner_tick_timer_b > 0.0: return
+			_inner_tick_timer_b = 5.0
+			var _player := _get_player()
+			if not is_instance_valid(_player): return
+			var _elem: String = _player.get("last_applied_element") if _player.get("last_applied_element") else ""
+			if _elem == "": return
+			var _ball_ref := self
+			var _ticks := 0
+			get_tree().create_timer(0.0).timeout.connect(func _echo_burst():
+				if not is_instance_valid(_ball_ref): return
+				for s in _ball_ref.get_tree().get_nodes_in_group("subjects"):
+					if not is_instance_valid(s): continue
+					if _ball_ref.global_position.distance_to(s.global_position) > 80.0: continue
+					match _elem:
+						"fire":     if not s.get("is_burning"):     s.apply_burn()
+						"wet":      if not s.get("is_wet"):         s.apply_wet()
+						"electric": if not s.get("is_electrified"): s.apply_electrified()
+						"cryo":     if not s.get("is_slowed"):      s.apply_slow(0.25)
+				_ticks += 1
+				if _ticks < 5 and is_instance_valid(_ball_ref):
+					_ball_ref.get_tree().create_timer(0.2).timeout.connect(_echo_burst)
+			)
 
 		"volatile_aura_core":
 			# Reaksiyon tetiklenince 80px'e 2 hasar pulse atar
