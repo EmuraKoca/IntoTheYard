@@ -18,6 +18,21 @@ var _upgrade_timer: float     = 0.0
 var _sprite: Sprite2D = null
 var _sprite_rest_pos: Vector2 = Vector2.ZERO
 
+# ── 8-yön silah sprite sistemi ───────────────────────────────────────────────
+var _weapon_sprite: Sprite2D = null
+var _weapon_textures: Dictionary = {}
+var _weapon_last_dir: String = ""
+const _WEAPON_DIRS: Dictionary = {
+	"N":  "North",
+	"NE": "northEast",
+	"E":  "East",
+	"SE": "southEast",
+	"S":  "South",
+	"SW": "southWest",
+	"W":  "west",
+	"NW": "northWest",
+}
+
 # ── Charge-up ─────────────────────────────────────────────────────────────────
 var is_charging     := false
 var charge_progress := 0.0        # 0.0 → 1.0 son 1 saniyede
@@ -31,6 +46,7 @@ var flash_color  := Color(2.0, 2.0, 3.5, 1.0)
 # ── Internal helpers ────────────────────────────────────────────────────────────
 var _last_launch_type := ""
 var _shake_tween: Tween = null
+var _weapon_shake_tween: Tween = null
 
 # ── Preview sprite ────────────────────────────────────────────────────────────
 var _preview_sprite: AnimatedSprite2D = null
@@ -79,6 +95,8 @@ func _ready() -> void:
 	_sprite = get_parent().get_node_or_null("BallLauncherSprite") as Sprite2D
 	if _sprite:
 		_sprite_rest_pos = _sprite.position
+
+	_setup_weapon_sprite()
 
 	_preview_sprite = AnimatedSprite2D.new()
 	_preview_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -144,6 +162,7 @@ func _update_preview_sprite() -> void:
 # ─────────────────────────────────────────────────────────────────────────────
 func _process(delta: float) -> void:
 	_update_preview_sprite()
+	_update_weapon_dir()
 
 	# ── Başlangıç sekansı ─────────────────────────────────────────────────────
 	if _startup_active and _startup_balls_left > 0:
@@ -457,6 +476,7 @@ func _trigger_recoil() -> void:
 	_shake_tween.tween_property(_sprite, "position", rest + Vector2(0.0, -9.0), 0.07)
 	_shake_tween.tween_property(_sprite, "position", rest + Vector2(0.0,  6.0), 0.07)
 	_shake_tween.tween_property(_sprite, "position", rest,                       0.15)
+	_weapon_recoil()
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Charge color by ball type (HDR — triggers glow)
@@ -518,3 +538,66 @@ func _draw() -> void:
 			var ray_end := muzzle + Vector2(cos(angle), sin(angle)) * r * 2.1
 			draw_line(muzzle, ray_end,
 				Color(c.r, c.g, c.b, a * 0.42), 1.5)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 8-yön silah sprite sistemi
+func _setup_weapon_sprite() -> void:
+	if not player: return
+	var char_type: String = player.character_type if player.get("character_type") else ""
+	var folder: String = ""
+	match char_type:
+		"vector": folder = "res://assets/characters/vector/vectorsWeapon/"
+		_: return  # Leila/Cyclone silahları hazır olunca eklenir
+
+	for dir_key in _WEAPON_DIRS:
+		var filename: String = _WEAPON_DIRS[dir_key] + ".png"
+		var path: String = folder + filename
+		if ResourceLoader.exists(path):
+			_weapon_textures[dir_key] = load(path)
+
+	if _weapon_textures.is_empty(): return
+
+	_weapon_sprite = Sprite2D.new()
+	_weapon_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_weapon_sprite.texture = _weapon_textures.get("S")
+	_weapon_sprite.z_index = 6
+	_weapon_sprite.z_as_relative = false
+	get_parent().add_child.call_deferred(_weapon_sprite)
+
+func _update_weapon_dir() -> void:
+	if not _weapon_sprite or not player: return
+	var aim: Vector2 = player.aim_direction if player.get("aim_direction") else Vector2(0, 1)
+	var angle: float = aim.angle()
+	var deg: float   = fmod(rad_to_deg(angle) + 360.0, 360.0)
+	var dir: String
+	if   deg < 22.5  or  deg >= 337.5: dir = "E"
+	elif deg < 67.5:                   dir = "SE"
+	elif deg < 112.5:                  dir = "S"
+	elif deg < 157.5:                  dir = "SW"
+	elif deg < 202.5:                  dir = "W"
+	elif deg < 247.5:                  dir = "NW"
+	elif deg < 292.5:                  dir = "N"
+	else:                              dir = "NE"
+
+	if not (_weapon_shake_tween and _weapon_shake_tween.is_running()):
+		_weapon_sprite.global_position = player.global_position + Vector2(20, -24)
+
+	if dir == _weapon_last_dir: return
+	_weapon_last_dir = dir
+	if _weapon_textures.has(dir):
+		_weapon_sprite.texture = _weapon_textures[dir]
+
+func _weapon_recoil() -> void:
+	if not _weapon_sprite: return
+	var aim: Vector2 = Vector2.ZERO
+	if player and player.get("aim_direction"):
+		aim = player.aim_direction.normalized()
+	var kick: Vector2 = -aim * 4.0
+	var rest: Vector2 = (player.global_position + Vector2(20, -24)) if player else _weapon_sprite.global_position
+	if _weapon_shake_tween and _weapon_shake_tween.is_running():
+		_weapon_shake_tween.kill()
+	_weapon_shake_tween = create_tween()
+	_weapon_shake_tween.set_ease(Tween.EASE_OUT)
+	_weapon_shake_tween.set_trans(Tween.TRANS_CUBIC)
+	_weapon_shake_tween.tween_property(_weapon_sprite, "global_position", rest + kick, 0.06)
+	_weapon_shake_tween.tween_property(_weapon_sprite, "global_position", rest,        0.14)

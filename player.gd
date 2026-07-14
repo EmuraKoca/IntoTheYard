@@ -281,7 +281,7 @@ func add_to_orbit(ball: Node2D) -> void:
 	if ball in orbit_balls or ball in inner_orbit_balls: return
 	ball.state         = "orbiting"
 	ball.moving        = false
-	ball.scale         = Vector2(1.0, 1.0)
+	ball.scale         = Vector2.ZERO
 	ball.z_index       = 4
 	ball.strike_offset = Vector2.ZERO
 	ball._is_striking  = false
@@ -637,16 +637,16 @@ func _physics_process(delta: float) -> void:
 	# Elemental Harmony: aktif unique element başına +%5 Core Speed
 	if has_elemental_harmony_util and elemental_harmony_bonus > 0.0:
 		_effective_orbit_speed *= (1.0 + elemental_harmony_bonus)
-	orbit_angle += _effective_orbit_speed * delta
+	# Orbit topları silah sprite'ının üstünde durur
+	var _weapon_offset := Vector2(20, -24)
 	var n := orbit_balls.size()
 	for i in range(n - 1, -1, -1):
 		if not is_instance_valid(orbit_balls[i]):
 			orbit_balls.remove_at(i)
 			continue
-		var angle: float = orbit_angle + (TAU / max(n, 1)) * i
-		orbit_balls[i].global_position = global_position + Vector2(cos(angle), sin(angle)) * ORBIT_RADIUS + orbit_balls[i].strike_offset
+		orbit_balls[i].global_position = global_position + _weapon_offset
 
-	# İç yörünge
+	# Connected Core'lar iç yörüngede döner
 	inner_orbit_angle += INNER_ORBIT_SPEED * delta
 	var ni := inner_orbit_balls.size()
 	for i in range(ni - 1, -1, -1):
@@ -958,12 +958,7 @@ func _draw() -> void:
 			draw_line(a, ctrl, Color(0.6, 0.9, 1.0, 0.85 * intensity), 0.8)
 			draw_line(ctrl, b,  Color(0.6, 0.9, 1.0, 0.85 * intensity), 0.8)
 
-	# Orbit halkası — soluk gösterge
-	if orbit_balls.size() > 0:
-		draw_arc(Vector2.ZERO, ORBIT_RADIUS, 0, TAU, 64, Color(0.0, 0.9, 1.0, 0.08), 1.5)
-	# İç orbit halkası
-	if inner_orbit_balls.size() > 0:
-		draw_arc(Vector2.ZERO, INNER_ORBIT_RADIUS, 0, TAU, 48, Color(0.8, 0.4, 1.0, 0.10), 1.2)
+	# Orbit halkaları kaldırıldı — core'lar artık silahın içinde
 
 	# Nişan çizgisi — sol tık basılıyken
 	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) and not orbit_balls.is_empty():

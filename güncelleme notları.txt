@@ -1,3 +1,30 @@
+v0.1.0.0 — Silah Sistemi & Orbit Yenileme (2026-07-15)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Silah Sprite Sistemi (Vector):
+
+  ⚠️  8-yönlü silah sprite sistemi eklendi — TEST GEREKTİRİYOR
+     — East/West/North/South + 4 çapraz yön PNG'leri yükleniyor
+     — Aim yönüne göre otomatik texture değişimi
+     — Her atışta hafif recoil (kick) animasyonu
+     — Silah konumu: sağ omuz üzeri (player + Vector2(20, -24))
+
+  ⚠️  Core geri dönüş animasyonu — TEST GEREKTİRİYOR
+     — Core silaha yaklaşırken scale 0'a iner, silahın içine "çekilir"
+     — Ateşlenince 0.3 scale'den 1.0'a TRANS_BACK tween ile büyür
+     — Silahta beklerken görünmez (scale = 0)
+
+  ⚠️  Orbit yenileme — TEST GEREKTİRİYOR
+     — Dış orbit kaldırıldı: orbit topları artık silahın içinde bekliyor
+     — Connected Core'lar iç orbit'te (INNER_ORBIT_RADIUS = 35px) dönmeye devam ediyor
+     — Orbit halka göstergesi kaldırıldı
+
+  ❌  Ball Launcher gözden geçirilmeli
+     — Silah sistemi eklenirken launch mekaniğinde bozulma tespit edildi
+     — Toplar namludan değil yanlış konumdan fırlatılıyor olabilir
+     — Tribündeki Ball Launcher ve silah sprite sistemi birbirinden bağımsız
+       tutulmalı, karışıklık giderilmeli
+
 v0.1.0.0 — Büyük Kart Genişlemesi & Connected Core Sistemi (2026-07-14)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

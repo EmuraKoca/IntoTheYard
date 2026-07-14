@@ -392,9 +392,12 @@ func launch(direction: Vector2, spd: float = 600.0) -> void:
 	state = "flying"
 	catch_cooldown = 1.2
 	$CollisionShape2D.disabled = false
-	scale = Vector2(1.0, 1.0)
 	z_index = 5
 	_wall_bounce_count = 0
+	scale = Vector2(0.3, 0.3)
+	var _lt := create_tween()
+	_lt.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_lt.tween_property(self, "scale", Vector2(1.0, 1.0), 0.18)
 
 func launch_with_speed(direction: Vector2, spd: float) -> void:
 	move_direction = direction.normalized()
@@ -403,8 +406,11 @@ func launch_with_speed(direction: Vector2, spd: float) -> void:
 	state = "flying"
 	catch_cooldown = 1.2
 	$CollisionShape2D.disabled = false
-	scale = Vector2(1.0, 1.0)
 	z_index = 5
+	scale = Vector2(0.3, 0.3)
+	var _ltws := create_tween()
+	_ltws.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_ltws.tween_property(self, "scale", Vector2(1.0, 1.0), 0.18)
 	_wall_bounce_count = 0
 
 func caught() -> void:
@@ -665,12 +671,20 @@ func _process_returning(delta: float) -> void:
 	if not is_instance_valid(player):
 		return
 
-	var to_player = player.global_position - global_position
+	var _weapon_offset := Vector2(20, -24)
+	var to_player = (player.global_position + _weapon_offset) - global_position
 	var dist = to_player.length()
+
+	# Yaklaşırken scale küçült
+	if dist < 90:
+		var t: float = clamp(1.0 - dist / 90.0, 0.0, 1.0)
+		var s: float = lerp(1.0, 0.0, t)
+		scale = Vector2(s, s)
 
 	if dist < 70:
 		$CollisionShape2D.disabled = true
 		if player.orbit_balls.size() < player.MAX_ORBIT:
+			scale = Vector2.ZERO
 			player.add_to_orbit(self)
 			return
 		# Orbit dolu — player etrafında küçük daire çizerek slot bekle
