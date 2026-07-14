@@ -228,6 +228,32 @@ func _setup_ball_sprite() -> void:
 	elif can_phantom_circuit:
 		folder = "phantomCircuitCore"; frame_count = 17
 	elif is_inner_core:
+		if inner_core_type == "elemental_shield_core":
+			# none:5 / cryo:3 / electro:2 / wet:3 / fire:4  → toplam 17 frame
+			const ESC_SEGS: Array = [
+				["none",    0,  5],
+				["cryo",    5,  8],
+				["electro", 8,  10],
+				["wet",     10, 13],
+				["fire",    13, 17],
+			]
+			var esc_frames := SpriteFrames.new()
+			if esc_frames.has_animation("default"):
+				esc_frames.remove_animation("default")
+			for seg in ESC_SEGS:
+				esc_frames.add_animation(seg[0])
+				esc_frames.set_animation_speed(seg[0], 12.0)
+				esc_frames.set_animation_loop(seg[0], true)
+				for i in range(seg[1], seg[2]):
+					esc_frames.add_frame(seg[0], load("res://assets/balls/elementalShieldCore/frame_%03d.png" % i))
+			_sprite = AnimatedSprite2D.new()
+			_sprite.sprite_frames  = esc_frames
+			_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			var _esc_size: float = float(esc_frames.get_frame_texture("none", 0).get_width())
+			_sprite.scale = Vector2.ONE * (0.57375 * (48.0 / _esc_size))
+			_sprite.play("none")
+			add_child(_sprite)
+			return
 		var inner_folders := {
 			"iron_aura_core":        ["ironAuraCore",        9],
 			"momentum_field_core":   ["momentumFieldCore",   9],
@@ -242,7 +268,6 @@ func _setup_ball_sprite() -> void:
 			"catalyst_pulse_core":   ["catalystPulseCore",   9],
 			"echo_resonance_core":   ["echoResonanceCore",   9],
 			"volatile_aura_core":    ["volatileAuraCore",    9],
-			"elemental_shield_core": ["elementalShieldCore", 9],
 		}
 		if inner_folders.has(inner_core_type):
 			var info = inner_folders[inner_core_type]
@@ -856,8 +881,18 @@ func _inner_core_tick(delta: float) -> void:
 			pass
 
 		"elemental_shield_core":
-			# Pasif direnç — tick gerekmez, game_scene.gd player_damaged() üzerinden kontrol eder
-			pass
+			# Animasyonu last_applied_element'a göre güncelle
+			if is_instance_valid(_sprite) and _sprite.sprite_frames:
+				var _lae: String = player.get("last_applied_element") if player.get("last_applied_element") else ""
+				var _anim: String
+				match _lae:
+					"fire":     _anim = "fire"
+					"wet":      _anim = "wet"
+					"electric": _anim = "electro"
+					"cryo":     _anim = "cryo"
+					_:          _anim = "none"
+				if _sprite.animation != _anim:
+					_sprite.play(_anim)
 
 		_:
 			# Eski fallback: Antivirus core (type atanmamış)
