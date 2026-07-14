@@ -114,8 +114,8 @@ func _ready() -> void:
 	$CollisionShape2D.disabled = false
 	_setup_trail()
 	_setup_momentum_trail()
-	_setup_ball_sprite()
-	_update_modulate()
+	call_deferred("_setup_ball_sprite")
+	call_deferred("_update_modulate")
 	_cached_player = get_tree().get_first_node_in_group("player")
 	collision_layer = 2
 	collision_mask  = 1
@@ -307,6 +307,12 @@ func _setup_ball_sprite() -> void:
 			"catalyst_pulse_core":   ["catalystPulseCore",   9],
 			"echo_resonance_core":   ["echoResonanceCore",   9],
 			"volatile_aura_core":    ["volatileAuraCore",    9],
+			"glitch_pulse_core":     ["glitchPulseCore",     9],
+			"shadow_core":           ["shadowCore",          9],
+			"data_drain_core":       ["dataDrainCore",       9],
+			"virus_beacon_core2":    ["virusBeaconCore",     9],
+			"rogues_eye_core2":      ["roguesEyeCore",       9],
+			"circuit_overload_core": ["circuitOverloadCore", 18],
 		}
 		if inner_folders.has(inner_core_type):
 			var info = inner_folders[inner_core_type]
