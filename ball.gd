@@ -255,6 +255,12 @@ func _setup_ball_sprite() -> void:
 			add_child(_sprite)
 			return
 		var inner_folders := {
+			"glitch_pulse_core":     ["glitchPulseCore",     9],
+			"shadow_core":           ["shadowCore",          9],
+			"data_drain_core":       ["dataDrainCore",       9],
+			"virus_beacon_core":     ["virusBeaconCore",     9],
+			"rogues_eye_core":       ["roguesEyeCore",       9],
+			"circuit_overload_core": ["circuitOverloadCore", 9],
 			"iron_aura_core":        ["ironAuraCore",        9],
 			"momentum_field_core":   ["momentumFieldCore",   9],
 			"regen_pulse_core":      ["regenPulseCore",      9],
@@ -880,6 +886,80 @@ func _inner_core_tick(delta: float) -> void:
 			# Bu core tick tabanlı değil — _on_reaction_triggered() üzerinden çalışır
 			pass
 
+		"glitch_pulse_core":
+			# Her 4s: 80px içinde rastgele 1 düşmana Glitch uygula
+			if _inner_tick_timer_b > 0.0: return
+			_inner_tick_timer_b = 4.0
+			var _gp_nearby: Array = []
+			for subject in get_tree().get_nodes_in_group("subjects"):
+				if not is_instance_valid(subject): continue
+				if global_position.distance_to(subject.global_position) <= 80.0:
+					_gp_nearby.append(subject)
+			if _gp_nearby.size() > 0:
+				var _gp_target = _gp_nearby[randi() % _gp_nearby.size()]
+				if _gp_target.has_method("apply_glitch"):
+					_gp_target.apply_glitch()
+
+		"shadow_core":
+			# Dash sonrası 3s: her 1s'de 50px çevresine 1 hasar
+			if player.get("is_dashing") and player.is_dashing:
+				_inner_tick_timer_b = 3.0
+			if _inner_tick_timer_b > 0.0:
+				for subject in get_tree().get_nodes_in_group("subjects"):
+					if not is_instance_valid(subject): continue
+					if global_position.distance_to(subject.global_position) <= 50.0:
+						subject.take_damage(1, false)
+
+		"data_drain_core":
+			# Her 1s: 60px içinde Glitch'li düşman varsa +1 HP
+			var _dd_found := false
+			for subject in get_tree().get_nodes_in_group("subjects"):
+				if not is_instance_valid(subject): continue
+				if global_position.distance_to(subject.global_position) > 60.0: continue
+				if subject.get("is_glitched") and subject.is_glitched:
+					_dd_found = true
+					break
+			if _dd_found and gfx:
+				gfx.player_hp = mini(gfx.player_hp + 1, gfx.player_max_hp)
+				gfx.update_ui()
+
+		"virus_beacon_core":
+			# Pasif — düşman ölümü base_enemy.gd die() hook'uyla tetiklenir
+			pass
+
+		"rogues_eye_core":
+			# Her 7s: en yakın düşmanı 3s işaretle (%10 fazla hasar)
+			if _inner_tick_timer_b > 0.0: return
+			_inner_tick_timer_b = 7.0
+			var _nearest_dist := INF
+			var _nearest = null
+			for subject in get_tree().get_nodes_in_group("subjects"):
+				if not is_instance_valid(subject): continue
+				var _d := global_position.distance_to(subject.global_position)
+				if _d < _nearest_dist:
+					_nearest_dist = _d
+					_nearest = subject
+			if is_instance_valid(_nearest):
+				_nearest.set("is_marked", true)
+				get_tree().create_timer(3.0).timeout.connect(func():
+					if is_instance_valid(_nearest):
+						_nearest.set("is_marked", false)
+				)
+
+		"circuit_overload_core":
+			# Circuit Breaker tetiklenince 3s boyunca her 1s'de 90px'e Glitch
+			if not player.get("circuit_overload_active"): return
+			if not player.circuit_overload_active: return
+			player.circuit_overload_timer -= INNER_TICK_INTERVAL
+			if player.circuit_overload_timer <= 0.0:
+				player.circuit_overload_active = false
+				return
+			for subject in get_tree().get_nodes_in_group("subjects"):
+				if not is_instance_valid(subject): continue
+				if global_position.distance_to(subject.global_position) <= 90.0:
+					if subject.has_method("apply_glitch"):
+						subject.apply_glitch()
+
 		"elemental_shield_core":
 			# Animasyonu last_applied_element'a göre güncelle
 			if is_instance_valid(_sprite) and _sprite.sprite_frames:
@@ -1369,6 +1449,10 @@ func _hit_subject(subject: Node2D) -> void:
 				for _cb_en in get_tree().get_nodes_in_group("subjects"):
 					if is_instance_valid(_cb_en) and _cb_en.has_method("apply_glitch"):
 						_cb_en.apply_glitch()
+				# Circuit Overload Core sinyali
+				if _rp.get("circuit_overload_timer") != null:
+					_rp.circuit_overload_active = true
+					_rp.circuit_overload_timer  = 3.0
 
 		# Exploit Network: Glitch vurulunca yayıl (Virus Spread ile 350px)
 		if _rp.get("has_exploit_network") and _rp.has_exploit_network and can_glitch and _is_glitched:

@@ -12,6 +12,7 @@ var original_speed: float = 0.0
 var is_slowed: bool = false
 var is_glitched: bool = false
 var is_antivirused: bool = false
+var is_marked: bool = false
 var antivirus_stacks: int = 0
 var _antivirus_duration: float = 0.0
 var _antivirus_tick: float = 0.0
@@ -125,6 +126,8 @@ func _update_anim_dir_from_velocity() -> void:
 # ── Hasar & Ölüm ─────────────────────────────────────────────────────────────
 
 func take_damage(amount, from_ally: bool = false) -> void:
+	if get("is_marked") and is_marked:
+		amount = int(amount * 1.1)
 	health -= amount
 	if is_electrified and not from_ally:
 		var p := _get_player()
@@ -139,6 +142,26 @@ func take_damage(amount, from_ally: bool = false) -> void:
 		die()
 
 func die() -> void:
+	# Virus Beacon Core: Antivirus'lü düşman ölürse 3s boyunca yakına stack yay
+	if is_antivirused and antivirus_stacks > 0:
+		for ball in get_tree().get_nodes_in_group("player_balls"):
+			if not is_instance_valid(ball): continue
+			if ball.get("is_inner_core") and ball.is_inner_core and ball.get("inner_core_type") and ball.inner_core_type == "virus_beacon_core":
+				if ball.global_position.distance_to(global_position) <= 80.0:
+					var _vb_ref := ball
+					var _vb_ticks := 0
+					get_tree().create_timer(0.0).timeout.connect(func _vb_burst():
+						if not is_instance_valid(_vb_ref): return
+						for s in _vb_ref.get_tree().get_nodes_in_group("subjects"):
+							if not is_instance_valid(s): continue
+							if _vb_ref.global_position.distance_to(s.global_position) <= 100.0:
+								if s.has_method("apply_antivirus"):
+									s.apply_antivirus(1)
+						_vb_ticks += 1
+						if _vb_ticks < 3 and is_instance_valid(_vb_ref):
+							_vb_ref.get_tree().create_timer(1.0).timeout.connect(_vb_burst)
+					)
+				break
 	_on_decay_death()
 	is_dead = true
 	if is_in_group("allies"):

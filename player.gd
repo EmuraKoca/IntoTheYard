@@ -150,6 +150,8 @@ var has_phase_shift: bool         = false # Phantom → ×2 dmg
 var has_interference_cloak: bool  = false # Phantom → Glitch 3s
 var has_circuit_breaker: bool     = false # Her 10. hit → tüm Glitch
 var _circuit_breaker_counter: int = 0
+var circuit_overload_active: bool  = false  # Circuit Overload Core tetik sinyali
+var circuit_overload_timer: float  = 0.0
 # Cross-build
 var has_rogues_instinct: bool     = false # Arındırma → +1 HP
 var has_backstab_protocol: bool   = false # North bounce → sonraki isabet ×1.5

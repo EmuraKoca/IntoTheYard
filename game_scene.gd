@@ -54,6 +54,12 @@ const _CORE_DISPLAY_NAMES: Dictionary = {
 	"echo_resonance_core":   "Echo Resonance Core",
 	"volatile_aura_core":    "Volatile Aura Core",
 	"elemental_shield_core": "Elemental Shield Core",
+	"glitch_pulse_core":    "Glitch Pulse Core",
+	"shadow_core":          "Shadow Core",
+	"data_drain_core":      "Data Drain Core",
+	"virus_beacon_core":    "Virus Beacon Core",
+	"rogues_eye_core":      "Rogue's Eye Core",
+	"circuit_overload_core":"Circuit Overload Core",
 }
 
 const _CALAMITY_DISPLAY_NAMES: Dictionary = {
@@ -126,6 +132,8 @@ const _CORE_INDEX_MAP: Dictionary = {
 	185: "mist_core", 186: "frost_aura_core", 187: "static_aura_core",
 	188: "catalyst_pulse_core", 189: "echo_resonance_core",
 	190: "volatile_aura_core", 191: "elemental_shield_core",
+	192: "glitch_pulse_core", 193: "shadow_core", 194: "data_drain_core",
+	195: "virus_beacon_core", 196: "rogues_eye_core", 197: "circuit_overload_core",
 }
 
 # index → {name, category}  (Identity kart izleme gerekmez, sadece Individuality+Utility)
@@ -2222,6 +2230,13 @@ func _build_all_upgrades() -> void:
 	{"name": "Bounce Barrage",       "category": "Calamity",      "color": Color(0.35, 0.0, 0.9),  "desc": "Core Speed ×3 for 5s",                                   "index": 138, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
 	{"name": "Mirror Image",         "category": "Calamity",      "color": Color(0.2, 0.65, 0.9),  "desc": "Spawn 2 phantom cores\nfor 5s",                          "index": 144, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
 	{"name": "Systemic Failure",     "category": "Calamity",      "color": Color(0.0, 0.7, 0.35),  "desc": "All enemies in the Yard\nget 2× Antivirus stacks",        "index": 156, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
+	# ── Cyclone Connected Cores (iç yörünge) ─────────────────────────────────
+	{"name": "Glitch Pulse Core",    "category": "Identity",      "color": Color(0.8, 0.0, 0.8),   "desc": "Her 4s: 80px içinde 1 düşmana\nGlitch uygular",                 "index": 192, "weight": 5, "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
+	{"name": "Shadow Core",          "category": "Identity",      "color": Color(0.2, 0.05, 0.4),  "desc": "Dash sonrası 3s: orbit hızlanır\n50px çevresine 1 hasar/s",      "index": 193, "weight": 4, "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
+	{"name": "Data Drain Core",      "category": "Identity",      "color": Color(0.6, 0.0, 0.25),  "desc": "Glitch'li düşman 60px içindeyse\nher 1s: +1 HP",                 "index": 194, "weight": 5, "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
+	{"name": "Virus Beacon Core",    "category": "Identity",      "color": Color(0.1, 0.75, 0.3),  "desc": "Antivirus'lü düşman 80px'te ölürse\n3s: 100px'e 1 stack yayar", "index": 195, "weight": 4, "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
+	{"name": "Rogue's Eye Core",     "category": "Identity",      "color": Color(0.9, 0.6, 0.1),   "desc": "Her 7s: en yakın düşmanı işaretle\n(3s, %10 fazla hasar alır)",  "index": 196, "weight": 4, "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
+	{"name": "Circuit Overload Core","category": "Identity",      "color": Color(0.25, 0.75, 0.95),"desc": "Circuit Breaker tetiklenince\n3s: 90px çevresine sürekli Glitch",  "index": 197, "weight": 3, "rarity": "epic",      "chars": ["cyclone"], "min_level": 3},
 	# ── Herkese açık ─────────────────────────────────────────────────────────
 	{"name": "Core Mastery",        "category": "Utility",       "color": Color(0.2, 0.8, 0.2), "desc": "+1 damage to all cores",                    "index": 11, "weight": 10, "rarity": "common", "chars": [], "min_level": 0},
 	{"name": "Lightning",           "category": "Calamity",      "color": Color(1.0, 1.0, 0.0), "desc": "Lightning strikes selected point",          "index": 7,  "weight": 8,  "rarity": "common", "chars": ["leila"], "min_level": 0},
@@ -3477,6 +3492,13 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 	elif index == 189: $BallLauncher.queue_upgrade_ball("echo_resonance_core")
 	elif index == 190: $BallLauncher.queue_upgrade_ball("volatile_aura_core")
 	elif index == 191: $BallLauncher.queue_upgrade_ball("elemental_shield_core")
+	# ── Cyclone Connected Cores ───────────────────────────────────────────────
+	elif index == 192: $BallLauncher.queue_upgrade_ball("glitch_pulse_core")
+	elif index == 193: $BallLauncher.queue_upgrade_ball("shadow_core")
+	elif index == 194: $BallLauncher.queue_upgrade_ball("data_drain_core")
+	elif index == 195: $BallLauncher.queue_upgrade_ball("virus_beacon_core")
+	elif index == 196: $BallLauncher.queue_upgrade_ball("rogues_eye_core")
+	elif index == 197: $BallLauncher.queue_upgrade_ball("circuit_overload_core")
 	# ── Vector — Calamity ─────────────────────────────────────────────────────
 	elif index == 173:  # Iron Fortress
 		if calamity_slots.size() < max_calamity_slots:
