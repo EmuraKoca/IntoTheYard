@@ -3606,3 +3606,34 @@ Silah Sprite Sistemi (Vector):
      — Toplar namludan değil yanlış konumdan fırlatılıyor olabilir
      — Tribündeki Ball Launcher ve silah sprite sistemi birbirinden bağımsız
        tutulmalı, karışıklık giderilmeli
+v0.1.0.2 — Silah Yön Düzeltmesi + Leila/Cyclone Weapon (2026-07-15)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Silah Sistemi — Düzeltmeler:
+
+  ✅  Silah yön sprite'ı artık ateş yönünü anlık yansıtıyor
+     — trigger_weapon_fire_fx() artık fire_dir parametresi alıyor
+     — Ateş anında silah sprite'ı hedefe dönüyor (S/SE/SW dahil)
+     — 0.3s kilit: ateş sonrası mouse takibine hemen geçilmiyor
+     — Auto-fire ve manual fire her ikisinde de çalışıyor
+
+  ✅  Z-order düzenlendi: Karakter (10) > Silah (7) > Core (4-5)
+     — Silah artık karakterin arkasında doğru konumda görünüyor
+
+  ✅  Sol alt köşe takılma sorunu giderildi
+     — Core returning state'de collision 70px → 100px'te kapatılıyor
+     — Core player body'sine çarpmadan weapon offset'ine ulaşabiliyor
+
+Leila Weapon:
+
+  ✅  17 frame'lik animasyonlu küre silah eklendi
+     — 12 FPS döngüsel idle animasyonu
+     — Ateşte flash efekti
+     — assets/characters/leila/leilasWeapon/ klasörüne eklendi
+
+Cyclone Weapon:
+
+  ✅  17 frame'lik glitch küre silah eklendi
+     — 12 FPS döngüsel idle animasyonu (glitch/kararsız görünüm)
+     — Ateşte flash efekti
+     — assets/characters/cyclone/cyclonesWeapon/ klasörüne eklendi
