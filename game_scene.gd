@@ -126,6 +126,29 @@ const _CORE_FOLDER_MAP: Dictionary = {
 	"crusher":    "crusherCore",   "kinetic":  "kineticCore",
 	"bulwark":    "bulwarkCore",   "siege":    "siegeCore",
 	"bloodbound": "bloodboundCore","tempered": "temperedCore",
+	# Vector Connected Cores
+	"iron_aura_core":        "ironAuraCore",
+	"momentum_field_core":   "momentumFieldCore",
+	"regen_pulse_core":      "regenPulseCore",
+	"fortress_core":         "fortressCore",
+	"bloodwall_core":        "bloodWallCore",
+	"overcharge_core":       "overchargeCore",
+	"anchor_pulse_core":     "anchorPulseCore",
+	# Leila Connected Cores
+	"mist_core":             "mistCore",
+	"frost_aura_core":       "frostAuraCore",
+	"static_aura_core":      "staticAuraCore",
+	"catalyst_pulse_core":   "catalystPulseCore",
+	"echo_resonance_core":   "echoResonanceCore",
+	"volatile_aura_core":    "volatileAuraCore",
+	"elemental_shield_core": "elementalShieldCore",
+	# Cyclone Connected Cores
+	"glitch_pulse_core":     "glitchPulseCore",
+	"shadow_core":           "shadowCore",
+	"data_drain_core":       "dataDrainCore",
+	"virus_beacon_core":     "virusBeaconCore",
+	"rogues_eye_core":       "roguesEyeCore",
+	"circuit_overload_core": "circuitOverloadCore",
 }
 
 const _CORE_INDEX_MAP: Dictionary = {
@@ -137,6 +160,8 @@ const _CORE_INDEX_MAP: Dictionary = {
 	61: "plasma", 62: "steam",   63: "arc",     64: "echo",
 	65: "orbit",  77: "scatter", 78: "catalyst",87: "voltaic",
 	88: "tempest",103: "prismatic",
+	180: "regen_pulse_core", 181: "fortress_core", 182: "bloodwall_core",
+	183: "overcharge_core", 184: "anchor_pulse_core",
 	185: "mist_core", 186: "frost_aura_core", 187: "static_aura_core",
 	188: "catalyst_pulse_core", 189: "echo_resonance_core",
 	190: "volatile_aura_core", 191: "elemental_shield_core",
@@ -144,7 +169,12 @@ const _CORE_INDEX_MAP: Dictionary = {
 	195: "virus_beacon_core", 196: "rogues_eye_core", 197: "circuit_overload_core",
 }
 
-
+# Connected Core (iç yörünge) index'leri — kart UI'da badge göstermek için
+const _CONNECTED_CORE_INDICES: Array = [
+	180, 181, 182, 183, 184,           # Vector
+	185, 186, 187, 188, 189, 190, 191, # Leila
+	192, 193, 194, 195, 196, 197,      # Cyclone
+]
 
 # index → {name, category}  (Identity kart izleme gerekmez, sadece Individuality+Utility)
 const _UPGRADE_META: Dictionary = {
@@ -1372,6 +1402,8 @@ func _get_ball_core_type(ball) -> String:
 	if ball.get("can_fire"):       return "fire"
 	if ball.get("can_leech"):      return "leech"
 	if ball.get("is_mimic"):       return "mimic"
+	if ball.get("is_inner_core") and ball.is_inner_core:
+		return ball.get("inner_core_type") if ball.get("inner_core_type") else "normal"
 	return "normal"
 
 const _FUSED_FOLDER_MAP: Dictionary = {
@@ -2465,7 +2497,19 @@ func show_upgrade_menu() -> void:
 		desc_label.add_theme_font_override("font", _font_regular)
 		desc_label.add_theme_color_override("font_color", Color(0.85, 0.85, 0.85))
 		desc_panel.add_child(desc_label)
-		
+
+		# ── Connected Core badge ─────────────────────────────────────────────
+		if upgrade.get("index", -1) in _CONNECTED_CORE_INDICES:
+			var badge := Label.new()
+			badge.text = "◈ Connected Core"
+			badge.position = Vector2(tx + 26, ty + 20)
+			badge.size = Vector2(card_width - 52, 24)
+			badge.add_theme_font_size_override("font_size", 11)
+			badge.add_theme_font_override("font", _font_bold)
+			badge.add_theme_color_override("font_color", Color(0.4, 0.85, 1.0))
+			badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			canvas.add_child(badge)
+
 		# Confirm ve Skip ortada
 		var confirm_btn = Button.new()
 		confirm_btn.text = Lang.t("upgrade_confirm")

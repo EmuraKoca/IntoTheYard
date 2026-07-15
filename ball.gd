@@ -807,6 +807,18 @@ const INNER_TICK_INTERVAL: float = 1.0
 const INNER_TICK_RADIUS: float = 50.0
 
 func _inner_core_tick(delta: float) -> void:
+	# Fortress Core: sürekli çalışır, timer bağımsız
+	if inner_core_type == "fortress_core":
+		var _gfx := get_tree().get_first_node_in_group("game")
+		if _gfx and _gfx.player_armor_cap > 0:
+			var _ratio: float = float(_gfx.player_armor) / float(_gfx.player_armor_cap)
+			if _ratio >= 0.75:
+				for _s in get_tree().get_nodes_in_group("subjects"):
+					if not is_instance_valid(_s): continue
+					if global_position.distance_to(_s.global_position) <= 90.0:
+						if _s.has_method("apply_slow"):
+							_s.apply_slow(0.25, 0.5)  # kısa süre, her frame yenilenir
+
 	_inner_tick_timer -= delta
 	_inner_tick_timer_b -= delta
 	if _inner_tick_timer > 0.0: return
@@ -839,15 +851,7 @@ func _inner_core_tick(delta: float) -> void:
 			if gfx: gfx.gain_armor(1)
 
 		"fortress_core":
-			# Her 1s: Armor %75+ doluysa 90px düşmanları %25 yavaşlat
-			if gfx and gfx.player_armor_cap > 0:
-				var ratio: float = float(gfx.player_armor) / float(gfx.player_armor_cap)
-				if ratio >= 0.75:
-					for subject in get_tree().get_nodes_in_group("subjects"):
-						if not is_instance_valid(subject): continue
-						if global_position.distance_to(subject.global_position) <= 90.0:
-							if subject.has_method("apply_slow"):
-								subject.apply_slow(0.25, 1.2)
+			pass  # aşağıda timer dışında işleniyor
 
 		"bloodwall_core":
 			# Her 9s: HP %50 altındaysa 1 HP yenile

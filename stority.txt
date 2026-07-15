@@ -1,0 +1,25 @@
+Yıl = 2099
+Eyalet = Cybereon
+
+Vector, Leila ve Cyclone alanlarında en iyiler olmasına karşın zayıf prototipleri olan 3 mahkumdur . 
+Geçmişlerinde işlediği suçların bedeli olarak " Cybereon" eyaletinde , tutuklanmış ve hapis yatmaktadırlar .
+Bir gün İTY Corp. başkanı Mr.Hasmen , hapisten çıkmaları karşılığında bir teklif yapar .
+Teklifin içeriğinde şu maddeler vardır .
+	- Prototip deneylerde kullanılacaklar .
+	- 3 ü de İTY Corp. binasından dışarı çıkamayacaklar .
+	- Diledikleri gibi yeyip içecekler .
+	- Kendi odaları olacak ve istedikleri gibi özelleştirebilecekler (Oyuna daha sonra eklemeyi planladığım mekanik) .
+Vector, Cyclone, Leila ve tabi hapishane müdürü bu teklifi seve seve ! kabul etmiştir .
+İTY Corp. Bilim adına çalışmalar yapan , devlete yüksek ödenekler sağlayan ve bu sebepten de çalışmaları ört bas edilen bir bilim ve teknoloji şirketidir .
+Şirket , son 3 yılda "Personal-ITY" adında ürettiği çipleri neredeyse bütün şehir sakinlerine bedava şekilde takmış ve karşılığında yeni nesil güncellemenin onaylanmasını istemiştir . 
+Hasmen her ne kadar iş adamı gibi görünse de kafasında ki planlar farklıdır , amacı her insanda farklı reaksiyon gösteren bu çiplerin verilerini depolamak olan Hasmen'ın bir de rakibi vardır . 
+Hasmen'ın gri olduğu yerde rakibi ne acıdır ki Siyahtır ve planları tam olarak bilinmez .
+Bir şeylerin yaklaşmakta olduğu sinyalini alan Hasmen , İnsanların ona sövmesine göğüs gererek bu planı yapmak zorunda kalmıştır .
+Kimilerinin top sandığı Hasmen projelerinin vazgeçilmezi olan "Identity" core'lara bir çeşit NFC yerleştirip veriyi bilgisayarında toplama niyetindedir .
+Fakat işler çok da istediği gibi gitmez ve kontrolden çıkma noktasına gelir . Bunun kendi projesi ile alakasının olmadığını düşünen Hasmen , geliştirdiği Core'ların ve orbit teknolojisinin faydalı olabileceğini düşünüp bir kaos planlar .
+Eğer planları istediği gibi giderse , mahkumlar sayesinde hem veri çekecek hem de bütün şehri arındıracaktır .
+Planı tam olarak şöyle işleyecekti , çipler kontrolden çıktığı zaman bütün arızalı cyber insanları ITY Corp. Binasının spor alanına yönlendirecek ve orbit teknolojisi ve NFC toplar sayesinde mahkumları öldürmeden
+hem veri çekip hem de onları çipin arızasından arındıracaktı. 
+Şirketinin antrenman alanına teknolojinin sınırlarını zorlayan bir Ball Launcher yerleştirmiş ve planını yürürlüğe koymaya hazırlanıyordu fakat sorun şu ki , 
+Rakibi de boş durmayacaktı . 
+Artık tek yapması gereken bir kaos oluşturmaktı ,ki onun da vakti gelmişti .

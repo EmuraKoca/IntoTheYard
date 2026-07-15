@@ -39,7 +39,7 @@ var orbit_balls: Array  = []
 var inner_orbit_balls: Array = []
 const MAX_ORBIT: int    = 8
 const ORBIT_RADIUS: float = 65.0
-const INNER_ORBIT_RADIUS: float = 35.0
+const INNER_ORBIT_RADIUS: float = 65.0
 const ORBIT_SPEED: float  = 2.2   # rad/s
 const INNER_ORBIT_SPEED: float = 3.5  # rad/s — iç yörünge biraz daha hızlı döner
 var orbit_angle: float  = 0.0
@@ -281,19 +281,19 @@ func add_to_orbit(ball: Node2D) -> void:
 	if ball in orbit_balls or ball in inner_orbit_balls: return
 	ball.state         = "orbiting"
 	ball.moving        = false
-	ball.scale         = Vector2.ZERO
 	ball.z_index       = 4
 	ball.strike_offset = Vector2.ZERO
 	ball._is_striking  = false
 	ball.get_node("CollisionShape2D").disabled = true
 	ball._reset_defense_life()
 	if ball.get("is_inner_core"):
+		ball.scale = Vector2(1.0, 1.0)  # Connected Core'lar orbit'te görünür
 		inner_orbit_balls.append(ball)
 		return
 	if orbit_balls.size() >= MAX_ORBIT: return
 	orbit_balls.append(ball)
-	# Silahta yüklü — küçük boyda bekler (tween yok, fire burst'le çakışmasın)
-	ball.scale = Vector2(0.32, 0.32)
+	# Silahta yüklü — görünmez bekler
+	ball.scale = Vector2.ZERO
 	# Auto mode: orbit'e giren top hemen fırlatılır (Orbit Core hariç)
 	if auto_mode and not ball.get("can_orbit"):
 		_fire_ball()
