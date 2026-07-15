@@ -23,6 +23,8 @@ var _weapon_sprite: Sprite2D = null
 var _weapon_textures: Dictionary = {}
 var _weapon_last_dir: String = ""
 var _weapon_dir_lock: float = 0.0  # ateş sonrası yön kilit süresi
+var _leila_weapon_anim: AnimatedSprite2D = null
+var _cyclone_weapon_anim: AnimatedSprite2D = null
 const _WEAPON_DIRS: Dictionary = {
 	"N":  "North",
 	"NE": "northEast",
@@ -553,7 +555,13 @@ func _setup_weapon_sprite() -> void:
 	var folder: String = ""
 	match char_type:
 		"vector": folder = "res://assets/characters/vector/vectorsWeapon/"
-		_: return  # Leila/Cyclone silahları hazır olunca eklenir
+		"leila":
+			_setup_leila_weapon()
+			return
+		"cyclone":
+			_setup_cyclone_weapon()
+			return
+		_: return
 
 	for dir_key in _WEAPON_DIRS:
 		var filename: String = _WEAPON_DIRS[dir_key] + ".png"
@@ -569,9 +577,57 @@ func _setup_weapon_sprite() -> void:
 	_weapon_sprite = Sprite2D.new()
 	_weapon_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_weapon_sprite.texture = _weapon_textures.get("S")
-	_weapon_sprite.z_index = 6
+	_weapon_sprite.z_index = 7
 	_weapon_sprite.z_as_relative = false
 	get_parent().add_child.call_deferred(_weapon_sprite)
+
+func _setup_leila_weapon() -> void:
+	var frames := SpriteFrames.new()
+	if frames.has_animation("default"):
+		frames.remove_animation("default")
+	frames.add_animation("idle")
+	frames.set_animation_speed("idle", 12.0)
+	frames.set_animation_loop("idle", true)
+	var folder := "res://assets/characters/leila/leilasWeapon/"
+	for i in range(17):
+		var path := folder + "frame_%03d.png" % i
+		var tex: Texture2D = load(path)
+		if tex != null:
+			frames.add_frame("idle", tex)
+		else:
+			push_warning("Leila weapon frame not found: " + path)
+
+	_leila_weapon_anim = AnimatedSprite2D.new()
+	_leila_weapon_anim.sprite_frames = frames
+	_leila_weapon_anim.autoplay = "idle"
+	_leila_weapon_anim.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_leila_weapon_anim.z_index = 7
+	_leila_weapon_anim.z_as_relative = false
+	get_parent().add_child.call_deferred(_leila_weapon_anim)
+
+func _setup_cyclone_weapon() -> void:
+	var frames := SpriteFrames.new()
+	if frames.has_animation("default"):
+		frames.remove_animation("default")
+	frames.add_animation("idle")
+	frames.set_animation_speed("idle", 12.0)
+	frames.set_animation_loop("idle", true)
+	var folder := "res://assets/characters/cyclone/cyclonesWeapon/"
+	for i in range(17):
+		var path := folder + "frame_%03d.png" % i
+		var tex: Texture2D = load(path)
+		if tex != null:
+			frames.add_frame("idle", tex)
+		else:
+			push_warning("Cyclone weapon frame not found: " + path)
+
+	_cyclone_weapon_anim = AnimatedSprite2D.new()
+	_cyclone_weapon_anim.sprite_frames = frames
+	_cyclone_weapon_anim.autoplay = "idle"
+	_cyclone_weapon_anim.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_cyclone_weapon_anim.z_index = 7
+	_cyclone_weapon_anim.z_as_relative = false
+	get_parent().add_child.call_deferred(_cyclone_weapon_anim)
 
 func _vec_to_weapon_dir(v: Vector2) -> String:
 	var deg: float = fmod(rad_to_deg(v.angle()) + 360.0, 360.0)
@@ -591,12 +647,21 @@ func _apply_weapon_dir(dir: String) -> void:
 		_weapon_sprite.texture = _weapon_textures[dir]
 
 func _update_weapon_dir() -> void:
-	if not _weapon_sprite or not player: return
+	if not player: return
 
+	# Leila — sadece pozisyon güncelle, animasyon kendi döner
+	if _leila_weapon_anim and is_instance_valid(_leila_weapon_anim):
+		_leila_weapon_anim.global_position = player.global_position + Vector2(20, -24)
+
+	# Cyclone — aynı mantık
+	if _cyclone_weapon_anim and is_instance_valid(_cyclone_weapon_anim):
+		_cyclone_weapon_anim.global_position = player.global_position + Vector2(20, -24)
+
+	# Vector — yön + pozisyon
+	if not _weapon_sprite: return
 	if not (_weapon_shake_tween and _weapon_shake_tween.is_running()):
 		_weapon_sprite.global_position = player.global_position + Vector2(20, -24)
 
-	# Ateş sonrası kilit: mouse takibine geçme
 	if _weapon_dir_lock > 0.0:
 		_weapon_dir_lock -= get_process_delta_time()
 		return
@@ -605,15 +670,25 @@ func _update_weapon_dir() -> void:
 	_apply_weapon_dir(_vec_to_weapon_dir(aim))
 
 func trigger_weapon_fire_fx(fire_dir: Vector2 = Vector2.ZERO) -> void:
-	if not _weapon_sprite or not is_instance_valid(_weapon_sprite): return
-	_weapon_recoil()
-	_weapon_sprite.modulate = Color(1.8, 1.8, 2.2)
-	var _wt: Tween = create_tween()
-	_wt.tween_property(_weapon_sprite, "modulate", Color(1.0, 1.0, 1.0), 0.18)
-	# Ateş yönünü hemen sprite'a uygula ve 0.3s kilitle
-	if fire_dir != Vector2.ZERO:
-		_apply_weapon_dir(_vec_to_weapon_dir(fire_dir))
-		_weapon_dir_lock = 0.3
+	# Vector silahı
+	if _weapon_sprite and is_instance_valid(_weapon_sprite):
+		_weapon_recoil()
+		_weapon_sprite.modulate = Color(1.8, 1.8, 2.2)
+		var _wt: Tween = create_tween()
+		_wt.tween_property(_weapon_sprite, "modulate", Color(1.0, 1.0, 1.0), 0.18)
+		if fire_dir != Vector2.ZERO:
+			_apply_weapon_dir(_vec_to_weapon_dir(fire_dir))
+			_weapon_dir_lock = 0.3
+	# Leila silahı — flash efekti
+	if _leila_weapon_anim and is_instance_valid(_leila_weapon_anim):
+		_leila_weapon_anim.modulate = Color(1.8, 1.8, 2.2)
+		var _lt: Tween = create_tween()
+		_lt.tween_property(_leila_weapon_anim, "modulate", Color(1.0, 1.0, 1.0), 0.18)
+	# Cyclone silahı — flash efekti
+	if _cyclone_weapon_anim and is_instance_valid(_cyclone_weapon_anim):
+		_cyclone_weapon_anim.modulate = Color(1.8, 1.8, 2.2)
+		var _ct: Tween = create_tween()
+		_ct.tween_property(_cyclone_weapon_anim, "modulate", Color(1.0, 1.0, 1.0), 0.18)
 
 func _weapon_recoil() -> void:
 	if not _weapon_sprite: return

@@ -388,7 +388,7 @@ func _ready() -> void:
 	# _process'i AnimatedSprite2D'den (priority 0) SONRA çalıştır
 	# Böylece aynı frame'de animasyon durduğu an is_playing() false görürüz
 	process_priority = 1
-	z_index = 2
+	z_index = 10
 	character_type = GameData.selected_character
 	# Each character shows its own visual; others remain hidden in tscn
 	match character_type:

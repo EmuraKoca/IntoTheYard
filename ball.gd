@@ -682,8 +682,11 @@ func _process_returning(delta: float) -> void:
 		var s: float = lerp(1.0, 0.0, t)
 		scale = Vector2(s, s)
 
-	if dist < 70:
+	# Player body'sinden geçerken takılmasın — collision erken kapat
+	if dist < 100:
 		$CollisionShape2D.disabled = true
+
+	if dist < 70:
 		if is_inner_core:
 			if player.orbit_balls.size() < player.MAX_ORBIT:
 				scale = Vector2.ZERO
