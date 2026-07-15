@@ -625,6 +625,7 @@ func _physics_process(delta: float) -> void:
 
 # ── State: Orbiting ───────────────────────────────────────────────────────────
 func _process_orbiting(delta: float) -> void:
+	if not is_inner_core: return  # Regular core'lar orbit'te davranış göstermez
 	if _is_striking:
 		return
 	if defense_cooldown > 0:
@@ -671,7 +672,7 @@ func _process_returning(delta: float) -> void:
 	if not is_instance_valid(player):
 		return
 
-	var _weapon_offset := Vector2(20, -24)
+	var _weapon_offset := Vector2.ZERO if is_inner_core else Vector2(20, -24)
 	var to_player = (player.global_position + _weapon_offset) - global_position
 	var dist = to_player.length()
 
@@ -683,21 +684,34 @@ func _process_returning(delta: float) -> void:
 
 	if dist < 70:
 		$CollisionShape2D.disabled = true
-		if player.orbit_balls.size() < player.MAX_ORBIT:
-			scale = Vector2.ZERO
-			player.add_to_orbit(self)
+		if is_inner_core:
+			if player.orbit_balls.size() < player.MAX_ORBIT:
+				scale = Vector2.ZERO
+				player.add_to_orbit(self)
+				return
+			# Inner orbit dolu — bekle
+			move_direction = move_direction.lerp(to_player.normalized().rotated(PI * 0.5), 0.20)
+			if move_direction.length() > 0.01:
+				move_direction = move_direction.normalized()
+			speed = 110.0
+			move_and_collide(move_direction * speed * delta)
 			return
-		# Orbit dolu — player etrafında küçük daire çizerek slot bekle
-		move_direction = move_direction.lerp(to_player.normalized().rotated(PI * 0.5), 0.20)
-		if move_direction.length() > 0.01:
-			move_direction = move_direction.normalized()
-		speed = 110.0
-		move_and_collide(move_direction * speed * delta)
-		return
+		else:
+			if player.orbit_balls.size() < player.MAX_ORBIT:
+				scale = Vector2.ZERO
+				player.add_to_orbit(self)
+				return
+			# Orbit dolu — weapon etrafında küçük daire çizerek slot bekle
+			move_direction = move_direction.lerp(to_player.normalized().rotated(PI * 0.5), 0.20)
+			if move_direction.length() > 0.01:
+				move_direction = move_direction.normalized()
+			speed = 90.0
+			move_and_collide(move_direction * speed * delta)
+			return
 
-	# Homing — her frame biraz daha player'a döner
+	# Homing — hedefe yönel
 	var target_dir = to_player.normalized()
-	move_direction = move_direction.lerp(target_dir, 0.12)
+	move_direction = move_direction.lerp(target_dir, 0.20)
 	if move_direction.length() > 0.01:
 		move_direction = move_direction.normalized()
 
@@ -1107,6 +1121,12 @@ func _start_returning() -> void:
 	$CollisionShape2D.disabled = false
 	hit_subjects.clear()
 	chain_density_unique_hits = 0
+	# Hemen hedefe yönel — yavaş dönüşle takılmasın
+	if is_instance_valid(_rp):
+		var _target_offset: Vector2 = Vector2.ZERO if is_inner_core else Vector2(20, -24)
+		var _to_target: Vector2 = (_rp.global_position + _target_offset) - global_position
+		if _to_target.length() > 0.01:
+			move_direction = _to_target.normalized()
 	# Momentum stacks dönüşte sıfırlanmaz — max cap (momentum_max) korunur
 	# Echo Core: dönüşte kopyalanan elementi aktifleştir
 	if can_echo and not _echo_element.is_empty():
@@ -1116,6 +1136,55 @@ func _start_returning() -> void:
 			"water":    can_water    = true
 			"cryo":     can_cryo     = true
 		queue_redraw()
+
+func _reload_to_launcher() -> void:
+	var game := get_node_or_null("/root/GameScene")
+	if not game:
+		queue_free()
+		return
+	var launcher := game.get_node_or_null("BallLauncher")
+	if is_instance_valid(launcher):
+		var btype := _get_ball_type_str()
+		if btype != "":
+			launcher.queue_reload_ball(btype)
+	queue_free()
+
+func _get_ball_type_str() -> String:
+	if can_split:            return "split"
+	if can_electric:         return "electric"
+	if can_pierce:           return "pierce"
+	if can_cryo:             return "cryo"
+	if can_glitch:           return "glitch"
+	if can_water:            return "water"
+	if can_fire:             return "fire"
+	if can_leech:            return "leech"
+	if can_armor:            return "armor"
+	if can_anchor:           return "anchor"
+	if can_crusher:          return "crusher"
+	if can_kinetic:          return "kinetic"
+	if can_bulwark:          return "bulwark"
+	if can_siege:            return "siege"
+	if can_bloodbound:       return "bloodbound"
+	if can_tempered:         return "tempered"
+	if can_voltaic:          return "voltaic"
+	if can_plasma:           return "plasma"
+	if can_arc:              return "arc"
+	if can_steam:            return "steam"
+	if can_echo:             return "echo"
+	if can_orbit:            return "orbit"
+	if can_scatter:          return "scatter"
+	if can_catalyst:         return "catalyst"
+	if can_tempest:          return "tempest"
+	if can_prismatic:        return "prismatic"
+	if can_antivirus_core:   return "antivirus_core"
+	if can_decay:            return "decay"
+	if can_static_core:      return "static_core"
+	if can_ricochet_core:    return "ricochet_core"
+	if can_phantom_circuit:  return "phantom_circuit"
+	if can_tracer_core:      return "tracer_core"
+	if can_spike_core:       return "spike_core"
+	if can_leech_nova_core:  return "leech_nova_core"
+	return ""
 
 func _try_fusion(other: Node2D) -> void:
 	var self_type = _get_type()

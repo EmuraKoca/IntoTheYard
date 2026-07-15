@@ -22,6 +22,7 @@ var _sprite_rest_pos: Vector2 = Vector2.ZERO
 var _weapon_sprite: Sprite2D = null
 var _weapon_textures: Dictionary = {}
 var _weapon_last_dir: String = ""
+var _weapon_dir_lock: float = 0.0  # ateş sonrası yön kilit süresi
 const _WEAPON_DIRS: Dictionary = {
 	"N":  "North",
 	"NE": "northEast",
@@ -135,6 +136,11 @@ func queue_upgrade_ball(ball_type: String) -> void:
 	_pending_upgrades.append(ball_type)
 	if _pending_upgrades.size() == 1:
 		_upgrade_timer = 2.0   # ilk upgrade bekleme
+
+func queue_reload_ball(ball_type: String) -> void:
+	_pending_upgrades.append(ball_type)
+	if _pending_upgrades.size() == 1:
+		_upgrade_timer = 1.2   # yeniden yükleme daha hızlı
 
 func _update_preview_sprite() -> void:
 	var next_type: String = game.next_ball_upgrade if game else ""
@@ -552,8 +558,11 @@ func _setup_weapon_sprite() -> void:
 	for dir_key in _WEAPON_DIRS:
 		var filename: String = _WEAPON_DIRS[dir_key] + ".png"
 		var path: String = folder + filename
-		if ResourceLoader.exists(path):
-			_weapon_textures[dir_key] = load(path)
+		var tex: Texture2D = load(path)
+		if tex != null:
+			_weapon_textures[dir_key] = tex
+		else:
+			push_warning("Weapon texture not found: " + path)
 
 	if _weapon_textures.is_empty(): return
 
@@ -564,28 +573,47 @@ func _setup_weapon_sprite() -> void:
 	_weapon_sprite.z_as_relative = false
 	get_parent().add_child.call_deferred(_weapon_sprite)
 
-func _update_weapon_dir() -> void:
-	if not _weapon_sprite or not player: return
-	var aim: Vector2 = player.aim_direction if player.get("aim_direction") else Vector2(0, 1)
-	var angle: float = aim.angle()
-	var deg: float   = fmod(rad_to_deg(angle) + 360.0, 360.0)
-	var dir: String
-	if   deg < 22.5  or  deg >= 337.5: dir = "E"
-	elif deg < 67.5:                   dir = "SE"
-	elif deg < 112.5:                  dir = "S"
-	elif deg < 157.5:                  dir = "SW"
-	elif deg < 202.5:                  dir = "W"
-	elif deg < 247.5:                  dir = "NW"
-	elif deg < 292.5:                  dir = "N"
-	else:                              dir = "NE"
+func _vec_to_weapon_dir(v: Vector2) -> String:
+	var deg: float = fmod(rad_to_deg(v.angle()) + 360.0, 360.0)
+	if   deg < 22.5  or deg >= 337.5: return "E"
+	elif deg < 67.5:                  return "SE"
+	elif deg < 112.5:                 return "S"
+	elif deg < 157.5:                 return "SW"
+	elif deg < 202.5:                 return "W"
+	elif deg < 247.5:                 return "NW"
+	elif deg < 292.5:                 return "N"
+	else:                             return "NE"
 
-	if not (_weapon_shake_tween and _weapon_shake_tween.is_running()):
-		_weapon_sprite.global_position = player.global_position + Vector2(20, -24)
-
+func _apply_weapon_dir(dir: String) -> void:
 	if dir == _weapon_last_dir: return
 	_weapon_last_dir = dir
 	if _weapon_textures.has(dir):
 		_weapon_sprite.texture = _weapon_textures[dir]
+
+func _update_weapon_dir() -> void:
+	if not _weapon_sprite or not player: return
+
+	if not (_weapon_shake_tween and _weapon_shake_tween.is_running()):
+		_weapon_sprite.global_position = player.global_position + Vector2(20, -24)
+
+	# Ateş sonrası kilit: mouse takibine geçme
+	if _weapon_dir_lock > 0.0:
+		_weapon_dir_lock -= get_process_delta_time()
+		return
+
+	var aim: Vector2 = player.aim_direction if player.get("aim_direction") else Vector2(0, 1)
+	_apply_weapon_dir(_vec_to_weapon_dir(aim))
+
+func trigger_weapon_fire_fx(fire_dir: Vector2 = Vector2.ZERO) -> void:
+	if not _weapon_sprite or not is_instance_valid(_weapon_sprite): return
+	_weapon_recoil()
+	_weapon_sprite.modulate = Color(1.8, 1.8, 2.2)
+	var _wt: Tween = create_tween()
+	_wt.tween_property(_weapon_sprite, "modulate", Color(1.0, 1.0, 1.0), 0.18)
+	# Ateş yönünü hemen sprite'a uygula ve 0.3s kilitle
+	if fire_dir != Vector2.ZERO:
+		_apply_weapon_dir(_vec_to_weapon_dir(fire_dir))
+		_weapon_dir_lock = 0.3
 
 func _weapon_recoil() -> void:
 	if not _weapon_sprite: return

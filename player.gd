@@ -292,6 +292,8 @@ func add_to_orbit(ball: Node2D) -> void:
 		return
 	if orbit_balls.size() >= MAX_ORBIT: return
 	orbit_balls.append(ball)
+	# Silahta yüklü — küçük boyda bekler (tween yok, fire burst'le çakışmasın)
+	ball.scale = Vector2(0.32, 0.32)
 	# Auto mode: orbit'e giren top hemen fırlatılır (Orbit Core hariç)
 	if auto_mode and not ball.get("can_orbit"):
 		_fire_ball()
@@ -330,36 +332,39 @@ func _fire_ball() -> void:
 	if fire_index >= orbit_balls.size():
 		fire_index = 0
 
-	# Tık anındaki yönü yakala (await sırasında mouse kaymasın)
+	# Tık anındaki yönü yakala
 	var captured_aim: Vector2 = aim_direction
+	var _weapon_pos: Vector2  = global_position + Vector2(20, -24)
 
-	# Orbit'ten çıkar — collision kapat, state durdur
-	ball.state         = "flying"
-	ball.moving        = false
-	ball.strike_offset = Vector2.ZERO
-	ball._is_striking  = false
-	ball.catch_cooldown = 1.0  # snap sırasında _physics_process tekrar orbit'e almasın
+	# Orbit'ten çıkar
+	ball.state          = "flying"
+	ball.moving         = false
+	ball.strike_offset  = Vector2.ZERO
+	ball._is_striking   = false
+	ball.catch_cooldown = 1.0
 	ball.get_node("CollisionShape2D").disabled = true
+	ball.global_position = _weapon_pos
 
-	# Hızla merkeze çek
-	var snap: Tween = ball.create_tween()
-	snap.tween_property(ball, "global_position", global_position, 0.07)\
-		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-	await snap.finished
+	# Silahtan çıkış — küçükten büyüye
+	ball.scale = Vector2(0.25, 0.25)
+	var burst: Tween = ball.create_tween()
+	burst.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	burst.tween_property(ball, "scale", Vector2(1.0, 1.0), 0.18)
 
-	if not is_instance_valid(ball):
-		return
+	# Weapon efekti
+	var _launcher := get_node_or_null("/root/GameScene/BallLauncher")
+	if is_instance_valid(_launcher) and _launcher.has_method("trigger_weapon_fire_fx"):
+		_launcher.trigger_weapon_fire_fx(captured_aim)
 
-	# Merkezden fırlat (collision kapalı — player'dan uzaklaşsın)
+	# Hemen fırlat — silahtan çıktı
 	ball.move_direction = captured_aim.normalized()
 	ball.speed          = 700.0
 	ball.moving         = true
 	ball.state          = "flying"
 	ball.catch_cooldown = 0.5
-	ball.scale          = Vector2(1.0, 1.0)
 	ball.z_index        = 5
 
-	# ~0.09s sonra collision aç (70 px uzakta olur)
+	# ~0.09s sonra collision aç (silahtan uzaklaşsın)
 	await get_tree().create_timer(0.09).timeout
 	if is_instance_valid(ball):
 		ball.get_node("CollisionShape2D").disabled = false
