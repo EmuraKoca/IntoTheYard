@@ -249,15 +249,15 @@ func _update_info() -> void:
 
 	var info := $InfoPanel
 	var lbl_name: Label = info.get_node("LabelName")
-	lbl_name.text = "İsim: " + (c["name"] if not locked else "???")
+	lbl_name.text = Lang.t("cs_name") + (c["name"] if not locked else "???")
 	lbl_name.add_theme_color_override("font_color", col if not locked else Color(0.5, 0.5, 0.5))
 
 	var lbl_pass: Label = info.get_node("LabelPassive")
-	lbl_pass.text = "Pasif: " + (c["passive"] if not locked else "???")
+	lbl_pass.text = Lang.t("cs_passive") + (c["passive"] if not locked else "???")
 
 	var lbl_desc: Label = info.get_node("LabelDescription")
 	if locked:
-		lbl_desc.text = "Bu karakter henüz kilitli."
+		lbl_desc.text = Lang.t("cs_locked")
 	else:
 		var char_id: String = c["id"]
 		var lv: int      = GameData.get_level(char_id)
@@ -267,10 +267,10 @@ func _update_info() -> void:
 		if lv < 6:
 			var next_unlock: String = GameData.get_unlock_for_level(char_id, lv + 1)
 			if next_unlock != "":
-				unlock_str = "\nSonraki: " + next_unlock + " (Lv%d)" % (lv + 1)
+				unlock_str = Lang.t("cs_next_unlock") + next_unlock + " (Lv%d)" % (lv + 1)
 		var balls_str := ""
 		if c["balls"].size() > 0:
-			balls_str = "Toplar: " + ", ".join(c["balls"]) + "\n"
+			balls_str = Lang.t("cs_balls") + ", ".join(c["balls"]) + "\n"
 		lbl_desc.text = balls_str + "LV %d  —  %d / %d XP%s" % [lv, xp_cur, xp_need, unlock_str]
 
 	if info.has_node("LabelTalent"):

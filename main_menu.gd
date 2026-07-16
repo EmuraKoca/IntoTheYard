@@ -108,7 +108,7 @@ func _show_confirm_dialog() -> void:
 
 	# Başlık
 	var title := Label.new()
-	title.text = "! YENİ OYUN" if Lang.locale == "tr" else "! NEW GAME"
+	title.text = Lang.t("ng_title")
 	title.add_theme_font_override("font", _font_bold)
 	title.add_theme_font_size_override("font_size", 20)
 	title.add_theme_color_override("font_color", Color(1.0, 0.18, 0.58, 1.0))
@@ -117,8 +117,7 @@ func _show_confirm_dialog() -> void:
 
 	# Uyarı metni
 	var warn := Label.new()
-	warn.text = "Mevcut kayıt kalıcı olarak silinecek.\nDevam etmek istiyor musun?" if Lang.locale == "tr" \
-		else "Your existing save will be permanently deleted.\nAre you sure you want to continue?"
+	warn.text = Lang.t("ng_warn")
 	warn.add_theme_font_override("font", _font_regular)
 	warn.add_theme_font_size_override("font_size", 16)
 	warn.add_theme_color_override("font_color", Color(0.85, 0.85, 0.85))
@@ -150,7 +149,7 @@ func _show_confirm_dialog() -> void:
 
 	# EVET butonu (kırmızı)
 	var yes_btn := Button.new()
-	yes_btn.text = "EVET — SİL VE BAŞLA" if Lang.locale == "tr" else "YES — DELETE & START"
+	yes_btn.text = Lang.t("ng_yes")
 	yes_btn.add_theme_font_override("font", _font_bold)
 	yes_btn.add_theme_font_size_override("font_size", 15)
 	yes_btn.add_theme_color_override("font_color", Color(1.0, 0.18, 0.58, 1.0))
@@ -168,7 +167,7 @@ func _show_confirm_dialog() -> void:
 
 	# HAYIR butonu (mavi)
 	var no_btn := Button.new()
-	no_btn.text = "HAYIR — GERİ DÖN" if Lang.locale == "tr" else "NO — GO BACK"
+	no_btn.text = Lang.t("ng_no")
 	no_btn.add_theme_font_override("font", _font_bold)
 	no_btn.add_theme_font_size_override("font_size", 15)
 	no_btn.add_theme_color_override("font_color", Color(0.0, 0.95, 1.0, 1.0))

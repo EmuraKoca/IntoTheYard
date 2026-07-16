@@ -1069,7 +1069,7 @@ func update_ui() -> void:
 	$UI/LabelLevel.text = Lang.t("ui_level") + str(level)
 	$UI/IntegrityBar.max_value = player_max_hp
 	$UI/IntegrityBar.value = player_hp
-	$UI/LabelBalls.text = "⬤  BALLS   " + str(get_node("Player").orbit_balls.size()) + " / " + str(get_node("Player").MAX_ORBIT)
+	$UI/LabelBalls.text = Lang.t("ui_balls") + str(get_node("Player").orbit_balls.size()) + " / " + str(get_node("Player").MAX_ORBIT)
 	$UI/IntegrityBar.max_value = player_max_hp
 	$UI/IntegrityBar.value = player_hp
 	if player_armor > 0:
@@ -1628,7 +1628,7 @@ func _show_discard_overlay(new_core_name: String) -> void:
 
 	# Başlık
 	var title := Label.new()
-	title.text = "RELEASE A CORE"
+	title.text = Lang.t("ui_release_core")
 	title.position = Vector2(760.0, 200.0)
 	title.size = Vector2(400.0, 60.0)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -1723,7 +1723,7 @@ func _show_discard_overlay(new_core_name: String) -> void:
 
 	# İptal butonu
 	var cancel_btn := Button.new()
-	cancel_btn.text = "Cancel"
+	cancel_btn.text = Lang.t("ui_cancel")
 	cancel_btn.size = Vector2(160.0, 48.0)
 	cancel_btn.position = Vector2(880.0, 800.0)
 	cancel_btn.process_mode = Node.PROCESS_MODE_ALWAYS
@@ -1773,7 +1773,7 @@ func _setup_neon_sign() -> void:
 func _setup_auto_toggle() -> void:
 	var btn := Button.new()
 	btn.name = "BtnAutoMode"
-	btn.text = "AUTO  OFF"
+	btn.text = Lang.t("ui_auto_off")
 	btn.position = Vector2(1762, 22)
 	btn.size     = Vector2(88, 28)
 	btn.add_theme_font_override("font", _font_bold)
@@ -1784,11 +1784,11 @@ func _setup_auto_toggle() -> void:
 		var player = get_node("Player")
 		player.auto_mode = not player.auto_mode
 		if player.auto_mode:
-			btn.text = "AUTO  ON"
+			btn.text = Lang.t("ui_auto_on")
 			btn.add_theme_color_override("font_color", Color(0.0, 1.0, 0.45))
 			player._fire_all_balls()
 		else:
-			btn.text = "AUTO  OFF"
+			btn.text = Lang.t("ui_auto_off")
 			btn.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
 	)
 
@@ -1818,7 +1818,7 @@ func _setup_data_bar() -> void:
 
 	# "UPGRADE" etiketi — bar dolunca yanıp söner (başta gizli)
 	_data_bar_label = Label.new()
-	_data_bar_label.text = "UPGRADE READY"
+	_data_bar_label.text = Lang.t("ui_upgrade_ready")
 	_data_bar_label.visible = false
 	_data_bar_label.position = _DATA_BAR_POS + Vector2(50, -18)
 	_data_bar_label.add_theme_font_override("font", _font_bold)
@@ -2418,7 +2418,7 @@ func show_upgrade_menu() -> void:
 	canvas.add_child(panel)
 	
 	var title = Label.new()
-	title.text = "LEVEL UP!"
+	title.text = Lang.t("ui_level_up")
 	title.position = Vector2(860, 150)
 	title.add_theme_font_size_override("font_size", 48)
 	title.add_theme_font_override("font", _font_bold)
@@ -2514,7 +2514,7 @@ func show_upgrade_menu() -> void:
 		# ── Connected Core badge ─────────────────────────────────────────────
 		if upgrade.get("index", -1) in _CONNECTED_CORE_INDICES:
 			var badge := Label.new()
-			badge.text = "◈ Connected Core"
+			badge.text = Lang.t("ui_connected_core")
 			badge.position = Vector2(tx + 26, ty + 20)
 			badge.size = Vector2(card_width - 52, 24)
 			badge.add_theme_font_size_override("font_size", 11)
@@ -3073,7 +3073,7 @@ func _show_rts_overlay() -> void:
 
 	# Etiket — sol üst köşe
 	var lbl := Label.new()
-	lbl.text              = "◈  TACTICAL MODE  //  ×0.5"
+	lbl.text              = Lang.t("ui_tactical_mode")
 	lbl.add_theme_color_override("font_color",        Color(1.0, 0.82, 0.0, 1.0))
 	lbl.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.8))
 	lbl.add_theme_constant_override("shadow_offset_x", 2)
@@ -3129,7 +3129,7 @@ func _show_pause_menu() -> void:
 	canvas.add_child(menu_btn)
 
 	var settings_btn = Button.new()
-	settings_btn.text = "Ayarlar"
+	settings_btn.text = Lang.t("ui_settings")
 	settings_btn.size = Vector2(200, 55)
 	settings_btn.position = Vector2(860, 530)
 	settings_btn.process_mode = Node.PROCESS_MODE_ALWAYS
@@ -3163,7 +3163,7 @@ func _show_pause_settings(pause_canvas: CanvasLayer) -> void:
 	overlay.add_child(bg)
 
 	var title := Label.new()
-	title.text = "Ayarlar"
+	title.text = Lang.t("set_title")
 	title.position = Vector2(880, 280)
 	title.add_theme_font_size_override("font_size", 48)
 	title.add_theme_font_override("font", _font_bold)
@@ -3217,7 +3217,7 @@ func _show_pause_settings(pause_canvas: CanvasLayer) -> void:
 		)
 
 	var back_btn := Button.new()
-	back_btn.text = "Geri"
+	back_btn.text = Lang.t("ui_back")
 	back_btn.size = Vector2(200, 55)
 	back_btn.position = Vector2(860, 700)
 	back_btn.process_mode = Node.PROCESS_MODE_ALWAYS

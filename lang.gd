@@ -73,6 +73,32 @@ const _TR := {
 	"unlock_continue": "AL VE DEVAM ET",
 	"unlock_hint":     "Yeni kartlar sonraki runlarda görünecek.",
 
+	# ── Oyun İçi — Ek ────────────────────────────────────────────────────────
+	"ui_balls":            "⬤  TOPLAR   ",
+	"ui_release_core":     "CORE BIRAK",
+	"ui_cancel":           "İptal",
+	"ui_auto_on":          "OTO  AÇIK",
+	"ui_auto_off":         "OTO  KAPALI",
+	"ui_upgrade_ready":    "GELİŞTİRME HAZIR",
+	"ui_level_up":         "SEVİYE ATLADI!",
+	"ui_connected_core":   "◈ Bağlantılı Core",
+	"ui_tactical_mode":    "◈  TAKTİK MOD  //  ×0.5",
+	"ui_settings":         "Ayarlar",
+	"ui_back":             "Geri",
+
+	# ── Karakter Seçim ────────────────────────────────────────────────────────
+	"cs_name":             "İsim: ",
+	"cs_passive":          "Pasif: ",
+	"cs_locked":           "Bu karakter henüz kilitli.",
+
+	# ── Yeni Oyun Onayı ───────────────────────────────────────────────────────
+	"ng_title":   "! YENİ OYUN",
+	"ng_warn":    "Mevcut kayıt kalıcı olarak silinecek.\nDevam etmek istiyor musun?",
+	"ng_yes":     "EVET — SİL VE BAŞLA",
+	"ng_no":      "HAYIR — GERİ DÖN",
+	"cs_next_unlock": "\nSonraki: ",
+	"cs_balls":        "Toplar: ",
+
 	# ── Hasmen Alıntıları ─────────────────────────────────────────────────────
 	"quote_0": "Sefil. Sabrımın sınırları var, başarısızlık oranının aksine.",
 	"quote_1": "Zar zor yeterli. Personal-ITY çipi daha iyi denekler hak ediyor.",
@@ -157,6 +183,32 @@ const _EN := {
 	"go_hint":         "[ Keep going — Victor is watching ]",
 	"unlock_continue": "TAKE AND CONTINUE",
 	"unlock_hint":     "New cards will appear in future runs.",
+
+	# ── Oyun İçi — Ek ────────────────────────────────────────────────────────
+	"ui_balls":            "⬤  BALLS   ",
+	"ui_release_core":     "RELEASE A CORE",
+	"ui_cancel":           "Cancel",
+	"ui_auto_on":          "AUTO  ON",
+	"ui_auto_off":         "AUTO  OFF",
+	"ui_upgrade_ready":    "UPGRADE READY",
+	"ui_level_up":         "LEVEL UP!",
+	"ui_connected_core":   "◈ Connected Core",
+	"ui_tactical_mode":    "◈  TACTICAL MODE  //  ×0.5",
+	"ui_settings":         "Settings",
+	"ui_back":             "Back",
+
+	# ── Karakter Seçim ────────────────────────────────────────────────────────
+	"cs_name":             "Name: ",
+	"cs_passive":          "Passive: ",
+	"cs_locked":           "This character is not yet unlocked.",
+
+	# ── Yeni Oyun Onayı ───────────────────────────────────────────────────────
+	"ng_title":   "! NEW GAME",
+	"ng_warn":    "Your existing save will be permanently deleted.\nAre you sure you want to continue?",
+	"ng_yes":     "YES — DELETE & START",
+	"ng_no":      "NO — GO BACK",
+	"cs_next_unlock": "\nNext: ",
+	"cs_balls":        "Balls: ",
 
 	# ── Hasmen Alıntıları ─────────────────────────────────────────────────────
 	"quote_0": "Pathetic. My patience has limits, unlike your failure rate.",
