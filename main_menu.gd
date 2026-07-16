@@ -7,10 +7,19 @@ extends Node2D
 const SETTINGS_PATH := "user://settings.cfg"
 var _cfg := ConfigFile.new()
 
-var master_vol: float = 1.0
-var music_vol:  float = 0.8
-var sfx_vol:    float = 0.8
-var fullscreen:  bool = false
+var master_vol:    float = 1.0
+var music_vol:     float = 0.8
+var sfx_vol:       float = 0.8
+var fullscreen:    bool  = false
+var resolution_idx: int  = 3   # varsayılan: 1920x1080
+
+const RESOLUTIONS: Array = [
+	Vector2i(960,  540),
+	Vector2i(1280, 720),
+	Vector2i(1600, 900),
+	Vector2i(1920, 1080),
+]
+const RESOLUTION_LABELS: Array = ["960 × 540", "1280 × 720", "1600 × 900", "1920 × 1080"]
 
 # ── Aktif tab ─────────────────────────────────────────────────────────────────
 var _active_tab: int = 0   # 0=Controls  1=Audio  2=Display  3=Language
@@ -23,6 +32,20 @@ func _ready() -> void:
 	_load_settings()
 	_apply_settings()
 	_apply_menu_lang()
+
+	_ensure_audio_buses()
+
+	if not get_tree().root.has_node("MenuMusic"):
+		var music := AudioStreamPlayer.new()
+		music.name         = "MenuMusic"
+		music.stream       = load("res://assets/music/menuTheme.ogg")
+		music.volume_db    = -8.0
+		music.bus          = "Music"
+		music.autoplay     = true
+		music.process_mode = Node.PROCESS_MODE_ALWAYS
+		music.get_stream().set("loop", true)
+		get_tree().root.add_child.call_deferred(music)
+
 	$BtnNewGame.pressed.connect(_on_new_game)
 	$BtnLoadGame.pressed.connect(_on_load_game)
 	$BtnSettings.pressed.connect(_on_settings)
@@ -406,6 +429,17 @@ func _build_audio_tab(parent: Control, rect: Rect2) -> Control:
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 3 — DISPLAY
 # ══════════════════════════════════════════════════════════════════════════════
+func _apply_resolution(idx: int) -> void:
+	var res: Vector2i = RESOLUTIONS[idx]
+	get_tree().root.content_scale_size = Vector2i(1920, 1080)
+	get_tree().root.content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS
+	get_tree().root.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_KEEP
+	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+	DisplayServer.window_set_size(res)
+	# Pencereyi ekran ortasına al
+	var screen_size := DisplayServer.screen_get_size()
+	DisplayServer.window_set_position((screen_size - res) / 2)
+
 func _build_display_tab(parent: Control, rect: Rect2) -> Control:
 	var cont := Control.new()
 	cont.position = rect.position
@@ -413,7 +447,42 @@ func _build_display_tab(parent: Control, rect: Rect2) -> Control:
 	cont.visible  = false
 	parent.add_child(cont)
 
-	_add_label(cont, Lang.t("set_display_fs"), Vector2(0, 30), 16, Color(0.82, 0.92, 1, 0.9), _font_bold)
+	# ── Çözünürlük ────────────────────────────────────────────────────────────
+	_add_label(cont, "Çözünürlük", Vector2(0, 20), 16, Color(0.82, 0.92, 1, 0.9), _font_bold)
+
+	var res_btns: Array = []
+	for i in RESOLUTIONS.size():
+		var is_active := i == resolution_idx
+		var fc  := Color(0, 0, 0, 1)    if is_active else Color(0, 0.88, 1, 1)
+		var bg  := Color(0, 0.88, 1, 1) if is_active else Color(0.02, 0.03, 0.12, 0.92)
+		var rb  := _make_button(RESOLUTION_LABELS[i], fc, bg, Color(0, 0.9, 1, 1))
+		rb.position = Vector2(i * 185, 55)
+		rb.size     = Vector2(175, 44)
+		cont.add_child(rb)
+		res_btns.append(rb)
+
+		var idx_capture := i
+		rb.pressed.connect(func():
+			if fullscreen: return
+			resolution_idx = idx_capture
+			_apply_resolution(idx_capture)
+			_save_settings()
+			for j in res_btns.size():
+				var active := j == idx_capture
+				res_btns[j].add_theme_color_override("font_color",
+					Color(0, 0, 0, 1) if active else Color(0, 0.88, 1, 1))
+				var st := StyleBoxFlat.new()
+				st.bg_color     = Color(0, 0.88, 1, 1) if active else Color(0.02, 0.03, 0.12, 0.92)
+				st.border_color = Color(0, 0.9, 1, 1)
+				st.border_width_left   = 2; st.border_width_right  = 2
+				st.border_width_top    = 2; st.border_width_bottom = 2
+				st.corner_radius_top_left     = 6; st.corner_radius_top_right    = 6
+				st.corner_radius_bottom_left  = 6; st.corner_radius_bottom_right = 6
+				res_btns[j].add_theme_stylebox_override("normal", st)
+		)
+
+	# ── Tam Ekran ─────────────────────────────────────────────────────────────
+	_add_label(cont, Lang.t("set_display_fs"), Vector2(0, 130), 16, Color(0.82, 0.92, 1, 0.9), _font_bold)
 
 	var fs_btn := _make_button(
 		"ON" if fullscreen else "OFF",
@@ -421,7 +490,7 @@ func _build_display_tab(parent: Control, rect: Rect2) -> Control:
 		Color(0.02, 0.03, 0.12, 0.92),
 		Color(0, 0.9, 1, 1)
 	)
-	fs_btn.position = Vector2(0, 60)
+	fs_btn.position = Vector2(0, 160)
 	fs_btn.size     = Vector2(160, 44)
 	fs_btn.pressed.connect(func():
 		fullscreen = not fullscreen
@@ -429,7 +498,7 @@ func _build_display_tab(parent: Control, rect: Rect2) -> Control:
 			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 			fs_btn.text = "ON"
 		else:
-			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+			_apply_resolution(resolution_idx)
 			fs_btn.text = "OFF"
 		_save_settings()
 	)
@@ -486,20 +555,30 @@ func _close_settings() -> void:
 		_settings_canvas = null
 
 # ── Ayar kaydetme/yükleme ─────────────────────────────────────────────────────
+func _ensure_audio_buses() -> void:
+	for bus_name in ["Music", "SFX"]:
+		if AudioServer.get_bus_index(bus_name) < 0:
+			AudioServer.add_bus()
+			var idx := AudioServer.get_bus_count() - 1
+			AudioServer.set_bus_name(idx, bus_name)
+			AudioServer.set_bus_send(idx, "Master")
+
 func _save_settings() -> void:
-	_cfg.set_value("audio",   "master", master_vol)
-	_cfg.set_value("audio",   "music",  music_vol)
-	_cfg.set_value("audio",   "sfx",    sfx_vol)
+	_cfg.set_value("audio",   "master",     master_vol)
+	_cfg.set_value("audio",   "music",      music_vol)
+	_cfg.set_value("audio",   "sfx",        sfx_vol)
 	_cfg.set_value("display", "fullscreen", fullscreen)
+	_cfg.set_value("display", "resolution", resolution_idx)
 	_cfg.save(SETTINGS_PATH)
 
 func _load_settings() -> void:
 	if _cfg.load(SETTINGS_PATH) == OK:
-		master_vol   = _cfg.get_value("audio",   "master",     1.0)
-		music_vol    = _cfg.get_value("audio",   "music",      0.8)
-		sfx_vol      = _cfg.get_value("audio",   "sfx",        0.8)
-		fullscreen   = _cfg.get_value("display", "fullscreen", false)
-		Lang.locale  = _cfg.get_value("lang",    "locale",     "en")
+		master_vol     = _cfg.get_value("audio",   "master",     1.0)
+		music_vol      = _cfg.get_value("audio",   "music",      0.8)
+		sfx_vol        = _cfg.get_value("audio",   "sfx",        0.8)
+		fullscreen     = _cfg.get_value("display", "fullscreen", false)
+		resolution_idx = _cfg.get_value("display", "resolution", 3)
+		Lang.locale    = _cfg.get_value("lang",    "locale",     "en")
 
 func _apply_settings() -> void:
 	for bus_data in [["Master", master_vol], ["Music", music_vol], ["SFX", sfx_vol]]:
@@ -508,6 +587,8 @@ func _apply_settings() -> void:
 			AudioServer.set_bus_volume_db(idx, linear_to_db(bus_data[1]))
 	if fullscreen:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+	else:
+		_apply_resolution(resolution_idx)
 
 # ── Yardımcı UI builder'lar ───────────────────────────────────────────────────
 func _make_tab_btn(label: String, idx: int) -> Button:

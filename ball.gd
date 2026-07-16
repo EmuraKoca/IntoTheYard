@@ -108,6 +108,11 @@ var _pos_stuck_timer: float = 0.0
 var _sprite: AnimatedSprite2D = null
 var _kinetic_vfx: Sprite2D = null
 var _momentum_trail: CPUParticles2D = null
+var _hit_sfx: AudioStreamPlayer2D = null
+
+static var _sfx_classic:  AudioStream = null
+static var _sfx_elemental: AudioStream = null
+static var _sfx_heavy:    AudioStream = null
 
 func _ready() -> void:
 	z_index = 5
@@ -119,6 +124,21 @@ func _ready() -> void:
 	_cached_player = get_tree().get_first_node_in_group("player")
 	collision_layer = 2
 	collision_mask  = 1
+	_setup_hit_sfx()
+
+func _setup_hit_sfx() -> void:
+	if _sfx_classic  == null: _sfx_classic  = load("res://assets/sfx/hitBalls/hitClassic.ogg")
+	if _sfx_elemental == null: _sfx_elemental = load("res://assets/sfx/hitBalls/hitElemental.ogg")
+	if _sfx_heavy    == null: _sfx_heavy    = load("res://assets/sfx/hitBalls/hitHeavy.ogg")
+	_hit_sfx = AudioStreamPlayer2D.new()
+	_hit_sfx.volume_db = 4.0
+	_hit_sfx.bus       = "SFX"
+	add_child(_hit_sfx)
+
+func _play_hit_sfx() -> void:
+	if not _hit_sfx: return
+	_hit_sfx.stream = _sfx_classic
+	_hit_sfx.play()
 
 func _setup_ball_sprite() -> void:
 	var folder: String
@@ -554,6 +574,7 @@ func _physics_process(delta: float) -> void:
 		return
 
 	if _bounced:
+		_play_hit_sfx()
 		if can_steam: _spawn_steam_cloud(global_position)
 		if can_tempest:
 			_tempest_index += 1
@@ -1385,6 +1406,7 @@ func _draw() -> void:
 				draw_arc(Vector2.ZERO, _radius, 0, TAU, 32, Color(0.9, 0.05, 0.05, _alpha), 2.5)
 		
 func _hit_subject(subject: Node2D) -> void:
+	_play_hit_sfx()
 	var _p := _get_player()
 	if _p and _p.character_type == "leila":
 		var fusion_zone = get_tree().get_first_node_in_group("fusion_zone")

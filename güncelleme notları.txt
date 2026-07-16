@@ -3637,3 +3637,51 @@ Cyclone Weapon:
      — 12 FPS döngüsel idle animasyonu (glitch/kararsız görünüm)
      — Ateşte flash efekti
      — assets/characters/cyclone/cyclonesWeapon/ klasörüne eklendi
+
+v0.1.0.3 — Intro Sahnesi + Ses Sistemi + Görüntü Ayarları (2026-07-16)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Intro Sahnesi:
+
+  ✅  5 panelli manga intro sahnesi eklendi (intro_scene.gd / intro_scene.tscn)
+     — Manga okuma sırası: sağdan sola (2|1 / 4|3 / _5_)
+     — Her tıklamada bir sonraki panel açılır, son panelden sonra çıkış
+     — Her panel kendi yağmur + şimşek efektine sahip (panel_fx.gd)
+     — Yağmur ve şimşek efekti panelin kendi sınırına kliplenmiş
+     — Yağmur sesi: rainThunder.ogg
+     — New Game butonundan intro'ya, oradan oyuna geçiş
+
+Ses Sistemi:
+
+  ✅  Silah ateş sesleri eklendi (AudioStreamPlayer2D, SFX bus)
+     — Vector: vectorsWeaponShootSFX.ogg
+     — Leila: leilasWeaponShootSFX.ogg
+     — Cyclone: cyclonesWeaponShootSFX.ogg
+
+  ✅  Core çarpma sesi eklendi (ball.gd, SFX bus)
+     — hitClassic.ogg — tüm core tipleri için (duvar + düşman)
+     — hitElemental.ogg ve hitHeavy.ogg hazır, ilerleyen sürümde ayrıştırılacak
+
+  ✅  Müzik sistemi eklendi
+     — Ana menü müziği: menuTheme.ogg (Main Menu'den itibaren, sahne geçişlerinde kesilmez)
+     — Oyun içi müzik: gameplayTheme.ogg (oyun sahnesinde başlar)
+     — Intro sahnesinde menü müziği durur
+     — Upgrade ekranında müzik kesilmez (PROCESS_MODE_ALWAYS)
+
+  ✅  Audio bus sistemi düzenlendi
+     — Music ve SFX bus'ları otomatik oluşturuluyor
+     — Ayarlardaki Müzik/SFX slider'ları artık çalışıyor
+     — Tüm ses oynatıcıları doğru bus'a atanmış
+
+Görüntü Ayarları:
+
+  ✅  Çözünürlük seçimi eklendi (Display sekmesi)
+     — 960×540 / 1280×720 / 1600×900 / 1920×1080
+     — Content scaling: oyun her zaman 1920×1080 dahili çözünürlükte render eder
+     — Seçim settings.cfg'ye kaydedilir, oyun açılışında uygulanır
+
+Pause Menüsü:
+
+  ✅  ESC menüsüne "Ayarlar" butonu eklendi
+     — Ana Ses / Müzik / Efektler slider'ları oyun içinde ayarlanabilir
+

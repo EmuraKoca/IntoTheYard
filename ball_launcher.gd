@@ -20,6 +20,9 @@ var _sprite_rest_pos: Vector2 = Vector2.ZERO
 
 # ── 8-yön silah sprite sistemi ───────────────────────────────────────────────
 var _weapon_sprite: Sprite2D = null
+var _weapon_sfx: AudioStreamPlayer2D = null
+var _leila_sfx:  AudioStreamPlayer2D = null
+var _cyclone_sfx: AudioStreamPlayer2D = null
 var _weapon_textures: Dictionary = {}
 var _weapon_last_dir: String = ""
 var _weapon_dir_lock: float = 0.0  # ateş sonrası yön kilit süresi
@@ -556,9 +559,11 @@ func _setup_weapon_sprite() -> void:
 	match char_type:
 		"vector": folder = "res://assets/characters/vector/vectorsWeapon/"
 		"leila":
+			_setup_leila_sfx()
 			_setup_leila_weapon()
 			return
 		"cyclone":
+			_setup_cyclone_sfx()
 			_setup_cyclone_weapon()
 			return
 		_: return
@@ -574,12 +579,29 @@ func _setup_weapon_sprite() -> void:
 
 	if _weapon_textures.is_empty(): return
 
+	var sfx_stream: AudioStream = load("res://assets/characters/vector/vectorsWeapon/vectorsWeaponShootSFX.ogg")
+	if sfx_stream:
+		_weapon_sfx = AudioStreamPlayer2D.new()
+		_weapon_sfx.stream    = sfx_stream
+		_weapon_sfx.volume_db = 0.0
+		_weapon_sfx.bus       = "SFX"
+		get_parent().add_child.call_deferred(_weapon_sfx)
+
 	_weapon_sprite = Sprite2D.new()
 	_weapon_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_weapon_sprite.texture = _weapon_textures.get("S")
-	_weapon_sprite.z_index = 7
+	_weapon_sprite.z_index = 15
 	_weapon_sprite.z_as_relative = false
 	get_parent().add_child.call_deferred(_weapon_sprite)
+
+func _setup_leila_sfx() -> void:
+	var stream: AudioStream = load("res://assets/characters/leila/leilasWeapon/leilasWeaponShootSFX.ogg")
+	if stream:
+		_leila_sfx = AudioStreamPlayer2D.new()
+		_leila_sfx.stream    = stream
+		_leila_sfx.volume_db = 0.0
+		_leila_sfx.bus       = "SFX"
+		get_parent().add_child.call_deferred(_leila_sfx)
 
 func _setup_leila_weapon() -> void:
 	var frames := SpriteFrames.new()
@@ -604,6 +626,15 @@ func _setup_leila_weapon() -> void:
 	_leila_weapon_anim.z_index = 7
 	_leila_weapon_anim.z_as_relative = false
 	get_parent().add_child.call_deferred(_leila_weapon_anim)
+
+func _setup_cyclone_sfx() -> void:
+	var stream: AudioStream = load("res://assets/characters/cyclone/cyclonesWeapon/cyclonesWeaponShootSFX.ogg")
+	if stream:
+		_cyclone_sfx = AudioStreamPlayer2D.new()
+		_cyclone_sfx.stream    = stream
+		_cyclone_sfx.volume_db = 0.0
+		_cyclone_sfx.bus       = "SFX"
+		get_parent().add_child.call_deferred(_cyclone_sfx)
 
 func _setup_cyclone_weapon() -> void:
 	var frames := SpriteFrames.new()
@@ -670,6 +701,12 @@ func _update_weapon_dir() -> void:
 	_apply_weapon_dir(_vec_to_weapon_dir(aim))
 
 func trigger_weapon_fire_fx(fire_dir: Vector2 = Vector2.ZERO) -> void:
+	if _weapon_sfx and is_instance_valid(_weapon_sfx):
+		_weapon_sfx.play()
+	if _leila_sfx and is_instance_valid(_leila_sfx):
+		_leila_sfx.play()
+	if _cyclone_sfx and is_instance_valid(_cyclone_sfx):
+		_cyclone_sfx.play()
 	# Vector silahı
 	if _weapon_sprite and is_instance_valid(_weapon_sprite):
 		_weapon_recoil()

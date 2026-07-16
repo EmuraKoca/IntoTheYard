@@ -1006,6 +1006,19 @@ func _spawn_hasmen_entrance() -> void:
 func _ready() -> void:
 	_player_node = get_node("Player")
 	_setup_hex_shield()
+
+	var menu_music := get_tree().root.get_node_or_null("MenuMusic")
+	if menu_music:
+		menu_music.queue_free()
+
+	var music := AudioStreamPlayer.new()
+	music.stream        = load("res://assets/music/gameplayTheme.ogg")
+	music.volume_db     = -8.0
+	music.bus           = "Music"
+	music.autoplay      = true
+	music.process_mode  = Node.PROCESS_MODE_ALWAYS
+	music.get_stream().set("loop", true)
+	add_child(music)
 	# UI sınırında görünmez duvar — düşmanların UI alanına girmesini engeller
 	var wall := StaticBody2D.new()
 	wall.name = "UIWall"
@@ -3115,14 +3128,102 @@ func _show_pause_menu() -> void:
 	menu_btn.pressed.connect(_on_main_menu.bind(canvas))
 	canvas.add_child(menu_btn)
 
+	var settings_btn = Button.new()
+	settings_btn.text = "Ayarlar"
+	settings_btn.size = Vector2(200, 55)
+	settings_btn.position = Vector2(860, 530)
+	settings_btn.process_mode = Node.PROCESS_MODE_ALWAYS
+	settings_btn.add_theme_font_override("font", _font_bold)
+	settings_btn.pressed.connect(_show_pause_settings.bind(canvas))
+	canvas.add_child(settings_btn)
+
+	menu_btn.position = Vector2(860, 610)
+
 	var quit_btn = Button.new()
 	quit_btn.text = Lang.t("pause_quit")
 	quit_btn.size = Vector2(200, 55)
-	quit_btn.position = Vector2(860, 610)
+	quit_btn.position = Vector2(860, 690)
 	quit_btn.process_mode = Node.PROCESS_MODE_ALWAYS
 	quit_btn.add_theme_font_override("font", _font_bold)
 	quit_btn.pressed.connect(_on_quit_game)
 	canvas.add_child(quit_btn)
+
+func _show_pause_settings(pause_canvas: CanvasLayer) -> void:
+	var cfg := ConfigFile.new()
+	cfg.load("user://settings.cfg")
+
+	var overlay := CanvasLayer.new()
+	overlay.layer = 120
+	overlay.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(overlay)
+
+	var bg := ColorRect.new()
+	bg.color = Color(0, 0, 0, 0.92)
+	bg.size  = Vector2(1920, 1080)
+	overlay.add_child(bg)
+
+	var title := Label.new()
+	title.text = "Ayarlar"
+	title.position = Vector2(880, 280)
+	title.add_theme_font_size_override("font_size", 48)
+	title.add_theme_font_override("font", _font_bold)
+	title.modulate = Color(1, 0.8, 0)
+	overlay.add_child(title)
+
+	var buses := [
+		["Ana Ses",  "Master"],
+		["Müzik",    "Music"],
+		["Efektler", "SFX"],
+	]
+	for i in buses.size():
+		var bus_name: String = buses[i][1]
+		var bus_idx  := AudioServer.get_bus_index(bus_name)
+		var cur_vol  := db_to_linear(AudioServer.get_bus_volume_db(bus_idx)) if bus_idx >= 0 else 1.0
+
+		var lbl := Label.new()
+		lbl.text = buses[i][0]
+		lbl.position = Vector2(720, 380 + i * 90)
+		lbl.add_theme_font_size_override("font_size", 18)
+		lbl.add_theme_font_override("font", _font_bold)
+		lbl.modulate = Color(0.82, 0.92, 1, 0.9)
+		overlay.add_child(lbl)
+
+		var slider := HSlider.new()
+		slider.min_value = 0.0
+		slider.max_value = 1.0
+		slider.step      = 0.01
+		slider.value     = cur_vol
+		slider.size      = Vector2(400, 30)
+		slider.position  = Vector2(720, 410 + i * 90)
+		slider.process_mode = Node.PROCESS_MODE_ALWAYS
+		overlay.add_child(slider)
+
+		var val_lbl := Label.new()
+		val_lbl.text = "%d%%" % int(cur_vol * 100)
+		val_lbl.position = Vector2(1135, 410 + i * 90)
+		val_lbl.add_theme_font_size_override("font_size", 16)
+		val_lbl.add_theme_font_override("font", _font_bold)
+		val_lbl.modulate = Color(0, 0.95, 1, 1)
+		overlay.add_child(val_lbl)
+
+		var lbl_ref := val_lbl
+		slider.value_changed.connect(func(v: float):
+			lbl_ref.text = "%d%%" % int(v * 100)
+			var idx := AudioServer.get_bus_index(bus_name)
+			if idx >= 0:
+				AudioServer.set_bus_volume_db(idx, linear_to_db(v))
+			cfg.set_value("audio", bus_name.to_lower(), v)
+			cfg.save("user://settings.cfg")
+		)
+
+	var back_btn := Button.new()
+	back_btn.text = "Geri"
+	back_btn.size = Vector2(200, 55)
+	back_btn.position = Vector2(860, 700)
+	back_btn.process_mode = Node.PROCESS_MODE_ALWAYS
+	back_btn.add_theme_font_override("font", _font_bold)
+	back_btn.pressed.connect(func(): overlay.queue_free())
+	overlay.add_child(back_btn)
 
 func _on_resume(canvas: CanvasLayer) -> void:
 	canvas.queue_free()
