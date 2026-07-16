@@ -340,7 +340,7 @@ func _on_confirm() -> void:
 	var c: Dictionary = CHARS[_cur]
 	if _is_locked(c): return
 	GameData.selected_character = c["id"]
-	get_tree().change_scene_to_file("res://game_scene.tscn")
+	get_tree().change_scene_to_file("res://intro_scene.tscn")
 
 func _on_back() -> void:
 	get_tree().change_scene_to_file("res://main_menu.tscn")
