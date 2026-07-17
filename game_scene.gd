@@ -2,6 +2,7 @@
 
 var _font_bold    = preload("res://assets/orbitronfont/Orbitron-Bold.ttf")
 var _font_regular = preload("res://assets/orbitronfont/Orbitron-Regular.ttf")
+var _gameplay_music_stream = preload("res://assets/music/gameplayTheme.ogg")
 
 var level = 1
 var player_hp = 50
@@ -23,6 +24,7 @@ var _armor_gain_boost_timer: float = 0.0
 # ── Core Envanter sistemi ──────────────────────────────────────────────────────
 var _core_panel: Control = null
 var _core_cells: Array = []
+var _connected_core_cells: Array = []
 var _pending_core_type: String = ""
 
 # ── Tooltip sistemi ────────────────────────────────────────────────────────────
@@ -1012,7 +1014,7 @@ func _ready() -> void:
 		menu_music.queue_free()
 
 	var music := AudioStreamPlayer.new()
-	music.stream        = load("res://assets/music/gameplayTheme.ogg")
+	music.stream        = _gameplay_music_stream
 	music.volume_db     = -8.0
 	music.bus           = "Music"
 	music.autoplay      = true
@@ -1060,6 +1062,8 @@ func _ready() -> void:
 	update_ui()
 	_update_armor_ui()
 	_run_start_level = GameData.get_level(GameData.selected_character)
+	$UI/CalamityCircle.visible = false
+
 	await get_tree().process_frame
 	_spawn_hasmen_entrance()
 	
@@ -1069,7 +1073,8 @@ func update_ui() -> void:
 	$UI/LabelLevel.text = Lang.t("ui_level") + str(level)
 	$UI/IntegrityBar.max_value = player_max_hp
 	$UI/IntegrityBar.value = player_hp
-	$UI/LabelBalls.text = Lang.t("ui_balls") + str(get_node("Player").orbit_balls.size()) + " / " + str(get_node("Player").MAX_ORBIT)
+	var _ui_p := get_node("Player")
+	$UI/LabelBalls.text = Lang.t("ui_balls") + str(_ui_p.orbit_balls.size()) + " / " + str(_ui_p.MAX_ORBIT)
 	$UI/IntegrityBar.max_value = player_max_hp
 	$UI/IntegrityBar.value = player_hp
 	if player_armor > 0:
@@ -1451,70 +1456,101 @@ func _get_core_icon_texture(core_type: String) -> Texture2D:
 	return load("res://assets/balls/%s/frame_000.png" % folder)
 
 func _setup_core_panel() -> void:
-	# Sağ panel, LabelUpgrades (y=338) altına yatay 4×2 grid
 	const CELL := 40
 	const GAP  := 5
-	const COLS := 4
-	const ROWS := 2
-	const PX   := 1640.0   # sağ panel x başlangıcı
-	const PY   := 344.0    # UISep4 separator altı
-	const PW   := 272.0    # sağ panel genişliği (1912-1640)
-	var grid_w: float = COLS * CELL + (COLS - 1) * GAP
-	var grid_h: float = ROWS * CELL + (ROWS - 1) * GAP
+	const PX   := 1640.0
+	const PY   := 344.0
+	const PW   := 272.0
 
-	# Başlık
-	var title := Label.new()
-	title.text = Lang.t("ui_cores_header")
-	title.size = Vector2(PW, 16.0)
-	title.position = Vector2(PX, PY)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	title.add_theme_font_override("font", _font_bold)
-	title.add_theme_font_size_override("font_size", 11)
-	title.add_theme_color_override("font_color", Color(0.55, 0.8, 1.0, 0.9))
-	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	$UI.add_child(title)
-
-	# Grid container (şeffaf arka plan)
-	var panel := Panel.new()
-	panel.name = "CoreInventoryPanel"
-	var sb := StyleBoxEmpty.new()
-	panel.add_theme_stylebox_override("panel", sb)
-	panel.size = Vector2(grid_w, grid_h)
-	panel.position = Vector2(PX, PY + 18.0)
-	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	$UI.add_child(panel)
+	# ── Launchable Cores başlığı + 5 hücre ──────────────────────────────────
+	var lbl_launch := Label.new()
+	lbl_launch.text = "Launchable Cores"
+	lbl_launch.size = Vector2(PW, 16.0)
+	lbl_launch.position = Vector2(PX, PY)
+	lbl_launch.add_theme_font_override("font", _font_bold)
+	lbl_launch.add_theme_font_size_override("font_size", 11)
+	lbl_launch.add_theme_color_override("font_color", Color(0.55, 0.8, 1.0, 0.9))
+	lbl_launch.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	$UI.add_child(lbl_launch)
 
 	_core_cells = []
-	for r in range(ROWS):
-		for c in range(COLS):
-			var cell := Panel.new()
-			var csb := StyleBoxFlat.new()
-			csb.bg_color = Color(0.07, 0.07, 0.15, 0.9)
-			csb.corner_radius_top_left = 3; csb.corner_radius_top_right = 3
-			csb.corner_radius_bottom_right = 3; csb.corner_radius_bottom_left = 3
-			csb.border_width_top = 1; csb.border_width_bottom = 1
-			csb.border_width_left = 1; csb.border_width_right = 1
-			csb.border_color = Color(0.2, 0.3, 0.55, 0.55)
-			cell.add_theme_stylebox_override("panel", csb)
-			cell.size = Vector2(CELL, CELL)
-			cell.position = Vector2(c * (CELL + GAP), r * (CELL + GAP))
-			panel.add_child(cell)
+	var panel_launch := Panel.new()
+	panel_launch.name = "CoreInventoryPanel"
+	panel_launch.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	panel_launch.size = Vector2(5 * CELL + 4 * GAP, CELL)
+	panel_launch.position = Vector2(PX, PY + 18.0)
+	panel_launch.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	$UI.add_child(panel_launch)
+	for c in range(5):
+		var cell := Panel.new()
+		var csb := StyleBoxFlat.new()
+		csb.bg_color = Color(0.07, 0.07, 0.15, 0.9)
+		csb.corner_radius_top_left = 3; csb.corner_radius_top_right = 3
+		csb.corner_radius_bottom_right = 3; csb.corner_radius_bottom_left = 3
+		csb.border_width_top = 1; csb.border_width_bottom = 1
+		csb.border_width_left = 1; csb.border_width_right = 1
+		csb.border_color = Color(0.2, 0.3, 0.55, 0.55)
+		cell.add_theme_stylebox_override("panel", csb)
+		cell.size = Vector2(CELL, CELL)
+		cell.position = Vector2(c * (CELL + GAP), 0.0)
+		panel_launch.add_child(cell)
+		var icon := TextureRect.new()
+		icon.name = "Icon"
+		icon.size = Vector2(CELL - 6, CELL - 6)
+		icon.position = Vector2(3.0, 3.0)
+		icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		cell.add_child(icon)
+		_core_cells.append(cell)
+		var ci := _core_cells.size() - 1
+		cell.mouse_entered.connect(func(): _on_core_cell_hover(ci))
+		cell.mouse_exited.connect(_hide_tooltip)
 
-			var icon := TextureRect.new()
-			icon.name = "Icon"
-			icon.size = Vector2(CELL - 6, CELL - 6)
-			icon.position = Vector2(3.0, 3.0)
-			icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
-			icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-			icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-			icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			cell.add_child(icon)
-			_core_cells.append(cell)
-			var ci := _core_cells.size() - 1
-			cell.mouse_entered.connect(func(): _on_core_cell_hover(ci))
-			cell.mouse_exited.connect(_hide_tooltip)
+	# ── Connected Cores başlığı + 3 hücre ───────────────────────────────────
+	var lbl_conn := Label.new()
+	lbl_conn.text = "Connected Cores"
+	lbl_conn.size = Vector2(PW, 16.0)
+	lbl_conn.position = Vector2(PX, PY + 18.0 + CELL + 10.0)
+	lbl_conn.add_theme_font_override("font", _font_bold)
+	lbl_conn.add_theme_font_size_override("font_size", 11)
+	lbl_conn.add_theme_color_override("font_color", Color(0.55, 0.8, 1.0, 0.9))
+	lbl_conn.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	$UI.add_child(lbl_conn)
 
-	_core_panel = panel
+	_connected_core_cells = []
+	var panel_conn := Panel.new()
+	panel_conn.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	panel_conn.size = Vector2(3 * CELL + 2 * GAP, CELL)
+	panel_conn.position = Vector2(PX, PY + 18.0 + CELL + 10.0 + 18.0)
+	panel_conn.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	$UI.add_child(panel_conn)
+	for c in range(3):
+		var cell := Panel.new()
+		var csb := StyleBoxFlat.new()
+		csb.bg_color = Color(0.07, 0.07, 0.15, 0.9)
+		csb.corner_radius_top_left = 3; csb.corner_radius_top_right = 3
+		csb.corner_radius_bottom_right = 3; csb.corner_radius_bottom_left = 3
+		csb.border_width_top = 1; csb.border_width_bottom = 1
+		csb.border_width_left = 1; csb.border_width_right = 1
+		csb.border_color = Color(0.4, 0.3, 0.7, 0.55)
+		cell.add_theme_stylebox_override("panel", csb)
+		cell.size = Vector2(CELL, CELL)
+		cell.position = Vector2(c * (CELL + GAP), 0.0)
+		panel_conn.add_child(cell)
+		var icon := TextureRect.new()
+		icon.name = "Icon"
+		icon.size = Vector2(CELL - 6, CELL - 6)
+		icon.position = Vector2(3.0, 3.0)
+		icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		cell.add_child(icon)
+		_connected_core_cells.append(cell)
+
+	_core_panel = panel_launch
 	_setup_tooltip()
 	_setup_calamity_cells()
 
@@ -1567,10 +1603,11 @@ func _on_core_cell_hover(index: int) -> void:
 		return
 	var balls := get_tree().get_nodes_in_group("player_balls")
 	balls = balls.filter(func(b): return is_instance_valid(b))
-	if index >= balls.size():
+	var special_balls := balls.filter(func(b): return b.get("is_normal_core") != true and b.get("is_inner_core") != true)
+	if index >= special_balls.size():
 		_hide_tooltip()
 		return
-	var btype := _get_ball_core_type(balls[index])
+	var btype := _get_ball_core_type(special_balls[index])
 	var display_name: String = _CORE_DISPLAY_NAMES.get(btype, btype.capitalize() + " Core")
 	var cell: Panel = _core_cells[index]
 	var pos := cell.global_position + Vector2(0, -28)
@@ -1601,14 +1638,24 @@ func _update_core_panel() -> void:
 	if _core_panel == null:
 		return
 	var balls := get_tree().get_nodes_in_group("player_balls")
-	# Geçersiz node'ları temizle
 	balls = balls.filter(func(b): return is_instance_valid(b))
+	# Normal core'ları ayır
+	var special_balls := balls.filter(func(b): return b.get("is_normal_core") != true and b.get("is_inner_core") != true)
+	var connected_balls := balls.filter(func(b): return b.get("is_inner_core") == true)
+	# Launchable cores (özellikli)
 	for i in range(_core_cells.size()):
 		var cell: Panel = _core_cells[i]
 		var icon: TextureRect = cell.get_node("Icon")
-		if i < balls.size():
-			var btype := _get_ball_core_type(balls[i])
-			icon.texture = _get_core_icon_texture(btype)
+		if i < special_balls.size():
+			icon.texture = _get_core_icon_texture(_get_ball_core_type(special_balls[i]))
+		else:
+			icon.texture = null
+	# Connected cores
+	for i in range(_connected_core_cells.size()):
+		var cell: Panel = _connected_core_cells[i]
+		var icon: TextureRect = cell.get_node("Icon")
+		if i < connected_balls.size():
+			icon.texture = _get_core_icon_texture(_get_ball_core_type(connected_balls[i]))
 		else:
 			icon.texture = null
 
@@ -2394,6 +2441,16 @@ func show_upgrade_menu() -> void:
 				return false
 		return true
 	)
+	# ── Identity limit filtresi ───────────────────────────────────────────────
+	var _fp := get_node("Player")
+	upgrades = upgrades.filter(func(u):
+		if u.get("category", "") != "Identity":
+			return true
+		if u.get("index", -1) in _CONNECTED_CORE_INDICES:
+			return _fp.connected_core_count < 3
+		else:
+			return _fp.special_core_count < 5
+	)
 	# Rarity ağırlıklı seçim: 3 kart için 3 kez rarity çek, o rarity'den kart al
 	upgrades = _pick_rarity_weighted_cards(upgrades, level, 3)
 	
@@ -2459,6 +2516,25 @@ func show_upgrade_menu() -> void:
 		card_sprite.size = Vector2(card_width, card_height)
 		card_sprite.position = Vector2(tx, ty)
 		canvas.add_child(card_sprite)
+
+		# ── Kategori etiketi (kart üst mavi bandı) ───────────────────────────
+		# PNG 162×241 → oyun 280×400 (scale=1.660, yatay margin=5.5)
+		# Bant: X 48→106 (merkez 77), Y 5→11 (merkez 8)
+		var cat_label := Label.new()
+		cat_label.text = upgrade.get("category", "")
+		var _cat_cx: float = 5.5 + 81.0 * 1.660   # ≈ 140 (merkez)
+		var _cat_cy: float = 8.0 * 1.660 - 2.0      # ≈ 11 (biraz yukarı)
+		var _cat_w: float  = 59.0 * 1.660           # ≈ 98
+		var _cat_h: float  = 16.0                   # label yüksekliği genişletildi
+		cat_label.size = Vector2(_cat_w, _cat_h)
+		cat_label.position = Vector2(tx + _cat_cx - _cat_w * 0.5, ty + _cat_cy - _cat_h * 0.5)
+		cat_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		cat_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		cat_label.add_theme_font_size_override("font_size", 10)
+		cat_label.add_theme_font_override("font", _font_bold)
+		cat_label.add_theme_color_override("font_color", Color(0.1, 0.1, 0.1))
+		cat_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		canvas.add_child(cat_label)
 
 		# ── Kart ismi ────────────────────────────────────────────────────────
 		var name_panel := Panel.new()
@@ -3714,16 +3790,21 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 			_utility_levels[_uname] = _utility_levels.get(_uname, 0) + 1
 			_apply_utility_level(index, _utility_levels[_uname])
 
-	# ── Core upgrade + MAX_ORBIT dolu → discard overlay ───────────────────────
-	if _CORE_INDEX_MAP.has(index):
-		var balls := get_tree().get_nodes_in_group("player_balls")
-		balls = balls.filter(func(b): return is_instance_valid(b))
-		var max_orbit: int = get_node("Player").MAX_ORBIT
-		if balls.size() >= max_orbit:
-			_pending_core_type = _CORE_INDEX_MAP[index]
-			update_ui()
-			_show_discard_overlay(_pending_core_type)
-			return
+	# ── Identity kart: core sayacını artır ────────────────────────────────────
+	var _p := get_node("Player")
+	var _this_upgrade: Dictionary = {}
+	for _u in upgrades:
+		if _u.get("index", -1) == index:
+			_this_upgrade = _u
+			break
+	if _this_upgrade.get("category", "") == "Identity":
+		if index in _CONNECTED_CORE_INDICES:
+			_p.connected_core_count += 1
+		else:
+			_p.special_core_count += 1
+	update_ui()
+
+	# Core upgrade — limit artık upgrade ekranında filtreleniyor, discard yok
 
 	if index == 0:
 		$BallLauncher.queue_upgrade_ball("split")

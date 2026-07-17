@@ -226,6 +226,10 @@ var has_condensation: bool            = false  # Wet core'lar hızlı döner (t�
 var has_living_storm: bool            = false  # Electrified yaklaşınca şimşek
 var has_overheat: bool                = false  # Burn 7 stackte patlar
 var _overheat_counter: int            = 0
+var special_core_count: int = 0      # Identity ile eklenen özellikli core sayısı
+var connected_core_count: int = 0   # Connected Core sayısı
+const special_core_count_max: int = 5
+const connected_core_count_max: int = 3
 var has_elemental_harmony_util: bool  = false  # 3 element aktifse hız bonusu
 var has_mana_overflow: bool           = false  # Calamity → core'lar güçlenir
 var mana_overflow_timer: float        = 0.0   # Mana Overflow süreci
@@ -290,7 +294,9 @@ func add_to_orbit(ball: Node2D) -> void:
 		ball.scale = Vector2(1.0, 1.0)  # Connected Core'lar orbit'te görünür
 		inner_orbit_balls.append(ball)
 		return
-	if orbit_balls.size() >= MAX_ORBIT: return
+	# Normal core'lar limite dahil değil — sadece özellikli core'lar sayılır
+	var _special_count := orbit_balls.filter(func(b): return is_instance_valid(b) and b.get("is_normal_core") != true).size()
+	if _special_count >= special_core_count_max: return
 	orbit_balls.append(ball)
 	# Silahta yüklü — görünmez bekler
 	ball.scale = Vector2.ZERO

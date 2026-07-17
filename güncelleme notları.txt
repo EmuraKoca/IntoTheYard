@@ -3703,3 +3703,46 @@ Pause Menüsü:
   ✅  ESC menüsüne "Ayarlar" butonu eklendi
      — Ana Ses / Müzik / Efektler slider'ları oyun içinde ayarlanabilir
 
+
+───────────────────────────────────────────────────────
+Sürüm: v0.1.0.5  |  Tarih: 17.07.2026
+───────────────────────────────────────────────────────
+
+Performans:
+
+  ✅  Oyun açılışındaki donma giderildi
+     — gameplayTheme.ogg runtime load() → preload() ile değiştirildi
+     — CalamityCircle başlangıçta visible=false yapıldı (sol üst köşe bug'ı)
+
+Kart Sistemi:
+
+  ✅  Kart kategorisi etiketi eklendi
+     — Her upgrade kartının üst mavi bandına Identity / Utility / Individuality / Calamity yazıyor
+
+  ✅  Dead code kartlar teyit edildi — hepsi zaten implement edilmişti
+     — Pyroblast (102), Thermal Expansion (89), Mana Overflow (90), Elemental Harmony (84)
+
+Core Sistemi — Büyük Güncelleme:
+
+  ✅  Tüm karakterler 5 Normal Core ile başlar
+     — Leila ve Cyclone'un karakter özel başlangıç core'ları kaldırıldı
+     — Normal Core'lar 0.75× küçük, özellikli core'lar 1.25× büyük
+
+  ✅  Core limitleri eklendi
+     — Launchable (özellikli) Core: max 5
+     — Connected Core: max 3
+     — Limitler dolunca ilgili Identity kartlar upgrade ekranında görünmez
+
+  ✅  Replace (core değiştirme) mekanizması kaldırıldı
+     — Limit zaten upgrade ekranında filtreleniyor
+
+  ✅  Core limiti normal core'ları saymıyor
+     — 5 normal + 5 özellikli birbirinden bağımsız takip ediliyor
+
+UI — Core Paneli:
+
+  ✅  Core paneli yeniden tasarlandı
+     — "Launchable Cores" başlığı + 5 slot (tek satır)
+     — "Connected Cores" başlığı + 3 slot (tek satır)
+     — Normal Core'lar UI panelinde görünmüyor
+     — Tooltip sadece özellikli core'ları gösteriyor

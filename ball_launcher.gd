@@ -4,7 +4,7 @@ var ball_scene = preload("res://ball.tscn")
 var player = null
 var game   = null
 
-# ── Başlangıç sekansı: 3 top, 2'şer saniye arayla ────────────────────────────
+# ── Başlangıç sekansı: 5 normal top, 2'şer saniye arayla ─────────────────────
 var _startup_balls_left: int  = 0
 var _startup_timer: float     = 0.0
 var _startup_active: bool     = false
@@ -111,10 +111,10 @@ func _ready() -> void:
 	_preview_sprite.visible = false
 	add_child(_preview_sprite)
 
-	# Başlangıç sekansı: ilk top hemen, sonrakiler 2s arayla
-	_startup_balls_left = 2      # ilkini hemen fırlatacağız, kalan 2
+	# Başlangıç sekansı: 5 normal top, 2s arayla
+	_startup_balls_left = 4      # ilkini hemen fırlatacağız, kalan 4
 	_startup_active     = true
-	_startup_timer      = 2.0    # process döngüsü 2s bekleyecek (anında ikinci top gitmesin)
+	_startup_timer      = 2.0
 	_startup_fired      = 0
 	_launch_startup_ball()       # 1. top hemen
 
@@ -126,16 +126,7 @@ func _launch_startup_ball() -> void:
 	_startup_fired += 1
 
 func _get_character_start_type() -> String:
-	# _startup_fired: 0 → normal, 1 → normal, 2 → karaktere özel
-	if _startup_fired < 2:
-		return ""   # normal
-	match player.character_type:
-		"vector":  return ""
-		"leila":
-			var pool := ["fire", "water", "cryo", "electric"]
-			return pool[randi() % pool.size()]
-		"cyclone": return "glitch"
-	return ""
+	return ""   # tüm karakterler 5 normal top ile başlar
 
 func queue_upgrade_ball(ball_type: String) -> void:
 	_pending_upgrades.append(ball_type)
@@ -240,14 +231,19 @@ func _launch_typed_ball(ball_type: String) -> void:
 	var player_node = get_parent().get_node("Player")
 	var _current_balls := get_tree().get_nodes_in_group("player_balls")
 	_current_balls = _current_balls.filter(func(b): return is_instance_valid(b))
-	# İç yörünge core'ları MAX_ORBIT limitine dahil değil
 	var is_inner := ball_type in ["iron_aura_core", "momentum_field_core", "regen_pulse_core", "fortress_core", "bloodwall_core", "overcharge_core", "anchor_pulse_core", "mist_core", "frost_aura_core", "static_aura_core", "catalyst_pulse_core", "echo_resonance_core", "volatile_aura_core", "elemental_shield_core", "glitch_pulse_core", "shadow_core", "data_drain_core", "virus_beacon_core", "rogues_eye_core", "circuit_overload_core"]
-	if not is_inner and _current_balls.size() >= player_node.MAX_ORBIT:
-		return
+	var is_normal := ball_type == "" and _startup_active
+	if not is_inner and not is_normal:
+		# Özellikli core limiti: normal core'ları sayma
+		var _special := _current_balls.filter(func(b): return b.get("is_normal_core") != true and b.get("is_inner_core") != true).size()
+		if _special >= player_node.special_core_count_max:
+			return
 
 	var ball = ball_scene.instantiate()
 	var vector_bonus: int = 3 if player_node.character_type == "vector" else 0
 	ball.max_damage = 5 + player_node.ball_mastery + vector_bonus
+	# Başlangıç sekansında fırlatılan normal toplar küçük, özellikli core'lar büyük
+	ball.is_normal_core = _startup_active and ball_type == ""
 
 	match ball_type:
 		"split":

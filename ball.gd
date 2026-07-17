@@ -60,6 +60,7 @@ var can_echo: bool     = false  # Düşmanın elementini kopyala, dönüşte uyg
 var _echo_element: String = ""  # Echo Core'un kopyaladığı element
 var can_orbit: bool    = false  # Orbit'te kalır, random element uygular
 var is_inner_core: bool = false  # İç yörüngede kalır, hiç fırlatılmaz
+var is_normal_core: bool = false  # Başlangıç normal topu — küçük scale
 var inner_core_type: String = ""
 var can_scatter: bool  = false  # Vuruşta 3 küçük elemental parça
 var can_catalyst: bool = false  # Mevcut debuff süresini uzatır
@@ -383,7 +384,8 @@ func _setup_ball_sprite() -> void:
 	# 48px referans boyut — 32px PNG'ler için scale orantılı büyütülür
 	var _base_px: float = 48.0
 	var _tex_size: float = float(frames.get_frame_texture("spin", 0).get_width())
-	_sprite.scale = Vector2.ONE * (0.57375 * (_base_px / _tex_size))
+	var _scale_mult: float = 0.75 if is_normal_core else (1.25 if not is_inner_core else 1.0)
+	_sprite.scale = Vector2.ONE * (0.57375 * (_base_px / _tex_size)) * _scale_mult
 	_sprite.play("spin")
 	add_child(_sprite)
 	if can_kinetic:
