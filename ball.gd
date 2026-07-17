@@ -132,7 +132,7 @@ func _setup_hit_sfx() -> void:
 	if _sfx_elemental == null: _sfx_elemental = load("res://assets/sfx/hitBalls/hitElemental.ogg")
 	if _sfx_heavy    == null: _sfx_heavy    = load("res://assets/sfx/hitBalls/hitHeavy.ogg")
 	_hit_sfx = AudioStreamPlayer2D.new()
-	_hit_sfx.volume_db = 4.0
+	_hit_sfx.volume_db = 0.0
 	_hit_sfx.bus       = "SFX"
 	add_child(_hit_sfx)
 
@@ -711,9 +711,8 @@ func _process_returning(delta: float) -> void:
 
 	if dist < 70:
 		if is_inner_core:
-			if player.orbit_balls.size() < player.MAX_ORBIT:
-				scale = Vector2.ZERO
-				player.add_to_orbit(self)
+			player.add_to_orbit(self)
+			if self in player.inner_orbit_balls:
 				return
 			# Inner orbit dolu — bekle
 			move_direction = move_direction.lerp(to_player.normalized().rotated(PI * 0.5), 0.20)
@@ -723,11 +722,12 @@ func _process_returning(delta: float) -> void:
 			move_and_collide(move_direction * speed * delta)
 			return
 		else:
-			if player.orbit_balls.size() < player.MAX_ORBIT:
-				scale = Vector2.ZERO
-				player.add_to_orbit(self)
+			scale = Vector2.ZERO
+			player.add_to_orbit(self)
+			if self in player.orbit_balls:
 				return
-			# Orbit dolu — weapon etrafında küçük daire çizerek slot bekle
+			scale = Vector2(1.0, 1.0)
+			# Limit dolu — weapon etrafında küçük daire çizerek slot bekle
 			move_direction = move_direction.lerp(to_player.normalized().rotated(PI * 0.5), 0.20)
 			if move_direction.length() > 0.01:
 				move_direction = move_direction.normalized()

@@ -37,7 +37,7 @@ var _firing_all: bool = false
 # ── Orbit sistemi ─────────────────────────────────────────────────────────────
 var orbit_balls: Array  = []
 var inner_orbit_balls: Array = []
-const MAX_ORBIT: int    = 8
+const MAX_ORBIT: int    = 10
 const ORBIT_RADIUS: float = 65.0
 const INNER_ORBIT_RADIUS: float = 65.0
 const ORBIT_SPEED: float  = 2.2   # rad/s
@@ -294,7 +294,11 @@ func add_to_orbit(ball: Node2D) -> void:
 		ball.scale = Vector2(1.0, 1.0)  # Connected Core'lar orbit'te görünür
 		inner_orbit_balls.append(ball)
 		return
-	# Normal core'lar limite dahil değil — sadece özellikli core'lar sayılır
+	# Normal core'lar her zaman eklenir — sadece özellikli core'lar sınırlı
+	if ball.get("is_normal_core") == true:
+		orbit_balls.append(ball)
+		ball.scale = Vector2.ZERO
+		return
 	var _special_count := orbit_balls.filter(func(b): return is_instance_valid(b) and b.get("is_normal_core") != true).size()
 	if _special_count >= special_core_count_max: return
 	orbit_balls.append(ball)
