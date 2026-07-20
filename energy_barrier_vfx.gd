@@ -1,6 +1,6 @@
 extends Node2D
 
-const START_X: float = 850.0
+const START_X: float = 360.0
 const END_X:   float = 1630.0
 const Y:       float = 255.0
 const STEPS:   int   = 180      # Nokta sayısı — ne çok o kadar pürüzsüz

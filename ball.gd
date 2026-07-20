@@ -1,4 +1,4 @@
-﻿extends CharacterBody2D
+extends CharacterBody2D
 
 static var _steam_cloud_sf: SpriteFrames = null  # paylaşılan, bir kez yüklenir
 
@@ -546,8 +546,8 @@ func _physics_process(delta: float) -> void:
 
 	# Duvar sınırları + sonsuz sekme koruması
 	var _bounced := false
-	if global_position.x <= 910:
-		global_position.x = 912
+	if global_position.x <= 409:
+		global_position.x = 411
 		move_direction.x = abs(move_direction.x)
 		_bounced = true
 		# Siege Core — sol duvar: tribün sarsıntısı
@@ -636,8 +636,9 @@ func _physics_process(delta: float) -> void:
 		elif collider.is_in_group("balls"):
 			pass  # top-top çakışmasını yok say
 		else:
-			# Bariyer veya statik duvar — aninda geri don
-			_start_returning()
+			# Bariyer veya statik duvar — sekme
+			move_direction = move_direction.bounce(collision.get_normal())
+			move_direction = move_direction.normalized()
 
 	if is_fused and fusion_type == "phantom":
 		var subjects = get_tree().get_nodes_in_group("subjects")
@@ -744,8 +745,8 @@ func _process_returning(delta: float) -> void:
 	speed = min(speed + 220.0 * delta, 680.0)
 
 	# Duvar sekme
-	if global_position.x <= 910:
-		global_position.x = 912
+	if global_position.x <= 409:
+		global_position.x = 411
 		move_direction.x = abs(move_direction.x)
 	if global_position.x >= 1580:
 		global_position.x = 1578

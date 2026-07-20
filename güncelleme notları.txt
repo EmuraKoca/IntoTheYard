@@ -3765,3 +3765,58 @@ UI — Core Paneli:
      — "Connected Cores" başlığı + 3 slot (tek satır)
      — Normal Core'lar UI panelinde görünmüyor
      — Tooltip sadece özellikli core'ları gösteriyor
+
+
+───────────────────────────────────────────────────────
+Sürüm: v0.1.0.7  |  Tarih: 20.07.2026
+───────────────────────────────────────────────────────
+
+Layout — Büyük Güncelleme:
+
+  ✅  Lab kaldırıldı, Tribune sola taşındı, oyun alanı genişledi
+     — Tribune: x 0→360, Oyun Alanı: x 360→1630
+     — Kamera ve tüm fizik duvarları yeni koordinatlara güncellendi
+
+  ✅  Kamera boşluk sorunu giderildi
+     — Camera2D x=995 → x=960 (world/screen hizalaması)
+
+  ✅  Energy Barrier efektli çizgi genişledi
+     — x 850→1630 idi, x 360→1630 oldu (tam oyun alanı)
+
+  ✅  ITY Corp. tabelası Tribune sağ kenarına taşındı
+
+Core / Ball:
+
+  ✅  Core sol duvar sekme sorunu giderildi
+     — Fizik duvarına çarpınca return yerine bounce yapıyor
+     — Sol sınır x=409'a güncellendi
+
+  ✅  Karakter sol tarafa geçebilir hale getirildi
+     — Player clamp x=910 → x=370
+
+  ✅  Aim çizgisi sol sınırı güncellendi (x=409)
+
+  ✅  Ball Launcher yeni konuma taşındı (x=1539, y=317)
+     — Eski Tribune duvar kontrolü kaldırıldı
+
+Zincir:
+
+  ✅  East ve West zincir spriteları kaldırıldı
+     — East → South-East, West → South-West olarak yönlendirildi
+
+Düşman Davranışları:
+
+  ✅  Ally kapıları güncellendi (West x=380, East x=1620, y=427/630/832)
+  ✅  Ally düşmanlar kapıya ulaşınca queue_free() oluyor
+  ✅  Kurtarılan düşman sayacı eklendi (GameData.rescued_total)
+     — Run sonu ekranında gösteriliyor, her run başında sıfırlanıyor
+  ✅  Mermi sıkan düşmanlar (cyber_shotgun/shooter/rifle) yerinde ölüyor
+     — Escape/Ally animasyonu yok, direkt queue_free()
+
+Diğer:
+
+  ✅  Intro sahnesi sadece New Game'de gösteriliyor
+     — Load Game direkt karakter seçimine geçiyor
+  ✅  Gereksiz fizik nesneleri temizlendi (Tribune StaticBody2D, DeathZone offset)
+  ✅  DeathZone collision genişliği 780 → 1270 px
+  ✅  Zemin görseli (gameAreaEdited2.png) 1270×840 oranına güncellendi

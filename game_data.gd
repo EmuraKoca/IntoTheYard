@@ -16,6 +16,9 @@ const UNLOCKS: Dictionary = {
 
 var char_xp: Dictionary = {"vector": 0, "leila": 0, "cyclone": 0}
 
+var show_intro: bool = false
+var rescued_total: int = 0
+
 func _ready() -> void:
 	load_data()
 

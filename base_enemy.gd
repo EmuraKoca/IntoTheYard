@@ -195,7 +195,7 @@ func _collapse() -> void:
 	set_physics_process(false)
 	$CollisionShape2D.set_deferred("disabled", true)
 	await get_tree().create_timer(0.4).timeout
-	if randf() < 0.01:
+	if randf() < 0.30:
 		_become_ally()
 	else:
 		_escape()
@@ -215,7 +215,7 @@ func _escape() -> void:
 	var spr := get_sprite()
 	if spr: spr.play(get_walk_anim_prefix() + _anim_dir)
 	if is_instance_valid(_chip_node): _chip_node.queue_free()
-	var _escape_doors: Array = [Vector2(1585, 395), Vector2(1585, 550), Vector2(1585, 710), Vector2(1585, 865)]
+	var _escape_doors: Array = [Vector2(1620, 427), Vector2(1620, 630), Vector2(1620, 832)]
 	var _nearest_escape: Vector2 = _escape_doors[0]
 	var _min_escape_dist: float = global_position.distance_to(_escape_doors[0])
 	for _ed in _escape_doors:
@@ -247,7 +247,7 @@ func _become_ally() -> void:
 	var game = get_parent()
 	if game.has_method("subject_rescued"):
 		game.subject_rescued()
-	var _ally_doors: Array = [Vector2(875, 395), Vector2(875, 550), Vector2(875, 710), Vector2(875, 865)]
+	var _ally_doors: Array = [Vector2(380, 427), Vector2(380, 630), Vector2(380, 832)]
 	var _nearest: Vector2 = _ally_doors[0]
 	var _min_d: float = global_position.distance_to(_ally_doors[0])
 	for _ad in _ally_doors:
@@ -273,27 +273,8 @@ func _become_ally() -> void:
 		global_position.distance_to(_nearest) / _aspeed)
 	await _atween.finished
 	if not is_instance_valid(self): return
-	var _dest: Vector2 = Vector2(randf_range(50.0, 680.0), randf_range(720.0, 1020.0))
-	var _walk_dur: float = _nearest.distance_to(_dest) / _aspeed
-	if is_instance_valid(_chip_node): _chip_node.queue_free()
-	var _shrink = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_BOUND)
-	_shrink.tween_property(self, "scale", Vector2(0.35, 0.35), 0.3)
-	var _walk2 = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_BOUND)
-	_walk2.tween_property(self, "global_position", _dest, _walk_dur)
-	await get_tree().create_timer(1.5, false).timeout
-	if not is_instance_valid(self): return
-	var _grow = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_BOUND)
-	_grow.tween_property(self, "scale", Vector2(1.0, 1.0), 0.3)
-	await _walk2.finished
-	if not is_instance_valid(self): return
-	add_to_group("allies")
-	remove_from_group("subjects")
-	_clear_element()
-	modulate = Color(1.0, 1.0, 1.0, 1.0)
-	scale = Vector2(1.0, 1.0)
-	$CollisionShape2D.set_deferred("disabled", false)
-	set_physics_process(true)
-	_on_became_ally()
+	GameData.rescued_total += 1
+	queue_free()
 
 # ── Element sistemi ──────────────────────────────────────────────────────────
 

@@ -2,7 +2,7 @@
 
 var SPEED = 150.0
 var aim_direction = Vector2(0, -1)
-var chain_anchor = Vector2(1240, 1040)
+var chain_anchor = Vector2(995, 1040)
 var chain_length = 355.0
 var invincible = false
 var ball_mastery = 0
@@ -484,6 +484,8 @@ func _update_pranga(delta: float) -> void:
 func _angle_to_chain_dir(angle: float) -> String:
 	var deg: float = fmod(rad_to_deg(angle) + 360.0, 360.0)
 	var sector: int = int((deg + 22.5) / 45.0) % 8
+	if sector == 0: sector = 1    # east → south-east
+	elif sector == 4: sector = 3  # west → south-west
 	return _CHAIN_DIR_NAMES[sector]
 
 func _process(_delta: float) -> void:
@@ -596,7 +598,7 @@ func _physics_process(delta: float) -> void:
 				)
 
 	# Wall boundaries
-	global_position.x = clamp(global_position.x, 910, 1580)
+	global_position.x = clamp(global_position.x, 370, 1580)
 	global_position.y = clamp(global_position.y, 330, 1035)
 
 	# Chain constraint check

@@ -72,6 +72,7 @@ func _on_new_game() -> void:
 func _start_new_game() -> void:
 	GameData.unlocked_characters = ["vector"]
 	GameData.char_xp = {"vector": 0, "leila": 0, "cyclone": 0}
+	GameData.show_intro = true
 	get_tree().change_scene_to_file("res://character_select.tscn")
 
 func _show_confirm_dialog() -> void:

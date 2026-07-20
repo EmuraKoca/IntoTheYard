@@ -11,6 +11,14 @@ func _update_anim(_moving: bool) -> void:
 	pass  # child override: walk_ veya idle_ prefix ile anim oynat
 
 
+func _collapse() -> void:
+	set_physics_process(false)
+	$CollisionShape2D.set_deferred("disabled", true)
+	var game = get_parent()
+	if game.has_method("subject_died"):
+		game.subject_died(score_value, global_position)
+	queue_free()
+
 func _ally_behavior() -> void:
 	var delta = get_physics_process_delta_time()
 	var subjects = get_tree().get_nodes_in_group("subjects")

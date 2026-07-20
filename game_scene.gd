@@ -1,4 +1,4 @@
-﻿extends Node2D
+extends Node2D
 
 var _font_bold    = preload("res://assets/orbitronfont/Orbitron-Bold.ttf")
 var _font_regular = preload("res://assets/orbitronfont/Orbitron-Regular.ttf")
@@ -304,7 +304,7 @@ func _start_boss_intro() -> void:
 	add_child(crate)
 	crate.landed.connect(_screen_shake)
 	crate.boss_emerged.connect(_on_boss_emerged)
-	crate.play_intro(Vector2(1240, 570))
+	crate.play_intro(Vector2(995, 570))
 
 func _on_boss_emerged() -> void:
 	var crate: Node2D = _crate_node
@@ -329,7 +329,7 @@ func _spawn_boss_at(spawn_pos: Vector2) -> void:
 
 	var tw := create_tween()
 	tw.set_parallel(true)
-	tw.tween_property(b, "position", Vector2(1240, 400), 0.75)\
+	tw.tween_property(b, "position", Vector2(995, 400), 0.75)\
 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN_OUT)
 	tw.tween_property(b, "scale", Vector2(1.8, 1.8), 0.75)\
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
@@ -605,7 +605,7 @@ func _show_run_end_screen() -> void:
 	canvas.add_child(title)
 
 	var stats_text := (Lang.t("run_end_time") + "\n\n" + Lang.t("run_end_enemies") + "\n\n" + Lang.t("run_end_allies")) % [
-		minutes, seconds, total_subjects_killed, get_tree().get_nodes_in_group("allies").size()
+		minutes, seconds, total_subjects_killed, GameData.rescued_total
 	]
 	var stats := Label.new()
 	stats.text = stats_text
@@ -927,7 +927,7 @@ func _spawn_nyx() -> void:
 	_nyx_node  = nyx
 	add_child(nyx)
 	nyx.landed.connect(_on_nyx_landed)
-	nyx.play_entry(Vector2(1240, 380))
+	nyx.play_entry(Vector2(995, 380))
 
 func _spawn_smiler() -> void:
 	var smiler = load("res://s_miler_79.gd").new()
@@ -935,7 +935,7 @@ func _spawn_smiler() -> void:
 	_smiler_node = smiler
 	add_child(smiler)
 	smiler.landed.connect(_on_smiler_landed)
-	smiler.play_entry(Vector2(1240, 500))
+	smiler.play_entry(Vector2(995, 500))
 
 func _on_smiler_landed() -> void:
 	# Sahayı temizle — normal düşmanları siler
@@ -1000,12 +1000,13 @@ func _spawn_hasmen_entrance() -> void:
 	# mid_pos   : kuzey koridoru sonu (dönüş noktası)
 	# chair_pos : sandalye — doğuya bakıyor, oyunu izliyor
 	npc.play_entrance(
-		Vector2(820, 1260),   # giriş — güney (ekran altı)
-		Vector2(820, 865),    # kuzey sonu
-		Vector2(745, 850)     # sandalye
+		Vector2(325, 1260),   # giriş — güney (ekran altı)
+		Vector2(325, 865),    # kuzey sonu
+		Vector2(250, 855)     # sandalye
 	)
 
 func _ready() -> void:
+	GameData.rescued_total = 0
 	_player_node = get_node("Player")
 	_setup_hex_shield()
 
@@ -1029,7 +1030,7 @@ func _ready() -> void:
 	rect.size = Vector2(20.0, 1080.0)
 	wall_shape.shape = rect
 	wall.add_child(wall_shape)
-	wall.position = Vector2(1625.0, 540.0)
+	wall.position = Vector2(360.0, 540.0)
 	add_child(wall)
 
 	# Karakter bazlı başlangıç değerleri
@@ -1814,7 +1815,7 @@ func _setup_neon_sign() -> void:
 	var sign: Node2D = load("res://neon_sign.gd").new()
 	# Oyun alanı ortası, üst duvara monte: x=1240, y=248 (duvarın hemen altı)
 	# Tribün sağ duvarına monte, cadde şeridinde dikey tabela
-	sign.position = Vector2(930, 120)
+	sign.position = Vector2(450, 120)
 	add_child(sign)
 
 func _setup_auto_toggle() -> void:
@@ -2705,13 +2706,13 @@ func _activate_arise() -> void:
 
 func _activate_blizzard() -> void:
 	for subject in get_tree().get_nodes_in_group("subjects"):
-		if is_instance_valid(subject) and subject.global_position.x >= 875.0 and subject.has_method("apply_frozen"):
+		if is_instance_valid(subject) and subject.global_position.x >= 385.0 and subject.has_method("apply_frozen"):
 			subject.apply_frozen()
 	_react_flash_screen(Color(0.7, 0.95, 1.0, 0.5))
 
 func _activate_monsoon() -> void:
 	for subject in get_tree().get_nodes_in_group("subjects"):
-		if is_instance_valid(subject) and subject.global_position.x >= 875.0 and subject.has_method("apply_wet"):
+		if is_instance_valid(subject) and subject.global_position.x >= 385.0 and subject.has_method("apply_wet"):
 			subject.apply_wet()
 	_react_flash_screen(Color(0.1, 0.4, 1.0, 0.4))
 
@@ -2747,7 +2748,7 @@ func _activate_thunderstorm() -> void:
 
 func _activate_emp() -> void:
 	for subject in get_tree().get_nodes_in_group("subjects"):
-		if is_instance_valid(subject) and subject.global_position.x >= 875.0 and subject.get("is_electrified") and subject.is_electrified:
+		if is_instance_valid(subject) and subject.global_position.x >= 385.0 and subject.get("is_electrified") and subject.is_electrified:
 			subject.take_damage(15)
 	_react_flash_screen(Color(0.3, 0.6, 1.0, 0.5))
 
@@ -2755,13 +2756,13 @@ func _activate_data_storm() -> void:
 	var p := get_node_or_null("Player")
 	var _cap: int = 5 if (p and p.get("has_stack_overflow") and p.has_stack_overflow) else 3
 	for subject in get_tree().get_nodes_in_group("subjects"):
-		if is_instance_valid(subject) and subject.global_position.x >= 875.0 and subject.get("is_glitched") and subject.is_glitched:
+		if is_instance_valid(subject) and subject.global_position.x >= 385.0 and subject.get("is_glitched") and subject.is_glitched:
 			subject.take_damage(10)
 	_react_flash_screen(Color(0.1, 0.8, 0.3, 0.45))
 
 func _activate_backdoor() -> void:
 	for subject in get_tree().get_nodes_in_group("subjects"):
-		if is_instance_valid(subject) and subject.global_position.x >= 875.0 and subject.has_method("apply_glitch"):
+		if is_instance_valid(subject) and subject.global_position.x >= 385.0 and subject.has_method("apply_glitch"):
 			subject.apply_glitch(3.0)
 	_react_flash_screen(Color(0.6, 0.0, 0.7, 0.4))
 
@@ -2769,7 +2770,7 @@ func _activate_systemic_failure() -> void:
 	var p := get_node_or_null("Player")
 	var _cap: int = 5 if (p and p.get("has_stack_overflow") and p.has_stack_overflow) else 3
 	for subject in get_tree().get_nodes_in_group("subjects"):
-		if is_instance_valid(subject) and subject.global_position.x >= 875.0 and subject.has_method("apply_antivirus"):
+		if is_instance_valid(subject) and subject.global_position.x >= 385.0 and subject.has_method("apply_antivirus"):
 			subject.apply_antivirus(subject.antivirus_stacks * 2 if subject.get("antivirus_stacks") and subject.antivirus_stacks > 0 else _cap)
 	_react_flash_screen(Color(0.05, 0.9, 0.35, 0.45))
 
@@ -2786,7 +2787,7 @@ func _activate_iron_fortress() -> void:
 func _activate_shockwave() -> void:
 	var dmg: int = max(1, player_armor / 2)
 	for subject in get_tree().get_nodes_in_group("subjects"):
-		if is_instance_valid(subject) and subject.global_position.x >= 875.0:
+		if is_instance_valid(subject) and subject.global_position.x >= 385.0:
 			subject.take_damage(dmg, false)
 	_react_flash_screen(Color(0.6, 0.6, 1.0, 0.5))
 
@@ -2818,7 +2819,7 @@ func _activate_rampart_collapse() -> void:
 	var closest: Node2D = null
 	var closest_d := INF
 	for s in subjects:
-		if not is_instance_valid(s) or s.global_position.x < 875.0: continue
+		if not is_instance_valid(s) or s.global_position.x < 385.0: continue
 		var d: float = p.global_position.distance_to(s.global_position)
 		if d < closest_d:
 			closest_d = d
@@ -3555,7 +3556,7 @@ func _spawn_subject() -> void:
 		"cyber_shotgun": subject = cyber_shotgun_scene.instantiate()
 		_:               subject = subject_scene.instantiate()
 
-	var rand_x = randf_range(950, 1580)
+	var rand_x = randf_range(430, 1580)
 	subject.position = Vector2(rand_x, -50)
 	add_child(subject)
 
@@ -3579,7 +3580,7 @@ func _calc_traj(start: Vector2, dir: Vector2, max_len: float, bounces: int) -> A
 	var pts := [start]
 	var pos  := start
 	var d    := dir.normalized()
-	const XMIN := 910.0; const XMAX := 1580.0
+	const XMIN := 409.0; const XMAX := 1580.0
 	const YMIN := 260.0; const YMAX := 1040.0
 	var remaining := max_len
 	for _b in bounces:

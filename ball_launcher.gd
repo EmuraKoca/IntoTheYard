@@ -78,7 +78,7 @@ const _PREVIEW_FOLDER_MAP: Dictionary = {
 }
 
 # Muzzle tip in sprite-local space (tune Y to match the visual barrel tip)
-const MUZZLE_SPRITE_LOCAL := Vector2(0.0, 60.0)
+const MUZZLE_SPRITE_LOCAL := Vector2(-15.0, 60.0)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Returns the muzzle tip in global space, derived from the sprite's transform.
@@ -427,9 +427,6 @@ func _launch_typed_ball(ball_type: String) -> void:
 
 	var direction  = (player.global_position - global_position).normalized()
 	var spawn_pos  = _get_muzzle_global()
-	if spawn_pos.x < 875.0 and direction.x > 0.0:
-		var t = (875.0 - spawn_pos.x) / direction.x
-		spawn_pos += direction * (t + 2.0)
 
 	if player_node.get("has_shadow_dance") and player_node.has_shadow_dance and player_node._shadow_dance_acc > 0.0:
 		ball.speed = 600.0 * (1.0 + player_node._shadow_dance_acc)
