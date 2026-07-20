@@ -298,6 +298,8 @@ func add_to_orbit(ball: Node2D) -> void:
 	if ball.get("is_normal_core") == true:
 		orbit_balls.append(ball)
 		ball.scale = Vector2.ZERO
+		if auto_mode and not ball.get("can_orbit"):
+			_fire_ball()
 		return
 	var _special_count := orbit_balls.filter(func(b): return is_instance_valid(b) and b.get("is_normal_core") != true).size()
 	if _special_count >= special_core_count_max: return

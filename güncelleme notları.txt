@@ -1,20 +1,12 @@
 ───────────────────────────────────────────────────
-Sürüm: v0.1.0.6  |  Tarih: 18.07.2026
+Sürüm: v0.1.0.8  |  Tarih: 20.07.2026
 ───────────────────────────────────────────────────
 
-Core Sistemi — Bugfix:
+Bugfix:
 
-  ✅  Launchable core'lar silaha giremiyor sorunu giderildi
-     — Returning ball'lar MAX_ORBIT (8) kontrolü yerine add_to_orbit() limitini kullanıyor
-     — MAX_ORBIT 8 → 10 (5 normal + 5 özellikli)
-
-  ✅  Normal core'lar sahada kalıp geri dönemiyordu
-     — add_to_orbit() içinde normal core'lar özellikli core limitini atlıyor
-     — 5 özellikli core doluyken normal core'lar artık doğru şekilde silaha giriyor
-
-Ses:
-
-  ✅  hitClassic.ogg volume_db 4.0 → 0.0 (varsayılan) ayarına geri alındı
+  ✅  Auto mode'da toplar fırlatılmıyordu
+     — Normal core'lar add_to_orbit() içinde erken return yapıyordu
+     — auto_mode kontrolü normal core yoluna da eklendi
 
 
 0.0.0.1
@@ -3765,6 +3757,26 @@ UI — Core Paneli:
      — "Connected Cores" başlığı + 3 slot (tek satır)
      — Normal Core'lar UI panelinde görünmüyor
      — Tooltip sadece özellikli core'ları gösteriyor
+
+
+───────────────────────────────────────────────────
+Sürüm: v0.1.0.6  |  Tarih: 18.07.2026
+───────────────────────────────────────────────────
+
+Core Sistemi — Bugfix:
+
+  ✅  Launchable core'lar silaha giremiyor sorunu giderildi
+     — Returning ball'lar MAX_ORBIT (8) kontrolü yerine add_to_orbit() limitini kullanıyor
+     — MAX_ORBIT 8 → 10 (5 normal + 5 özellikli)
+
+  ✅  Normal core'lar sahada kalıp geri dönemiyordu
+     — add_to_orbit() içinde normal core'lar özellikli core limitini atlıyor
+     — 5 özellikli core doluyken normal core'lar artık doğru şekilde silaha giriyor
+
+Ses:
+
+  ✅  hitClassic.ogg volume_db 4.0 → 0.0 (varsayılan) ayarına geri alındı
+
 
 
 ───────────────────────────────────────────────────────
