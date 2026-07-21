@@ -3832,3 +3832,17 @@ Diğer:
   ✅  Gereksiz fizik nesneleri temizlendi (Tribune StaticBody2D, DeathZone offset)
   ✅  DeathZone collision genişliği 780 → 1270 px
   ✅  Zemin görseli (gameAreaEdited2.png) 1270×840 oranına güncellendi
+
+
+───────────────────────────────────────────────────────
+Sürüm: v0.1.0.9  |  Tarih: 21.07.2026
+───────────────────────────────────────────────────────
+
+Bugfix:
+
+  ✅  Auto mode'da core hız sorunu giderildi
+     — _process_returning, _fire_ball sonrası speed=90 yazıyordu
+     — state=="flying" kontrolü eklenerek düzeltildi
+
+  ✅  Aim çizgisi top çıkış noktasıyla hizalandı
+     — Çizgi artık player.global_position yerine silah konumundan (offset +20,-24) başlıyor

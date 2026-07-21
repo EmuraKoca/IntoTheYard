@@ -357,11 +357,7 @@ func _fire_ball() -> void:
 	ball.get_node("CollisionShape2D").disabled = true
 	ball.global_position = _weapon_pos
 
-	# Silahtan çıkış — küçükten büyüye
-	ball.scale = Vector2(0.25, 0.25)
-	var burst: Tween = ball.create_tween()
-	burst.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	burst.tween_property(ball, "scale", Vector2(1.0, 1.0), 0.18)
+	ball.scale = Vector2(1.0, 1.0)
 
 	# Weapon efekti
 	var _launcher := get_node_or_null("/root/GameScene/BallLauncher")
@@ -369,11 +365,12 @@ func _fire_ball() -> void:
 		_launcher.trigger_weapon_fire_fx(captured_aim)
 
 	# Hemen fırlat — silahtan çıktı
-	ball.move_direction = captured_aim.normalized()
-	ball.speed          = 700.0
-	ball.moving         = true
-	ball.state          = "flying"
-	ball.catch_cooldown = 0.5
+	ball.move_direction    = captured_aim.normalized()
+	ball.speed             = 700.0
+	ball.moving            = true
+	ball.state             = "flying"
+	ball.catch_cooldown    = 1.5
+	ball._near_player_timer = 0.0
 	ball.z_index        = 5
 
 	# ~0.09s sonra collision aç (silahtan uzaklaşsın)

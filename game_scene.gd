@@ -3566,7 +3566,7 @@ func _draw() -> void:
 	var auto_on: bool  = player.auto_mode
 	var lmb_held: bool = Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
 	if not auto_on and not lmb_held: return
-	var start: Vector2 = player.global_position
+	var start: Vector2 = player.global_position + Vector2(20, -24)
 	var mouse: Vector2 = get_global_mouse_position()
 	var dir: Vector2   = (mouse - start).normalized()
 	if dir == Vector2.ZERO: return

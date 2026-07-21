@@ -725,7 +725,7 @@ func _process_returning(delta: float) -> void:
 		else:
 			scale = Vector2.ZERO
 			player.add_to_orbit(self)
-			if self in player.orbit_balls:
+			if self in player.orbit_balls or state == "flying":
 				return
 			scale = Vector2(1.0, 1.0)
 			# Limit dolu — weapon etrafında küçük daire çizerek slot bekle
