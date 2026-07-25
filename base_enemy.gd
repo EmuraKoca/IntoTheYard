@@ -219,7 +219,9 @@ func _spawn_death_particles(cause: String) -> void:
 	mat.gravity = Vector3(0, 200, 0)
 	mat.scale_min = 3.0
 	mat.scale_max = 7.0
-	mat.color_ramp = _make_fade_gradient(mat.color)
+	var grad_tex := GradientTexture1D.new()
+	grad_tex.gradient = _make_fade_gradient(mat.color)
+	mat.color_ramp = grad_tex
 
 	particles.process_material = mat
 	particles.lifetime = 0.6
