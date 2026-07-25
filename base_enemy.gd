@@ -150,7 +150,7 @@ func take_damage(amount, from_ally: bool = false) -> void:
 		_on_lethal_damage(from_ally)
 		die()
 
-func die() -> void:
+func die(cause: String = "normal") -> void:
 	# Virus Beacon Core: Antivirus'lü düşman ölürse 3s boyunca yakına stack yay
 	if is_antivirused and antivirus_stacks > 0:
 		for ball in get_tree().get_nodes_in_group("player_balls"):
@@ -183,12 +183,61 @@ func die() -> void:
 	var game = get_parent()
 	if game.has_method("subject_died"):
 		game.subject_died(score_value, global_position)
+	_spawn_death_particles(cause)
 	var spr := get_sprite()
 	if spr: spr.play(get_walk_anim_prefix() + _anim_dir)
 	var tween = create_tween()
-	tween.tween_property(self, "modulate", Color(1, 1, 1, 0), 0.4)
-	await get_tree().create_timer(0.4).timeout
+	tween.tween_property(self, "modulate", Color(1, 1, 1, 0), 0.3)
+	await get_tree().create_timer(0.3).timeout
 	if is_instance_valid(self): queue_free()
+
+func _spawn_death_particles(cause: String) -> void:
+	var particles := GPUParticles2D.new()
+	var mat := ParticleProcessMaterial.new()
+
+	match cause:
+		"burn":
+			mat.color = Color(1.0, 0.3, 0.0, 1.0)
+			particles.amount = 24
+		"electric":
+			mat.color = Color(0.6, 0.9, 1.0, 1.0)
+			particles.amount = 20
+		"freeze":
+			mat.color = Color(0.7, 0.95, 1.0, 1.0)
+			particles.amount = 22
+		"steam":
+			mat.color = Color(0.85, 0.85, 0.85, 0.9)
+			particles.amount = 18
+		_: # normal
+			mat.color = Color(0.75, 0.05, 0.05, 1.0)
+			particles.amount = 16
+
+	mat.direction = Vector3(0, -1, 0)
+	mat.spread = 180.0
+	mat.initial_velocity_min = 80.0
+	mat.initial_velocity_max = 220.0
+	mat.gravity = Vector3(0, 200, 0)
+	mat.scale_min = 3.0
+	mat.scale_max = 7.0
+	mat.color_ramp = _make_fade_gradient(mat.color)
+
+	particles.process_material = mat
+	particles.lifetime = 0.6
+	particles.explosiveness = 0.95
+	particles.one_shot = true
+	particles.emitting = true
+	particles.global_position = global_position
+	particles.top_level = true
+	get_tree().current_scene.add_child(particles)
+	# Sahneye bırak, bitince kendisi temizlensin
+	get_tree().create_timer(1.0).timeout.connect(func():
+		if is_instance_valid(particles): particles.queue_free())
+
+func _make_fade_gradient(base_color: Color) -> Gradient:
+	var g := Gradient.new()
+	g.set_color(0, base_color)
+	g.set_color(1, Color(base_color.r, base_color.g, base_color.b, 0.0))
+	return g
 
 # ── Element sistemi ──────────────────────────────────────────────────────────
 
@@ -219,7 +268,7 @@ func apply_burn() -> void:
 					p._overheat_counter = 0
 					_react_overheat()
 			if health <= 0:
-				die()
+				die("burn")
 	if not is_instance_valid(self):
 		return
 	is_burning = false
@@ -546,7 +595,7 @@ func _react_electrocute(mult: float, game: Node, player: Node) -> void:
 		# Arc Overload: +2 ek düşmana 5 hasar zinciri
 		if _ao_spread < _ao_limit and is_instance_valid(body) and global_position.distance_to(body.global_position) < 180.0:
 			body.health -= 5
-			if body.health <= 0: body.die()
+			if body.health <= 0: body.die("electric")
 			_ao_spread += 1
 	var prev_speed: float = float(speed)
 	speed = 0.0
@@ -558,7 +607,7 @@ func _react_electrocute(mult: float, game: Node, player: Node) -> void:
 	if player and player.get("has_shock_reflex") and player.has_shock_reflex:
 		player._shock_reflex_timer = 3.0
 	_notify_reaction(game, player)
-	if health <= 0: die()
+	if health <= 0: die("electric")
 
 func _react_steam(mult: float, game: Node, player: Node) -> void:
 	_last_reaction_type = "steam"
@@ -573,14 +622,14 @@ func _react_steam(mult: float, game: Node, player: Node) -> void:
 		if is_instance_valid(body) and global_position.distance_to(body.global_position) < _steam_radius:
 			body.health -= dmg
 			if _thermal and body.get("apply_wet"): body.apply_wet(0.3, 2.0)
-			if body.health <= 0: body.die()
+			if body.health <= 0: body.die("steam")
 	health -= dmg
 	_react_flash(Color(0.9, 0.9, 1.0))
 	_clear_element()
 	if player and player.get("has_steam_surge") and player.has_steam_surge:
 		player._steam_surge_timer = 3.0
 	_notify_reaction(game, player)
-	if health <= 0: die()
+	if health <= 0: die("steam")
 
 func _react_cryostatic(mult: float, game: Node, player: Node) -> void:
 	_last_reaction_type = "freeze"
@@ -592,7 +641,7 @@ func _react_cryostatic(mult: float, game: Node, player: Node) -> void:
 		if is_instance_valid(body) and global_position.distance_to(body.global_position) < aoe_radius:
 			body.take_damage(dmg)
 			if body.get("apply_slow"): body.apply_slow(0.4, 2.0)
-			if body.health <= 0: body.die()
+			if body.health <= 0: body.die("freeze")
 	health -= dmg
 	_react_flash(Color(0.5, 0.8, 1.0))
 	_clear_element()
@@ -600,7 +649,7 @@ func _react_cryostatic(mult: float, game: Node, player: Node) -> void:
 		player.frost_barrier_hp = 5
 		player._frost_barrier_timer = 4.0
 	_notify_reaction(game, player)
-	if health <= 0: die()
+	if health <= 0: die("freeze")
 
 func _react_shatter(mult: float, game: Node, player: Node) -> void:
 	_spawn_shatter_vfx()
@@ -609,7 +658,7 @@ func _react_shatter(mult: float, game: Node, player: Node) -> void:
 	_react_flash(Color(0.6, 0.9, 1.0))
 	_clear_element()
 	_notify_reaction(game, player)
-	if health <= 0: die()
+	if health <= 0: die("freeze")
 
 func _react_melt_frozen(mult: float, game: Node, player: Node) -> void:
 	if is_instance_valid(_freeze_sprite):
@@ -632,12 +681,12 @@ func _react_overcharge(mult: float, game: Node, player: Node) -> void:
 		if body == self: continue
 		if is_instance_valid(body) and global_position.distance_to(body.global_position) < aoe_radius:
 			body.health -= dmg
-			if body.health <= 0: body.die()
+			if body.health <= 0: body.die("electric")
 	health -= dmg
 	_react_flash(Color(1.0, 0.6, 0.0))
 	_clear_element()
 	_notify_reaction(game, player)
-	if health <= 0: die()
+	if health <= 0: die("electric")
 
 func _react_melt(mult: float) -> void:
 	_last_reaction_type = "melt"
@@ -646,7 +695,7 @@ func _react_melt(mult: float) -> void:
 	health -= dmg
 	_react_flash(Color(1.0, 0.6, 0.1))
 	_clear_element()
-	if health <= 0: die()
+	if health <= 0: die("burn")
 
 func _react_flash(color: Color) -> void:
 	modulate = color
