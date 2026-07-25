@@ -2171,7 +2171,7 @@ func _build_all_upgrades() -> void:
 	{"name": "Anchor Core",         "category": "Identity",      "color": Color(0.3, 0.4, 0.6), "desc": "Hit → slow enemy 60% (3s)",                 "index": 41, "weight": 10, "rarity": "common",   "chars": ["vector"], "min_level": 0},
 	{"name": "Crusher Core",        "category": "Identity",      "color": Color(0.6, 0.3, 0.1), "desc": "High damage, breaks Armor",                 "index": 42, "weight": 10, "rarity": "common",   "chars": ["vector"], "min_level": 0},
 	{"name": "Siege Core",          "category": "Identity",      "color": Color(0.4, 0.4, 0.5), "desc": "Highest damage core",                       "index": 45, "weight": 6,  "rarity": "uncommon", "chars": ["vector"], "min_level": 2},
-	{"name": "Momentum Engine",     "category": "Utility",       "color": Color(0.0, 0.7, 1.0), "desc": "Hit → +1 Stack\n+3% Core Speed per stack\n(max 20 stacks)", "index": 35, "weight": 8,   "rarity": "common", "chars": ["vector"], "min_level": 0},
+	{"name": "Momentum Engine",     "category": "Utility",       "color": Color(0.0, 0.7, 1.0), "desc": "Hit → +1 Stack\n+3% Core Speed per stack\n(max 20 stacks)", "index": 35, "weight": 4,   "rarity": "uncommon", "chars": ["vector"], "min_level": 1},
 	{"name": "Chain Density",       "category": "Utility",       "color": Color(0.0, 0.9, 0.5), "desc": "New enemy hit mid-flight:\n+dmg ramp, resets on return",     "index": 37, "weight": 8, "rarity": "common", "chars": ["vector"], "min_level": 0},
 	{"name": "Reinforced Frame",    "category": "Individuality", "color": Color(0.5, 0.7, 0.5), "desc": "+20 Max Armor / Core Speed -%10",           "index": 48, "weight": 8, "rarity": "common",   "chars": ["vector"], "min_level": 1},
 	{"name": "Iron Constitution",   "category": "Individuality", "color": Color(0.7, 0.8, 0.6), "desc": "Armor gain efficiency +%25",                 "index": 49, "weight": 8, "rarity": "common",   "chars": ["vector"], "min_level": 1},
@@ -2309,7 +2309,7 @@ func _build_all_upgrades() -> void:
 	{"name": "Melt Spiral",     "category": "Individuality", "color": Color(1.0, 0.5, 0.2),  "desc": "Melt reaksiyonu:\ndüşmanın konumunda 2s alev bırakır (1/s)",  "index": 206, "weight": 5,  "rarity": "rare",      "chars": ["leila"], "min_level": 3},
 	{"name": "Void Resonance",  "category": "Individuality", "color": Color(0.7, 0.3, 1.0),  "desc": "Dalgada 4 farklı reaksiyon:\nsonraki Calamity slot tüketmez",  "index": 207, "weight": 2,  "rarity": "epic",      "chars": ["leila"], "min_level": 5},
 	# Calamity
-	{"name": "Deep Freeze",     "category": "Calamity",      "color": Color(0.5, 0.85, 1.0), "desc": "Tüm Islak düşmanları\nanında Dondurur",                        "index": 208, "weight": 4,  "rarity": "rare",      "chars": ["leila"], "min_level": 3},
+	{"name": "Deep Freeze",     "category": "Calamity",      "color": Color(0.5, 0.85, 1.0), "desc": "Tüm Islak düşmanları\nanında Dondurur",                        "index": 208, "weight": 2,  "rarity": "legendary", "chars": ["leila"], "min_level": 3},
 	{"name": "Wildfire",        "category": "Calamity",      "color": Color(1.0, 0.3, 0.0),  "desc": "Tüm Yanan düşmanlar patlar\n(10 hasar, 2 yakına yayılır)",     "index": 209, "weight": 3,  "rarity": "epic",      "chars": ["leila"], "min_level": 4},
 	# Utility
 	{"name": "Cryo Burst",      "category": "Utility",       "color": Color(0.6, 0.85, 1.0), "desc": "Yavaşlatılmış düşmana\nsonraki vuruş +8 bonus hasar",          "index": 210, "weight": 5,  "rarity": "rare",      "chars": ["leila"], "min_level": 2},
@@ -2317,7 +2317,7 @@ func _build_all_upgrades() -> void:
 	# ── Cyclone (Manipülasyon) ────────────────────────────────────────────────
 	# Identity — Core kartları
 	{"name": "Glitch Core",          "category": "Identity",      "color": Color(0.8, 0.0, 0.8),  "desc": "Disorients subject for 3s",                                "index": 16,  "weight": 10, "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
-	{"name": "Echo Core",            "category": "Identity",      "color": Color(0.5, 0.5, 1.0),  "desc": "Copies the nearest powered-up core",                       "index": 19,  "weight": 1,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 0},
+	{"name": "Echo Core",            "category": "Identity",      "color": Color(0.5, 0.5, 1.0),  "desc": "Copies the nearest powered-up core",                       "index": 19,  "weight": 1,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3},
 	{"name": "Data Leech Core",      "category": "Identity",      "color": Color(0.6, 0.0, 0.2),  "desc": "+2 Integrity on hit",                                      "index": 22,  "weight": 10, "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
 	{"name": "AntiVirus Core",       "category": "Identity",      "color": Color(0.1, 0.75, 0.3),  "desc": "Hit → 1 Antivirus stack\n(1 dmg/s, 3s, stackable)",       "index": 160, "weight": 9,  "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
 	{"name": "Decay Core",           "category": "Identity",      "color": Color(0.5, 0.3, 0.0),  "desc": "Hit → 1 Decay stack (max 3)\n5% slow/stack; death: 2 dmg/stack","index": 161, "weight": 8,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
@@ -2379,9 +2379,9 @@ func _build_all_upgrades() -> void:
 	{"name": "Spike Core",     "category": "Identity",      "color": Color(0.5, 0.15, 0.0), "desc": "3 Decay stack varsa:\nanında Decay patlaması tetiklenir",          "index": 213, "weight": 6,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
 	{"name": "Leech Nova Core","category": "Identity",      "color": Color(0.6, 0.0, 0.3),  "desc": "Öldürünce: +2 HP\n80px çevresine 1s Glitch",                        "index": 214, "weight": 4,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3},
 	# Calamity — Rare/Epic
-	{"name": "Glitch Bomb",    "category": "Calamity",      "color": Color(0.75, 0.0, 0.85),"desc": "Seçilen 120px alana 4s Glitch uygular",                              "index": 215, "weight": 5,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
+	{"name": "Glitch Bomb",    "category": "Calamity",      "color": Color(0.75, 0.0, 0.85),"desc": "Seçilen 120px alana 4s Glitch uygular",                              "index": 215, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 3},
 	{"name": "System Crash",   "category": "Calamity",      "color": Color(0.8, 0.1, 0.6),  "desc": "Tüm Glitch'li düşmanlar\nmevcut HP'nin %%30'unu kaybeder",          "index": 216, "weight": 4,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3},
-	{"name": "Antivirus Rain", "category": "Calamity",      "color": Color(0.1, 0.85, 0.4),  "desc": "3s boyunca her 0.5s:\ntüm düşmanlara 1 Antivirus stack",           "index": 217, "weight": 5,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
+	{"name": "Antivirus Rain", "category": "Calamity",      "color": Color(0.1, 0.85, 0.4),  "desc": "3s boyunca her 0.5s:\ntüm düşmanlara 1 Antivirus stack",           "index": 217, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 3},
 	{"name": "Decay Field",    "category": "Calamity",      "color": Color(0.45, 0.2, 0.0),  "desc": "5s: seçilen 100px alana aura\ngiren düşmanlar her 1s'de 1 Decay alır","index": 218, "weight": 4,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3},
 	# Individuality
 	{"name": "Decay Harvest",       "category": "Individuality", "color": Color(0.5, 0.25, 0.0), "desc": "Decay patlaması tetiklenince:\n+2 HP kazan",                    "index": 219, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
@@ -2392,8 +2392,8 @@ func _build_all_upgrades() -> void:
 	{"name": "Static Link", "category": "Utility", "color": Color(0.75, 0.75, 0.2), "desc": "Static Core: hedef Glitch'liyse\nslow süresi 2× uzar",                    "index": 223, "weight": 5,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
 	# ── Herkese açık ─────────────────────────────────────────────────────────
 	{"name": "Core Mastery",        "category": "Utility",       "color": Color(0.2, 0.8, 0.2), "desc": "+1 damage to all cores",                    "index": 11, "weight": 10, "rarity": "common", "chars": [], "min_level": 0},
-	{"name": "Lightning",           "category": "Calamity",      "color": Color(1.0, 1.0, 0.0), "desc": "Lightning strikes selected point",          "index": 7,  "weight": 8,  "rarity": "common", "chars": ["leila"], "min_level": 0},
-	{"name": "Flame Zone",          "category": "Calamity",      "color": Color(1.0, 0.3, 0.0), "desc": "Continuous damage in selected area",        "index": 8,  "weight": 8,  "rarity": "common", "chars": ["leila"], "min_level": 0},
+	{"name": "Lightning",           "category": "Calamity",      "color": Color(1.0, 1.0, 0.0), "desc": "Lightning strikes selected point",          "index": 7,  "weight": 3,  "rarity": "epic",   "chars": ["leila"], "min_level": 2},
+	{"name": "Flame Zone",          "category": "Calamity",      "color": Color(1.0, 0.3, 0.0), "desc": "Continuous damage in selected area",        "index": 8,  "weight": 3,  "rarity": "epic",   "chars": ["leila"], "min_level": 2},
 ]
 	# ── TEST MODE — false yapınca normal ağırlıklara döner ──────────────────
 	const TEST_ELEMENTAL: bool = false

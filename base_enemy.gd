@@ -292,6 +292,7 @@ func apply_burn() -> void:
 	var burn_ticks := 3
 	if p and p.get("has_elemental_memory") and p.has_elemental_memory and _had_reaction:
 		burn_ticks = 6
+		_had_reaction = false
 	for i in range(burn_ticks):
 		await get_tree().create_timer(1.0).timeout
 		if is_instance_valid(self) and health > 0:
@@ -358,6 +359,7 @@ func apply_wet() -> void:
 	var dur := 5.0
 	if p and p.get("has_elemental_memory") and p.has_elemental_memory and _had_reaction:
 		dur *= 2.0
+		_had_reaction = false
 	if p and p.get("first_debuff_duration_mult") and not _had_any_element():
 		dur *= p.first_debuff_duration_mult
 	await get_tree().create_timer(dur).timeout
@@ -422,6 +424,7 @@ func apply_electrified() -> void:
 	var dur := 5.0
 	if p and p.get("has_elemental_memory") and p.has_elemental_memory and _had_reaction:
 		dur *= 2.0
+		_had_reaction = false
 	if p and p.get("first_debuff_duration_mult") and not _had_any_element():
 		dur *= p.first_debuff_duration_mult
 	var _ls_p := _get_player()
@@ -460,6 +463,7 @@ func apply_slow(amount, duration: float = 3.0, source: String = "cryo", anchor_p
 	var dur := duration
 	if p and p.get("has_elemental_memory") and p.has_elemental_memory and _had_reaction:
 		dur *= 2.0
+		_had_reaction = false
 	if p and p.get("first_debuff_duration_mult") and not _had_any_element():
 		dur *= p.first_debuff_duration_mult
 	# Static Link: Glitch'li hedef ise slow süresi 2× uzar
