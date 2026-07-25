@@ -183,63 +183,12 @@ func die(cause: String = "normal") -> void:
 	var game = get_parent()
 	if game.has_method("subject_died"):
 		game.subject_died(score_value, global_position)
-	_spawn_death_particles(cause)
 	var spr := get_sprite()
 	if spr: spr.play(get_walk_anim_prefix() + _anim_dir)
 	var tween = create_tween()
 	tween.tween_property(self, "modulate", Color(1, 1, 1, 0), 0.3)
 	await get_tree().create_timer(0.3).timeout
 	if is_instance_valid(self): queue_free()
-
-func _spawn_death_particles(cause: String) -> void:
-	var particles := GPUParticles2D.new()
-	var mat := ParticleProcessMaterial.new()
-
-	match cause:
-		"burn":
-			mat.color = Color(1.0, 0.3, 0.0, 1.0)
-			particles.amount = 24
-		"electric":
-			mat.color = Color(0.6, 0.9, 1.0, 1.0)
-			particles.amount = 20
-		"freeze":
-			mat.color = Color(0.7, 0.95, 1.0, 1.0)
-			particles.amount = 22
-		"steam":
-			mat.color = Color(0.85, 0.85, 0.85, 0.9)
-			particles.amount = 18
-		_: # normal
-			mat.color = Color(0.75, 0.05, 0.05, 1.0)
-			particles.amount = 16
-
-	mat.direction = Vector3(0, -1, 0)
-	mat.spread = 180.0
-	mat.initial_velocity_min = 80.0
-	mat.initial_velocity_max = 220.0
-	mat.gravity = Vector3(0, 200, 0)
-	mat.scale_min = 3.0
-	mat.scale_max = 7.0
-	var grad_tex := GradientTexture1D.new()
-	grad_tex.gradient = _make_fade_gradient(mat.color)
-	mat.color_ramp = grad_tex
-
-	particles.process_material = mat
-	particles.lifetime = 0.6
-	particles.explosiveness = 0.95
-	particles.one_shot = true
-	particles.emitting = true
-	particles.global_position = global_position
-	particles.top_level = true
-	get_tree().current_scene.add_child(particles)
-	# Sahneye bırak, bitince kendisi temizlensin
-	get_tree().create_timer(1.0).timeout.connect(func():
-		if is_instance_valid(particles): particles.queue_free())
-
-func _make_fade_gradient(base_color: Color) -> Gradient:
-	var g := Gradient.new()
-	g.set_color(0, base_color)
-	g.set_color(1, Color(base_color.r, base_color.g, base_color.b, 0.0))
-	return g
 
 # ── Element sistemi ──────────────────────────────────────────────────────────
 
