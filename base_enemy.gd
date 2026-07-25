@@ -178,103 +178,17 @@ func die() -> void:
 			if global_position.distance_to(s.global_position) <= 80.0:
 				if s.get("apply_glitch"): s.apply_glitch()
 	is_dead = true
-	if is_in_group("allies"):
-		set_physics_process(false)
-		$CollisionShape2D.set_deferred("disabled", true)
-		var tween = create_tween()
-		tween.tween_property(self, "modulate", Color(1, 1, 1, 0), 1.0)
-		await get_tree().create_timer(1.0).timeout
-		queue_free()
-		return
+	set_physics_process(false)
+	$CollisionShape2D.set_deferred("disabled", true)
 	var game = get_parent()
 	if game.has_method("subject_died"):
 		game.subject_died(score_value, global_position)
-	_collapse()
-
-func _collapse() -> void:
-	set_physics_process(false)
-	$CollisionShape2D.set_deferred("disabled", true)
-	await get_tree().create_timer(0.4).timeout
-	if randf() < 0.30:
-		_become_ally()
-	else:
-		_escape()
-
-func _escape() -> void:
-	is_burning = false
-	is_wet = false
-	is_electrified = false
-	_reactions_cancelled = true
-	is_slowed = false
-	is_frozen = false
-	_clear_element()
-	if is_instance_valid(_freeze_sprite): _freeze_sprite.queue_free(); _freeze_sprite = null
-	if is_instance_valid(_cryo_sprite): _cryo_sprite.queue_free(); _cryo_sprite = null
-	if is_instance_valid(_melt_frozen_sprite): _melt_frozen_sprite.queue_free(); _melt_frozen_sprite = null
-	if is_instance_valid(_electrocute_sprite): _electrocute_sprite.queue_free(); _electrocute_sprite = null
 	var spr := get_sprite()
 	if spr: spr.play(get_walk_anim_prefix() + _anim_dir)
-	if is_instance_valid(_chip_node): _chip_node.queue_free()
-	var _escape_doors: Array = [Vector2(1620, 427), Vector2(1620, 630), Vector2(1620, 832)]
-	var _nearest_escape: Vector2 = _escape_doors[0]
-	var _min_escape_dist: float = global_position.distance_to(_escape_doors[0])
-	for _ed in _escape_doors:
-		var _d: float = global_position.distance_to(_ed)
-		if _d < _min_escape_dist:
-			_min_escape_dist = _d
-			_nearest_escape = _ed
-	var nav_speed: float = max(speed * 4.5, 200.0)
-	if spr: spr.play(get_walk_anim_prefix() + "SE")
-	var tween = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_BOUND)
-	tween.tween_property(self, "global_position", _nearest_escape,
-		global_position.distance_to(_nearest_escape) / nav_speed)
-	await tween.finished
+	var tween = create_tween()
+	tween.tween_property(self, "modulate", Color(1, 1, 1, 0), 0.4)
+	await get_tree().create_timer(0.4).timeout
 	if is_instance_valid(self): queue_free()
-
-func _become_ally() -> void:
-	is_burning = false
-	is_wet = false
-	is_electrified = false
-	_reactions_cancelled = true
-	is_slowed = false
-	is_frozen = false
-	_clear_element()
-	if is_instance_valid(_freeze_sprite): _freeze_sprite.queue_free(); _freeze_sprite = null
-	if is_instance_valid(_cryo_sprite): _cryo_sprite.queue_free(); _cryo_sprite = null
-	if is_instance_valid(_melt_frozen_sprite): _melt_frozen_sprite.queue_free(); _melt_frozen_sprite = null
-	if is_instance_valid(_electrocute_sprite): _electrocute_sprite.queue_free(); _electrocute_sprite = null
-	set_physics_process(false)
-	var game = get_parent()
-	if game.has_method("subject_rescued"):
-		game.subject_rescued()
-	var _ally_doors: Array = [Vector2(380, 427), Vector2(380, 630), Vector2(380, 832)]
-	var _nearest: Vector2 = _ally_doors[0]
-	var _min_d: float = global_position.distance_to(_ally_doors[0])
-	for _ad in _ally_doors:
-		var _d: float = global_position.distance_to(_ad)
-		if _d < _min_d:
-			_min_d = _d
-			_nearest = _ad
-	var _aspeed: float = max(speed * 4.5, 200.0)
-	var spr := get_sprite()
-	if spr: spr.play(get_walk_anim_prefix() + "W")
-	var _pre_shrink_pos: Vector2 = _nearest + (_nearest - global_position).normalized() * -80.0
-	if global_position.distance_to(_nearest) > 80.0:
-		var _pre_tween = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_BOUND)
-		_pre_tween.tween_property(self, "global_position", _pre_shrink_pos,
-			global_position.distance_to(_pre_shrink_pos) / _aspeed)
-		await _pre_tween.finished
-		if not is_instance_valid(self): return
-	if is_instance_valid(_chip_node): _chip_node.queue_free()
-	var _early_shrink = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_BOUND)
-	_early_shrink.tween_property(self, "scale", Vector2(0.35, 0.35), 0.4)
-	var _atween = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_BOUND)
-	_atween.tween_property(self, "global_position", _nearest,
-		global_position.distance_to(_nearest) / _aspeed)
-	await _atween.finished
-	if not is_instance_valid(self): return
-	GameData.rescued_total += 1
-	queue_free()
 
 # ── Element sistemi ──────────────────────────────────────────────────────────
 
