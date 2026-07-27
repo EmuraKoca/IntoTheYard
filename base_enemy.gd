@@ -1,6 +1,8 @@
 extends CharacterBody2D
 
 static var _freeze_sf: SpriteFrames = null
+static var _corpse_queue: Array = []
+const _MAX_CORPSES: int = 10
 
 const SURGERY_EXIT := Vector2(850, 1000)
 
@@ -210,6 +212,7 @@ func die(cause: String = "normal") -> void:
 		if spr.sprite_frames and spr.sprite_frames.has_animation("died_" + died_dir):
 			spr.play("died_" + died_dir)
 			await spr.animation_finished
+	_register_corpse()
 
 # ── Element sistemi ──────────────────────────────────────────────────────────
 
@@ -755,6 +758,39 @@ func _notify_reaction(game: Node, player: Node) -> void:
 			pass  # _wave_reaction_types already updated above
 		if player._wave_reaction_types.size() >= 4:
 			player._void_resonance_ready = true
+
+# ── Ceset yönetimi ───────────────────────────────────────────────────────────
+
+func _register_corpse() -> void:
+	if not is_instance_valid(self): return
+	_corpse_queue.append(self)
+	if _corpse_queue.size() > _MAX_CORPSES:
+		var oldest = _corpse_queue.pop_front()
+		if is_instance_valid(oldest):
+			oldest._fade_with_blood()
+
+func _fade_with_blood() -> void:
+	var game := get_parent()
+	if is_instance_valid(game):
+		var sf := SpriteFrames.new()
+		if sf.has_animation("default"): sf.remove_animation("default")
+		sf.add_animation("blood")
+		sf.set_animation_speed("blood", 12.0)
+		sf.set_animation_loop("blood", false)
+		for i in range(17):
+			sf.add_frame("blood", load("res://assets/VFX/disappearanceOfBlood/frame_%03d.png" % i))
+		var blood := AnimatedSprite2D.new()
+		blood.sprite_frames = sf
+		blood.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		blood.z_index = 1
+		blood.global_position = global_position
+		game.add_child(blood)
+		blood.play("blood")
+		blood.animation_finished.connect(blood.queue_free)
+	var tween := create_tween()
+	tween.tween_property(self, "modulate:a", 0.0, 17.0 / 12.0)
+	await tween.finished
+	if is_instance_valid(self): queue_free()
 
 # ── VFX ──────────────────────────────────────────────────────────────────────
 
