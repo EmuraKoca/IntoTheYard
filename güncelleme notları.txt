@@ -3893,3 +3893,30 @@ Bugfix:
 
   ✅  GDScript 4.7 type inference hatası giderildi
      — base_enemy.gd: key değişkeni için explicit tip tanımı eklendi
+
+
+───────────────────────────────────────────────────────
+Sürüm: v0.1.1.1  |  Tarih: 27.07.2026
+───────────────────────────────────────────────────────
+
+Ceset Sistemi:
+
+  ✅  10'dan fazla ceset varsa en eski ceset yavaşça kaybolur
+     — Yeni düşman öldükçe en eski ceset 1.5s fade out ile silinir
+     — Sahnede maksimum 10 ceset tutulur
+
+  ✅  Cesetler artık tekrar ayağa kalkmıyor
+     — take_damage() başına is_dead kontrolü eklendi
+
+  ✅  Cesetlerde element debuff görünmüyor
+     — apply_burn/wet/frozen/electrified/slow/glitch: is_dead guard eklendi
+
+  ✅  Zincir uzatma kartı eklendi (Chain Extension)
+     — Tüm karakterlerin ortak havuzunda, uncommon
+     — Alındığında zincir görsel olarak 5 halka uzar (+70px hareket alanı)
+
+  ✅  Ölüm sonrası chip efekti kayboluyor
+     — Düşman ölünce elektrik chip göstergesi anında gizleniyor
+
+  ✅  Ölüm animasyonu son frame'de donuyor
+     — Animasyon bitince düşman yeniden yürüme animasyonuna geçmiyordu (düzeltildi)
