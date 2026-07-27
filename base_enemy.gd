@@ -770,25 +770,8 @@ func _register_corpse() -> void:
 			oldest._fade_with_blood()
 
 func _fade_with_blood() -> void:
-	var game := get_parent()
-	if is_instance_valid(game):
-		var sf := SpriteFrames.new()
-		if sf.has_animation("default"): sf.remove_animation("default")
-		sf.add_animation("blood")
-		sf.set_animation_speed("blood", 12.0)
-		sf.set_animation_loop("blood", false)
-		for i in range(17):
-			sf.add_frame("blood", load("res://assets/VFX/disappearanceOfBlood/frame_%03d.png" % i))
-		var blood := AnimatedSprite2D.new()
-		blood.sprite_frames = sf
-		blood.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		blood.z_index = 1
-		blood.global_position = global_position
-		game.add_child(blood)
-		blood.play("blood")
-		blood.animation_finished.connect(blood.queue_free)
 	var tween := create_tween()
-	tween.tween_property(self, "modulate:a", 0.0, 17.0 / 12.0)
+	tween.tween_property(self, "modulate:a", 0.0, 1.5)
 	await tween.finished
 	if is_instance_valid(self): queue_free()
 
