@@ -18,6 +18,9 @@ func get_sprite() -> AnimatedSprite2D:
 func get_walk_anim_prefix() -> String:
 	return "run_"
 
+func _get_died_anim_base() -> String:
+	return "res://assets/enemys/armedSubject/animations/died/"
+
 func _setup_sprite() -> void:
 	var sprite: AnimatedSprite2D = $ArmedSprite
 	var frames := SpriteFrames.new()
@@ -41,6 +44,7 @@ func _setup_sprite() -> void:
 				atlas.atlas  = tex
 				atlas.region = Rect2(i * 128, 0, 128, 128)
 				frames.add_frame(key, atlas)
+	_add_died_anims(frames)
 	sprite.sprite_frames  = frames
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	sprite.scale          = Vector2(0.85, 0.85)

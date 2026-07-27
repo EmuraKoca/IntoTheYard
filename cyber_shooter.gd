@@ -12,6 +12,12 @@ func _ready() -> void:
 func get_sprite() -> AnimatedSprite2D:
 	return $ShooterSprite
 
+func _get_died_anim_base() -> String:
+	return "res://assets/enemys/cyberShooter/animations/died/"
+
+func _get_died_frame_count() -> int:
+	return 7
+
 func _setup_sprite() -> void:
 	var sprite: AnimatedSprite2D = $ShooterSprite
 	var frames := SpriteFrames.new()
@@ -41,6 +47,7 @@ func _setup_sprite() -> void:
 			atlas.atlas  = idle_tex
 			atlas.region = Rect2(i * 128, 0, 128, 128)
 			frames.add_frame(idle_key, atlas)
+	_add_died_anims(frames)
 	sprite.sprite_frames  = frames
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	sprite.scale          = Vector2(0.85, 0.85)

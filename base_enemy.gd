@@ -48,6 +48,25 @@ func get_sprite() -> AnimatedSprite2D:
 func get_walk_anim_prefix() -> String:
 	return "walk_"
 
+func _get_died_anim_base() -> String:
+	return ""
+
+func _get_died_frame_count() -> int:
+	return 9
+
+func _add_died_anims(frames: SpriteFrames) -> void:
+	var base := _get_died_anim_base()
+	if base == "": return
+	var count := _get_died_frame_count()
+	for dir_name in ["south-east", "south-west"]:
+		var key := "died_" + dir_name
+		if frames.has_animation(key): frames.remove_animation(key)
+		frames.add_animation(key)
+		frames.set_animation_speed(key, 12.0)
+		frames.set_animation_loop(key, false)
+		for i in range(count):
+			frames.add_frame(key, load(base + dir_name + "/frame_%03d.png" % i))
+
 func _elem_indicator_y_offset() -> float:
 	return -68.0
 
@@ -184,11 +203,11 @@ func die(cause: String = "normal") -> void:
 	if game.has_method("subject_died"):
 		game.subject_died(score_value, global_position)
 	var spr := get_sprite()
-	if spr: spr.play(get_walk_anim_prefix() + _anim_dir)
-	var tween = create_tween()
-	tween.tween_property(self, "modulate", Color(1, 1, 1, 0), 0.3)
-	await get_tree().create_timer(0.3).timeout
-	if is_instance_valid(self): queue_free()
+	if spr:
+		var died_dir := "south-west" if _anim_dir in ["W", "NW", "SW"] else "south-east"
+		if spr.sprite_frames and spr.sprite_frames.has_animation("died_" + died_dir):
+			spr.play("died_" + died_dir)
+			await spr.animation_finished
 
 # ── Element sistemi ──────────────────────────────────────────────────────────
 

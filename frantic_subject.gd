@@ -15,6 +15,9 @@ func get_sprite() -> AnimatedSprite2D:
 func get_walk_anim_prefix() -> String:
 	return "run_"
 
+func _get_died_anim_base() -> String:
+	return "res://assets/enemys/franticSubject/Top-down_pixel_art_game_sprite/animations/died/"
+
 func _setup_sprite() -> void:
 	var sprite: AnimatedSprite2D = $FranticSprite
 	var frames := SpriteFrames.new()
@@ -38,6 +41,7 @@ func _setup_sprite() -> void:
 				atlas.atlas  = tex
 				atlas.region = Rect2(i * 124, 0, 124, 124)
 				frames.add_frame(key, atlas)
+	_add_died_anims(frames)
 	sprite.sprite_frames  = frames
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	sprite.scale          = Vector2(0.9, 0.9)
