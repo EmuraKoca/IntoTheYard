@@ -49,6 +49,7 @@ func _setup_sprite() -> void:
 	sprite.play("run_S")
 
 func _on_kick_finished() -> void:
+	if is_dead: return
 	_kicking = false
 	_update_walk_anim()
 

@@ -52,6 +52,7 @@ func _setup_sprite() -> void:
 	sprite.play("run_S")
 
 func _on_kick_finished() -> void:
+	if is_dead: return
 	_kicking = false
 	$ArmedSprite.speed_scale = 1.0
 	_update_walk_anim()

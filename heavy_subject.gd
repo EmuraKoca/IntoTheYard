@@ -49,6 +49,7 @@ func _setup_sprite() -> void:
 	sprite.play("walk_S")
 
 func _on_uppercut_finished() -> void:
+	if is_dead: return
 	_uppercutting = false
 	_update_walk_anim()
 

@@ -3846,3 +3846,50 @@ Bugfix:
 
   ✅  Aim çizgisi top çıkış noktasıyla hizalandı
      — Çizgi artık player.global_position yerine silah konumundan (offset +20,-24) başlıyor
+
+
+───────────────────────────────────────────────────────
+Sürüm: v0.1.1.0  |  Tarih: 27.07.2026
+───────────────────────────────────────────────────────
+
+BrutalITY — Düşman Ölüm Sistemi:
+
+  ✅  Tüm düşmanlar artık gerçekten ölüyor
+     — _become_ally / _escape sistemi kaldırıldı
+     — Düşmanlar ölünce yerde kalıyor, queue_free() yok
+
+  ✅  7 düşman türü için ölüm animasyonu eklendi
+     — subject, armed_subject, frantic_subject, heavy_subject
+     — cyber_shotgun, cyber_shooter (7 frame), cyber_rifle
+     — Her tip için south-east / south-west yönlü 2 animasyon
+     — Animasyon bitince son frame'de donuyor
+
+  ✅  Ölüm sonrası chip efekti kayboluyor
+     — Düşman ölünce elektrik göstergesi anında gizleniyor
+
+Kart Dengesi:
+
+  ✅  Calamity Lightning / Flame Zone düzeltildi
+     — common weight:8 → epic weight:3, min_level:2
+
+  ✅  Momentum Engine düzeltildi
+     — common weight:8 → uncommon weight:4, min_level:1
+
+  ✅  Echo Core düzeltildi
+     — min_level:0 → min_level:3
+
+  ✅  Glitch Bomb / Antivirus Rain düzeltildi
+     — rare weight:5 → legendary weight:2, min_level:3
+
+  ✅  Deep Freeze düzeltildi
+     — rare weight:4 → legendary weight:2
+
+Bugfix:
+
+  ✅  Elemental Memory kalıcı 2× süre uzatma hatası giderildi
+     — _had_reaction flag'i kullanıldıktan sonra sıfırlanıyor
+     — Önceki davranış: bir kez reaksiyon geçiren düşman sonraki
+       tüm debuff'larda kalıcı 2× uzama alıyordu
+
+  ✅  GDScript 4.7 type inference hatası giderildi
+     — base_enemy.gd: key değişkeni için explicit tip tanımı eklendi

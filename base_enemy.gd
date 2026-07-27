@@ -58,8 +58,8 @@ func _add_died_anims(frames: SpriteFrames) -> void:
 	var base := _get_died_anim_base()
 	if base == "": return
 	var count := _get_died_frame_count()
-	for dir_name in ["south-east", "south-west"]:
-		var key := "died_" + dir_name
+	for dir_name: String in ["south-east", "south-west"]:
+		var key: String = "died_" + dir_name
 		if frames.has_animation(key): frames.remove_animation(key)
 		frames.add_animation(key)
 		frames.set_animation_speed(key, 12.0)
@@ -199,6 +199,7 @@ func die(cause: String = "normal") -> void:
 	is_dead = true
 	set_physics_process(false)
 	$CollisionShape2D.set_deferred("disabled", true)
+	if _chip_node: _chip_node.visible = false
 	var game = get_parent()
 	if game.has_method("subject_died"):
 		game.subject_died(score_value, global_position)
