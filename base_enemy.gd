@@ -146,6 +146,7 @@ func _update_anim_dir_from_velocity() -> void:
 # ── Hasar & Ölüm ─────────────────────────────────────────────────────────────
 
 func take_damage(amount, from_ally: bool = false) -> void:
+	if is_dead: return
 	if get("is_marked") and is_marked:
 		amount = int(amount * 1.1)
 	# Primal Instinct: 3 farklı reaksiyon tetiklendiyse +10% hasar (5s)
@@ -213,6 +214,7 @@ func die(cause: String = "normal") -> void:
 # ── Element sistemi ──────────────────────────────────────────────────────────
 
 func apply_burn() -> void:
+	if is_dead: return
 	if is_burning:
 		return
 	_check_reaction("fire")
@@ -258,6 +260,7 @@ func _react_overheat() -> void:
 			if body.health <= 0: body.die()
 
 func apply_frozen() -> void:
+	if is_dead: return
 	if is_frozen:
 		return
 	is_frozen = true
@@ -285,6 +288,7 @@ func apply_frozen() -> void:
 	_clear_element()
 
 func apply_wet() -> void:
+	if is_dead: return
 	_check_reaction("wet")
 	if not is_instance_valid(self): return
 	is_wet = true
@@ -333,6 +337,7 @@ func _process_antivirus(delta: float) -> void:
 		antivirus_stacks = 0
 
 func apply_glitch(duration: float = 3.0) -> void:
+	if is_dead: return
 	if is_glitched:
 		return
 	var _gp := get_tree().get_first_node_in_group("player")
@@ -348,6 +353,7 @@ func apply_glitch(duration: float = 3.0) -> void:
 	_clear_element()
 
 func apply_electrified() -> void:
+	if is_dead: return
 	if is_electrified:
 		return
 	_check_reaction("electric")
@@ -380,6 +386,7 @@ func _living_storm_loop() -> void:
 			if health <= 0: die(); break
 
 func apply_slow(amount, duration: float = 3.0, source: String = "cryo", anchor_pos: Vector2 = Vector2.ZERO) -> void:
+	if is_dead: return
 	if is_slowed:
 		return
 	_check_reaction("cryo")
