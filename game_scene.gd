@@ -2390,6 +2390,7 @@ func _build_all_upgrades() -> void:
 	# Utility
 	{"name": "Decay Amp",   "category": "Utility", "color": Color(0.55, 0.25, 0.0), "desc": "Decay patlaması: stack başına\n2 → 3 hasar",                              "index": 222, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
 	{"name": "Static Link", "category": "Utility", "color": Color(0.75, 0.75, 0.2), "desc": "Static Core: hedef Glitch'liyse\nslow süresi 2× uzar",                    "index": 223, "weight": 5,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
+	{"name": "Chain Extension", "category": "Utility", "color": Color(0.7, 0.6, 0.3), "desc": "Zincir 5 halka uzar\n(hareket alanı genişler)",                         "index": 224, "weight": 6,  "rarity": "uncommon",  "chars": [],           "min_level": 0},
 	# ── Herkese açık ─────────────────────────────────────────────────────────
 	{"name": "Core Mastery",        "category": "Utility",       "color": Color(0.2, 0.8, 0.2), "desc": "+1 damage to all cores",                    "index": 11, "weight": 10, "rarity": "common", "chars": [], "min_level": 0},
 	{"name": "Lightning",           "category": "Calamity",      "color": Color(1.0, 1.0, 0.0), "desc": "Lightning strikes selected point",          "index": 7,  "weight": 3,  "rarity": "epic",   "chars": ["leila"], "min_level": 2},
@@ -3813,6 +3814,9 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 		$BallLauncher.queue_upgrade_ball("electric")
 	elif index == 2:
 		$BallLauncher.queue_upgrade_ball("pierce")
+	elif index == 224:
+		var p = get_node("Player")
+		p.chain_length += 5 * (355.0 / 20.0)
 	elif index == 4:
 		var player = get_node("Player")
 		player.SPEED += 50
