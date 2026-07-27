@@ -250,7 +250,7 @@ var damage_mult_leila: float          = 1.0   # Thermal Vision vb. hasar çarpan
 var _chain_links: Array[Sprite2D] = []
 const _CHAIN_DIR_NAMES: Array[String] = ["east","south-east","south","south-west","west","north-west","north","north-east"]
 const _LINK_SPACING: float = 14.0
-const _MAX_LINKS: int = 21
+var _max_links: int = 21
 var _link_textures: Dictionary = {}
 # Catenary simülasyonu — her halkanın fizik pozisyonu
 var _chain_positions: Array[Vector2] = []
@@ -415,7 +415,7 @@ func _ready() -> void:
 func _setup_pranga() -> void:
 	for d in _CHAIN_DIR_NAMES:
 		_link_textures[d] = load("res://assets/chain/chainLink/%s.png" % d)
-	for i in range(_MAX_LINKS):
+	for i in range(_max_links):
 		var lnk := Sprite2D.new()
 		lnk.visible = false
 		lnk.z_index = 1
@@ -437,22 +437,22 @@ func _update_pranga(delta: float) -> void:
 
 	# Başlangıçta pozisyonları başlat (sıfırsa)
 	if _chain_positions[0] == Vector2.ZERO:
-		for i in range(_MAX_LINKS):
-			var t: float = float(i) / float(_MAX_LINKS - 1)
+		for i in range(_max_links):
+			var t: float = float(i) / float(_max_links - 1)
 			_chain_positions[i] = anchor_g.lerp(player_g, t)
 
 	# Verlet entegrasyonu — yer çekimi yok, sadece atalet + sönümleme
-	for i in range(1, _MAX_LINKS - 1):
+	for i in range(1, _max_links - 1):
 		_chain_velocities[i] *= (1.0 - _CHAIN_DAMPING * delta)
 		_chain_positions[i] += _chain_velocities[i] * delta
 
 	# Kısıt: anchor sabit, player ucu player'a bağlı
 	_chain_positions[0] = anchor_g
-	_chain_positions[_MAX_LINKS - 1] = player_g
+	_chain_positions[_max_links - 1] = player_g
 
 	# Kısıt iterasyonu — halka mesafelerini koru, hız güncelle
 	for _iter in range(12):
-		for i in range(_MAX_LINKS - 1):
+		for i in range(_max_links - 1):
 			var diff: Vector2 = _chain_positions[i + 1] - _chain_positions[i]
 			var d: float = diff.length()
 			if d > 0.001:
@@ -460,18 +460,18 @@ func _update_pranga(delta: float) -> void:
 				if i > 0:
 					_chain_positions[i] += correction
 					_chain_velocities[i] += correction / delta * 0.05
-				if i + 1 < _MAX_LINKS - 1:
+				if i + 1 < _max_links - 1:
 					_chain_positions[i + 1] -= correction
 					_chain_velocities[i + 1] -= correction / delta * 0.05
 		_chain_positions[0] = anchor_g
-		_chain_positions[_MAX_LINKS - 1] = player_g
+		_chain_positions[_max_links - 1] = player_g
 
 	# Sprite'ları pozisyonlara yerleştir
-	for i in range(_MAX_LINKS):
+	for i in range(_max_links):
 		var pos_local: Vector2 = to_local(_chain_positions[i])
 		# Yön hesapla
 		var dir_vec: Vector2 = Vector2.DOWN
-		if i < _MAX_LINKS - 1:
+		if i < _max_links - 1:
 			dir_vec = (_chain_positions[i + 1] - _chain_positions[i]).normalized()
 		elif i > 0:
 			dir_vec = (_chain_positions[i] - _chain_positions[i - 1]).normalized()
@@ -479,6 +479,20 @@ func _update_pranga(delta: float) -> void:
 		_chain_links[i].visible = true
 		_chain_links[i].global_position = _chain_positions[i]
 		_chain_links[i].texture = _link_textures[dir_name]
+
+func add_chain_links(count: int) -> void:
+	chain_length += count * _LINK_SPACING
+	for i in range(count):
+		var lnk := Sprite2D.new()
+		lnk.visible = false
+		lnk.z_index = 1
+		lnk.z_as_relative = false
+		lnk.scale = Vector2(0.50, 0.50)
+		add_child(lnk)
+		_chain_links.append(lnk)
+		_chain_positions.append(Vector2.ZERO)
+		_chain_velocities.append(Vector2.ZERO)
+	_max_links += count
 
 func _angle_to_chain_dir(angle: float) -> String:
 	var deg: float = fmod(rad_to_deg(angle) + 360.0, 360.0)
