@@ -542,6 +542,17 @@ func _update_chain_wrap() -> void:
 		enemy._chain_wrap_count = count
 		var was_ready: bool = enemy.get("is_chain_ready") and enemy.is_chain_ready
 		enemy.is_chain_ready = count >= _CHAIN_WRAP_THRESHOLD
+		# Segment sayısına göre hız kısıtla
+		if enemy.get("original_speed") and enemy.original_speed > 0:
+			if count >= _CHAIN_WRAP_THRESHOLD:
+				enemy.speed = 0.0
+			elif count >= 4:
+				enemy.speed = enemy.original_speed * 0.25
+			elif count >= 2:
+				enemy.speed = enemy.original_speed * 0.6
+			else:
+				if not enemy.get("is_slowed") or not enemy.is_slowed:
+					enemy.speed = enemy.original_speed
 		if enemy.is_chain_ready and not was_ready:
 			enemy._react_flash(Color(1.0, 0.2, 0.0))
 
