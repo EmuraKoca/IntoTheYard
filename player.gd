@@ -530,10 +530,33 @@ func _unhandled_input(event: InputEvent) -> void:
 
 const _CHAIN_WRAP_THRESHOLD: int = 6
 
+const _CHAIN_PUSH_RADIUS: float = 16.0
+
 func _update_chain_wrap() -> void:
 	for enemy in get_tree().get_nodes_in_group("subjects"):
 		if not is_instance_valid(enemy): continue
 		if enemy.get("is_dead") and enemy.is_dead: continue
+
+		# Zincir segmentlerinden fiziksel itme
+		var total_push := Vector2.ZERO
+		for i in range(_chain_positions.size() - 1):
+			var a: Vector2 = _chain_positions[i]
+			var b: Vector2 = _chain_positions[i + 1]
+			var ep: Vector2 = enemy.global_position
+			var ab: Vector2 = b - a
+			var ab_len_sq: float = ab.length_squared()
+			if ab_len_sq < 0.001: continue
+			var t: float = clamp((ep - a).dot(ab) / ab_len_sq, 0.0, 1.0)
+			var closest: Vector2 = a + ab * t
+			var diff: Vector2 = ep - closest
+			var dist: float = diff.length()
+			if dist < _CHAIN_PUSH_RADIUS and dist > 0.001:
+				total_push += diff.normalized() * (_CHAIN_PUSH_RADIUS - dist)
+
+		if total_push.length() > 0.001:
+			enemy.global_position += total_push * 0.9
+
+		# Wrap tespiti: enemy etrafındaki segment sayısı
 		var wrap_radius: float = enemy.get("chain_wrap_radius") if enemy.get("chain_wrap_radius") else 35.0
 		var count: int = 0
 		for pos in _chain_positions:
@@ -542,17 +565,8 @@ func _update_chain_wrap() -> void:
 		enemy._chain_wrap_count = count
 		var was_ready: bool = enemy.get("is_chain_ready") and enemy.is_chain_ready
 		enemy.is_chain_ready = count >= _CHAIN_WRAP_THRESHOLD
-		# Segment sayısına göre hız kısıtla
 		if enemy.get("original_speed") and enemy.original_speed > 0:
-			if count >= _CHAIN_WRAP_THRESHOLD:
-				enemy.speed = 0.0
-			elif count >= 4:
-				enemy.speed = enemy.original_speed * 0.25
-			elif count >= 2:
-				enemy.speed = enemy.original_speed * 0.6
-			else:
-				if not enemy.get("is_slowed") or not enemy.is_slowed:
-					enemy.speed = enemy.original_speed
+			enemy.speed = 0.0 if enemy.is_chain_ready else enemy.original_speed
 		if enemy.is_chain_ready and not was_ready:
 			enemy._react_flash(Color(1.0, 0.2, 0.0))
 
