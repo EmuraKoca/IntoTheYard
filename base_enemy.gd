@@ -203,9 +203,15 @@ func die(cause: String = "normal") -> void:
 			if global_position.distance_to(s.global_position) <= 80.0:
 				if s.get("apply_glitch"): s.apply_glitch()
 	is_dead = true
+	z_index = 0
 	set_physics_process(false)
 	$CollisionShape2D.set_deferred("disabled", true)
 	if _chip_node: _chip_node.visible = false
+	if _elem_indicator: _elem_indicator.visible = false
+	if _cryo_sprite and is_instance_valid(_cryo_sprite): _cryo_sprite.queue_free(); _cryo_sprite = null
+	if _freeze_sprite and is_instance_valid(_freeze_sprite): _freeze_sprite.queue_free(); _freeze_sprite = null
+	if _melt_frozen_sprite and is_instance_valid(_melt_frozen_sprite): _melt_frozen_sprite.queue_free(); _melt_frozen_sprite = null
+	if _electrocute_sprite and is_instance_valid(_electrocute_sprite): _electrocute_sprite.queue_free(); _electrocute_sprite = null
 	var game = get_parent()
 	if game.has_method("subject_died"):
 		game.subject_died(score_value, global_position)
@@ -289,6 +295,7 @@ func apply_frozen() -> void:
 		_freeze_sprite.queue_free()
 		_freeze_sprite = null
 	is_frozen = false
+	if is_dead: return
 	var spr2 := get_sprite()
 	if spr2 and is_instance_valid(spr2): spr2.play(get_walk_anim_prefix() + _anim_dir)
 	_clear_element()
