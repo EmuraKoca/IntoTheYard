@@ -528,6 +528,30 @@ func _unhandled_input(event: InputEvent) -> void:
 		if dash_charges > 0:
 			_dash()
 
+const _CHAIN_WRAP_THRESHOLD: int = 6
+
+func _update_chain_wrap() -> void:
+	for enemy in get_tree().get_nodes_in_group("subjects"):
+		if not is_instance_valid(enemy): continue
+		if enemy.get("is_dead") and enemy.is_dead: continue
+		var wrap_radius: float = enemy.get("chain_wrap_radius") if enemy.get("chain_wrap_radius") else 35.0
+		var count: int = 0
+		for pos in _chain_positions:
+			if pos.distance_to(enemy.global_position) <= wrap_radius:
+				count += 1
+		enemy._chain_wrap_count = count
+		var was_ready: bool = enemy.get("is_chain_ready") and enemy.is_chain_ready
+		enemy.is_chain_ready = count >= _CHAIN_WRAP_THRESHOLD
+		if enemy.is_chain_ready and not was_ready:
+			enemy._react_flash(Color(1.0, 0.2, 0.0))
+
+func _chain_crush() -> void:
+	for enemy in get_tree().get_nodes_in_group("subjects"):
+		if not is_instance_valid(enemy): continue
+		if enemy.get("is_chain_ready") and enemy.is_chain_ready:
+			if enemy.has_method("die"):
+				enemy.die("chain_crush")
+
 func _dash() -> void:
 	var dash_dir = Vector2.ZERO
 	if Input.is_key_pressed(KEY_W): dash_dir.y -= 1
@@ -543,6 +567,7 @@ func _dash() -> void:
 	dash_velocity = dash_dir.normalized() * (dash_distance / dash_duration)
 	dash_timer = dash_duration
 	dash_charges -= 1
+	_chain_crush()
 	dash_recharge_timer = 0.0
 	if dash_charges <= 0:
 		dash_is_empty = true
@@ -624,6 +649,7 @@ func _physics_process(delta: float) -> void:
 		global_position = chain_anchor - dir_to_anchor * chain_length
 
 	_update_pranga(delta)
+	_update_chain_wrap()
 
 	# ── Burn Frenzy: Her Yanan düşman için +2% Core hızı ─────────────────────
 	var _bf_bonus: float = 0.0

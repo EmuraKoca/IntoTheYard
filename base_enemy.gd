@@ -41,6 +41,9 @@ var _melt_frozen_sprite: AnimatedSprite2D = null
 var _electrocute_sprite: AnimatedSprite2D = null
 var _had_reaction: bool = false
 var score_value: int = 1
+var chain_wrap_radius: float = 35.0
+var _chain_wrap_count: int = 0
+var is_chain_ready: bool = false
 
 # ── Virtual fonksiyonlar ─────────────────────────────────────────────────────
 
