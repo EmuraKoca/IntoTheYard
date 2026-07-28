@@ -769,18 +769,7 @@ func _notify_reaction(game: Node, player: Node) -> void:
 # ── Ceset yönetimi ───────────────────────────────────────────────────────────
 
 func _register_corpse() -> void:
-	if not is_instance_valid(self): return
-	_corpse_queue.append(self)
-	if _corpse_queue.size() > _MAX_CORPSES:
-		var oldest = _corpse_queue.pop_front()
-		if is_instance_valid(oldest):
-			oldest._fade_with_blood()
-
-func _fade_with_blood() -> void:
-	var tween := create_tween()
-	tween.tween_property(self, "modulate:a", 0.0, 1.5)
-	await tween.finished
-	if is_instance_valid(self): queue_free()
+	pass
 
 # ── VFX ──────────────────────────────────────────────────────────────────────
 

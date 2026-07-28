@@ -279,7 +279,7 @@ var _rts_overlay: CanvasLayer = null
 
 # ── Veri Barı ─────────────────────────────────────────────────────────────────
 var _data_current:    float      = 0.0
-var _data_max:        float      = 40.0
+var _data_max:        float      = 150.0
 var _data_bar_canvas: CanvasLayer = null
 var _data_bar_fill:   ColorRect   = null
 var _data_bar_label:  Label       = null
@@ -1887,7 +1887,7 @@ func _spawn_data_particles(world_pos: Vector2, amount: float, count: int) -> voi
 		_update_data_bar()
 		if _data_current >= _data_max:
 			_data_current = 0.0
-			_data_max     = _data_max * 1.35
+			_data_max     = _data_max * 2.0
 			get_tree().paused = true
 			show_upgrade_menu()
 		return
@@ -1924,7 +1924,7 @@ func _spawn_data_particles(world_pos: Vector2, amount: float, count: int) -> voi
 			_update_data_bar()
 			if _data_current >= _data_max:
 				_data_current = 0.0
-				_data_max     = _data_max * 1.35
+				_data_max     = _data_max * 2.0
 				get_tree().paused = true
 				show_upgrade_menu()
 			lbl.queue_free()
