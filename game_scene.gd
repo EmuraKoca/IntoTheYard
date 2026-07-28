@@ -3816,7 +3816,7 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 		$BallLauncher.queue_upgrade_ball("pierce")
 	elif index == 224:
 		var p = get_node("Player")
-		p.add_chain_links(5)
+		p.chain_length += 5 * 14.0
 	elif index == 4:
 		var player = get_node("Player")
 		player.SPEED += 50

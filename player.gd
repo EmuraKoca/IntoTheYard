@@ -250,7 +250,7 @@ var damage_mult_leila: float          = 1.0   # Thermal Vision vb. hasar çarpan
 var _chain_links: Array[Sprite2D] = []
 const _CHAIN_DIR_NAMES: Array[String] = ["east","south-east","south","south-west","west","north-west","north","north-east"]
 const _LINK_SPACING: float = 14.0
-var _max_links: int = 21
+const _MAX_LINKS: int = 21
 var _link_textures: Dictionary = {}
 # Catenary simülasyonu — her halkanın fizik pozisyonu
 var _chain_positions: Array[Vector2] = []
@@ -415,7 +415,7 @@ func _ready() -> void:
 func _setup_pranga() -> void:
 	for d in _CHAIN_DIR_NAMES:
 		_link_textures[d] = load("res://assets/chain/chainLink/%s.png" % d)
-	for i in range(_max_links):
+	for i in range(_MAX_LINKS):
 		var lnk := Sprite2D.new()
 		lnk.visible = false
 		lnk.z_index = 1
@@ -437,22 +437,22 @@ func _update_pranga(delta: float) -> void:
 
 	# Başlangıçta pozisyonları başlat (sıfırsa)
 	if _chain_positions[0] == Vector2.ZERO:
-		for i in range(_max_links):
-			var t: float = float(i) / float(_max_links - 1)
+		for i in range(_MAX_LINKS):
+			var t: float = float(i) / float(_MAX_LINKS - 1)
 			_chain_positions[i] = anchor_g.lerp(player_g, t)
 
 	# Verlet entegrasyonu — yer çekimi yok, sadece atalet + sönümleme
-	for i in range(1, _max_links - 1):
+	for i in range(1, _MAX_LINKS - 1):
 		_chain_velocities[i] *= (1.0 - _CHAIN_DAMPING * delta)
 		_chain_positions[i] += _chain_velocities[i] * delta
 
 	# Kısıt: anchor sabit, player ucu player'a bağlı
 	_chain_positions[0] = anchor_g
-	_chain_positions[_max_links - 1] = player_g
+	_chain_positions[_MAX_LINKS - 1] = player_g
 
 	# Kısıt iterasyonu — halka mesafelerini koru, hız güncelle
 	for _iter in range(12):
-		for i in range(_max_links - 1):
+		for i in range(_MAX_LINKS - 1):
 			var diff: Vector2 = _chain_positions[i + 1] - _chain_positions[i]
 			var d: float = diff.length()
 			if d > 0.001:
@@ -460,18 +460,18 @@ func _update_pranga(delta: float) -> void:
 				if i > 0:
 					_chain_positions[i] += correction
 					_chain_velocities[i] += correction / delta * 0.05
-				if i + 1 < _max_links - 1:
+				if i + 1 < _MAX_LINKS - 1:
 					_chain_positions[i + 1] -= correction
 					_chain_velocities[i + 1] -= correction / delta * 0.05
 		_chain_positions[0] = anchor_g
-		_chain_positions[_max_links - 1] = player_g
+		_chain_positions[_MAX_LINKS - 1] = player_g
 
 	# Sprite'ları pozisyonlara yerleştir
-	for i in range(_max_links):
+	for i in range(_MAX_LINKS):
 		var pos_local: Vector2 = to_local(_chain_positions[i])
 		# Yön hesapla
 		var dir_vec: Vector2 = Vector2.DOWN
-		if i < _max_links - 1:
+		if i < _MAX_LINKS - 1:
 			dir_vec = (_chain_positions[i + 1] - _chain_positions[i]).normalized()
 		elif i > 0:
 			dir_vec = (_chain_positions[i] - _chain_positions[i - 1]).normalized()
@@ -480,19 +480,6 @@ func _update_pranga(delta: float) -> void:
 		_chain_links[i].global_position = _chain_positions[i]
 		_chain_links[i].texture = _link_textures[dir_name]
 
-func add_chain_links(count: int) -> void:
-	chain_length += count * _LINK_SPACING
-	for i in range(count):
-		var lnk := Sprite2D.new()
-		lnk.visible = false
-		lnk.z_index = 1
-		lnk.z_as_relative = false
-		lnk.scale = Vector2(0.50, 0.50)
-		add_child(lnk)
-		_chain_links.append(lnk)
-		_chain_positions.append(Vector2.ZERO)
-		_chain_velocities.append(Vector2.ZERO)
-	_max_links += count
 
 func _angle_to_chain_dir(angle: float) -> String:
 	var deg: float = fmod(rad_to_deg(angle) + 360.0, 360.0)
@@ -528,55 +515,6 @@ func _unhandled_input(event: InputEvent) -> void:
 		if dash_charges > 0:
 			_dash()
 
-const _CHAIN_WRAP_THRESHOLD: int = 6
-
-const _CHAIN_PUSH_RADIUS: float = 16.0
-
-func _update_chain_wrap() -> void:
-	for enemy in get_tree().get_nodes_in_group("subjects"):
-		if not is_instance_valid(enemy): continue
-		if enemy.get("is_dead") and enemy.is_dead: continue
-
-		# Zincir segmentlerinden fiziksel itme
-		var total_push := Vector2.ZERO
-		for i in range(_chain_positions.size() - 1):
-			var a: Vector2 = _chain_positions[i]
-			var b: Vector2 = _chain_positions[i + 1]
-			var ep: Vector2 = enemy.global_position
-			var ab: Vector2 = b - a
-			var ab_len_sq: float = ab.length_squared()
-			if ab_len_sq < 0.001: continue
-			var t: float = clamp((ep - a).dot(ab) / ab_len_sq, 0.0, 1.0)
-			var closest: Vector2 = a + ab * t
-			var diff: Vector2 = ep - closest
-			var dist: float = diff.length()
-			if dist < _CHAIN_PUSH_RADIUS and dist > 0.001:
-				total_push += diff.normalized() * (_CHAIN_PUSH_RADIUS - dist)
-
-		if total_push.length() > 0.001:
-			enemy.global_position += total_push * 0.9
-
-		# Wrap tespiti: enemy etrafındaki segment sayısı
-		var wrap_radius: float = enemy.get("chain_wrap_radius") if enemy.get("chain_wrap_radius") else 35.0
-		var count: int = 0
-		for pos in _chain_positions:
-			if pos.distance_to(enemy.global_position) <= wrap_radius:
-				count += 1
-		enemy._chain_wrap_count = count
-		var was_ready: bool = enemy.get("is_chain_ready") and enemy.is_chain_ready
-		enemy.is_chain_ready = count >= _CHAIN_WRAP_THRESHOLD
-		if enemy.get("original_speed") and enemy.original_speed > 0:
-			enemy.speed = 0.0 if enemy.is_chain_ready else enemy.original_speed
-		if enemy.is_chain_ready and not was_ready:
-			enemy._react_flash(Color(1.0, 0.2, 0.0))
-
-func _chain_crush() -> void:
-	for enemy in get_tree().get_nodes_in_group("subjects"):
-		if not is_instance_valid(enemy): continue
-		if enemy.get("is_chain_ready") and enemy.is_chain_ready:
-			if enemy.has_method("die"):
-				enemy.die("chain_crush")
-
 func _dash() -> void:
 	var dash_dir = Vector2.ZERO
 	if Input.is_key_pressed(KEY_W): dash_dir.y -= 1
@@ -592,7 +530,6 @@ func _dash() -> void:
 	dash_velocity = dash_dir.normalized() * (dash_distance / dash_duration)
 	dash_timer = dash_duration
 	dash_charges -= 1
-	_chain_crush()
 	dash_recharge_timer = 0.0
 	if dash_charges <= 0:
 		dash_is_empty = true
@@ -674,7 +611,6 @@ func _physics_process(delta: float) -> void:
 		global_position = chain_anchor - dir_to_anchor * chain_length
 
 	_update_pranga(delta)
-	_update_chain_wrap()
 
 	# ── Burn Frenzy: Her Yanan düşman için +2% Core hızı ─────────────────────
 	var _bf_bonus: float = 0.0
@@ -1075,3 +1011,4 @@ func _spawn_footstep_dust(pos: Vector2) -> void:
 	get_tree().current_scene.add_child(p)
 	p.emitting = true
 	get_tree().create_timer(0.7).timeout.connect(p.queue_free)
+
