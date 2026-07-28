@@ -111,8 +111,8 @@ func _ready() -> void:
 	_preview_sprite.visible = false
 	add_child(_preview_sprite)
 
-	# Başlangıç sekansı: 5 normal top, 2s arayla
-	_startup_balls_left = 4      # ilkini hemen fırlatacağız, kalan 4
+	# Başlangıç sekansı: 3 normal top, 2s arayla
+	_startup_balls_left = 2      # ilkini hemen fırlatacağız, kalan 2
 	_startup_active     = true
 	_startup_timer      = 2.0
 	_startup_fired      = 0
