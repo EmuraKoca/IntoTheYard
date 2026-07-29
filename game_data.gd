@@ -41,6 +41,52 @@ const BOSS_MILESTONE_CHIPS: Array = [15, 30, 60, 100, 200]
 const CORE_MILESTONES: Array = [100, 1000, 10000]
 const CORE_MILESTONE_CHIPS: Array = [10, 40, 150]
 
+# ── Chip Mağazası ────────────────────────────────────────────────────────────
+var purchased_upgrades: Array = []
+
+const SHOP_ITEMS: Array = [
+	{"id": "hp_up",       "name": "Güçlendirilmiş Biyometri", "desc": "Başlangıç HP +10",          "cost": 50,  "color": Color(0.2, 1.0, 0.5)},
+	{"id": "armor_up",    "name": "Titanyum Tabaka",           "desc": "Başlangıç Armor +5",         "cost": 40,  "color": Color(0.5, 0.8, 1.0)},
+	{"id": "core_up",     "name": "Ekstra Orbit Slotu",        "desc": "Başlangıçta +1 Core",        "cost": 75,  "color": Color(1.0, 0.8, 0.0)},
+	{"id": "speed_up",    "name": "Overclock Protokolü",       "desc": "Core hızı +%5",              "cost": 60,  "color": Color(0.0, 1.0, 1.0)},
+	{"id": "xp_up",       "name": "Veri Emici",                "desc": "Düşmanlar +%10 XP verir",   "cost": 80,  "color": Color(0.8, 0.4, 1.0)},
+	{"id": "leila_unlock","name": "Leila — Erişim Kodu",       "desc": "Leila karakterini aç",       "cost": 150, "color": Color(1.0, 0.18, 0.47)},
+]
+
+func is_purchased(item_id: String) -> bool:
+	return item_id in purchased_upgrades
+
+func buy_item(item_id: String) -> bool:
+	if is_purchased(item_id): return false
+	var item: Dictionary = {}
+	for s in SHOP_ITEMS:
+		if s["id"] == item_id:
+			item = s
+			break
+	if item.is_empty(): return false
+	if chips < item["cost"]: return false
+	chips -= item["cost"]
+	purchased_upgrades.append(item_id)
+	if item_id == "leila_unlock":
+		unlock_character("leila")
+	save_data()
+	return true
+
+func get_shop_hp_bonus() -> int:
+	return 10 if is_purchased("hp_up") else 0
+
+func get_shop_armor_bonus() -> int:
+	return 5 if is_purchased("armor_up") else 0
+
+func get_shop_core_bonus() -> int:
+	return 1 if is_purchased("core_up") else 0
+
+func get_shop_speed_mult() -> float:
+	return 1.05 if is_purchased("speed_up") else 1.0
+
+func get_shop_xp_mult() -> float:
+	return 1.1 if is_purchased("xp_up") else 1.0
+
 func record_kill(enemy_type: String) -> int:
 	if enemy_type not in enemy_kills:
 		enemy_kills[enemy_type] = 0
@@ -134,6 +180,7 @@ func save_data() -> void:
 	cfg.set_value("progress", "char_xp_cyclone",     char_xp.get("cyclone", 0))
 	cfg.set_value("chips", "total", chips)
 	cfg.set_value("chips", "completed_milestones", completed_milestones)
+	cfg.set_value("chips", "purchased_upgrades", purchased_upgrades)
 	for k in enemy_kills:
 		cfg.set_value("kills", k, enemy_kills[k])
 	for k in core_fires:
@@ -161,6 +208,9 @@ func load_data() -> void:
 	var ms: Variant = cfg.get_value("chips", "completed_milestones", [])
 	if ms is Array:
 		completed_milestones = ms
+	var pu: Variant = cfg.get_value("chips", "purchased_upgrades", [])
+	if pu is Array:
+		purchased_upgrades = pu
 	for k in enemy_kills:
 		enemy_kills[k] = cfg.get_value("kills", k, 0)
 	var core_keys: Variant = cfg.get_section_keys("cores") if cfg.has_section("cores") else []

@@ -1057,13 +1057,19 @@ func _ready() -> void:
 
 	# Karakter bazlı başlangıç değerleri
 	var char_type: String = get_node("Player").character_type
+	var _shop_hp: int    = GameData.get_shop_hp_bonus()
+	var _shop_arm: int   = GameData.get_shop_armor_bonus()
 	if char_type == "vector":
-		player_hp = 40
-		player_max_hp = 40
-		player_armor = 20
-		player_armor_cap = 20
-		player_max_armor = 20
+		player_hp        = 40 + _shop_hp
+		player_max_hp    = 40 + _shop_hp
+		player_armor     = 20 + _shop_arm
+		player_armor_cap = 20 + _shop_arm
+		player_max_armor = 20 + _shop_arm
 		_update_hex_shield()
+	else:
+		if _shop_hp > 0:
+			player_hp     += _shop_hp
+			player_max_hp += _shop_hp
 
 	$UI/BtnPause.pressed.connect(_show_pause_menu)
 	$UI/FusionEnergyBar.max_value = 50
@@ -1140,7 +1146,8 @@ func update_ui() -> void:
 func subject_died(xp_reward: int = 1, death_pos: Vector2 = Vector2.ZERO, etype: String = "subject") -> void:
 	subjects_killed += 1
 	total_subjects_killed += 1
-	GameData.add_xp(GameData.selected_character, xp_reward)
+	var _xp := int(float(xp_reward) * GameData.get_shop_xp_mult())
+	GameData.add_xp(GameData.selected_character, _xp)
 	GameData.record_kill(etype)
 	var _rip := get_node_or_null("Player")
 	if _rip and _rip.get("has_rogues_instinct") and _rip.has_rogues_instinct:

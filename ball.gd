@@ -409,7 +409,7 @@ func launch(direction: Vector2, spd: float = 600.0) -> void:
 	if _ks and _ks.get("has_kinetic_surge") and _ks.has_kinetic_surge:
 		if _ks.momentum_stacks >= 15:
 			spd = max(spd, 600.0)
-	speed = spd
+	speed = spd * GameData.get_shop_speed_mult()
 	moving = true
 	state = "flying"
 	catch_cooldown = 1.2
