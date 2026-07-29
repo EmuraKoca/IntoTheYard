@@ -436,6 +436,7 @@ func _launch_typed_ball(ball_type: String) -> void:
 	get_parent().add_child.call_deferred(ball)
 	ball.queue_redraw()
 	ball.launch(direction)
+	GameData.record_core_fire(ball_type if ball_type != "" else "normal")
 
 	if _sprite:
 		_sprite.modulate = Color(1.0, 1.0, 1.0)

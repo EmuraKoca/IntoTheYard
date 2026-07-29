@@ -41,6 +41,7 @@ var _melt_frozen_sprite: AnimatedSprite2D = null
 var _electrocute_sprite: AnimatedSprite2D = null
 var _had_reaction: bool = false
 var score_value: int = 1
+var enemy_type: String = "subject"
 
 # ── Virtual fonksiyonlar ─────────────────────────────────────────────────────
 
@@ -211,7 +212,7 @@ func die(cause: String = "normal") -> void:
 	if _electrocute_sprite and is_instance_valid(_electrocute_sprite): _electrocute_sprite.queue_free(); _electrocute_sprite = null
 	var game = get_parent()
 	if game.has_method("subject_died"):
-		game.subject_died(score_value, global_position)
+		game.subject_died(score_value, global_position, enemy_type)
 	var spr := get_sprite()
 	if spr:
 		var died_dir := "south-west" if _anim_dir in ["W", "NW", "SW"] else "south-east"

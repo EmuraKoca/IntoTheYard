@@ -271,6 +271,7 @@ var _smiler_spawned: bool = false
 var _smiler_node = null
 var data_collected: int = 0
 var total_subjects_killed: int = 0
+var _run_start_chips: int = 0
 var ally_chip_duration: float = 15.0  # Upgradeable via card (index 23)
 
 # ── RTS / Tactical Mode ───────────────────────────────────────────────────────
@@ -614,6 +615,27 @@ func _show_run_end_screen() -> void:
 	stats.modulate = Color(0.85, 0.85, 0.9)
 	stats.position = Vector2(760, 340)
 	canvas.add_child(stats)
+
+	var chips_earned := GameData.chips - _run_start_chips
+	var chip_lbl := Label.new()
+	chip_lbl.add_theme_font_size_override("font_size", 32)
+	chip_lbl.add_theme_font_override("font", _font_bold)
+	if chips_earned > 0:
+		chip_lbl.text = "+ %d Chip" % chips_earned
+		chip_lbl.modulate = Color(0.0, 1.0, 0.8)
+	else:
+		chip_lbl.text = "Chip kazanılmadı"
+		chip_lbl.modulate = Color(0.5, 0.5, 0.6)
+	chip_lbl.position = Vector2(760, 520)
+	canvas.add_child(chip_lbl)
+
+	var chip_total_lbl := Label.new()
+	chip_total_lbl.text = "Toplam: %d Chip" % GameData.chips
+	chip_total_lbl.add_theme_font_size_override("font_size", 22)
+	chip_total_lbl.add_theme_font_override("font", _font_bold)
+	chip_total_lbl.modulate = Color(0.6, 0.6, 0.7)
+	chip_total_lbl.position = Vector2(760, 560)
+	canvas.add_child(chip_total_lbl)
 
 	var btn := Button.new()
 	btn.text = Lang.t("go_continue")
@@ -1063,6 +1085,7 @@ func _ready() -> void:
 	update_ui()
 	_update_armor_ui()
 	_run_start_level = GameData.get_level(GameData.selected_character)
+	_run_start_chips = GameData.chips
 	$UI/CalamityCircle.visible = false
 
 	await get_tree().process_frame
@@ -1114,10 +1137,11 @@ func update_ui() -> void:
 	$UI/LabelCalamity.text = calamity_text
 	_update_processor_btn()
 
-func subject_died(xp_reward: int = 1, death_pos: Vector2 = Vector2.ZERO) -> void:
+func subject_died(xp_reward: int = 1, death_pos: Vector2 = Vector2.ZERO, etype: String = "subject") -> void:
 	subjects_killed += 1
 	total_subjects_killed += 1
 	GameData.add_xp(GameData.selected_character, xp_reward)
+	GameData.record_kill(etype)
 	var _rip := get_node_or_null("Player")
 	if _rip and _rip.get("has_rogues_instinct") and _rip.has_rogues_instinct:
 		player_hp = min(player_hp + 1, player_max_hp)

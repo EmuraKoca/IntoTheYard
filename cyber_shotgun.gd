@@ -6,6 +6,7 @@ func _ready() -> void:
 	health = 30
 	max_health = 30
 	score_value = 5
+	enemy_type = "cyber_shotgun"
 	shoot_interval = 5.5
 	super._ready()
 

@@ -7,6 +7,7 @@ func _ready() -> void:
 	health = 45
 	max_health = 45
 	score_value = 3
+	enemy_type = "heavy_subject"
 	super._ready()
 
 func get_sprite() -> AnimatedSprite2D:

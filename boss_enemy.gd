@@ -6,6 +6,7 @@ var max_phase: int = 2
 var phase_threshold: float = 0.5  # HP %50'ye düşünce phase 2
 
 func _ready() -> void:
+	enemy_type = "boss"
 	super._ready()
 
 func _enemy_process(delta: float) -> void:
