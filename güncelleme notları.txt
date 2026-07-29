@@ -3920,3 +3920,43 @@ Ceset Sistemi:
 
   ✅  Ölüm animasyonu son frame'de donuyor
      — Animasyon bitince düşman yeniden yürüme animasyonuna geçmiyordu (düzeltildi)
+
+
+───────────────────────────────────────────────────────
+Sürüm: v0.1.2.0  |  Tarih: 29.07.2026
+───────────────────────────────────────────────────────
+
+Denge:
+
+  ✅  Başlangıç core sayısı 5'ten 3'e indirildi
+     — Her karakter run başında 3 normal core ile başlar (önceden 5)
+
+Meta Progression — Chip Sistemi:
+
+  ✅  Chip para birimi eklendi (kalıcı, run'lar arası)
+     — Megabonk tarzı milestone sistemi: belirli eşiklere ulaşınca Chip kazanılır
+     — Chip run sırasında değil, milestone tamamlanınca verilir
+
+  ✅  Düşman kill milestone'ları
+     — 7 düşman türü + boss için ayrı ayrı takip edilir
+     — 10 / 100 / 1000 öldürme → 5 / 20 / 75 Chip
+     — Boss: 5 / 10 / 25 / 50 / 100 öldürme → 15 / 30 / 60 / 100 / 200 Chip
+
+  ✅  Core fire milestone'ları
+     — Tüm core tipleri için ayrı ayrı takip edilir
+     — 100 / 1000 / 10000 atış → 10 / 40 / 150 Chip
+
+  ✅  Run sonu ekranına Chip göstergesi eklendi
+     — Bu run'da kazanılan Chip ve toplam bakiye görünür
+
+  ✅  Chip Mağazası eklendi (karakter seçim ekranı, sol üst)
+     — 6 kalıcı upgrade, her biri 1 kez satın alınabilir:
+       · Güçlendirilmiş Biyometri — Başlangıç HP +10 (50 Chip)
+       · Titanyum Tabaka — Başlangıç Armor +5 (40 Chip)
+       · Ekstra Orbit Slotu — Başlangıçta +1 Core (75 Chip)
+       · Overclock Protokolü — Core hızı +%5 (60 Chip)
+       · Veri Emici — Düşmanlar +%10 XP verir (80 Chip)
+       · Leila — Erişim Kodu — Leila karakterini aç (150 Chip)
+
+  ✅  Cesetler kalıcı yapıldı
+     — Fade out sistemi kaldırıldı, cesetler run sonuna kadar sahnede kalır

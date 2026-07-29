@@ -21,6 +21,21 @@ köprüsü olarak kullanılır. Her oturum başında oku, her oturum sonunda gü
 - [ ] Leila +20 kart
 - [ ] Cyclone +18 kart (Ricochet/Static/Decay/Mirror implementasyonu)
 
+**Meta Progression (2026-07-29) — TAMAMLANDI:**
+- [x] Chip para birimi eklendi (kalıcı, run'lar arası)
+- [x] Düşman kill milestone'ları (7 tür + boss, 3-5 eşik)
+- [x] Core fire milestone'ları (tüm tipler, 3 eşik)
+- [x] Run sonu ekranına Chip göstergesi eklendi
+- [x] Chip Mağazası eklendi — 6 kalıcı upgrade (karakter seçim ekranı)
+- [x] Cesetler kalıcı yapıldı (fade out kaldırıldı)
+- [x] Başlangıç core sayısı 5 → 3'e indirildi
+
+**Sıradaki adımlar (2026-07-29):**
+- [ ] Milestone ilerleme göstergesi (mağaza veya ayrı ekran — "47/100 subject")
+- [ ] Chip Mağazasına yeni upgrade'ler ekle (ilerleyen sürümde)
+- [ ] Kart dengesi: Vector Calamity (0 → en az 4-5 kart)
+- [ ] Bug listesi: Elemental Memory, Volatile Mixture çift tetik, Living Storm döngüsü
+
 ## Kart Dengesi — Hedefler (2026-07-11)
 
 Her karakter hedef: **65 kart**
