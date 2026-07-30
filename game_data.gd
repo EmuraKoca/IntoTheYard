@@ -30,8 +30,10 @@ var enemy_kills: Dictionary = {
 }
 var core_fires: Dictionary = {}
 
-# Tamamlanan milestone'lar (tekrar ödül vermesin)
+# Tamamlanan milestone'lar — collect edilmemiş olanlar burada bekler
 var completed_milestones: Array = []
+# Collect edilmiş milestone'lar — bir daha gösterilmez
+var claimed_milestones: Array = []
 
 # Milestone tanımları
 const ENEMY_MILESTONES: Array = [10, 100, 1000]
@@ -87,37 +89,61 @@ func get_shop_speed_mult() -> float:
 func get_shop_xp_mult() -> float:
 	return 1.1 if is_purchased("xp_up") else 1.0
 
-func record_kill(enemy_type: String) -> int:
+func record_kill(enemy_type: String) -> void:
 	if enemy_type not in enemy_kills:
 		enemy_kills[enemy_type] = 0
 	enemy_kills[enemy_type] += 1
-	var earned := 0
 	var milestones := BOSS_MILESTONES if enemy_type == "boss" else ENEMY_MILESTONES
-	var rewards   := BOSS_MILESTONE_CHIPS if enemy_type == "boss" else ENEMY_MILESTONE_CHIPS
+	var new_unlock := false
 	for i in range(milestones.size()):
 		var key := "kill_%s_%d" % [enemy_type, milestones[i]]
-		if enemy_kills[enemy_type] >= milestones[i] and key not in completed_milestones:
+		if enemy_kills[enemy_type] >= milestones[i] and key not in completed_milestones and key not in claimed_milestones:
 			completed_milestones.append(key)
-			chips += rewards[i]
-			earned += rewards[i]
-	if earned > 0:
+			new_unlock = true
+	if new_unlock:
 		save_data()
-	return earned
 
-func record_core_fire(core_type: String) -> int:
+func record_core_fire(core_type: String) -> void:
 	if core_type not in core_fires:
 		core_fires[core_type] = 0
 	core_fires[core_type] += 1
-	var earned := 0
+	var new_unlock := false
 	for i in range(CORE_MILESTONES.size()):
 		var key := "core_%s_%d" % [core_type, CORE_MILESTONES[i]]
-		if core_fires[core_type] >= CORE_MILESTONES[i] and key not in completed_milestones:
+		if core_fires[core_type] >= CORE_MILESTONES[i] and key not in completed_milestones and key not in claimed_milestones:
 			completed_milestones.append(key)
-			chips += CORE_MILESTONE_CHIPS[i]
-			earned += CORE_MILESTONE_CHIPS[i]
-	if earned > 0:
+			new_unlock = true
+	if new_unlock:
 		save_data()
-	return earned
+
+func claim_milestone(key: String) -> int:
+	if key not in completed_milestones: return 0
+	var reward := _get_milestone_reward(key)
+	completed_milestones.erase(key)
+	claimed_milestones.append(key)
+	chips += reward
+	save_data()
+	return reward
+
+func _get_milestone_reward(key: String) -> int:
+	if key.begins_with("kill_boss_"):
+		var threshold := int(key.split("_")[2])
+		var idx := BOSS_MILESTONES.find(threshold)
+		return BOSS_MILESTONE_CHIPS[idx] if idx >= 0 else 0
+	elif key.begins_with("kill_"):
+		var parts := key.split("_")
+		var threshold := int(parts[parts.size() - 1])
+		var idx := ENEMY_MILESTONES.find(threshold)
+		return ENEMY_MILESTONE_CHIPS[idx] if idx >= 0 else 0
+	elif key.begins_with("core_"):
+		var parts := key.split("_")
+		var threshold := int(parts[parts.size() - 1])
+		var idx := CORE_MILESTONES.find(threshold)
+		return CORE_MILESTONE_CHIPS[idx] if idx >= 0 else 0
+	return 0
+
+func has_unclaimed_milestones() -> bool:
+	return completed_milestones.size() > 0
 
 func _ready() -> void:
 	load_data()
@@ -180,7 +206,8 @@ func save_data() -> void:
 	cfg.set_value("progress", "char_xp_cyclone",     char_xp.get("cyclone", 0))
 	cfg.set_value("chips", "total", chips)
 	cfg.set_value("chips", "completed_milestones", completed_milestones)
-	cfg.set_value("chips", "purchased_upgrades", purchased_upgrades)
+	cfg.set_value("chips", "claimed_milestones",   claimed_milestones)
+	cfg.set_value("chips", "purchased_upgrades",   purchased_upgrades)
 	for k in enemy_kills:
 		cfg.set_value("kills", k, enemy_kills[k])
 	for k in core_fires:
@@ -208,6 +235,9 @@ func load_data() -> void:
 	var ms: Variant = cfg.get_value("chips", "completed_milestones", [])
 	if ms is Array:
 		completed_milestones = ms
+	var cm: Variant = cfg.get_value("chips", "claimed_milestones", [])
+	if cm is Array:
+		claimed_milestones = cm
 	var pu: Variant = cfg.get_value("chips", "purchased_upgrades", [])
 	if pu is Array:
 		purchased_upgrades = pu

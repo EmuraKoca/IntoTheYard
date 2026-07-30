@@ -364,6 +364,173 @@ func _build_shop_button() -> void:
 	btn.pressed.connect(_open_shop)
 	add_child(btn)
 
+	var abtn := Button.new()
+	var pending := GameData.completed_milestones.size()
+	abtn.text = "★  Başarımlar" + ("  [%d]" % pending if pending > 0 else "")
+	abtn.name = "AchievBtn"
+	abtn.add_theme_font_override("font", _font_bold)
+	abtn.add_theme_font_size_override("font_size", 14)
+	abtn.add_theme_color_override("font_color",       Color(1.0, 0.85, 0.0) if pending > 0 else Color(0.6, 0.6, 0.7))
+	abtn.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 1.0))
+	abtn.size     = Vector2(240, 44)
+	abtn.position = Vector2(40, 92)
+	abtn.pressed.connect(_open_achievements)
+	add_child(abtn)
+
+func _milestone_display(key: String) -> Dictionary:
+	var ENEMY_NAMES := {
+		"subject": "Subject", "armored_subject": "Armored Subject",
+		"frantic_subject": "Frantic Subject", "heavy_subject": "Heavy Subject",
+		"cyber_shotgun": "Cyber Shotgun", "cyber_shooter": "Cyber Shooter",
+		"cyber_rifle": "Cyber Rifle", "boss": "Boss"
+	}
+	var CORE_NAMES := {
+		"normal": "Normal Core", "split": "Split Core", "electric": "Electric Core",
+		"pierce": "Pierce Core", "cryo": "Cryo Core", "glitch": "Glitch Core",
+		"water": "Water Core", "fire": "Fire Core", "mimic": "Mimic Core",
+		"leech": "Leech Core", "armor": "Armor Core", "anchor": "Anchor Core",
+		"crusher": "Crusher Core", "kinetic": "Kinetic Core", "bulwark": "Bulwark Core",
+		"siege": "Siege Core", "bloodbound": "Bloodbound Core", "tempered": "Tempered Core",
+		"iron_aura_core": "Iron Aura Core"
+	}
+	var reward := GameData._get_milestone_reward(key)
+	var label := ""
+	if key.begins_with("kill_boss_"):
+		var threshold := key.split("_")[2]
+		label = "Boss — %s öldür" % threshold
+	elif key.begins_with("kill_"):
+		var parts := key.split("_")
+		var threshold := parts[parts.size() - 1]
+		var etype := "_".join(parts.slice(1, parts.size() - 1))
+		var ename: String = ENEMY_NAMES.get(etype, etype)
+		label = "%s — %s öldür" % [ename, threshold]
+	elif key.begins_with("core_"):
+		var parts := key.split("_")
+		var threshold := parts[parts.size() - 1]
+		var ctype := "_".join(parts.slice(1, parts.size() - 1))
+		var cname: String = CORE_NAMES.get(ctype, ctype)
+		label = "%s — %s atış" % [cname, threshold]
+	return {"label": label, "reward": reward}
+
+func _open_achievements() -> void:
+	var canvas := CanvasLayer.new()
+	canvas.layer = 90
+	add_child(canvas)
+
+	var bg := ColorRect.new()
+	bg.color = Color(0.02, 0.02, 0.07, 0.97)
+	bg.size  = Vector2(1920, 1080)
+	canvas.add_child(bg)
+
+	var title := Label.new()
+	title.text = "★  BAŞARIMLAR"
+	title.add_theme_font_override("font", _font_bold)
+	title.add_theme_font_size_override("font_size", 42)
+	title.add_theme_color_override("font_color", Color(1.0, 0.85, 0.0))
+	title.position = Vector2(600, 60)
+	canvas.add_child(title)
+
+	var chip_lbl := Label.new()
+	chip_lbl.name = "ChipLbl"
+	chip_lbl.text = "Bakiye: %d Chip" % GameData.chips
+	chip_lbl.add_theme_font_override("font", _font_bold)
+	chip_lbl.add_theme_font_size_override("font_size", 22)
+	chip_lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.8))
+	chip_lbl.position = Vector2(600, 120)
+	canvas.add_child(chip_lbl)
+
+	# Tüm milestone'ları topla: tamamlanan + claimed (son hali göster)
+	var all_keys: Array = []
+	var ENEMY_TYPES := ["subject","armored_subject","frantic_subject","heavy_subject","cyber_shotgun","cyber_shooter","cyber_rifle"]
+	for etype in ENEMY_TYPES:
+		for threshold in GameData.ENEMY_MILESTONES:
+			all_keys.append("kill_%s_%d" % [etype, threshold])
+	for threshold in GameData.BOSS_MILESTONES:
+		all_keys.append("kill_boss_%d" % threshold)
+
+	var scroll := ScrollContainer.new()
+	scroll.position = Vector2(460, 185)
+	scroll.size     = Vector2(1000, 720)
+	canvas.add_child(scroll)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 10)
+	scroll.add_child(vbox)
+
+	for key in all_keys:
+		var info := _milestone_display(key)
+		var is_completed: bool = key in GameData.completed_milestones
+		var is_claimed: bool   = key in GameData.claimed_milestones
+
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 16)
+		vbox.add_child(row)
+
+		var lbl := Label.new()
+		lbl.text = info["label"]
+		lbl.custom_minimum_size = Vector2(620, 0)
+		lbl.add_theme_font_override("font", _font_bold)
+		lbl.add_theme_font_size_override("font_size", 16)
+		if is_completed:
+			lbl.add_theme_color_override("font_color", Color(0.0, 1.0, 0.7))
+		elif is_claimed:
+			lbl.add_theme_color_override("font_color", Color(0.35, 0.35, 0.35))
+		else:
+			lbl.add_theme_color_override("font_color", Color(0.55, 0.55, 0.6))
+		row.add_child(lbl)
+
+		var reward_lbl := Label.new()
+		reward_lbl.text = "+%d Chip" % info["reward"]
+		reward_lbl.custom_minimum_size = Vector2(120, 0)
+		reward_lbl.add_theme_font_override("font", _font_bold)
+		reward_lbl.add_theme_font_size_override("font_size", 15)
+		reward_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.0) if not is_claimed else Color(0.3, 0.3, 0.3))
+		row.add_child(reward_lbl)
+
+		var collect_btn := Button.new()
+		collect_btn.custom_minimum_size = Vector2(160, 36)
+		collect_btn.add_theme_font_override("font", _font_bold)
+		collect_btn.add_theme_font_size_override("font_size", 14)
+		if is_claimed:
+			collect_btn.text     = "ALINDI ✓"
+			collect_btn.disabled = true
+			collect_btn.add_theme_color_override("font_color", Color(0.3, 0.5, 0.3))
+		elif is_completed:
+			collect_btn.text = "COLLECT"
+			collect_btn.add_theme_color_override("font_color", Color(0.0, 1.0, 0.7))
+			var k: String = key
+			collect_btn.pressed.connect(func():
+				GameData.claim_milestone(k)
+				canvas.queue_free()
+				_open_achievements()
+				_refresh_header_buttons()
+			)
+		else:
+			collect_btn.text     = "COLLECT"
+			collect_btn.disabled = true
+			collect_btn.add_theme_color_override("font_color", Color(0.25, 0.25, 0.28))
+		row.add_child(collect_btn)
+
+	var close_btn := Button.new()
+	close_btn.text = "✕  Kapat"
+	close_btn.add_theme_font_override("font", _font_bold)
+	close_btn.add_theme_font_size_override("font_size", 18)
+	close_btn.add_theme_color_override("font_color", Color(0.8, 0.2, 0.2))
+	close_btn.size     = Vector2(200, 50)
+	close_btn.position = Vector2(860, 940)
+	close_btn.pressed.connect(func(): canvas.queue_free(); _refresh_header_buttons())
+	canvas.add_child(close_btn)
+
+func _refresh_header_buttons() -> void:
+	var sb := get_node_or_null("ShopBtn")
+	if sb:
+		sb.text = "⬡  Chip Mağazası  —  %d Chip" % GameData.chips
+	var ab := get_node_or_null("AchievBtn")
+	if ab:
+		var pending := GameData.completed_milestones.size()
+		ab.text = "★  Başarımlar" + ("  [%d]" % pending if pending > 0 else "")
+		ab.add_theme_color_override("font_color", Color(1.0, 0.85, 0.0) if pending > 0 else Color(0.6, 0.6, 0.7))
+
 func _open_shop() -> void:
 	var canvas := CanvasLayer.new()
 	canvas.layer = 90
@@ -448,9 +615,7 @@ func _open_shop() -> void:
 				if GameData.buy_item(item_id):
 					canvas.queue_free()
 					_open_shop()
-					var sb := get_node_or_null("ShopBtn")
-					if sb:
-						sb.text = "⬡  Chip Mağazası  —  %d Chip" % GameData.chips
+					_refresh_header_buttons()
 			)
 		canvas.add_child(buy_btn)
 

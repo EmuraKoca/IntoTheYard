@@ -1149,6 +1149,7 @@ func subject_died(xp_reward: int = 1, death_pos: Vector2 = Vector2.ZERO, etype: 
 	var _xp := int(float(xp_reward) * GameData.get_shop_xp_mult())
 	GameData.add_xp(GameData.selected_character, _xp)
 	GameData.record_kill(etype)
+
 	var _rip := get_node_or_null("Player")
 	if _rip and _rip.get("has_rogues_instinct") and _rip.has_rogues_instinct:
 		player_hp = min(player_hp + 1, player_max_hp)
