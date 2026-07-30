@@ -3960,3 +3960,35 @@ Meta Progression — Chip Sistemi:
 
   ✅  Cesetler kalıcı yapıldı
      — Fade out sistemi kaldırıldı, cesetler run sonuna kadar sahnede kalır
+
+
+───────────────────────────────────────────────────────
+Sürüm: v0.1.3.0  |  Tarih: 30.07.2026
+───────────────────────────────────────────────────────
+
+Başarım Sistemi — Collect Mekanizması:
+
+  ✅  Chip artık otomatik verilmiyor — collect bekleniyor
+     — Milestone tamamlanınca Chip anında gelmez
+     — Karakter seçim ekranında "Görevler" butonuna basıp COLLECT edilmesi gerekir
+
+  ✅  "Görevler" ve "Black Market" sol panele taşındı
+     — Karakter seçim ekranı sol panelinde sade metin butonlar
+     — Tamamlanmamış görev varsa "Görevler [2]" şeklinde sarı renkte gösterilir
+
+  ✅  Başarım ekranı kategorilere ayrıldı (scrollable liste)
+     — Düşman Öldürme (7 tür × 3 eşik)
+     — Boss (5 eşik)
+     — Reaksiyonlar: Steam / Overheat / Electrocute / Frozen × 3 eşik
+     — Hayatta Kalma: 5 / 10 / 20 dakika × 2-3 eşik
+     — Bir run'da 3+ element kullanma (1 / 10 / 50 kez)
+     — Karaktere Özel: Vector / Leila / Cyclone kill × 3 eşik
+     — Upgrade: toplam kart alımı + Calamity slot doldurma
+
+  ✅  Yeni sayaçlar eklendi (kalıcı, run'lar arası)
+     — Reaksiyon sayıları: steam, overheat, electrocute, frozen
+     — Karaktere özel kill: vector, leila, cyclone
+     — Toplam upgrade alımı
+     — Calamity slot doldurma sayısı
+     — 5 / 10 / 20 dakika hayatta kalma sayısı
+     — Bir run'da 3+ farklı element kullanma sayısı

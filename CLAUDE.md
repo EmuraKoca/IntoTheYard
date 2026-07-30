@@ -36,6 +36,13 @@ köprüsü olarak kullanılır. Her oturum başında oku, her oturum sonunda gü
 - [ ] Kart dengesi: Vector Calamity (0 → en az 4-5 kart)
 - [ ] Bug listesi: Elemental Memory, Volatile Mixture çift tetik, Living Storm döngüsü
 
+**v0.1.3.0 (2026-07-30) — TAMAMLANDI:**
+- [x] Chip collect mekanizması — milestone tamamlanınca otomatik değil, COLLECT butonu ile alınır
+- [x] Görevler + Black Market sol panele taşındı (sade metin butonlar)
+- [x] Başarım ekranı kategorilere ayrıldı, scrollable
+- [x] Yeni başarım kategorileri: Reaksiyonlar, Hayatta Kalma, Karaktere Özel Kill, Upgrade, 3 Element/run
+- [x] Yeni kalıcı sayaçlar: reaction_counts, char_kills, total_upgrades_taken, calamity_filled_count, survival milestones, run_3element_count
+
 ## Kart Dengesi — Hedefler (2026-07-11)
 
 Her karakter hedef: **65 kart**
