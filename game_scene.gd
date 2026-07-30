@@ -254,6 +254,10 @@ var min_spawn_interval = 0.6
 var selected_upgrade_index = -1
 var selected_card_bg = null
 var elapsed_time = 0.0
+var _survival_5_recorded: bool  = false
+var _survival_10_recorded: bool = false
+var _survival_20_recorded: bool = false
+var _elements_used_run: Array   = []
 var cyber_shooter_scene = preload("res://cyber_shooter.tscn")
 var cyber_shotgun_scene = preload("res://cyber_shotgun.tscn")
 var cyber_rifle_scene = preload("res://cyber_rifle.tscn")
@@ -581,6 +585,23 @@ func _show_cards_unlocked(lv_from: int, lv_to: int) -> void:
 
 	get_tree().paused = false
 	canvas.queue_free()
+
+func _check_survival_milestones(minutes: int) -> void:
+	if not _survival_5_recorded and minutes >= 5:
+		_survival_5_recorded = true
+		GameData.record_survival(5)
+	if not _survival_10_recorded and minutes >= 10:
+		_survival_10_recorded = true
+		GameData.record_survival(10)
+	if not _survival_20_recorded and minutes >= 20:
+		_survival_20_recorded = true
+		GameData.record_survival(20)
+
+func record_element_used(element: String) -> void:
+	if element not in _elements_used_run:
+		_elements_used_run.append(element)
+		if _elements_used_run.size() >= 3:
+			GameData.record_run_3element()
 
 func _show_run_end_screen() -> void:
 	get_tree().paused = true
@@ -1149,6 +1170,7 @@ func subject_died(xp_reward: int = 1, death_pos: Vector2 = Vector2.ZERO, etype: 
 	var _xp := int(float(xp_reward) * GameData.get_shop_xp_mult())
 	GameData.add_xp(GameData.selected_character, _xp)
 	GameData.record_kill(etype)
+	GameData.record_char_kill(GameData.selected_character)
 
 	var _rip := get_node_or_null("Player")
 	if _rip and _rip.get("has_rogues_instinct") and _rip.has_rogues_instinct:
@@ -3799,6 +3821,7 @@ func _process(delta: float) -> void:
 		var minutes = int(elapsed_time / 60)
 		var seconds = int(elapsed_time) % 60
 		$UI/LabelTime.text = "⏱  %02d:%02d" % [minutes, seconds]
+		_check_survival_milestones(minutes)
 	# Boss spawn — 10. dakikada bu bölümün boss'u gelir
 	if not _boss_spawned and elapsed_time >= BOSS_SPAWN_TIME:
 		_boss_spawned = true
@@ -3810,6 +3833,9 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 	upgrading = false
 	get_tree().paused = false
 	level += 1
+	GameData.record_upgrade_taken()
+	if calamity_slots.size() >= max_calamity_slots:
+		GameData.record_calamity_filled()
 
 	# ── Kart takibi ───────────────────────────────────────────────────────────
 	if index not in _owned_indices:

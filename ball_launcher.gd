@@ -437,6 +437,11 @@ func _launch_typed_ball(ball_type: String) -> void:
 	ball.queue_redraw()
 	ball.launch(direction)
 	GameData.record_core_fire(ball_type if ball_type != "" else "normal")
+	var _elem_map := {"fire": "fire", "water": "water", "electric": "electric", "cryo": "cryo", "glitch": "glitch"}
+	if ball_type in _elem_map:
+		var _gs := get_parent()
+		if _gs and _gs.has_method("record_element_used"):
+			_gs.record_element_used(_elem_map[ball_type])
 
 	if _sprite:
 		_sprite.modulate = Color(1.0, 1.0, 1.0)

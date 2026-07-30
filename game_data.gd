@@ -30,6 +30,20 @@ var enemy_kills: Dictionary = {
 }
 var core_fires: Dictionary = {}
 
+# Reaksiyon sayaçları
+var reaction_counts: Dictionary = {"steam": 0, "overheat": 0, "electrocute": 0, "frozen": 0}
+
+# Karaktere özel kill
+var char_kills: Dictionary = {"vector": 0, "leila": 0, "cyclone": 0}
+
+# Upgrade / run istatistikleri
+var total_upgrades_taken: int = 0
+var calamity_filled_count: int = 0
+var survival_5min: int = 0
+var survival_10min: int = 0
+var survival_20min: int = 0
+var run_3element_count: int = 0
+
 # Tamamlanan milestone'lar — collect edilmemiş olanlar burada bekler
 var completed_milestones: Array = []
 # Collect edilmiş milestone'lar — bir daha gösterilmez
@@ -42,6 +56,22 @@ const BOSS_MILESTONES: Array = [5, 10, 25, 50, 100]
 const BOSS_MILESTONE_CHIPS: Array = [15, 30, 60, 100, 200]
 const CORE_MILESTONES: Array = [100, 1000, 10000]
 const CORE_MILESTONE_CHIPS: Array = [10, 40, 150]
+const REACTION_MILESTONES: Array = [100, 500, 2000]
+const REACTION_MILESTONE_CHIPS: Array = [15, 50, 150]
+const CHAR_KILL_MILESTONES: Array = [100, 500, 2000]
+const CHAR_KILL_MILESTONE_CHIPS: Array = [20, 60, 150]
+const UPGRADE_MILESTONES: Array = [10, 50, 200]
+const UPGRADE_MILESTONE_CHIPS: Array = [10, 30, 100]
+const CALAMITY_MILESTONES: Array = [1, 5, 20]
+const CALAMITY_MILESTONE_CHIPS: Array = [25, 60, 150]
+const SURVIVAL_5MIN_MILESTONES: Array = [1, 5, 20]
+const SURVIVAL_5MIN_CHIPS: Array = [20, 50, 100]
+const SURVIVAL_10MIN_MILESTONES: Array = [1, 5, 10]
+const SURVIVAL_10MIN_CHIPS: Array = [40, 80, 150]
+const SURVIVAL_20MIN_MILESTONES: Array = [1, 3]
+const SURVIVAL_20MIN_CHIPS: Array = [100, 250]
+const RUN3ELEM_MILESTONES: Array = [1, 10, 50]
+const RUN3ELEM_MILESTONE_CHIPS: Array = [15, 40, 100]
 
 # ── Chip Mağazası ────────────────────────────────────────────────────────────
 var purchased_upgrades: Array = []
@@ -103,6 +133,49 @@ func record_kill(enemy_type: String) -> void:
 	if new_unlock:
 		save_data()
 
+func record_char_kill(char_id: String) -> void:
+	if char_id not in char_kills: char_kills[char_id] = 0
+	char_kills[char_id] += 1
+	_check_generic("charkill_%s" % char_id, char_kills[char_id], CHAR_KILL_MILESTONES)
+
+func record_reaction(rtype: String) -> void:
+	if rtype not in reaction_counts: reaction_counts[rtype] = 0
+	reaction_counts[rtype] += 1
+	_check_generic("react_%s" % rtype, reaction_counts[rtype], REACTION_MILESTONES)
+
+func record_upgrade_taken() -> void:
+	total_upgrades_taken += 1
+	_check_generic("upgrade_total", total_upgrades_taken, UPGRADE_MILESTONES)
+
+func record_calamity_filled() -> void:
+	calamity_filled_count += 1
+	_check_generic("calamity_filled", calamity_filled_count, CALAMITY_MILESTONES)
+
+func record_survival(minutes: int) -> void:
+	match minutes:
+		5:
+			survival_5min += 1
+			_check_generic("survival_5min", survival_5min, SURVIVAL_5MIN_MILESTONES)
+		10:
+			survival_10min += 1
+			_check_generic("survival_10min", survival_10min, SURVIVAL_10MIN_MILESTONES)
+		20:
+			survival_20min += 1
+			_check_generic("survival_20min", survival_20min, SURVIVAL_20MIN_MILESTONES)
+
+func record_run_3element() -> void:
+	run_3element_count += 1
+	_check_generic("run_3element", run_3element_count, RUN3ELEM_MILESTONES)
+
+func _check_generic(prefix: String, value: int, thresholds: Array) -> void:
+	var changed := false
+	for t in thresholds:
+		var key := "%s_%d" % [prefix, t]
+		if value >= t and key not in completed_milestones and key not in claimed_milestones:
+			completed_milestones.append(key)
+			changed = true
+	if changed: save_data()
+
 func record_core_fire(core_type: String) -> void:
 	if core_type not in core_fires:
 		core_fires[core_type] = 0
@@ -126,20 +199,41 @@ func claim_milestone(key: String) -> int:
 	return reward
 
 func _get_milestone_reward(key: String) -> int:
+	var parts := key.split("_")
+	var threshold := int(parts[parts.size() - 1])
 	if key.begins_with("kill_boss_"):
-		var threshold := int(key.split("_")[2])
 		var idx := BOSS_MILESTONES.find(threshold)
 		return BOSS_MILESTONE_CHIPS[idx] if idx >= 0 else 0
 	elif key.begins_with("kill_"):
-		var parts := key.split("_")
-		var threshold := int(parts[parts.size() - 1])
 		var idx := ENEMY_MILESTONES.find(threshold)
 		return ENEMY_MILESTONE_CHIPS[idx] if idx >= 0 else 0
 	elif key.begins_with("core_"):
-		var parts := key.split("_")
-		var threshold := int(parts[parts.size() - 1])
 		var idx := CORE_MILESTONES.find(threshold)
 		return CORE_MILESTONE_CHIPS[idx] if idx >= 0 else 0
+	elif key.begins_with("react_"):
+		var idx := REACTION_MILESTONES.find(threshold)
+		return REACTION_MILESTONE_CHIPS[idx] if idx >= 0 else 0
+	elif key.begins_with("charkill_"):
+		var idx := CHAR_KILL_MILESTONES.find(threshold)
+		return CHAR_KILL_MILESTONE_CHIPS[idx] if idx >= 0 else 0
+	elif key.begins_with("upgrade_total_"):
+		var idx := UPGRADE_MILESTONES.find(threshold)
+		return UPGRADE_MILESTONE_CHIPS[idx] if idx >= 0 else 0
+	elif key.begins_with("calamity_filled_"):
+		var idx := CALAMITY_MILESTONES.find(threshold)
+		return CALAMITY_MILESTONE_CHIPS[idx] if idx >= 0 else 0
+	elif key.begins_with("survival_5min_"):
+		var idx := SURVIVAL_5MIN_MILESTONES.find(threshold)
+		return SURVIVAL_5MIN_CHIPS[idx] if idx >= 0 else 0
+	elif key.begins_with("survival_10min_"):
+		var idx := SURVIVAL_10MIN_MILESTONES.find(threshold)
+		return SURVIVAL_10MIN_CHIPS[idx] if idx >= 0 else 0
+	elif key.begins_with("survival_20min_"):
+		var idx := SURVIVAL_20MIN_MILESTONES.find(threshold)
+		return SURVIVAL_20MIN_CHIPS[idx] if idx >= 0 else 0
+	elif key.begins_with("run_3element_"):
+		var idx := RUN3ELEM_MILESTONES.find(threshold)
+		return RUN3ELEM_MILESTONE_CHIPS[idx] if idx >= 0 else 0
 	return 0
 
 func has_unclaimed_milestones() -> bool:
@@ -212,6 +306,16 @@ func save_data() -> void:
 		cfg.set_value("kills", k, enemy_kills[k])
 	for k in core_fires:
 		cfg.set_value("cores", k, core_fires[k])
+	for k in reaction_counts:
+		cfg.set_value("reactions", k, reaction_counts[k])
+	for k in char_kills:
+		cfg.set_value("char_kills", k, char_kills[k])
+	cfg.set_value("stats", "total_upgrades_taken", total_upgrades_taken)
+	cfg.set_value("stats", "calamity_filled_count", calamity_filled_count)
+	cfg.set_value("stats", "survival_5min",  survival_5min)
+	cfg.set_value("stats", "survival_10min", survival_10min)
+	cfg.set_value("stats", "survival_20min", survival_20min)
+	cfg.set_value("stats", "run_3element_count", run_3element_count)
 	cfg.save(SAVE_PATH)
 
 func load_data() -> void:
@@ -247,3 +351,13 @@ func load_data() -> void:
 	if core_keys is Array:
 		for k in core_keys:
 			core_fires[k] = cfg.get_value("cores", k, 0)
+	for k in reaction_counts:
+		reaction_counts[k] = cfg.get_value("reactions", k, 0)
+	for k in char_kills:
+		char_kills[k] = cfg.get_value("char_kills", k, 0)
+	total_upgrades_taken  = cfg.get_value("stats", "total_upgrades_taken",  0)
+	calamity_filled_count = cfg.get_value("stats", "calamity_filled_count", 0)
+	survival_5min         = cfg.get_value("stats", "survival_5min",         0)
+	survival_10min        = cfg.get_value("stats", "survival_10min",        0)
+	survival_20min        = cfg.get_value("stats", "survival_20min",        0)
+	run_3element_count    = cfg.get_value("stats", "run_3element_count",    0)

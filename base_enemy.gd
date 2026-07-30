@@ -258,6 +258,7 @@ func apply_burn() -> void:
 	_clear_element()
 
 func _react_overheat() -> void:
+	GameData.record_reaction("overheat")
 	_spawn_overheat_vfx()
 	var p := _get_player()
 	var _oh_radius := 150.0
@@ -273,6 +274,7 @@ func apply_frozen() -> void:
 	if is_dead: return
 	if is_frozen:
 		return
+	GameData.record_reaction("frozen")
 	is_frozen = true
 	is_wet = false
 	_set_element("frozen")
@@ -570,6 +572,7 @@ func _check_reaction(incoming: String) -> void:
 		_react_overcharge(dmg_mult, game, player); return
 
 func _react_electrocute(mult: float, game: Node, player: Node) -> void:
+	GameData.record_reaction("electrocute")
 	_last_reaction_type = "electrocute"
 	_spawn_electrocute_vfx()
 	var dmg := int(12 * mult)
@@ -599,6 +602,7 @@ func _react_electrocute(mult: float, game: Node, player: Node) -> void:
 	if health <= 0: die("electric")
 
 func _react_steam(mult: float, game: Node, player: Node) -> void:
+	GameData.record_reaction("steam")
 	_last_reaction_type = "steam"
 	_spawn_steam_vfx()
 	var dmg := int(8 * mult)

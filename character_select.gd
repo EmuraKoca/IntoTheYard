@@ -427,6 +427,32 @@ func _milestone_display(key: String) -> Dictionary:
 		var ctype := "_".join(parts.slice(1, parts.size() - 1))
 		var cname: String = CORE_NAMES.get(ctype, ctype)
 		label = "%s — %s atış" % [cname, threshold]
+	elif key.begins_with("react_steam_"):
+		label = "Steam reaksiyonu — %s kez" % key.split("_")[2]
+	elif key.begins_with("react_overheat_"):
+		label = "Overheat reaksiyonu — %s kez" % key.split("_")[2]
+	elif key.begins_with("react_electrocute_"):
+		label = "Electrocute reaksiyonu — %s kez" % key.split("_")[2]
+	elif key.begins_with("react_frozen_"):
+		label = "Frozen reaksiyonu — %s kez" % key.split("_")[2]
+	elif key.begins_with("survival_5min_"):
+		label = "5 dakika hayatta kal — %s kez" % key.split("_")[2]
+	elif key.begins_with("survival_10min_"):
+		label = "10 dakika hayatta kal — %s kez" % key.split("_")[2]
+	elif key.begins_with("survival_20min_"):
+		label = "20 dakika hayatta kal — %s kez" % key.split("_")[2]
+	elif key.begins_with("run_3element_"):
+		label = "Bir run'da 3+ element kullan — %s kez" % key.split("_")[2]
+	elif key.begins_with("charkill_vector_"):
+		label = "Vector ile %s düşman öldür" % key.split("_")[2]
+	elif key.begins_with("charkill_leila_"):
+		label = "Leila ile %s düşman öldür" % key.split("_")[2]
+	elif key.begins_with("charkill_cyclone_"):
+		label = "Cyclone ile %s düşman öldür" % key.split("_")[2]
+	elif key.begins_with("upgrade_total_"):
+		label = "Toplam %s kart al" % key.split("_")[2]
+	elif key.begins_with("calamity_filled_"):
+		label = "Calamity slotunu %s kez doldur" % key.split("_")[2]
 	return {"label": label, "reward": reward}
 
 func _open_achievements() -> void:
@@ -456,77 +482,111 @@ func _open_achievements() -> void:
 	chip_lbl.position = Vector2(600, 120)
 	canvas.add_child(chip_lbl)
 
-	# Tüm milestone'ları topla: tamamlanan + claimed (son hali göster)
-	var all_keys: Array = []
+	# Tüm milestone'ları kategoriye göre topla
+	var categories: Array = [
+		{"title": "─── Düşman Öldürme ───", "keys": []},
+		{"title": "─── Boss ───",            "keys": []},
+		{"title": "─── Reaksiyonlar ───",    "keys": []},
+		{"title": "─── Hayatta Kalma ───",   "keys": []},
+		{"title": "─── Karaktere Özel ───",  "keys": []},
+		{"title": "─── Upgrade ───",         "keys": []},
+	]
 	var ENEMY_TYPES := ["subject","armored_subject","frantic_subject","heavy_subject","cyber_shotgun","cyber_shooter","cyber_rifle"]
 	for etype in ENEMY_TYPES:
-		for threshold in GameData.ENEMY_MILESTONES:
-			all_keys.append("kill_%s_%d" % [etype, threshold])
-	for threshold in GameData.BOSS_MILESTONES:
-		all_keys.append("kill_boss_%d" % threshold)
-
+		for t in GameData.ENEMY_MILESTONES:
+			categories[0]["keys"].append("kill_%s_%d" % [etype, t])
+	for t in GameData.BOSS_MILESTONES:
+		categories[1]["keys"].append("kill_boss_%d" % t)
+	for rtype in ["steam","overheat","electrocute","frozen"]:
+		for t in GameData.REACTION_MILESTONES:
+			categories[2]["keys"].append("react_%s_%d" % [rtype, t])
+	for t in GameData.SURVIVAL_5MIN_MILESTONES:
+		categories[3]["keys"].append("survival_5min_%d" % t)
+	for t in GameData.SURVIVAL_10MIN_MILESTONES:
+		categories[3]["keys"].append("survival_10min_%d" % t)
+	for t in GameData.SURVIVAL_20MIN_MILESTONES:
+		categories[3]["keys"].append("survival_20min_%d" % t)
+	for t in GameData.RUN3ELEM_MILESTONES:
+		categories[3]["keys"].append("run_3element_%d" % t)
+	for char_id in ["vector","leila","cyclone"]:
+		for t in GameData.CHAR_KILL_MILESTONES:
+			categories[4]["keys"].append("charkill_%s_%d" % [char_id, t])
+	for t in GameData.UPGRADE_MILESTONES:
+		categories[5]["keys"].append("upgrade_total_%d" % t)
+	for t in GameData.CALAMITY_MILESTONES:
+		categories[5]["keys"].append("calamity_filled_%d" % t)
 	var scroll := ScrollContainer.new()
 	scroll.position = Vector2(460, 185)
 	scroll.size     = Vector2(1000, 720)
 	canvas.add_child(scroll)
 
 	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 10)
+	vbox.add_theme_constant_override("separation", 8)
 	scroll.add_child(vbox)
 
-	for key in all_keys:
-		var info := _milestone_display(key)
-		var is_completed: bool = key in GameData.completed_milestones
-		var is_claimed: bool   = key in GameData.claimed_milestones
+	for cat in categories:
+		var cat_lbl := Label.new()
+		cat_lbl.text = cat["title"]
+		cat_lbl.add_theme_font_override("font", _font_bold)
+		cat_lbl.add_theme_font_size_override("font_size", 14)
+		cat_lbl.add_theme_color_override("font_color", Color(0.4, 0.4, 0.5))
+		var spacer := Control.new()
+		spacer.custom_minimum_size = Vector2(0, 6)
+		vbox.add_child(spacer)
+		vbox.add_child(cat_lbl)
+		for key in cat["keys"]:
+			var info := _milestone_display(key)
+			var is_completed: bool = key in GameData.completed_milestones
+			var is_claimed: bool   = key in GameData.claimed_milestones
 
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 16)
-		vbox.add_child(row)
+			var row := HBoxContainer.new()
+			row.add_theme_constant_override("separation", 16)
+			vbox.add_child(row)
 
-		var lbl := Label.new()
-		lbl.text = info["label"]
-		lbl.custom_minimum_size = Vector2(620, 0)
-		lbl.add_theme_font_override("font", _font_bold)
-		lbl.add_theme_font_size_override("font_size", 16)
-		if is_completed:
-			lbl.add_theme_color_override("font_color", Color(0.0, 1.0, 0.7))
-		elif is_claimed:
-			lbl.add_theme_color_override("font_color", Color(0.35, 0.35, 0.35))
-		else:
-			lbl.add_theme_color_override("font_color", Color(0.55, 0.55, 0.6))
-		row.add_child(lbl)
+			var lbl := Label.new()
+			lbl.text = info["label"]
+			lbl.custom_minimum_size = Vector2(620, 0)
+			lbl.add_theme_font_override("font", _font_bold)
+			lbl.add_theme_font_size_override("font_size", 16)
+			if is_completed:
+				lbl.add_theme_color_override("font_color", Color(0.0, 1.0, 0.7))
+			elif is_claimed:
+				lbl.add_theme_color_override("font_color", Color(0.35, 0.35, 0.35))
+			else:
+				lbl.add_theme_color_override("font_color", Color(0.55, 0.55, 0.6))
+			row.add_child(lbl)
 
-		var reward_lbl := Label.new()
-		reward_lbl.text = "+%d Chip" % info["reward"]
-		reward_lbl.custom_minimum_size = Vector2(120, 0)
-		reward_lbl.add_theme_font_override("font", _font_bold)
-		reward_lbl.add_theme_font_size_override("font_size", 15)
-		reward_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.0) if not is_claimed else Color(0.3, 0.3, 0.3))
-		row.add_child(reward_lbl)
+			var reward_lbl := Label.new()
+			reward_lbl.text = "+%d Chip" % info["reward"]
+			reward_lbl.custom_minimum_size = Vector2(120, 0)
+			reward_lbl.add_theme_font_override("font", _font_bold)
+			reward_lbl.add_theme_font_size_override("font_size", 15)
+			reward_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.0) if not is_claimed else Color(0.3, 0.3, 0.3))
+			row.add_child(reward_lbl)
 
-		var collect_btn := Button.new()
-		collect_btn.custom_minimum_size = Vector2(160, 36)
-		collect_btn.add_theme_font_override("font", _font_bold)
-		collect_btn.add_theme_font_size_override("font_size", 14)
-		if is_claimed:
-			collect_btn.text     = "ALINDI ✓"
-			collect_btn.disabled = true
-			collect_btn.add_theme_color_override("font_color", Color(0.3, 0.5, 0.3))
-		elif is_completed:
-			collect_btn.text = "COLLECT"
-			collect_btn.add_theme_color_override("font_color", Color(0.0, 1.0, 0.7))
-			var k: String = key
-			collect_btn.pressed.connect(func():
-				GameData.claim_milestone(k)
-				canvas.queue_free()
-				_open_achievements()
-				_refresh_header_buttons()
-			)
-		else:
-			collect_btn.text     = "COLLECT"
-			collect_btn.disabled = true
-			collect_btn.add_theme_color_override("font_color", Color(0.25, 0.25, 0.28))
-		row.add_child(collect_btn)
+			var collect_btn := Button.new()
+			collect_btn.custom_minimum_size = Vector2(160, 36)
+			collect_btn.add_theme_font_override("font", _font_bold)
+			collect_btn.add_theme_font_size_override("font_size", 14)
+			if is_claimed:
+				collect_btn.text     = "ALINDI ✓"
+				collect_btn.disabled = true
+				collect_btn.add_theme_color_override("font_color", Color(0.3, 0.5, 0.3))
+			elif is_completed:
+				collect_btn.text = "COLLECT"
+				collect_btn.add_theme_color_override("font_color", Color(0.0, 1.0, 0.7))
+				var k: String = key
+				collect_btn.pressed.connect(func():
+					GameData.claim_milestone(k)
+					canvas.queue_free()
+					_open_achievements()
+					_refresh_header_buttons()
+				)
+			else:
+				collect_btn.text     = "COLLECT"
+				collect_btn.disabled = true
+				collect_btn.add_theme_color_override("font_color", Color(0.25, 0.25, 0.28))
+			row.add_child(collect_btn)
 
 	var close_btn := Button.new()
 	close_btn.text = "✕  Kapat"
