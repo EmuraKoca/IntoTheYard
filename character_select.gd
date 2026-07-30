@@ -31,7 +31,7 @@ func _ready() -> void:
 
 	_build_ui()
 	_refresh()
-	_build_shop_button()
+	_build_left_menu()
 
 # ── UI inşası ─────────────────────────────────────────────────────────────────
 func _build_ui() -> void:
@@ -351,31 +351,48 @@ func _on_back() -> void:
 	get_tree().change_scene_to_file("res://main_menu.tscn")
 
 # ── Chip Mağazası ─────────────────────────────────────────────────────────────
-func _build_shop_button() -> void:
-	var btn := Button.new()
-	btn.text = "⬡  Chip Mağazası  —  %d Chip" % GameData.chips
-	btn.name = "ShopBtn"
-	btn.add_theme_font_override("font", _font_bold)
-	btn.add_theme_font_size_override("font_size", 14)
-	btn.add_theme_color_override("font_color",       Color(0.0, 1.0, 0.8))
-	btn.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 1.0))
-	btn.size     = Vector2(320, 44)
-	btn.position = Vector2(40, 40)
-	btn.pressed.connect(_open_shop)
-	add_child(btn)
+func _make_left_btn(label_text: String, col: Color) -> Button:
+	var flat := StyleBoxFlat.new()
+	flat.bg_color = Color(0, 0, 0, 0)
+	flat.border_width_bottom = 0
+	flat.border_width_top    = 0
+	flat.border_width_left   = 0
+	flat.border_width_right  = 0
 
-	var abtn := Button.new()
+	var b := Button.new()
+	b.text = label_text
+	b.flat = true
+	b.add_theme_font_override("font", _font_bold)
+	b.add_theme_font_size_override("font_size", 20)
+	b.add_theme_color_override("font_color",       col)
+	b.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 1.0))
+	b.add_theme_color_override("font_pressed_color", col.lightened(0.3))
+	b.add_theme_stylebox_override("normal",  flat)
+	b.add_theme_stylebox_override("hover",   flat)
+	b.add_theme_stylebox_override("pressed", flat)
+	b.add_theme_stylebox_override("focus",   flat)
+	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	return b
+
+func _build_left_menu() -> void:
+	var info := $InfoPanel
+
+	var spacer := Control.new()
+	spacer.custom_minimum_size = Vector2(0, 24)
+	info.add_child(spacer)
+
 	var pending := GameData.completed_milestones.size()
-	abtn.text = "★  Başarımlar" + ("  [%d]" % pending if pending > 0 else "")
-	abtn.name = "AchievBtn"
-	abtn.add_theme_font_override("font", _font_bold)
-	abtn.add_theme_font_size_override("font_size", 14)
-	abtn.add_theme_color_override("font_color",       Color(1.0, 0.85, 0.0) if pending > 0 else Color(0.6, 0.6, 0.7))
-	abtn.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 1.0))
-	abtn.size     = Vector2(240, 44)
-	abtn.position = Vector2(40, 92)
-	abtn.pressed.connect(_open_achievements)
-	add_child(abtn)
+	var gorev_text := "Görevler" + ("  [%d]" % pending if pending > 0 else "")
+	var gorev_col  := Color(1.0, 0.85, 0.0) if pending > 0 else Color(0.7, 0.7, 0.75)
+	var gorev_btn  := _make_left_btn(gorev_text, gorev_col)
+	gorev_btn.name = "AchievBtn"
+	gorev_btn.pressed.connect(_open_achievements)
+	info.add_child(gorev_btn)
+
+	var market_btn := _make_left_btn("Black Market", Color(0.0, 1.0, 0.8))
+	market_btn.name = "ShopBtn"
+	market_btn.pressed.connect(_open_shop)
+	info.add_child(market_btn)
 
 func _milestone_display(key: String) -> Dictionary:
 	var ENEMY_NAMES := {
@@ -522,14 +539,11 @@ func _open_achievements() -> void:
 	canvas.add_child(close_btn)
 
 func _refresh_header_buttons() -> void:
-	var sb := get_node_or_null("ShopBtn")
-	if sb:
-		sb.text = "⬡  Chip Mağazası  —  %d Chip" % GameData.chips
-	var ab := get_node_or_null("AchievBtn")
+	var ab := $InfoPanel.get_node_or_null("AchievBtn")
 	if ab:
 		var pending := GameData.completed_milestones.size()
-		ab.text = "★  Başarımlar" + ("  [%d]" % pending if pending > 0 else "")
-		ab.add_theme_color_override("font_color", Color(1.0, 0.85, 0.0) if pending > 0 else Color(0.6, 0.6, 0.7))
+		ab.text = "Görevler" + ("  [%d]" % pending if pending > 0 else "")
+		ab.add_theme_color_override("font_color", Color(1.0, 0.85, 0.0) if pending > 0 else Color(0.7, 0.7, 0.75))
 
 func _open_shop() -> void:
 	var canvas := CanvasLayer.new()
