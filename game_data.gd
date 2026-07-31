@@ -89,7 +89,6 @@ const SHOP_ITEMS: Array = [
 	{"id": "cal_start",    "name": "Hızlı Başlangıç",           "desc": "Run başında +1 rastgele Calamity", "base_cost": 90, "cost_inc": 15, "max_stack": 2, "chars": [],      "color": Color(1.0, 0.6, 0.0)},
 	{"id": "dash_up",      "name": "Kinetik Atlama",            "desc": "Dash hakkı +1",               "base_cost": 80,  "cost_inc": 0,  "max_stack": 1, "chars": [],           "color": Color(0.9, 0.5, 1.0)},
 	{"id": "armor_up",     "name": "Titanyum Tabaka",           "desc": "Başlangıç Armor +5",          "base_cost": 40,  "cost_inc": 10, "max_stack": 3, "chars": ["vector"],   "color": Color(0.5, 0.8, 1.0)},
-	{"id": "leila_unlock", "name": "Leila — Erişim Kodu",       "desc": "Leila karakterini aç",        "base_cost": 150, "cost_inc": 0,  "max_stack": 1, "chars": ["vector","cyclone"], "color": Color(1.0, 0.18, 0.47)},
 ]
 
 func shop_stack(item_id: String, char_id: String = "") -> int:
@@ -118,8 +117,6 @@ func buy_item(item_id: String) -> bool:
 	chips -= cost
 	if cid not in purchased_upgrades: purchased_upgrades[cid] = {}
 	purchased_upgrades[cid][item_id] = purchased_upgrades[cid].get(item_id, 0) + 1
-	if item_id == "leila_unlock":
-		unlock_character("leila")
 	save_data()
 	return true
 
