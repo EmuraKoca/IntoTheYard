@@ -1080,6 +1080,9 @@ func _ready() -> void:
 	var char_type: String = get_node("Player").character_type
 	var _shop_hp: int    = GameData.get_shop_hp_bonus()
 	var _shop_arm: int   = GameData.get_shop_armor_bonus()
+	var _p_node := get_node("Player")
+	_p_node.max_dash_charges += GameData.get_shop_dash_bonus()
+	_p_node.dash_charges = _p_node.max_dash_charges
 	if char_type == "vector":
 		player_hp        = 40 + _shop_hp
 		player_max_hp    = 40 + _shop_hp

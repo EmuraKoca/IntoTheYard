@@ -87,6 +87,7 @@ const SHOP_ITEMS: Array = [
 	{"id": "xp_up",        "name": "Veri Emici",                "desc": "Düşmanlar +%10 XP verir",    "base_cost": 70,  "cost_inc": 10, "max_stack": 3, "chars": [],           "color": Color(0.8, 0.4, 1.0)},
 	{"id": "cal_slot",     "name": "Ek Calamity Yuvası",        "desc": "Maksimum Calamity Slotu +1",  "base_cost": 80,  "cost_inc": 15, "max_stack": 2, "chars": [],           "color": Color(1.0, 0.4, 0.0)},
 	{"id": "cal_start",    "name": "Hızlı Başlangıç",           "desc": "Run başında +1 rastgele Calamity", "base_cost": 90, "cost_inc": 15, "max_stack": 2, "chars": [],      "color": Color(1.0, 0.6, 0.0)},
+	{"id": "dash_up",      "name": "Kinetik Atlama",            "desc": "Dash hakkı +1",               "base_cost": 80,  "cost_inc": 0,  "max_stack": 1, "chars": [],           "color": Color(0.9, 0.5, 1.0)},
 	{"id": "armor_up",     "name": "Titanyum Tabaka",           "desc": "Başlangıç Armor +5",          "base_cost": 40,  "cost_inc": 10, "max_stack": 3, "chars": ["vector"],   "color": Color(0.5, 0.8, 1.0)},
 	{"id": "leila_unlock", "name": "Leila — Erişim Kodu",       "desc": "Leila karakterini aç",        "base_cost": 150, "cost_inc": 0,  "max_stack": 1, "chars": ["vector","cyclone"], "color": Color(1.0, 0.18, 0.47)},
 ]
@@ -142,6 +143,9 @@ func get_shop_calamity_slot_bonus() -> int:
 
 func get_shop_start_calamity_count() -> int:
 	return shop_stack("cal_start")
+
+func get_shop_dash_bonus() -> int:
+	return shop_stack("dash_up")
 
 func record_kill(enemy_type: String) -> void:
 	if enemy_type not in enemy_kills:
