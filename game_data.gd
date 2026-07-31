@@ -91,19 +91,19 @@ const SHOP_ITEMS: Array = [
 	{"id": "leila_unlock", "name": "Leila — Erişim Kodu",       "desc": "Leila karakterini aç",        "base_cost": 150, "cost_inc": 0,  "max_stack": 1, "chars": ["vector","cyclone"], "color": Color(1.0, 0.18, 0.47)},
 ]
 
-func get_stack(item_id: String, char_id: String = "") -> int:
+func shop_stack(item_id: String, char_id: String = "") -> int:
 	var cid := char_id if char_id != "" else selected_character
 	if cid not in purchased_upgrades: return 0
 	return purchased_upgrades[cid].get(item_id, 0)
 
 func get_item_cost(item: Dictionary, char_id: String = "") -> int:
-	return item["base_cost"] + get_stack(item["id"], char_id) * item["cost_inc"]
+	return item["base_cost"] + shop_stack(item["id"], char_id) * item["cost_inc"]
 
 func can_buy(item: Dictionary, char_id: String = "") -> bool:
 	var cid := char_id if char_id != "" else selected_character
 	var allowed: Array = item.get("chars", [])
 	if allowed.size() > 0 and cid not in allowed: return false
-	if get_stack(item["id"], cid) >= item["max_stack"]: return false
+	if shop_stack(item["id"], cid) >= item["max_stack"]: return false
 	return chips >= get_item_cost(item, cid)
 
 func buy_item(item_id: String) -> bool:
@@ -123,25 +123,25 @@ func buy_item(item_id: String) -> bool:
 	return true
 
 func get_shop_hp_bonus() -> int:
-	return get_stack("hp_up") * 10
+	return shop_stack("hp_up") * 10
 
 func get_shop_armor_bonus() -> int:
-	return get_stack("armor_up") * 5
+	return shop_stack("armor_up") * 5
 
 func get_shop_core_bonus() -> int:
-	return get_stack("core_up")
+	return shop_stack("core_up")
 
 func get_shop_speed_mult() -> float:
-	return 1.0 + get_stack("speed_up") * 0.05
+	return 1.0 + shop_stack("speed_up") * 0.05
 
 func get_shop_xp_mult() -> float:
-	return 1.0 + get_stack("xp_up") * 0.1
+	return 1.0 + shop_stack("xp_up") * 0.1
 
 func get_shop_calamity_slot_bonus() -> int:
-	return get_stack("cal_slot")
+	return shop_stack("cal_slot")
 
 func get_shop_start_calamity_count() -> int:
-	return get_stack("cal_start")
+	return shop_stack("cal_start")
 
 func record_kill(enemy_type: String) -> void:
 	if enemy_type not in enemy_kills:

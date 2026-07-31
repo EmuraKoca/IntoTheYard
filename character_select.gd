@@ -645,7 +645,7 @@ func _open_shop() -> void:
 		var item: Dictionary = visible_items[i]
 		var row_y := 195 + i * 100
 		var col: Color = item["color"]
-		var stack: int     = GameData.get_stack(item["id"], char_id)
+		var stack: int     = GameData.shop_stack(item["id"], char_id)
 		var max_s: int     = item["max_stack"]
 		var maxed: bool    = stack >= max_s
 		var cost: int      = GameData.get_item_cost(item, char_id)
