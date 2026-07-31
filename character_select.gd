@@ -606,6 +606,9 @@ func _refresh_header_buttons() -> void:
 		ab.add_theme_color_override("font_color", Color(1.0, 0.85, 0.0) if pending > 0 else Color(0.7, 0.7, 0.75))
 
 func _open_shop() -> void:
+	var char_id: String = CHARS[_cur]["id"]
+	var char_col: Color = CHARS[_cur]["color"]
+
 	var canvas := CanvasLayer.new()
 	canvas.layer = 90
 	add_child(canvas)
@@ -616,80 +619,96 @@ func _open_shop() -> void:
 	canvas.add_child(bg)
 
 	var title := Label.new()
-	title.text = "⬡  CHİP MAĞAZASI"
+	title.text = "⬡  BLACK MARKET  —  %s" % CHARS[_cur]["name"].to_upper()
 	title.add_theme_font_override("font", _font_bold)
-	title.add_theme_font_size_override("font_size", 42)
-	title.add_theme_color_override("font_color", Color(0.0, 1.0, 0.8))
-	title.position = Vector2(600, 60)
+	title.add_theme_font_size_override("font_size", 38)
+	title.add_theme_color_override("font_color", char_col)
+	title.position = Vector2(480, 55)
 	canvas.add_child(title)
 
 	var chip_lbl := Label.new()
-	chip_lbl.name = "ChipLbl"
 	chip_lbl.text = "Bakiye: %d Chip" % GameData.chips
 	chip_lbl.add_theme_font_override("font", _font_bold)
 	chip_lbl.add_theme_font_size_override("font_size", 22)
 	chip_lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.8))
-	chip_lbl.position = Vector2(600, 120)
+	chip_lbl.position = Vector2(480, 115)
 	canvas.add_child(chip_lbl)
 
-	var items: Array = GameData.SHOP_ITEMS
-	for i in items.size():
-		var item: Dictionary = items[i]
-		var row_y := 200 + i * 110
+	# Sadece bu karaktere uygun itemları filtrele
+	var visible_items: Array = []
+	for item in GameData.SHOP_ITEMS:
+		var allowed: Array = item.get("chars", [])
+		if allowed.size() == 0 or char_id in allowed:
+			visible_items.append(item)
+
+	for i in visible_items.size():
+		var item: Dictionary = visible_items[i]
+		var row_y := 195 + i * 100
 		var col: Color = item["color"]
-		var bought: bool = GameData.is_purchased(item["id"])
+		var stack: int     = GameData.get_stack(item["id"], char_id)
+		var max_s: int     = item["max_stack"]
+		var maxed: bool    = stack >= max_s
+		var cost: int      = GameData.get_item_cost(item, char_id)
+		var affordable: bool = GameData.chips >= cost
 
 		var box := ColorRect.new()
-		box.color    = Color(col.r * 0.06, col.g * 0.06, col.b * 0.1, 0.85) if not bought else Color(0.05, 0.05, 0.05, 0.7)
-		box.size     = Vector2(860, 90)
-		box.position = Vector2(530, row_y)
+		box.color    = Color(col.r*0.06, col.g*0.06, col.b*0.1, 0.85) if not maxed else Color(0.04,0.04,0.04,0.7)
+		box.size     = Vector2(900, 82)
+		box.position = Vector2(510, row_y)
 		canvas.add_child(box)
 
 		var border := ColorRect.new()
-		border.color    = Color(col.r, col.g, col.b, 0.4) if not bought else Color(0.2, 0.2, 0.2, 0.4)
-		border.size     = Vector2(862, 92)
-		border.position = Vector2(529, row_y - 1)
+		border.color    = Color(col.r, col.g, col.b, 0.35) if not maxed else Color(0.18,0.18,0.18,0.4)
+		border.size     = Vector2(902, 84)
+		border.position = Vector2(509, row_y - 1)
 		border.z_index  = -1
 		canvas.add_child(border)
 
 		var name_lbl := Label.new()
 		name_lbl.text = item["name"]
 		name_lbl.add_theme_font_override("font", _font_bold)
-		name_lbl.add_theme_font_size_override("font_size", 18)
-		name_lbl.add_theme_color_override("font_color", col if not bought else Color(0.35, 0.35, 0.35))
-		name_lbl.position = Vector2(550, row_y + 10)
+		name_lbl.add_theme_font_size_override("font_size", 17)
+		name_lbl.add_theme_color_override("font_color", col if not maxed else Color(0.3,0.3,0.3))
+		name_lbl.position = Vector2(528, row_y + 8)
 		canvas.add_child(name_lbl)
 
 		var desc_lbl := Label.new()
 		desc_lbl.text = item["desc"]
 		desc_lbl.add_theme_font_override("font", _font_regular)
-		desc_lbl.add_theme_font_size_override("font_size", 14)
-		desc_lbl.add_theme_color_override("font_color", Color(0.65, 0.65, 0.7) if not bought else Color(0.3, 0.3, 0.3))
-		desc_lbl.position = Vector2(550, row_y + 38)
+		desc_lbl.add_theme_font_size_override("font_size", 13)
+		desc_lbl.add_theme_color_override("font_color", Color(0.6,0.6,0.65) if not maxed else Color(0.28,0.28,0.28))
+		desc_lbl.position = Vector2(528, row_y + 36)
 		canvas.add_child(desc_lbl)
+
+		# Stack göstergesi (0/3 kutucuklar)
+		for si in max_s:
+			var sq := ColorRect.new()
+			sq.size     = Vector2(16, 16)
+			sq.position = Vector2(960 + si * 22, row_y + 32)
+			sq.color    = col if si < stack else Color(0.15, 0.15, 0.18)
+			canvas.add_child(sq)
 
 		var buy_btn := Button.new()
 		buy_btn.add_theme_font_override("font", _font_bold)
-		buy_btn.add_theme_font_size_override("font_size", 15)
-		buy_btn.size     = Vector2(160, 44)
-		buy_btn.position = Vector2(1210, row_y + 23)
-		if bought:
-			buy_btn.text     = "ALINDI ✓"
+		buy_btn.add_theme_font_size_override("font_size", 14)
+		buy_btn.size     = Vector2(155, 42)
+		buy_btn.position = Vector2(1255, row_y + 20)
+		if maxed:
+			buy_btn.text     = "MAX ✓"
 			buy_btn.disabled = true
-			buy_btn.add_theme_color_override("font_color", Color(0.3, 0.6, 0.3))
-		elif GameData.chips < item["cost"]:
-			buy_btn.text     = "%d Chip" % item["cost"]
+			buy_btn.add_theme_color_override("font_color", Color(0.3,0.6,0.3))
+		elif not affordable:
+			buy_btn.text     = "%d Chip" % cost
 			buy_btn.disabled = true
-			buy_btn.add_theme_color_override("font_color", Color(0.4, 0.4, 0.4))
+			buy_btn.add_theme_color_override("font_color", Color(0.38,0.38,0.38))
 		else:
-			buy_btn.text = "%d Chip" % item["cost"]
-			buy_btn.add_theme_color_override("font_color", Color(0.0, 1.0, 0.8))
-			var item_id: String = item["id"]
+			buy_btn.text = "%d Chip" % cost
+			buy_btn.add_theme_color_override("font_color", Color(0.0,1.0,0.8))
+			var iid: String = item["id"]
 			buy_btn.pressed.connect(func():
-				if GameData.buy_item(item_id):
+				if GameData.buy_item(iid):
 					canvas.queue_free()
 					_open_shop()
-					_refresh_header_buttons()
 			)
 		canvas.add_child(buy_btn)
 
@@ -697,8 +716,8 @@ func _open_shop() -> void:
 	close_btn.text = "✕  Kapat"
 	close_btn.add_theme_font_override("font", _font_bold)
 	close_btn.add_theme_font_size_override("font_size", 18)
-	close_btn.add_theme_color_override("font_color", Color(0.8, 0.2, 0.2))
+	close_btn.add_theme_color_override("font_color", Color(0.8,0.2,0.2))
 	close_btn.size     = Vector2(200, 50)
-	close_btn.position = Vector2(860, 940)
+	close_btn.position = Vector2(860, 950)
 	close_btn.pressed.connect(func(): canvas.queue_free())
 	canvas.add_child(close_btn)

@@ -74,50 +74,74 @@ const RUN3ELEM_MILESTONES: Array = [1, 10, 50]
 const RUN3ELEM_MILESTONE_CHIPS: Array = [15, 40, 100]
 
 # ── Chip Mağazası ────────────────────────────────────────────────────────────
-var purchased_upgrades: Array = []
+# purchased_upgrades[char_id][item_id] = stack sayısı
+var purchased_upgrades: Dictionary = {
+	"vector": {}, "leila": {}, "cyclone": {}
+}
 
+# chars: [] = tüm karakterler, ["vector"] = sadece Vector vb.
 const SHOP_ITEMS: Array = [
-	{"id": "hp_up",       "name": "Güçlendirilmiş Biyometri", "desc": "Başlangıç HP +10",          "cost": 50,  "color": Color(0.2, 1.0, 0.5)},
-	{"id": "armor_up",    "name": "Titanyum Tabaka",           "desc": "Başlangıç Armor +5",         "cost": 40,  "color": Color(0.5, 0.8, 1.0)},
-	{"id": "core_up",     "name": "Ekstra Orbit Slotu",        "desc": "Başlangıçta +1 Core",        "cost": 75,  "color": Color(1.0, 0.8, 0.0)},
-	{"id": "speed_up",    "name": "Overclock Protokolü",       "desc": "Core hızı +%5",              "cost": 60,  "color": Color(0.0, 1.0, 1.0)},
-	{"id": "xp_up",       "name": "Veri Emici",                "desc": "Düşmanlar +%10 XP verir",   "cost": 80,  "color": Color(0.8, 0.4, 1.0)},
-	{"id": "leila_unlock","name": "Leila — Erişim Kodu",       "desc": "Leila karakterini aç",       "cost": 150, "color": Color(1.0, 0.18, 0.47)},
+	{"id": "hp_up",        "name": "Güçlendirilmiş Biyometri", "desc": "Başlangıç HP +10",            "base_cost": 50,  "cost_inc": 10, "max_stack": 3, "chars": [],           "color": Color(0.2, 1.0, 0.5)},
+	{"id": "core_up",      "name": "Ekstra Orbit Slotu",        "desc": "Başlangıçta +1 Normal Core",  "base_cost": 60,  "cost_inc": 10, "max_stack": 3, "chars": [],           "color": Color(1.0, 0.8, 0.0)},
+	{"id": "speed_up",     "name": "Overclock Protokolü",       "desc": "Core hızı +%5",               "base_cost": 60,  "cost_inc": 10, "max_stack": 3, "chars": [],           "color": Color(0.0, 1.0, 1.0)},
+	{"id": "xp_up",        "name": "Veri Emici",                "desc": "Düşmanlar +%10 XP verir",    "base_cost": 70,  "cost_inc": 10, "max_stack": 3, "chars": [],           "color": Color(0.8, 0.4, 1.0)},
+	{"id": "cal_slot",     "name": "Ek Calamity Yuvası",        "desc": "Maksimum Calamity Slotu +1",  "base_cost": 80,  "cost_inc": 15, "max_stack": 2, "chars": [],           "color": Color(1.0, 0.4, 0.0)},
+	{"id": "cal_start",    "name": "Hızlı Başlangıç",           "desc": "Run başında +1 rastgele Calamity", "base_cost": 90, "cost_inc": 15, "max_stack": 2, "chars": [],      "color": Color(1.0, 0.6, 0.0)},
+	{"id": "armor_up",     "name": "Titanyum Tabaka",           "desc": "Başlangıç Armor +5",          "base_cost": 40,  "cost_inc": 10, "max_stack": 3, "chars": ["vector"],   "color": Color(0.5, 0.8, 1.0)},
+	{"id": "leila_unlock", "name": "Leila — Erişim Kodu",       "desc": "Leila karakterini aç",        "base_cost": 150, "cost_inc": 0,  "max_stack": 1, "chars": ["vector","cyclone"], "color": Color(1.0, 0.18, 0.47)},
 ]
 
-func is_purchased(item_id: String) -> bool:
-	return item_id in purchased_upgrades
+func get_stack(item_id: String, char_id: String = "") -> int:
+	var cid := char_id if char_id != "" else selected_character
+	if cid not in purchased_upgrades: return 0
+	return purchased_upgrades[cid].get(item_id, 0)
+
+func get_item_cost(item: Dictionary, char_id: String = "") -> int:
+	return item["base_cost"] + get_stack(item["id"], char_id) * item["cost_inc"]
+
+func can_buy(item: Dictionary, char_id: String = "") -> bool:
+	var cid := char_id if char_id != "" else selected_character
+	var allowed: Array = item.get("chars", [])
+	if allowed.size() > 0 and cid not in allowed: return false
+	if get_stack(item["id"], cid) >= item["max_stack"]: return false
+	return chips >= get_item_cost(item, cid)
 
 func buy_item(item_id: String) -> bool:
-	if is_purchased(item_id): return false
 	var item: Dictionary = {}
 	for s in SHOP_ITEMS:
-		if s["id"] == item_id:
-			item = s
-			break
+		if s["id"] == item_id: item = s; break
 	if item.is_empty(): return false
-	if chips < item["cost"]: return false
-	chips -= item["cost"]
-	purchased_upgrades.append(item_id)
+	var cid := selected_character
+	if not can_buy(item, cid): return false
+	var cost := get_item_cost(item, cid)
+	chips -= cost
+	if cid not in purchased_upgrades: purchased_upgrades[cid] = {}
+	purchased_upgrades[cid][item_id] = purchased_upgrades[cid].get(item_id, 0) + 1
 	if item_id == "leila_unlock":
 		unlock_character("leila")
 	save_data()
 	return true
 
 func get_shop_hp_bonus() -> int:
-	return 10 if is_purchased("hp_up") else 0
+	return get_stack("hp_up") * 10
 
 func get_shop_armor_bonus() -> int:
-	return 5 if is_purchased("armor_up") else 0
+	return get_stack("armor_up") * 5
 
 func get_shop_core_bonus() -> int:
-	return 1 if is_purchased("core_up") else 0
+	return get_stack("core_up")
 
 func get_shop_speed_mult() -> float:
-	return 1.05 if is_purchased("speed_up") else 1.0
+	return 1.0 + get_stack("speed_up") * 0.05
 
 func get_shop_xp_mult() -> float:
-	return 1.1 if is_purchased("xp_up") else 1.0
+	return 1.0 + get_stack("xp_up") * 0.1
+
+func get_shop_calamity_slot_bonus() -> int:
+	return get_stack("cal_slot")
+
+func get_shop_start_calamity_count() -> int:
+	return get_stack("cal_start")
 
 func record_kill(enemy_type: String) -> void:
 	if enemy_type not in enemy_kills:
@@ -301,7 +325,9 @@ func save_data() -> void:
 	cfg.set_value("chips", "total", chips)
 	cfg.set_value("chips", "completed_milestones", completed_milestones)
 	cfg.set_value("chips", "claimed_milestones",   claimed_milestones)
-	cfg.set_value("chips", "purchased_upgrades",   purchased_upgrades)
+	for cid in purchased_upgrades:
+		for iid in purchased_upgrades[cid]:
+			cfg.set_value("shop_%s" % cid, iid, purchased_upgrades[cid][iid])
 	for k in enemy_kills:
 		cfg.set_value("kills", k, enemy_kills[k])
 	for k in core_fires:
@@ -342,9 +368,11 @@ func load_data() -> void:
 	var cm: Variant = cfg.get_value("chips", "claimed_milestones", [])
 	if cm is Array:
 		claimed_milestones = cm
-	var pu: Variant = cfg.get_value("chips", "purchased_upgrades", [])
-	if pu is Array:
-		purchased_upgrades = pu
+	for cid in ["vector", "leila", "cyclone"]:
+		purchased_upgrades[cid] = {}
+		if cfg.has_section("shop_%s" % cid):
+			for iid in cfg.get_section_keys("shop_%s" % cid):
+				purchased_upgrades[cid][iid] = cfg.get_value("shop_%s" % cid, iid, 0)
 	for k in enemy_kills:
 		enemy_kills[k] = cfg.get_value("kills", k, 0)
 	var core_keys: Variant = cfg.get_section_keys("cores") if cfg.has_section("cores") else []

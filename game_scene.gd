@@ -1113,6 +1113,13 @@ func _ready() -> void:
 	_update_armor_ui()
 	_run_start_level = GameData.get_level(GameData.selected_character)
 	_run_start_chips = GameData.chips
+	max_calamity_slots = 3 + GameData.get_shop_calamity_slot_bonus()
+	var _cal_start := GameData.get_shop_start_calamity_count()
+	if _cal_start > 0:
+		var _cal_pool := ["⚡", "🔥", "🌀", "🔮", "❄️", "💧", "☠️"]
+		_cal_pool.shuffle()
+		for _ci in range(min(_cal_start, max_calamity_slots)):
+			calamity_slots.append(_cal_pool[_ci])
 	$UI/CalamityCircle.visible = false
 
 	await get_tree().process_frame
