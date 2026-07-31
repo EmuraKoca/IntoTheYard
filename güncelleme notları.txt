@@ -3992,3 +3992,34 @@ Başarım Sistemi — Collect Mekanizması:
      — Calamity slot doldurma sayısı
      — 5 / 10 / 20 dakika hayatta kalma sayısı
      — Bir run'da 3+ farklı element kullanma sayısı
+
+
+───────────────────────────────────────────────────────
+Sürüm: v0.1.3.1  |  Tarih: 31.07.2026
+───────────────────────────────────────────────────────
+
+Chip Mağazası Güncellemesi & Bugfix:
+
+  ✅  Chip Mağazası yeniden tasarlandı — karakter bazlı
+     — Her karakterin ayrı mağazası var; karakter değişince mağaza içeriği güncellenir
+     — Satın alınan upgrade sadece ilgili karakteri etkiler
+     — Ortak havuz (tüm karakterler):
+       · Güçlendirilmiş Biyometri — Başlangıç HP +10 (50 Chip, 3× alınabilir)
+       · Ekstra Orbit Slotu — Başlangıçta +1 Normal Core (60 Chip, 3× alınabilir)
+       · Overclock Protokolü — Core hızı +%5 (60 Chip, 3× alınabilir)
+       · Veri Emici — Düşmanlar +%10 XP verir (70 Chip, 3× alınabilir)
+       · Ek Calamity Yuvası — Maksimum Calamity Slotu +1 (80 Chip, 2× alınabilir)
+       · Hızlı Başlangıç — Run başında +1 rastgele Calamity (90 Chip, 2× alınabilir)
+       · Kinetik Atlama — Dash hakkı +1 (80 Chip, 1× alınabilir)
+     — Sadece Vector:
+       · Titanyum Tabaka — Başlangıç Armor +5 (40 Chip, 3× alınabilir)
+
+  ✅  Leila unlock mağazadan kaldırıldı
+     — Karakter açma boss öldürmeye bağlı, Chip Mağazası'nda yeri yok
+
+  🔧  Bugfix: ölü bedenler Connected Core ile etkileşince tekrar kalkıp ölüyordu
+     — is_dead guard eklendi (base_enemy.gd)
+
+  🔧  Bugfix: get_stack() GDScript built-in çakışması giderildi → shop_stack()
+
+  🔧  Bugfix: Object.get() 2 argüman hatası düzeltildi (is_dead default kaldırıldı)
