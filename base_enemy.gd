@@ -165,7 +165,7 @@ func take_damage(amount, from_ally: bool = false) -> void:
 		var p := _get_player()
 		if p and p.get("has_static_charge") and p.has_static_charge:
 			for body in get_tree().get_nodes_in_group("subjects"):
-				if body != self and is_instance_valid(body) and body.get("is_electrified") and body.is_electrified:
+				if body != self and is_instance_valid(body) and not body.get("is_dead", false) and body.get("is_electrified") and body.is_electrified:
 					if global_position.distance_to(body.global_position) < 150.0:
 						body.health -= int(amount * 0.4)
 						if body.health <= 0: body.die()
@@ -174,6 +174,7 @@ func take_damage(amount, from_ally: bool = false) -> void:
 		die()
 
 func die(cause: String = "normal") -> void:
+	if is_dead: return
 	# Virus Beacon Core: Antivirus'lü düşman ölürse 3s boyunca yakına stack yay
 	if is_antivirused and antivirus_stacks > 0:
 		for ball in get_tree().get_nodes_in_group("player_balls"):
