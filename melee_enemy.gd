@@ -1,6 +1,6 @@
 extends "res://base_enemy.gd"
 
-func take_damage(amount, from_ally: bool = false) -> void:
+func take_damage(amount, from_ally: bool = false, kill_cause: String = "normal") -> void:
 	health -= amount
 	if is_electrified and not from_ally:
 		var p := _get_player()

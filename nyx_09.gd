@@ -622,7 +622,7 @@ func _draw() -> void:
 	if _bolt_flash > 0.0:
 		draw_circle(Vector2.ZERO, 45.0 * _bolt_flash, Color(0.0, 0.55, 1.0, _bolt_flash * 0.45))
 
-func take_damage(amount: int, _from_ally: bool = false) -> void:
+func take_damage(amount: int, _from_ally: bool = false, _kill_cause: String = "normal") -> void:
 	if is_dead: return
 	health -= amount
 	var game := get_parent()

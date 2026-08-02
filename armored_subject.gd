@@ -22,6 +22,9 @@ func get_walk_anim_prefix() -> String:
 func _get_died_anim_base() -> String:
 	return "res://assets/enemys/armedSubject/animations/died/"
 
+func _get_effective_death_base() -> String:
+	return "res://assets/effectiveDeathAnimations/armedSubject/"
+
 func _setup_sprite() -> void:
 	var sprite: AnimatedSprite2D = $ArmedSprite
 	var frames := SpriteFrames.new()

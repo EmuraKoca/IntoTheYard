@@ -16,6 +16,9 @@ func get_sprite() -> AnimatedSprite2D:
 func _get_died_anim_base() -> String:
 	return "res://assets/enemys/cyberRifle/animations/died/"
 
+func _get_effective_death_base() -> String:
+	return "res://assets/effectiveDeathAnimations/cyberRifle/"
+
 func _setup_sprite() -> void:
 	var sprite: AnimatedSprite2D = $RifleSprite
 	var frames := SpriteFrames.new()

@@ -19,6 +19,9 @@ func get_walk_anim_prefix() -> String:
 func _get_died_anim_base() -> String:
 	return "res://assets/enemys/franticSubject/Top-down_pixel_art_game_sprite/animations/died/"
 
+func _get_effective_death_base() -> String:
+	return "res://assets/effectiveDeathAnimations/franticSubject/"
+
 func _setup_sprite() -> void:
 	var sprite: AnimatedSprite2D = $FranticSprite
 	var frames := SpriteFrames.new()

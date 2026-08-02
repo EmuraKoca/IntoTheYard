@@ -439,7 +439,7 @@ func _spawn_missile_vfx(pos: Vector2) -> void:
 # ══════════════════════════════════════════════════════════
 # HASAR & ÖLÜM
 # ══════════════════════════════════════════════════════════
-func take_damage(amount: int, _from_ally: bool = false) -> void:
+func take_damage(amount: int, _from_ally: bool = false, _kill_cause: String = "normal") -> void:
 	if is_dead:
 		return
 	health -= amount

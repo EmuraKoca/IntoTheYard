@@ -1514,7 +1514,8 @@ func _hit_subject(subject: Node2D) -> void:
 		if _glitch_count >= 5:
 			total_damage = int(float(total_damage) * 1.2)
 
-	subject.take_damage(total_damage)
+	var _kill_cause := "brutal" if (can_siege or can_crusher) else "normal"
+	subject.take_damage(total_damage, false, _kill_cause)
 
 	# Ricochet Core: düşmana çarpınca hızı sıfırla
 	if can_ricochet_core:

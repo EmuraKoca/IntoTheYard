@@ -4023,3 +4023,37 @@ Chip Mağazası Güncellemesi & Bugfix:
   🔧  Bugfix: get_stack() GDScript built-in çakışması giderildi → shop_stack()
 
   🔧  Bugfix: Object.get() 2 argüman hatası düzeltildi (is_dead default kaldırıldı)
+
+
+───────────────────────────────────────────────────────
+Sürüm: v0.1.3.2  |  Tarih: 02.08.2026
+───────────────────────────────────────────────────────
+
+Elemental Ölüm Animasyonları:
+
+  ✅  Ölüm sebebine göre farklı animasyon oynatılıyor
+     — Siege Core / Crusher Core çarpması → brutalDeath
+     — Yanarak ölüm (is_burning) → burnDeath
+     — Donarak ölüm (is_frozen) → frozenDeath
+     — Elektriğe çarparak ölüm (is_electrified) → electrocutionDeath
+     — Diğer ölümler → mevcut varsayılan animasyon
+     — 7 düşman tipi için uygulandı
+
+Ceset Sistemi:
+
+  ✅  Cesetler 30 saniye yerde kalıyor, sonra 1.5 saniyede soluklaşarak kayboluyor
+
+Bugfix:
+
+  🔧  Donmuş düşman ölünce yeniden kalkma hatası giderildi
+     — apply_frozen await sonrası is_dead kontrolü eklendi
+
+  🔧  Ölüler yaşayanların altında kalıyor
+     — Ölüm anında z_index 2 → 0'a düşürülüyor
+
+  🔧  Ölünce element indikatörleri ve VFX temizleniyor
+     — elem_indicator, cryo/freeze/melt/electrocute sprite'ları anında kaldırılıyor
+
+  🔧  Upgrade XP eşiği artırıldı
+     — Başlangıç: 40 → 150 (≈15 XP), her levelda ×2 (eski: ×1.35)
+     — Güçlü düşmanlar (5 XP) artık 5× daha hızlı bar dolduruyor

@@ -16,6 +16,9 @@ func get_sprite() -> AnimatedSprite2D:
 func _get_died_anim_base() -> String:
 	return "res://assets/enemys/cyberShooter/animations/died/"
 
+func _get_effective_death_base() -> String:
+	return "res://assets/effectiveDeathAnimations/cyberShooter/"
+
 func _get_died_frame_count() -> int:
 	return 7
 

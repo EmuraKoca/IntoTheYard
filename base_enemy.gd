@@ -57,6 +57,9 @@ func _get_died_anim_base() -> String:
 func _get_died_frame_count() -> int:
 	return 9
 
+func _get_effective_death_base() -> String:
+	return ""
+
 func _add_died_anims(frames: SpriteFrames) -> void:
 	var base := _get_died_anim_base()
 	if base == "": return
@@ -69,6 +72,29 @@ func _add_died_anims(frames: SpriteFrames) -> void:
 		frames.set_animation_loop(key, false)
 		for i in range(count):
 			frames.add_frame(key, load(base + dir_name + "/frame_%03d.png" % i))
+	# Elemental / brutal ölüm animasyonları
+	var eff_base := _get_effective_death_base()
+	if eff_base == "": return
+	var eff_types := {
+		"brutal_":    "brutalDeath",
+		"burn_":      "burnDeath",
+		"frozen_":    "frozenDeath",
+		"electric_":  "electrocutionDeath",
+	}
+	for prefix: String in eff_types:
+		var folder: String = eff_types[prefix]
+		for dir_name: String in ["south-east", "south-west"]:
+			var frame_path := eff_base + folder + "/" + dir_name + "/frame_000.png"
+			if not ResourceLoader.exists(frame_path): continue
+			var key: String = prefix + dir_name
+			if frames.has_animation(key): frames.remove_animation(key)
+			frames.add_animation(key)
+			frames.set_animation_speed(key, 12.0)
+			frames.set_animation_loop(key, false)
+			var i := 0
+			while ResourceLoader.exists(eff_base + folder + "/" + dir_name + "/frame_%03d.png" % i):
+				frames.add_frame(key, load(eff_base + folder + "/" + dir_name + "/frame_%03d.png" % i))
+				i += 1
 
 func _elem_indicator_y_offset() -> float:
 	return -68.0
@@ -148,7 +174,7 @@ func _update_anim_dir_from_velocity() -> void:
 
 # ── Hasar & Ölüm ─────────────────────────────────────────────────────────────
 
-func take_damage(amount, from_ally: bool = false) -> void:
+func take_damage(amount, from_ally: bool = false, kill_cause: String = "normal") -> void:
 	if is_dead: return
 	if get("is_marked") and is_marked:
 		amount = int(amount * 1.1)
@@ -171,7 +197,7 @@ func take_damage(amount, from_ally: bool = false) -> void:
 						if body.health <= 0: body.die()
 	if health <= 0:
 		_on_lethal_damage(from_ally)
-		die()
+		die(kill_cause)
 
 func die(cause: String = "normal") -> void:
 	if is_dead: return
@@ -217,7 +243,23 @@ func die(cause: String = "normal") -> void:
 	var spr := get_sprite()
 	if spr:
 		var died_dir := "south-west" if _anim_dir in ["W", "NW", "SW"] else "south-east"
-		if spr.sprite_frames and spr.sprite_frames.has_animation("died_" + died_dir):
+		# Element/cause öncelik sırası: brutal > burn > frozen > electric > normal
+		var anim_type: String
+		if cause == "brutal":
+			anim_type = "brutal_"
+		elif is_burning or cause == "burn":
+			anim_type = "burn_"
+		elif is_frozen or cause == "freeze":
+			anim_type = "frozen_"
+		elif is_electrified or cause == "electric":
+			anim_type = "electric_"
+		else:
+			anim_type = "died_"
+		var anim_key := anim_type + died_dir
+		if spr.sprite_frames and spr.sprite_frames.has_animation(anim_key):
+			spr.play(anim_key)
+			await spr.animation_finished
+		elif spr.sprite_frames and spr.sprite_frames.has_animation("died_" + died_dir):
 			spr.play("died_" + died_dir)
 			await spr.animation_finished
 	_register_corpse()
@@ -775,7 +817,12 @@ func _notify_reaction(game: Node, player: Node) -> void:
 # ── Ceset yönetimi ───────────────────────────────────────────────────────────
 
 func _register_corpse() -> void:
-	pass
+	await get_tree().create_timer(30.0).timeout
+	if not is_instance_valid(self): return
+	var tween := create_tween()
+	tween.tween_property(self, "modulate:a", 0.0, 1.5)
+	await tween.finished
+	if is_instance_valid(self): queue_free()
 
 # ── VFX ──────────────────────────────────────────────────────────────────────
 
