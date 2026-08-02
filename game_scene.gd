@@ -511,6 +511,18 @@ func _show_cards_unlocked(lv_from: int, lv_to: int) -> void:
 			card_sprite.position = Vector2(tx, card_y)
 			canvas.add_child(card_sprite)
 
+			# Kart art görseli
+			var _art_path := _get_card_art_path(u, char_id2)
+			if _art_path != "" and ResourceLoader.exists(_art_path):
+				var art_tex: Texture2D = load(_art_path)
+				var art_rect := TextureRect.new()
+				art_rect.texture = art_tex
+				art_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+				art_rect.size = Vector2(card_w - 40, 200)
+				art_rect.position = Vector2(tx + 20, card_y + 30)
+				art_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+				canvas.add_child(art_rect)
+
 			var name_panel := Panel.new()
 			name_panel.size = Vector2(card_w - 52, 44)
 			name_panel.position = Vector2(tx + 26, card_y + card_h - 116)
@@ -2478,6 +2490,18 @@ func _build_all_upgrades() -> void:
 
 	_all_upgrades = upgrades.duplicate()
 
+func _get_card_art_path(card: Dictionary, char_id: String) -> String:
+	var category: String = card.get("category", "")
+	var card_name: String = card.get("name", "")
+	var file_name := card_name.to_lower().replace(" ", "_") + "_art.png"
+	var char_folder: String = ({"vector": "Vector", "leila": "Leila", "cyclone": "Cyclone"} as Dictionary).get(char_id, "")
+	var cat_folder: String = ({"Identity": "identityCards", "Utility": "utilityCards",
+		"Individuality": "individualityCards", "Calamity": "calamityCards"} as Dictionary).get(category, "")
+	if char_folder == "" or cat_folder == "":
+		return ""
+	var path := "res://assets/upgradeCardsArt/%s/%s/%s" % [char_folder, cat_folder, file_name]
+	return path
+
 func show_upgrade_menu() -> void:
 	upgrading = true
 	# Void Resonance: her dalga başında reaksiyon sayacı sıfırla
@@ -2517,7 +2541,6 @@ func show_upgrade_menu() -> void:
 		else:
 			return _fp.special_core_count < 5
 	)
-	# Rarity ağırlıklı seçim: 3 kart için 3 kez rarity çek, o rarity'den kart al
 	upgrades = _pick_rarity_weighted_cards(upgrades, level, 3)
 	
 	var canvas = CanvasLayer.new()
@@ -2582,6 +2605,25 @@ func show_upgrade_menu() -> void:
 		card_sprite.size = Vector2(card_width, card_height)
 		card_sprite.position = Vector2(tx, ty)
 		canvas.add_child(card_sprite)
+
+		# Kart art görseli
+		var _art_path2 := _get_card_art_path(upgrade, char_id)
+		if _art_path2 != "" and ResourceLoader.exists(_art_path2):
+			var art_bg := ColorRect.new()
+			art_bg.color = Color(0.04, 0.04, 0.08, 1.0)
+			art_bg.size = Vector2(card_width - 48, 185)
+			art_bg.position = Vector2(tx + 24, ty + 55)
+			art_bg.z_index = 2
+			canvas.add_child(art_bg)
+			var art_tex2: Texture2D = load(_art_path2)
+			var art_rect2 := TextureRect.new()
+			art_rect2.texture = art_tex2
+			art_rect2.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			art_rect2.size = Vector2(card_width - 48, 185)
+			art_rect2.position = Vector2(tx + 24, ty + 55)
+			art_rect2.z_index = 3
+			art_rect2.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			canvas.add_child(art_rect2)
 
 		# ── Kategori etiketi (kart üst mavi bandı) ───────────────────────────
 		# PNG 162×241 → oyun 280×400 (scale=1.660, yatay margin=5.5)
