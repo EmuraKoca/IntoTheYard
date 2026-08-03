@@ -817,7 +817,7 @@ func _notify_reaction(game: Node, player: Node) -> void:
 # ── Ceset yönetimi ───────────────────────────────────────────────────────────
 
 func _register_corpse() -> void:
-	await get_tree().create_timer(30.0).timeout
+	await get_tree().create_timer(15.0).timeout
 	if not is_instance_valid(self): return
 	var tween := create_tween()
 	tween.tween_property(self, "modulate:a", 0.0, 1.5)

@@ -2607,16 +2607,18 @@ func show_upgrade_menu() -> void:
 		canvas.add_child(card_sprite)
 
 		# Kart art görseli
+		var art_bg2: ColorRect = null
+		var art_rect2: TextureRect = null
 		var _art_path2 := _get_card_art_path(upgrade, char_id)
 		if _art_path2 != "" and ResourceLoader.exists(_art_path2):
-			var art_bg := ColorRect.new()
-			art_bg.color = Color(0.04, 0.04, 0.08, 1.0)
-			art_bg.size = Vector2(card_width - 48, 185)
-			art_bg.position = Vector2(tx + 24, ty + 55)
-			art_bg.z_index = 2
-			canvas.add_child(art_bg)
+			art_bg2 = ColorRect.new()
+			art_bg2.color = Color(0.04, 0.04, 0.08, 1.0)
+			art_bg2.size = Vector2(card_width - 48, 185)
+			art_bg2.position = Vector2(tx + 24, ty + 55)
+			art_bg2.z_index = 2
+			canvas.add_child(art_bg2)
 			var art_tex2: Texture2D = load(_art_path2)
-			var art_rect2 := TextureRect.new()
+			art_rect2 = TextureRect.new()
 			art_rect2.texture = art_tex2
 			art_rect2.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 			art_rect2.size = Vector2(card_width - 48, 185)
@@ -2745,13 +2747,17 @@ func show_upgrade_menu() -> void:
 		canvas.add_child(click_area)
 
 		# ── Card entry animation: bottom to top, staggered ─────────────────────
-		var card_anim_nodes: Array = [card_sprite, name_label, desc_label, click_area]
+		var card_anim_nodes: Array = [card_sprite]
+		if art_bg2 != null: card_anim_nodes.append(art_bg2)
+		if art_rect2 != null: card_anim_nodes.append(art_rect2)
+		card_anim_nodes.append_array([name_label, desc_label, click_area])
 		var card_target_ys: Array = []
 		for anim_node in card_anim_nodes:
 			card_target_ys.append(anim_node.position.y)
 			anim_node.position.y += 160.0
-		for anim_node in [card_sprite, name_label, desc_label]:
-			anim_node.modulate.a = 0.0
+		for anim_node in card_anim_nodes:
+			if anim_node != click_area:
+				anim_node.modulate.a = 0.0
 
 		var slide_tw := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 		slide_tw.tween_interval(i * 0.13)

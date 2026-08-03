@@ -1417,6 +1417,8 @@ func _hit_subject(subject: Node2D) -> void:
 			fusion_zone.add_energy_from_hit(hit_type)
 	if not is_instance_valid(subject):
 		return
+	if subject.get("is_dead") and subject.is_dead:
+		return
 	if subject in hit_subjects:
 		return
 	hit_subjects.append(subject)
