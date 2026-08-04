@@ -3996,8 +3996,8 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 		ally_chip_duration += 5.0
 	# ── Vector Armor — Individuality ─────────────────────────────────────────
 	elif index == 30:  # Blood for Steel
-		player_hp = max(1, player_hp - 10)
 		player_max_hp = max(1, player_max_hp - 10)
+		player_hp = min(player_hp, player_max_hp)
 		player_max_armor += 10
 		player_armor_cap += 10
 		_update_armor_ui()
