@@ -284,7 +284,7 @@ var _rts_overlay: CanvasLayer = null
 
 # ── Veri Barı ─────────────────────────────────────────────────────────────────
 var _data_current:    float      = 0.0
-var _data_max:        float      = 150.0
+var _data_max:        float      = 20.0
 var _data_bar_canvas: CanvasLayer = null
 var _data_bar_fill:   ColorRect   = null
 var _data_bar_label:  Label       = null
@@ -2266,7 +2266,7 @@ func _build_all_upgrades() -> void:
 	# Lv2: Armor ekonomisi
 	{"name": "Last Stand",          "category": "Utility",       "color": Color(1.0, 0.6, 0.0), "desc": "Low HP → bonus Core Speed\n& Armor Gain efficiency", "index": 38, "weight": 5, "rarity": "rare", "chars": ["vector"], "min_level": 3},
 	{"name": "Pain Converter",      "category": "Individuality", "color": Color(0.8, 0.2, 0.3), "desc": "HP <50%  →  Armor Gain +50%",                "index": 31, "weight": 5, "rarity": "rare",     "chars": ["vector"], "min_level": 3},
-	{"name": "Scar Tissue",         "category": "Individuality", "color": Color(0.6, 0.1, 0.1), "desc": "-5 HP  |  +Armor Cap  |  +Armor Regen",      "index": 33, "weight": 5, "rarity": "rare",     "chars": ["vector"], "min_level": 3},
+	{"name": "Scar Tissue",         "category": "Individuality", "color": Color(0.6, 0.1, 0.1), "desc": "-10 Max HP  |  +Armor Cap  |  +Armor Regen",  "index": 33, "weight": 5, "rarity": "rare",     "chars": ["vector"], "min_level": 3},
 	{"name": "Blood Circuit",       "category": "Individuality", "color": Color(0.8, 0.1, 0.1), "desc": "HP <= %70: Core Speed scales up to +%50",    "index": 51, "weight": 5, "rarity": "rare",     "chars": ["vector"], "min_level": 3},
 	{"name": "Kinetic Nervous System","category":"Individuality", "color": Color(0.2, 0.9, 0.6), "desc": "Momentum cap +10\n(20 → 30)", "index": 55, "weight": 4, "rarity": "rare", "chars": ["vector"], "min_level": 3},
 	# Lv3: Risk / Ödül
@@ -4008,7 +4008,8 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 		var p := get_node("Player")
 		p.has_adrenal_surge = true
 	elif index == 33:  # Scar Tissue
-		player_hp = max(1, player_hp - 5)
+		player_max_hp = max(1, player_max_hp - 10)
+		player_hp = min(player_hp, player_max_hp)
 		player_armor_cap += 5
 		player_max_armor = max(player_max_armor, player_armor_cap)
 		player_armor_regen_rate += 1.0
