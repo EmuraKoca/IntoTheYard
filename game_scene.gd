@@ -2606,12 +2606,13 @@ func show_upgrade_menu() -> void:
 		canvas.add_child(card_sprite)
 
 		# Kart art görseli
-		var art_bg2: ColorRect = null
+		var art_bg2: Control = null
 		var art_rect2: TextureRect = null
 		var _art_path2 := _get_card_art_path(upgrade, char_id)
 		if _art_path2 != "" and ResourceLoader.exists(_art_path2):
-			art_bg2 = ColorRect.new()
-			art_bg2.color = Color(0.04, 0.04, 0.08, 1.0)
+			art_bg2 = TextureRect.new()
+			(art_bg2 as TextureRect).texture = load("res://assets/upgradeCardsArt/cardArtBackground.png")
+			(art_bg2 as TextureRect).stretch_mode = TextureRect.STRETCH_TILE
 			art_bg2.size = Vector2(card_width - 48, 185)
 			art_bg2.position = Vector2(tx + 24, ty + 55)
 			art_bg2.z_index = 2

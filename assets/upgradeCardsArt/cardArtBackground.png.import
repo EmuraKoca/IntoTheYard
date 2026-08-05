@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bfv2240akaryc"
-path="res://.godot/imported/blood_circuit_art.png-9cea3273411d0e06f17fbfdc8c841688.ctex"
+uid="uid://se8gxvy4bhbo"
+path="res://.godot/imported/cardArtBackground.png-c156cd6f8ee57f9c581fb5268cebce61.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/upgradeCardsArt/Vector/individualityCards/blood_circuit_art.png"
-dest_files=["res://.godot/imported/blood_circuit_art.png-9cea3273411d0e06f17fbfdc8c841688.ctex"]
+source_file="res://assets/upgradeCardsArt/cardArtBackground.png"
+dest_files=["res://.godot/imported/cardArtBackground.png-c156cd6f8ee57f9c581fb5268cebce61.ctex"]
 
 [params]
 
