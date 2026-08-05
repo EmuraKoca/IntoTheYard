@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d0h1xbufrbvi6"
-path="res://.godot/imported/gravitional_fore_art.png-a7afde256ec7ddd3610a413444604ce4.ctex"
+uid="uid://1f7ok2ha5jc4"
+path="res://.godot/imported/gravitational_force_art.png-ca4347cfd15daa2915183264838b331b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/upgradeCardsArt/Vector/calamityCards/gravitional_fore_art.png"
-dest_files=["res://.godot/imported/gravitional_fore_art.png-a7afde256ec7ddd3610a413444604ce4.ctex"]
+source_file="res://assets/upgradeCardsArt/Vector/calamityCards/gravitational_force_art.png"
+dest_files=["res://.godot/imported/gravitational_force_art.png-ca4347cfd15daa2915183264838b331b.ctex"]
 
 [params]
 
