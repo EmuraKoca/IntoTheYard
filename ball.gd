@@ -59,6 +59,9 @@ var can_arc: bool      = false  # Electrified düşmana çarptığında debuff 2
 var can_echo: bool     = false  # Düşmanın elementini kopyala, dönüşte uygula
 var _echo_element: String = ""  # Echo Core'un kopyaladığı element
 var can_orbit: bool    = false  # Orbit'te kalır, random element uygular
+var _orbit_element_timer: float = 0.0
+const ORBIT_ELEMENT_INTERVAL: float = 2.0
+const ORBIT_ELEMENT_RADIUS: float = 55.0
 var is_inner_core: bool = false  # İç yörüngede kalır, hiç fırlatılmaz
 var is_normal_core: bool = false  # Başlangıç normal topu — küçük scale
 var inner_core_type: String = ""
@@ -495,6 +498,13 @@ func _physics_process(delta: float) -> void:
 	# İç yörünge: yakın düşmanlara Antivirus uygula
 	if is_inner_core and state == "orbiting":
 		_inner_core_tick(delta)
+
+	# Prism Core: orbit'te beklerken yakındaki düşmanlara rastgele element uygula
+	if can_orbit and state == "orbiting":
+		_orbit_element_timer -= delta
+		if _orbit_element_timer <= 0.0:
+			_orbit_element_timer = ORBIT_ELEMENT_INTERVAL
+			_prism_apply_random_element()
 
 	match state:
 		"orbiting":  _process_orbiting(delta); return
@@ -1103,6 +1113,17 @@ func _get_defense_base_damage() -> int:
 	elif can_leech:   fd = 2
 	else:             fd = 5
 	return max(int(fd * 0.5), 1)
+
+func _prism_apply_random_element() -> void:
+	var elements := ["fire", "water", "electric", "cryo"]
+	for body in get_tree().get_nodes_in_group("subjects"):
+		if not is_instance_valid(body): continue
+		if global_position.distance_to(body.global_position) > ORBIT_ELEMENT_RADIUS: continue
+		match elements[randi() % elements.size()]:
+			"fire":     if body.has_method("apply_burn"):        body.apply_burn()
+			"water":    if body.has_method("apply_wet"):         body.apply_wet()
+			"electric": if body.has_method("apply_electrified"): body.apply_electrified()
+			"cryo":     if body.has_method("apply_slow"):        body.apply_slow(0.4, 2.0)
 
 func _spawn_steam_cloud(pos: Vector2) -> void:
 	var game := get_node_or_null("/root/GameScene")
@@ -2087,13 +2108,6 @@ func _hit_subject(subject: Node2D) -> void:
 	if can_voltaic and is_instance_valid(subject) and subject.get("is_electrified") and subject.is_electrified:
 		_voltaic_chain(subject, total_damage, 3)
 
-	# Tempest Core: Her duvar sekmesinde element değişir (duvar sekmesinde tetiklenir)
-	if can_tempest and is_instance_valid(subject):
-		match _tempest_elements[_tempest_index % _tempest_elements.size()]:
-			"electric": subject.apply_electrified()
-			"cryo":     subject.apply_slow(slow_amount)
-			"water":    subject.apply_wet()
-			"fire":     subject.apply_burn()
 
 	# Scatter Core: Vuruşta 3 küçük elemental parça
 	if can_scatter and is_instance_valid(subject):
