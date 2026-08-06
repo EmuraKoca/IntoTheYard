@@ -837,6 +837,7 @@ func _auto_fire() -> void:
 var _inner_tick_timer: float = 0.0
 var _inner_tick_timer_b: float = 0.0  # ikincil cooldown (core tipine özel)
 var _anchor_still_time: float = 0.0   # Anchor Pulse Core: hareketsizlik sayacı
+var _static_aura_cd: Dictionary = {}  # Static Aura Core: per-enemy 3s CD (enemy instance_id → time_left)
 const INNER_TICK_INTERVAL: float = 1.0
 const INNER_TICK_RADIUS: float = 50.0
 
@@ -855,6 +856,10 @@ func _inner_core_tick(delta: float) -> void:
 
 	_inner_tick_timer -= delta
 	_inner_tick_timer_b -= delta
+	for key in _static_aura_cd.keys():
+		_static_aura_cd[key] -= delta
+		if _static_aura_cd[key] <= 0.0:
+			_static_aura_cd.erase(key)
 	if _inner_tick_timer > 0.0: return
 	_inner_tick_timer = INNER_TICK_INTERVAL
 	var player := _get_player()
@@ -937,17 +942,20 @@ func _inner_core_tick(delta: float) -> void:
 						subject.apply_slow(0.3, 2.0)
 
 		"static_aura_core":
-			# Her 1s: 60px içindeki düşmanlara Electrified uygula (3s CD/düşman)
+			# 60px içine giren düşmanlara Electrified uygula (3s CD/düşman)
 			for subject in get_tree().get_nodes_in_group("subjects"):
 				if not is_instance_valid(subject): continue
-				if global_position.distance_to(subject.global_position) <= 60.0:
-					if subject.has_method("apply_electrified") and not subject.get("is_electrified"):
-						subject.apply_electrified()
+				if global_position.distance_to(subject.global_position) > 60.0: continue
+				var sid := subject.get_instance_id()
+				if _static_aura_cd.has(sid): continue
+				if subject.has_method("apply_electrified"):
+					subject.apply_electrified()
+					_static_aura_cd[sid] = 3.0
 
 		"catalyst_pulse_core":
-			# Her 5s: 120px'teki debufflı düşmanların sürelerini +1s uzat
+			# Her 3s: 120px'teki debufflı düşmanların sürelerini +1s uzat
 			if _inner_tick_timer_b > 0.0: return
-			_inner_tick_timer_b = 5.0
+			_inner_tick_timer_b = 3.0
 			for subject in get_tree().get_nodes_in_group("subjects"):
 				if not is_instance_valid(subject): continue
 				if global_position.distance_to(subject.global_position) > 120.0: continue
