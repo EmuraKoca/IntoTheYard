@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c1vhyo4cjou42"
-path="res://.godot/imported/frame_000.png-ced352865507c38923b581196c1a2acc.ctex"
+uid="uid://delq7w8vwbwaq"
+path="res://.godot/imported/static_aura_core.png-601dcd19050d1992b026d884f76d2d8e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/balls/staticAuraCore/frame_000.png"
-dest_files=["res://.godot/imported/frame_000.png-ced352865507c38923b581196c1a2acc.ctex"]
+source_file="res://assets/upgradeCardsArt/Leila/identityCards/static_aura_core.png"
+dest_files=["res://.godot/imported/static_aura_core.png-601dcd19050d1992b026d884f76d2d8e.ctex"]
 
 [params]
 
