@@ -51,7 +51,7 @@ var can_bloodbound: bool = false
 var _blood_trail_timer: float = 0.0
 var _fire_trail_timer: float = 0.0
 var _shadow_primed: bool = false   # Shadow Strike: duvar sekmesi sonrası ilk vuruş
-var can_tempered: bool = false
+var can_tempered: bool = false  # Tempered Core
 # ── Leila yeni core flag'leri ─────────────────────────────────────────────────
 var can_plasma: bool   = false  # Electrified'a sekme
 var can_steam: bool    = false  # Wet hedef → küçük AoE
@@ -68,10 +68,10 @@ var inner_core_type: String = ""
 var can_scatter: bool  = false  # Vuruşta 3 küçük elemental parça
 var can_catalyst: bool = false  # Mevcut debuff süresini uzatır
 var can_voltaic: bool  = false  # Electrified düşman ölünce zincir
-var can_tempest: bool    = false  # Her duvar sekmesinde element değişir
-var can_prismatic: bool  = false  # Her düşman isabetinde random element değişir
-var _tempest_elements: Array = ["electric", "cryo", "water", "fire"]
-var _tempest_index: int = 0
+var can_echo_resonance: bool = false  # Her 5s: yakın debufflı düşmanın debuffını yayar
+var _echo_res_timer: float = 0.0
+const ECHO_RES_INTERVAL: float = 5.0
+const ECHO_RES_RADIUS: float = 80.0
 # ── Cyclone yeni core flag'leri ───────────────────────────────────────────────
 var can_antivirus_core: bool   = false  # İsabette 1 Antivirus stack
 var can_decay: bool            = false  # İsabette 1 Decay stack (max 3)
@@ -505,6 +505,13 @@ func _physics_process(delta: float) -> void:
 		if _orbit_element_timer <= 0.0:
 			_orbit_element_timer = ORBIT_ELEMENT_INTERVAL
 			_prism_apply_random_element()
+
+	# Echo Resonance Core: her 5s, yakın debufflı düşmanın debuffını yayar
+	if can_echo_resonance and state == "orbiting":
+		_echo_res_timer -= delta
+		if _echo_res_timer <= 0.0:
+			_echo_res_timer = ECHO_RES_INTERVAL
+			_echo_resonance_spread()
 
 	match state:
 		"orbiting":  _process_orbiting(delta); return
@@ -1133,6 +1140,40 @@ func _prism_apply_random_element() -> void:
 			"electric": if body.has_method("apply_electrified"): body.apply_electrified()
 			"cryo":     if body.has_method("apply_slow"):        body.apply_slow(0.4, 2.0)
 
+func _echo_resonance_spread() -> void:
+	var all_subjects := get_tree().get_nodes_in_group("subjects")
+	# 80px içindeki düşmanları bul
+	var nearby := all_subjects.filter(func(b): return is_instance_valid(b) and global_position.distance_to(b.global_position) <= ECHO_RES_RADIUS)
+	if nearby.is_empty(): return
+	# En yakın debufflı düşmanı bul
+	var source: Node = null
+	var source_dist: float = INF
+	for body in nearby:
+		var has_debuff: bool = (body.get("is_burning") and body.is_burning) or \
+							   (body.get("is_wet") and body.is_wet) or \
+							   (body.get("is_electrified") and body.is_electrified) or \
+							   (body.get("is_slowed") and body.is_slowed) or \
+							   (body.get("is_frozen") and body.is_frozen)
+		if not has_debuff: continue
+		var d := global_position.distance_to(body.global_position)
+		if d < source_dist:
+			source_dist = d
+			source = body
+	if not is_instance_valid(source): return
+	# Debuffları diğer yakın düşmanlara yay
+	for body in nearby:
+		if body == source: continue
+		if source.get("is_burning") and source.is_burning and body.has_method("apply_burn"):
+			body.apply_burn()
+		if source.get("is_wet") and source.is_wet and body.has_method("apply_wet"):
+			body.apply_wet()
+		if source.get("is_electrified") and source.is_electrified and body.has_method("apply_electrified"):
+			body.apply_electrified()
+		if source.get("is_slowed") and source.is_slowed and body.has_method("apply_slow"):
+			body.apply_slow(0.4, 2.0)
+		if source.get("is_frozen") and source.is_frozen and body.has_method("apply_frozen"):
+			body.apply_frozen()
+
 func _spawn_steam_cloud(pos: Vector2) -> void:
 	var game := get_node_or_null("/root/GameScene")
 	if not is_instance_valid(game): return
@@ -1227,6 +1268,7 @@ func _get_ball_type_str() -> String:
 	if can_bloodbound:       return "bloodbound"
 	if can_tempered:         return "tempered"
 	if can_voltaic:          return "voltaic"
+	if can_echo_resonance:   return "echo_resonance_core"
 	if can_plasma:           return "plasma"
 	if can_arc:              return "arc"
 	if can_steam:            return "steam"
@@ -1234,8 +1276,6 @@ func _get_ball_type_str() -> String:
 	if can_orbit:            return "orbit"
 	if can_scatter:          return "scatter"
 	if can_catalyst:         return "catalyst"
-	if can_tempest:          return "tempest"
-	if can_prismatic:        return "prismatic"
 	if can_antivirus_core:   return "antivirus_core"
 	if can_decay:            return "decay"
 	if can_static_core:      return "static_core"

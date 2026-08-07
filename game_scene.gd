@@ -37,7 +37,6 @@ const _CORE_DISPLAY_NAMES: Dictionary = {
 	"steam":      "Steam Core",     "echo":       "Echo Core",
 	"orbit":      "Prism Core",     "scatter":    "Scatter Core",
 	"catalyst":   "Catalyst Core",  "voltaic":    "Voltaic Core",
-	"tempest":    "Tempest Core",   "prismatic":  "Prismatic Core",
 	"pierce":     "Pierce Core",     "split":      "Split Core",
 	"cryo":       "Cryo Core",      "glitch":     "Glitch Core",
 	"water":      "Hydro Core",     "fire":       "Pyro Core",
@@ -119,7 +118,6 @@ const _CORE_FOLDER_MAP: Dictionary = {
 	"steam":      "steamCore",     "echo":     "echoCore",
 	"orbit":      "orbitCore",     "scatter":  "scatterCore",
 	"catalyst":   "catalystCore",  "voltaic":  "voltaicCore",
-	"tempest":    "tempestCore",   "prismatic":"prismaticCore",
 	"pierce":     "pierceBall",    "split":    "splitBall",
 	"cryo":       "cryoBall",      "glitch":   "glitchBall",
 	"water":      "waterBall",     "fire":     "fireBall",
@@ -161,7 +159,6 @@ const _CORE_INDEX_MAP: Dictionary = {
 	47: "tempered",
 	61: "plasma", 62: "steam",   63: "arc",     64: "echo",
 	65: "orbit",  77: "scatter", 78: "catalyst",87: "voltaic",
-	88: "tempest",103: "prismatic",
 	180: "regen_pulse_core", 181: "fortress_core", 182: "bloodwall_core",
 	183: "overcharge_core", 184: "anchor_pulse_core",
 	185: "mist_core", 186: "frost_aura_core", 187: "static_aura_core",
@@ -509,9 +506,7 @@ func _show_cards_unlocked(lv_from: int, lv_to: int) -> void:
 			card_sprite.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 			card_sprite.size = Vector2(card_w, card_h)
 			card_sprite.position = Vector2(tx, card_y)
-			canvas.add_child(card_sprite)
-
-			# Kart art görseli
+			# Kart art görseli (card_sprite'dan önce eklenir, altında kalır)
 			var _art_path := _get_card_art_path(u, char_id2)
 			if _art_path != "" and ResourceLoader.exists(_art_path):
 				var art_tex: Texture2D = load(_art_path)
@@ -522,6 +517,8 @@ func _show_cards_unlocked(lv_from: int, lv_to: int) -> void:
 				art_rect.position = Vector2(tx + 20, card_y + 30)
 				art_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 				canvas.add_child(art_rect)
+
+			canvas.add_child(card_sprite)
 
 			var name_panel := Panel.new()
 			name_panel.size = Vector2(card_w - 52, 44)
@@ -1485,9 +1482,8 @@ func _get_ball_core_type(ball) -> String:
 	if ball.get("can_orbit"):      return "orbit"
 	if ball.get("can_scatter"):    return "scatter"
 	if ball.get("can_catalyst"):   return "catalyst"
-	if ball.get("can_voltaic"):    return "voltaic"
-	if ball.get("can_tempest"):    return "tempest"
-	if ball.get("can_prismatic"):  return "prismatic"
+	if ball.get("can_voltaic"):         return "voltaic"
+	if ball.get("can_echo_resonance"):  return "echo_resonance_core"
 	if ball.get("can_electric"):   return "electric"
 	if ball.get("can_pierce"):     return "pierce"
 	if ball.get("can_split"):      return "split"
@@ -2603,9 +2599,7 @@ func show_upgrade_menu() -> void:
 		card_sprite.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		card_sprite.size = Vector2(card_width, card_height)
 		card_sprite.position = Vector2(tx, ty)
-		canvas.add_child(card_sprite)
-
-		# Kart art görseli
+		# Kart art görseli (card_sprite'dan önce eklenir, altında kalır)
 		var art_bg2: Control = null
 		var art_rect2: TextureRect = null
 		var _art_path2 := _get_card_art_path(upgrade, char_id)
@@ -2615,7 +2609,6 @@ func show_upgrade_menu() -> void:
 			(art_bg2 as TextureRect).stretch_mode = TextureRect.STRETCH_TILE
 			art_bg2.size = Vector2(card_width - 48, 185)
 			art_bg2.position = Vector2(tx + 24, ty + 55)
-			art_bg2.z_index = 2
 			canvas.add_child(art_bg2)
 			var art_tex2: Texture2D = load(_art_path2)
 			art_rect2 = TextureRect.new()
@@ -2623,9 +2616,10 @@ func show_upgrade_menu() -> void:
 			art_rect2.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 			art_rect2.size = Vector2(card_width - 48, 185)
 			art_rect2.position = Vector2(tx + 24, ty + 55)
-			art_rect2.z_index = 3
 			art_rect2.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			canvas.add_child(art_rect2)
+
+		canvas.add_child(card_sprite)
 
 		# ── Kategori etiketi (kart üst mavi bandı) ───────────────────────────
 		# PNG 162×241 → oyun 280×400 (scale=1.660, yatay margin=5.5)
@@ -4185,10 +4179,6 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 		get_node("Player").debuff_duration_mult *= 1.3
 	elif index == 87:  # Voltaic Core
 		$BallLauncher.queue_upgrade_ball("voltaic")
-	elif index == 88:  # Tempest Core
-		$BallLauncher.queue_upgrade_ball("tempest")
-	elif index == 103:  # Prismatic Core
-		$BallLauncher.queue_upgrade_ball("prismatic")
 
 	# ── Leila — Utility ─────────────────────────────────────────────────────
 	elif index == 66:  # Conduction

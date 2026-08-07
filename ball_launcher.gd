@@ -326,12 +326,9 @@ func _launch_typed_ball(ball_type: String) -> void:
 			ball.can_voltaic  = true
 			ball.can_electric = true
 			ball.max_damage   = 8 + player_node.ball_mastery
-		"tempest":
-			ball.can_tempest  = true
-			ball.max_damage   = 6 + player_node.ball_mastery
-		"prismatic":
-			ball.can_prismatic = true
-			ball.max_damage    = 5 + player_node.ball_mastery
+		"echo_resonance_core":
+			ball.can_echo_resonance = true
+			ball.max_damage         = 4 + player_node.ball_mastery
 		# ── Cyclone yeni core'lar ─────────────────────────────────────────────
 		"antivirus_core":
 			ball.can_antivirus_core = true
