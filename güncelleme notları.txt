@@ -1,4 +1,28 @@
 ───────────────────────────────────────────────────
+Sürüm: v0.1.3.4  |  Tarih: 08.08.2026
+───────────────────────────────────────────────────
+
+Leila Identity & Calamity:
+
+  ✅  Leila Identity kart görselleri tamamlandı (19 kart)
+  ✅  Leila Calamity kart görselleri tamamlandı (8 kart)
+  ✅  Prism Core implement edildi — orbit'teyken her 2s, 55px içindeki
+      düşmanlara rastgele element uygular. min_level 3 → 2.
+  ✅  Echo Resonance Core implement edildi — orbit'teyken her 5s, 80px
+      içindeki en yakın debufflı düşmanın debufflarını yakındaki düşmanlara yayar
+  ✅  Monsoon Calamity VFX eklendi (saha alanına özel, 4 frame animasyon)
+  ✅  Blizzard güncellendi — artık sadece Islak düşmanları dondurur
+  ✅  Deep Freeze kaldırıldı (özelliği Blizzard'a aktarıldı)
+
+Bugfix & Temizlik:
+
+  ✅  Kart görseli z-order düzeltildi — görsel artık kart çerçevesinin
+      altında kalıyor (Cards Unlocked + upgrade menüsü)
+  ✅  Tempest Core ve Prismatic Core dead code tamamen kaldırıldı
+  ✅  Steam Core açıklaması gerçek implementasyona göre güncellendi
+  ✅  static_aura_core.png → static_aura_core_art.png yeniden adlandırıldı
+
+───────────────────────────────────────────────────
 Sürüm: v0.1.0.8  |  Tarih: 20.07.2026
 ───────────────────────────────────────────────────
 

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://delq7w8vwbwaq"
-path="res://.godot/imported/static_aura_core.png-601dcd19050d1992b026d884f76d2d8e.ctex"
+uid="uid://dvsqc5qyj5naj"
+path="res://.godot/imported/wildfire_art.png-c498cd33c24e626666389de87e53e7d7.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/upgradeCardsArt/Leila/identityCards/static_aura_core.png"
-dest_files=["res://.godot/imported/static_aura_core.png-601dcd19050d1992b026d884f76d2d8e.ctex"]
+source_file="res://assets/upgradeCardsArt/Leila/calamityCards/wildfire_art.png"
+dest_files=["res://.godot/imported/wildfire_art.png-c498cd33c24e626666389de87e53e7d7.ctex"]
 
 [params]
 

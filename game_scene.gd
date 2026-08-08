@@ -85,7 +85,6 @@ const _CALAMITY_DISPLAY_NAMES: Dictionary = {
 	"🏚️": "Rampart Collapse",
 	"🌀🕳️": "WormHole",
 	"🌧️": "Siege Rain",
-	"🧊":   "Deep Freeze",
 	"🔥💥": "Wildfire",
 	"💣":   "Glitch Bomb",
 	"💻💥": "System Crash",
@@ -1500,7 +1499,6 @@ func _get_ball_core_type(ball) -> String:
 const _FUSED_FOLDER_MAP: Dictionary = {
 	"conductive":       "conductive",
 	"cryostatic":       "cryoStatic",
-	"deep_freeze":      "deepFreeze",
 	"electric_split":   "electrifiedSplit",
 	"firework":         "fireWork",
 	"frozen_split":     "frozenSplit",
@@ -2359,7 +2357,7 @@ func _build_all_upgrades() -> void:
 	{"name": "Chain Catalyst",     "category": "Utility",       "color": Color(0.7, 0.5, 1.0), "desc": "2+ elements on target:\nReactions deal +30% dmg", "index": 106, "weight": 6, "rarity": "uncommon", "chars": ["leila"], "min_level": 1},
 	{"name": "Volatile Mixture",   "category": "Individuality", "color": Color(0.9, 0.4, 1.0), "desc": "3rd element on target:\ninstantly triggers Reaction", "index": 107, "weight": 4, "rarity": "rare", "chars": ["leila"], "min_level": 3},
 	# ── Leila Calamity ────────────────────────────────────────────────────────
-	{"name": "Blizzard",           "category": "Calamity",      "color": Color(0.6, 0.9, 1.0), "desc": "The entire Yard freezes\nfor 3s",              "index": 94, "weight": 2,  "rarity": "legendary", "chars": ["leila"], "min_level": 4},
+	{"name": "Blizzard",           "category": "Calamity",      "color": Color(0.6, 0.9, 1.0), "desc": "Islak tüm düşmanları\nanında dondurur",        "index": 94, "weight": 2,  "rarity": "legendary", "chars": ["leila"], "min_level": 4},
 	{"name": "Volcanic Rift",      "category": "Calamity",      "color": Color(1.0, 0.3, 0.0), "desc": "Leaves lava trail on ground",                 "index": 97, "weight": 2,  "rarity": "legendary", "chars": ["leila"], "min_level": 4},
 	{"name": "Thunderstorm",       "category": "Calamity",      "color": Color(0.3, 0.5, 1.0), "desc": "Random lightning strikes for 5s",             "index": 98, "weight": 2,  "rarity": "legendary", "chars": ["leila"], "min_level": 5},
 	# ── Leila Connected Cores (iç yörünge) ───────────────────────────────────
@@ -2380,7 +2378,6 @@ func _build_all_upgrades() -> void:
 	{"name": "Melt Spiral",     "category": "Individuality", "color": Color(1.0, 0.5, 0.2),  "desc": "Melt reaksiyonu:\ndüşmanın konumunda 2s alev bırakır (1/s)",  "index": 206, "weight": 5,  "rarity": "rare",      "chars": ["leila"], "min_level": 3},
 	{"name": "Void Resonance",  "category": "Individuality", "color": Color(0.7, 0.3, 1.0),  "desc": "Dalgada 4 farklı reaksiyon:\nsonraki Calamity slot tüketmez",  "index": 207, "weight": 2,  "rarity": "epic",      "chars": ["leila"], "min_level": 5},
 	# Calamity
-	{"name": "Deep Freeze",     "category": "Calamity",      "color": Color(0.5, 0.85, 1.0), "desc": "Tüm Islak düşmanları\nanında Dondurur",                        "index": 208, "weight": 2,  "rarity": "legendary", "chars": ["leila"], "min_level": 3},
 	{"name": "Wildfire",        "category": "Calamity",      "color": Color(1.0, 0.3, 0.0),  "desc": "Tüm Yanan düşmanlar patlar\n(10 hasar, 2 yakına yayılır)",     "index": 209, "weight": 3,  "rarity": "epic",      "chars": ["leila"], "min_level": 4},
 	# Utility
 	{"name": "Cryo Burst",      "category": "Utility",       "color": Color(0.6, 0.85, 1.0), "desc": "Yavaşlatılmış düşmana\nsonraki vuruş +8 bonus hasar",          "index": 210, "weight": 5,  "rarity": "rare",      "chars": ["leila"], "min_level": 2},
@@ -2813,8 +2810,9 @@ func _activate_arise() -> void:
 
 func _activate_blizzard() -> void:
 	for subject in get_tree().get_nodes_in_group("subjects"):
-		if is_instance_valid(subject) and subject.global_position.x >= 385.0 and subject.has_method("apply_frozen"):
-			subject.apply_frozen()
+		if is_instance_valid(subject) and subject.global_position.x >= 385.0:
+			if subject.get("is_wet") and subject.is_wet and subject.has_method("apply_frozen"):
+				subject.apply_frozen()
 	_react_flash_screen(Color(0.7, 0.95, 1.0, 0.5))
 
 func _activate_monsoon() -> void:
@@ -2822,6 +2820,28 @@ func _activate_monsoon() -> void:
 		if is_instance_valid(subject) and subject.global_position.x >= 385.0 and subject.has_method("apply_wet"):
 			subject.apply_wet()
 	_react_flash_screen(Color(0.1, 0.4, 1.0, 0.4))
+	_play_monsoon_vfx()
+
+func _play_monsoon_vfx() -> void:
+	var frames := SpriteFrames.new()
+	if frames.has_animation("default"): frames.remove_animation("default")
+	frames.add_animation("rain")
+	frames.set_animation_speed("rain", 8.0)
+	frames.set_animation_loop("rain", false)
+	for i in range(1, 5):
+		var path := "res://assets/VFX/monsoonVFX/rain_drops-%02d.png" % i
+		frames.add_frame("rain", load(path))
+	var vfx := AnimatedSprite2D.new()
+	vfx.sprite_frames = frames
+	# Saha alanı: x 385→1920, y 0→1080
+	var field_w: float = 1920.0 - 385.0
+	var field_h: float = 1080.0
+	vfx.position = Vector2(385.0 + field_w * 0.5, field_h * 0.5)
+	vfx.z_index = 10
+	vfx.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	add_child(vfx)
+	vfx.play("rain")
+	vfx.animation_finished.connect(vfx.queue_free)
 
 func _activate_volcanic_rift(pos: Vector2) -> void:
 	_react_flash_screen(Color(1.0, 0.3, 0.0, 0.35))
@@ -3100,13 +3120,6 @@ func _activate_decay_field(pos: Vector2) -> void:
 				if e.get("apply_decay"): e.apply_decay()
 	if is_instance_valid(zone): zone.queue_free()
 
-func _activate_deep_freeze() -> void:
-	# Tüm Islak düşmanları anında Dondurur
-	var enemies := get_tree().get_nodes_in_group("enemies")
-	for e in enemies:
-		if e.get("is_wet") and e.is_wet:
-			e.apply_frozen()
-	_react_flash_screen(Color(0.6, 0.9, 1.0, 0.25))
 
 func _activate_wildfire() -> void:
 	# Tüm Yanan düşmanlar patlar: 10 hasar + 2 yakın düşmana yangın yayar
@@ -3189,8 +3202,6 @@ func _input(event: InputEvent) -> void:
 				_activate_wormhole()
 			elif calamity == "🌧️":  # Siege Rain
 				_activate_siege_rain(mouse_pos)
-			elif calamity == "🧊":  # Deep Freeze
-				_activate_deep_freeze()
 			elif calamity == "🔥💥":  # Wildfire
 				_activate_wildfire()
 			elif calamity == "💣":  # Glitch Bomb
@@ -3850,8 +3861,6 @@ func _process(delta: float) -> void:
 		elif calamity == "🌧️":  # Siege Rain
 			$UI/CalamityCircle.color = Color(0.4, 0.4, 0.5, 0.2)
 			$UI/CalamityCircle.radius = 80
-		elif calamity == "🧊":  # Deep Freeze — hedef yok, tüm Islak düşmanlar
-			$UI/CalamityCircle.visible = false
 		elif calamity == "🔥💥":  # Wildfire — hedef yok, tüm Yanan düşmanlar
 			$UI/CalamityCircle.visible = false
 		elif calamity == "💣":  # Glitch Bomb
@@ -4364,10 +4373,6 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 	elif index == 98:  # Thunderstorm
 		if calamity_slots.size() < max_calamity_slots:
 			calamity_slots.append("⛈️")
-			update_ui()
-	elif index == 208:  # Deep Freeze
-		if calamity_slots.size() < max_calamity_slots:
-			calamity_slots.append("🧊")
 			update_ui()
 	elif index == 209:  # Wildfire
 		if calamity_slots.size() < max_calamity_slots:

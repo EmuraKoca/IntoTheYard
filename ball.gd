@@ -242,10 +242,6 @@ func _setup_ball_sprite() -> void:
 		folder = "scatterCore";     frame_count = 17
 	elif can_catalyst:
 		folder = "catalystCore";    frame_count = 17
-	elif can_tempest:
-		folder = "tempestCore";     frame_count = 17
-	elif can_prismatic:
-		folder = "prismaticCore";      frame_count = 17
 	elif can_antivirus_core:
 		folder = "antivirusCore";      frame_count = 17
 	elif can_decay:
@@ -595,8 +591,7 @@ func _physics_process(delta: float) -> void:
 	if _bounced:
 		_play_hit_sfx()
 		if can_steam: _spawn_steam_cloud(global_position)
-		if can_tempest:
-			_tempest_index += 1
+
 		if can_kinetic:
 			_wall_bounce_count += 1
 			_update_kinetic_vfx()
