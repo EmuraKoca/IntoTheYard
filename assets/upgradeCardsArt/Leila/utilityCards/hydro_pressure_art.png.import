@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://0cbme5e0veup"
-path="res://.godot/imported/hydro_pressure.png-edcc3b205477ecd47b839556dbeb0a86.ctex"
+uid="uid://dv7bhdb7sc5nm"
+path="res://.godot/imported/hydro_pressure_art.png-d3a1bf2eed352c9eafb49f7a0d548336.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/upgradeCardsArt/Leila/utilityCards/hydro_pressure.png"
-dest_files=["res://.godot/imported/hydro_pressure.png-edcc3b205477ecd47b839556dbeb0a86.ctex"]
+source_file="res://assets/upgradeCardsArt/Leila/utilityCards/hydro_pressure_art.png"
+dest_files=["res://.godot/imported/hydro_pressure_art.png-d3a1bf2eed352c9eafb49f7a0d548336.ctex"]
 
 [params]
 
