@@ -231,6 +231,8 @@ func die(cause: String = "normal") -> void:
 	z_index = 0
 	set_physics_process(false)
 	$CollisionShape2D.set_deferred("disabled", true)
+	collision_layer = 0
+	collision_mask  = 0
 	if _chip_node: _chip_node.visible = false
 	if _elem_indicator: _elem_indicator.visible = false
 	if _cryo_sprite and is_instance_valid(_cryo_sprite): _cryo_sprite.queue_free(); _cryo_sprite = null
