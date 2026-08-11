@@ -105,7 +105,6 @@ var _severance_triggered: bool    = false # Severance Protocol tetiklendi mi
 var has_overclock_threshold: bool = false # 20 momentum → Core Dmg ×1.3 kalıcı
 var _overclock_triggered: bool    = false # Overclock tetiklendi mi
 
-var has_chain_catalyst: bool      = false # 2+ element → +%30 reaksiyon hasarı
 var has_volatile_mixture: bool    = false # 3. element → anında reaksiyon
 
 # ── Leila — Individuality (yeni) ─────────────────────────────────────────────
@@ -223,7 +222,6 @@ var move_speed_bonus_pct: float       = 0.0  # Mystic Flow hız bonusu
 var has_static_charge: bool           = false  # Electrified → hasar aktarır
 var has_hydro_pressure: bool          = false  # Wet core'lar hızlı döner
 var has_condensation: bool            = false  # Wet core'lar hızlı döner (tümü)
-var has_living_storm: bool            = false  # Electrified yaklaşınca şimşek
 var has_overheat: bool                = false  # Burn 7 stackte patlar
 var _overheat_counter: int            = 0
 var special_core_count: int = 0      # Identity ile eklenen özellikli core sayısı

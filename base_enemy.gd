@@ -292,9 +292,10 @@ func apply_burn() -> void:
 				if not p.get("_overheat_counter"):
 					p.set("_overheat_counter", 0)
 				p._overheat_counter += 1
-				if p._overheat_counter >= 13:
+				if p._overheat_counter >= 33:
+					var _saved_count: int = p._overheat_counter
 					p._overheat_counter = 0
-					_react_overheat()
+					_react_overheat(_saved_count)
 			if health <= 0:
 				die("burn")
 	if not is_instance_valid(self):
@@ -302,13 +303,13 @@ func apply_burn() -> void:
 	is_burning = false
 	_clear_element()
 
-func _react_overheat() -> void:
+func _react_overheat(saved_count: int = 0) -> void:
 	GameData.record_reaction("overheat")
 	_spawn_overheat_vfx()
 	var p := _get_player()
 	var _oh_radius := 150.0
 	if p and p.get("has_pyroblast") and p.has_pyroblast:
-		_oh_radius = 150.0 + float(p.get("_overheat_counter") if p.get("_overheat_counter") != null else 0) * 8.0
+		_oh_radius = 150.0 + float(saved_count) * 8.0
 	for body in get_tree().get_nodes_in_group("subjects"):
 		if is_instance_valid(body) and global_position.distance_to(body.global_position) < _oh_radius:
 			body.health -= 15
@@ -426,22 +427,12 @@ func apply_electrified() -> void:
 	if p and p.get("first_debuff_duration_mult") and not _had_any_element():
 		dur *= p.first_debuff_duration_mult
 	var _ls_p := _get_player()
-	if _ls_p and _ls_p.get("has_living_storm") and _ls_p.has_living_storm:
-		_living_storm_loop()
+
 	await get_tree().create_timer(dur).timeout
 	if is_instance_valid(self):
 		is_electrified = false
 		_clear_element()
 
-func _living_storm_loop() -> void:
-	while is_instance_valid(self) and is_electrified:
-		await get_tree().create_timer(1.5).timeout
-		if not is_instance_valid(self) or not is_electrified: break
-		var _target := get_tree().get_first_node_in_group("player")
-		if _target and global_position.distance_to(_target.global_position) < 120.0:
-			health -= 3
-			_react_flash(Color(0.2, 0.5, 4.0))
-			if health <= 0: die(); break
 
 func apply_slow(amount, duration: float = 3.0, source: String = "cryo", anchor_pos: Vector2 = Vector2.ZERO) -> void:
 	if is_dead: return
@@ -548,14 +539,6 @@ func _check_reaction(incoming: String) -> void:
 				speed = original_speed if original_speed > 0 else speed
 				_react_melt(dmg_mult); return
 
-	if player and player.get("has_chain_catalyst") and player.has_chain_catalyst:
-		var active := 0
-		if is_burning:    active += 1
-		if is_wet:        active += 1
-		if is_electrified: active += 1
-		if is_slowed:     active += 1
-		if active >= 2:
-			dmg_mult = 1.3
 
 	if incoming == "electric" and is_wet:
 		is_wet = false; is_electrified = false
