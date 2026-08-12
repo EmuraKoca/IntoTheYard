@@ -268,6 +268,13 @@ func die(cause: String = "normal") -> void:
 
 # ── Element sistemi ──────────────────────────────────────────────────────────
 
+func _notify_mystic_flow(_element: String) -> void:
+	var p := _get_player()
+	if not p or not p.get("mystic_flow_stacks") is int: return
+	if p.mystic_flow_stacks >= 20: return
+	p.mystic_flow_stacks += 1
+	p.move_speed_bonus_pct = float(p.mystic_flow_stacks) * 0.01
+
 func apply_burn() -> void:
 	if is_dead: return
 	if is_burning:
@@ -275,11 +282,18 @@ func apply_burn() -> void:
 	_check_reaction("fire")
 	if not is_instance_valid(self): return
 	is_burning = true
+	_notify_mystic_flow("fire")
 	_set_element("burn")
 	var p := _get_player()
 	var tick_dmg: int = 2
 	if p and p.get("burn_damage_mult"):
 		tick_dmg = max(1, int(2.0 * p.burn_damage_mult))
+	if p and p.get("has_burn_frenzy") and p.has_burn_frenzy:
+		var _burning_count: int = 0
+		for _bfe in get_tree().get_nodes_in_group("subjects"):
+			if _bfe.get("is_burning") and _bfe.is_burning:
+				_burning_count += 1
+		tick_dmg += mini(_burning_count, 7)
 	var burn_ticks := 3
 	if p and p.get("has_elemental_memory") and p.has_elemental_memory and _had_reaction:
 		burn_ticks = 6
@@ -351,6 +365,7 @@ func apply_wet() -> void:
 	_check_reaction("wet")
 	if not is_instance_valid(self): return
 	is_wet = true
+	_notify_mystic_flow("wet")
 	_set_element("wet")
 	var p := _get_player()
 	var dur := 5.0
@@ -418,6 +433,7 @@ func apply_electrified() -> void:
 	_check_reaction("electric")
 	if not is_instance_valid(self): return
 	is_electrified = true
+	_notify_mystic_flow("electric")
 	_set_element("electrified")
 	var p := _get_player()
 	var dur := 5.0
@@ -441,6 +457,7 @@ func apply_slow(amount, duration: float = 3.0, source: String = "cryo", anchor_p
 	_check_reaction("cryo")
 	if not is_instance_valid(self): return
 	is_slowed = true
+	_notify_mystic_flow("cryo")
 	original_speed = speed
 	var p := _get_player()
 	var slow_amount: float = float(amount)
@@ -516,28 +533,6 @@ func _check_reaction(incoming: String) -> void:
 	var player := game.get_node_or_null("Player") if game else null
 	var dmg_mult: float = 1.0
 
-	if player and player.get("has_volatile_mixture") and player.has_volatile_mixture:
-		var active := 0
-		if is_burning:     active += 1
-		if is_wet:         active += 1
-		if is_electrified: active += 1
-		if is_slowed:      active += 1
-		if active >= 2:
-			if is_wet and is_electrified:
-				is_wet = false; is_electrified = false
-				_react_electrocute(dmg_mult, game, player); return
-			elif is_wet and is_slowed:
-				is_wet = false; is_slowed = false
-				speed = original_speed if original_speed > 0 else speed
-				apply_frozen(); _react_flash(Color(0.5, 0.9, 1.0))
-				_notify_reaction(game, player); return
-			elif is_burning and is_wet:
-				is_wet = false; is_burning = false
-				_react_steam(dmg_mult, game, player); return
-			elif is_burning and is_slowed:
-				is_burning = false; is_slowed = false
-				speed = original_speed if original_speed > 0 else speed
-				_react_melt(dmg_mult); return
 
 
 	if incoming == "electric" and is_wet:
@@ -667,8 +662,11 @@ func _react_cryostatic(mult: float, game: Node, player: Node) -> void:
 	_react_flash(Color(0.5, 0.8, 1.0))
 	_clear_element()
 	if player and player.get("has_frost_barrier") and player.has_frost_barrier:
-		player.frost_barrier_hp = 5
+		player.frost_barrier_hp = mini(player.frost_barrier_hp + 5, 20)
 		player._frost_barrier_timer = 4.0
+		var _game := get_node_or_null("/root/GameScene")
+		if _game and _game.has_method("_update_frost_barrier_ui"):
+			_game._update_frost_barrier_ui()
 	_notify_reaction(game, player)
 	if health <= 0: die("freeze")
 
@@ -745,10 +743,7 @@ func _notify_reaction(game: Node, player: Node) -> void:
 			apply_electrified()
 		elif last_elem == "cryo" and not is_slowed:
 			apply_slow(0.25)
-	if player.get("has_catalyst_mind") and player.has_catalyst_mind and player.catalyst_mind_cooldown <= 0.0:
-		player.catalyst_mind_ready = true
-		player.catalyst_mind_cooldown = 5.0
-	# Volatile Aura Core hook
+# Volatile Aura Core hook
 	for ball in get_tree().get_nodes_in_group("player_balls"):
 		if not is_instance_valid(ball): continue
 		if not ball.get("is_inner_core") or not ball.is_inner_core: continue
@@ -760,32 +755,55 @@ func _notify_reaction(game: Node, player: Node) -> void:
 	# Melt Spiral: Melt reaksiyonu → düşman konumunda 2s alev bırakır
 	if _last_reaction_type == "melt" and player.get("has_melt_spiral") and player.has_melt_spiral:
 		var spiral_pos := global_position
-		var fire_zone := ColorRect.new()
-		fire_zone.color = Color(1.0, 0.3, 0.0, 0.35)
-		fire_zone.size = Vector2(30, 30)
-		fire_zone.position = spiral_pos - Vector2(15, 15)
-		fire_zone.z_index = 2
-		if game: game.add_child(fire_zone)
-		var spiral_timer := game.get_tree().create_timer(2.0)
-		spiral_timer.timeout.connect(func():
-			if is_instance_valid(fire_zone): fire_zone.queue_free()
+		var frames := SpriteFrames.new()
+		frames.add_animation("burn")
+		for i in range(9):
+			var tex := load("res://assets/VFX/meltSpiralVFX/frame_%03d.png" % i)
+			if tex: frames.add_frame("burn", tex)
+		frames.set_animation_speed("burn", 6.0)
+		frames.set_animation_loop("burn", true)
+		var vfx := AnimatedSprite2D.new()
+		vfx.sprite_frames = frames
+		vfx.animation = "burn"
+		vfx.global_position = spiral_pos
+		vfx.z_index = 2
+		vfx.scale = Vector2(0.6, 0.6)
+		if game: game.add_child(vfx)
+		vfx.play("burn")
+		game.get_tree().create_timer(2.0).timeout.connect(func():
+			if is_instance_valid(vfx):
+				vfx.queue_free()
 		)
-		var tick_count := 0
-		var tick_timer := game.get_tree().create_timer(0.5)
-		tick_timer.timeout.connect(func():
-			tick_count += 1
-			if not is_instance_valid(fire_zone): return
-			for s in game.get_tree().get_nodes_in_group("subjects"):
-				if s.global_position.distance_to(spiral_pos) <= 20.0:
+		var _sp := spiral_pos
+		var _v := vfx
+		var _g := game
+		game.get_tree().create_timer(0.5).timeout.connect(func():
+			if not is_instance_valid(_v):
+				return
+			for s in _g.get_tree().get_nodes_in_group("subjects"):
+				if s.global_position.distance_to(_sp) <= 20.0:
 					s.take_damage(1, false)
-			if tick_count < 4:
-				var t2 := game.get_tree().create_timer(0.5)
-				t2.timeout.connect(func():
-					if not is_instance_valid(fire_zone): return
-					for s2 in game.get_tree().get_nodes_in_group("subjects"):
-						if s2.global_position.distance_to(spiral_pos) <= 20.0:
-							s2.take_damage(1, false)
-				)
+		)
+		game.get_tree().create_timer(1.0).timeout.connect(func():
+			if not is_instance_valid(_v):
+				return
+			for s in _g.get_tree().get_nodes_in_group("subjects"):
+				if s.global_position.distance_to(_sp) <= 20.0:
+					s.take_damage(1, false)
+		)
+		game.get_tree().create_timer(1.5).timeout.connect(func():
+			if not is_instance_valid(_v):
+				return
+			for s in _g.get_tree().get_nodes_in_group("subjects"):
+				if s.global_position.distance_to(_sp) <= 20.0:
+					s.take_damage(1, false)
+		)
+		game.get_tree().create_timer(2.0).timeout.connect(func():
+			if not is_instance_valid(_v):
+				return
+			for s in _g.get_tree().get_nodes_in_group("subjects"):
+				if s.global_position.distance_to(_sp) <= 20.0:
+					s.take_damage(1, false)
 		)
 	# Primal Instinct + Void Resonance: reaksiyon tipi takibi
 	if player.get("has_primal_instinct") and player.has_primal_instinct:

@@ -817,14 +817,8 @@ func _defense_hit(subject: Node2D) -> void:
 			# Elemental Harmony (Individuality): per-unique-element +5% core hız
 			if _pn.get("has_elemental_harmony_ind") and _pn.has_elemental_harmony_ind:
 				_pn.orbit_speed_mult = 1.0 + _pn.mystic_flow_stacks * 0.05
-	# Catalyst Mind — önceki reaksiyon hazırsa bu elementi 2x uygula
-	if _pn and _pn.get("catalyst_mind_ready") and _pn.catalyst_mind_ready:
-		_pn.catalyst_mind_ready = false
-		if can_fire and is_instance_valid(subject):    subject.apply_burn()
-		elif can_water and is_instance_valid(subject): subject.apply_wet()
-		elif can_electric and is_instance_valid(subject): subject.apply_electrified()
-		elif can_cryo and is_instance_valid(subject):  subject.apply_slow(slow_amount)
-	if can_glitch  and is_instance_valid(subject): subject.apply_glitch()
+	if can_glitch and is_instance_valid(subject):
+		subject.apply_glitch()
 	defense_life -= defense_damage
 	if defense_life <= 0:
 		_auto_fire()

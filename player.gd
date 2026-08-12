@@ -105,7 +105,6 @@ var _severance_triggered: bool    = false # Severance Protocol tetiklendi mi
 var has_overclock_threshold: bool = false # 20 momentum → Core Dmg ×1.3 kalıcı
 var _overclock_triggered: bool    = false # Overclock tetiklendi mi
 
-var has_volatile_mixture: bool    = false # 3. element → anında reaksiyon
 
 # ── Leila — Individuality (yeni) ─────────────────────────────────────────────
 var has_wet_armor: bool           = false # Islak düşman varken %10 az hasar
@@ -237,9 +236,6 @@ var elemental_harmony_bonus: float    = 0.0   # Elemental Harmony: unique elemen
 var has_perfect_catalyst: bool        = false  # Reaksiyon → son element tekrar
 var last_applied_element: String      = ""    # Perfect Catalyst için
 var has_elemental_harmony_ind: bool   = false  # Individuality: per-element hız
-var has_catalyst_mind: bool           = false  # Reaksiyon → sonraki element 2x
-var catalyst_mind_ready: bool         = false  # Catalyst Mind tetiklenme hazır
-var catalyst_mind_cooldown: float     = 0.0   # 5s cooldown aralarında
 var has_resonant_soul_ind: bool       = false  # Individuality: reaksiyon → +1 HP
 var has_elemental_memory: bool        = false  # Reaksiyon sonrası debuff 50% uzar
 var damage_mult_leila: float          = 1.0   # Thermal Vision vb. hasar çarpanı
@@ -533,17 +529,18 @@ func _dash() -> void:
 		dash_is_empty = true
 
 func _physics_process(delta: float) -> void:
-	if catalyst_mind_cooldown > 0.0:
-		catalyst_mind_cooldown -= delta
-	# ── Leila Individuality timers ────────────────────────────────────────────
+# ── Leila Individuality timers ────────────────────────────────────────────
 	if _steam_surge_timer > 0.0:
 		_steam_surge_timer -= delta
 	if _shock_reflex_timer > 0.0:
 		_shock_reflex_timer -= delta
 	if _frost_barrier_timer > 0.0:
 		_frost_barrier_timer -= delta
-	else:
+	elif frost_barrier_hp > 0:
 		frost_barrier_hp = 0
+		var _g := get_tree().get_first_node_in_group("game")
+		if _g and _g.has_method("_update_frost_barrier_ui"):
+			_g._update_frost_barrier_ui()
 	if _primal_instinct_timer > 0.0:
 		_primal_instinct_timer -= delta
 	if _ghost_step_cooldown > 0.0:
@@ -562,7 +559,7 @@ func _physics_process(delta: float) -> void:
 	if Input.is_key_pressed(KEY_D): direction.x = 1
 
 	var _ss_speed_move: float = 1.15 if (has_steam_surge and _steam_surge_timer > 0.0) else 1.0
-	velocity = direction.normalized() * SPEED * _ss_speed_move
+	velocity = direction.normalized() * SPEED * _ss_speed_move * (1.0 + move_speed_bonus_pct)
 	move_and_slide()
 
 	# Vector footstep toz bulutu
@@ -610,15 +607,8 @@ func _physics_process(delta: float) -> void:
 
 	_update_pranga(delta)
 
-	# ── Burn Frenzy: Her Yanan düşman için +2% Core hızı ─────────────────────
-	var _bf_bonus: float = 0.0
-	if has_burn_frenzy:
-		for _bfe in get_tree().get_nodes_in_group("subjects"):
-			if _bfe.get("is_burning") and _bfe.is_burning:
-				_bf_bonus += 0.02
-		_bf_bonus = minf(_bf_bonus, 0.14)
 	# ── Orbit pozisyonlama ────────────────────────────────────────────────────
-	var _effective_orbit_speed: float = ORBIT_SPEED * orbit_speed_mult * (1.0 + _bf_bonus)
+	var _effective_orbit_speed: float = ORBIT_SPEED * orbit_speed_mult
 	var game_node := get_tree().get_first_node_in_group("game")
 	if has_momentum_engine and momentum_stacks > 0:
 		# Last Stand: eksik HP başına ekstra bonus

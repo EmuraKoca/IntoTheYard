@@ -18,6 +18,8 @@ var _armor_regen_acc: float = 0.0
 var _armor_was_full: bool = false
 var _armor_bar: ColorRect = null
 var _armor_label: Label = null
+var _frost_barrier_bar: ColorRect = null
+var _frost_barrier_label: Label = null
 var _armor_gain_boost: float = 1.0    # Pain Converter / Emergency Protocol çarpanı
 var _armor_gain_boost_timer: float = 0.0
 
@@ -228,7 +230,6 @@ const _UPGRADE_META: Dictionary = {
 	86: {"name": "Elemental Memory",    "category": "Individuality"},
 	90: {"name": "Mana Overflow",       "category": "Utility"},
 	91: {"name": "Perfect Catalyst",    "category": "Utility"},
-	93: {"name": "Catalyst Mind",       "category": "Individuality"},
 	103: {"name": "Prismatic Core",     "category": "Identity"},
 }
 
@@ -1119,6 +1120,7 @@ func _ready() -> void:
 	_setup_auto_toggle()
 	_setup_neon_sign()
 	_setup_armor_bar()
+	_setup_frost_barrier_ui()
 	_setup_core_panel()
 	update_ui()
 	_update_armor_ui()
@@ -1234,6 +1236,50 @@ func _setup_armor_bar() -> void:
 	lbl.visible = false
 	$UI.add_child(lbl)
 	_armor_label = lbl
+
+func _setup_frost_barrier_ui() -> void:
+	var integrity_bar: ProgressBar = $UI/IntegrityBar
+	var fb := ColorRect.new()
+	fb.name = "FrostBarrierOverlay"
+	fb.color = Color(0.4, 0.85, 1.0, 0.75)
+	fb.size = Vector2(0.0, integrity_bar.size.y)
+	fb.position = integrity_bar.position
+	fb.visible = false
+	fb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	fb.z_index = integrity_bar.z_index + 2
+	$UI.add_child(fb)
+	_frost_barrier_bar = fb
+	var lbl2 := Label.new()
+	lbl2.name = "LabelFrostBarrier"
+	lbl2.size = Vector2(integrity_bar.size.x, integrity_bar.size.y)
+	lbl2.position = integrity_bar.position
+	lbl2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl2.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	lbl2.add_theme_font_override("font", _font_bold)
+	lbl2.add_theme_font_size_override("font_size", 10)
+	lbl2.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0))
+	lbl2.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	lbl2.z_index = fb.z_index + 1
+	lbl2.visible = false
+	$UI.add_child(lbl2)
+	_frost_barrier_label = lbl2
+
+func _update_frost_barrier_ui() -> void:
+	if _frost_barrier_bar == null: return
+	var _p := get_node_or_null("Player")
+	var hp: int = _p.frost_barrier_hp if (_p and _p.get("frost_barrier_hp")) else 0
+	if hp <= 0:
+		_frost_barrier_bar.visible = false
+		_frost_barrier_label.visible = false
+		return
+	var integrity_bar: ProgressBar = $UI/IntegrityBar
+	var bar_w: float = integrity_bar.size.x
+	var bar_h: float = integrity_bar.size.y
+	var ratio: float = clampf(float(hp) / 20.0, 0.0, 1.0)
+	_frost_barrier_bar.size = Vector2(bar_w * ratio, bar_h)
+	_frost_barrier_bar.position = integrity_bar.position
+	_frost_barrier_bar.visible = true
+	_frost_barrier_label.visible = false
 
 func _update_armor_ui() -> void:
 	if _armor_bar == null:
@@ -2012,6 +2058,7 @@ func player_damaged(amount: int = 1) -> void:
 	# Frost Barrier: 5 HP kalkan absorbe eder
 	if _p and _p.get("has_frost_barrier") and _p.has_frost_barrier and _p.frost_barrier_hp > 0:
 		_p.frost_barrier_hp = maxi(0, _p.frost_barrier_hp - amount)
+		_update_frost_barrier_ui()
 		return
 	# Wet Armor: Islak düşman varken %10 az hasar
 	if _p and _p.get("has_wet_armor") and _p.has_wet_armor:
@@ -2245,7 +2292,7 @@ func _build_all_upgrades() -> void:
 	{"name": "Chain Density",       "category": "Utility",       "color": Color(0.0, 0.9, 0.5), "desc": "New enemy hit mid-flight:\n+dmg ramp, resets on return",     "index": 37, "weight": 8, "rarity": "common", "chars": ["vector"], "min_level": 0},
 	{"name": "Reinforced Frame",    "category": "Individuality", "color": Color(0.5, 0.7, 0.5), "desc": "+20 Max Armor / Core Speed -%10",           "index": 48, "weight": 8, "rarity": "common",   "chars": ["vector"], "min_level": 1},
 	{"name": "Iron Constitution",   "category": "Individuality", "color": Color(0.7, 0.8, 0.6), "desc": "Armor gain efficiency +%25",                 "index": 49, "weight": 8, "rarity": "common",   "chars": ["vector"], "min_level": 1},
-	{"name": "Speed Upgrade",       "category": "Individuality", "color": Color(0.6, 0.2, 0.8), "desc": "Movement speed increases",                  "index": 4,  "weight": 8, "rarity": "common",   "chars": [],         "min_level": 0},
+	{"name": "Speed Upgrade",       "category": "Individuality", "color": Color(0.6, 0.2, 0.8), "desc": "Kalıcı: Hareket hızı +50",                  "index": 4,  "weight": 8, "rarity": "common",   "chars": [],         "min_level": 0},
 	{"name": "Max Health Up",       "category": "Individuality", "color": Color(0.8, 0.2, 0.2), "desc": "Maximum HP +5",                             "index": 21, "weight": 8, "rarity": "common",   "chars": [],         "min_level": 0},
 	{"name": "Medkit",              "category": "Individuality", "color": Color(0.9, 0.1, 0.1), "desc": "+10 HP restored",                           "index": 20, "weight": 8, "rarity": "common",   "chars": [],         "min_level": 0},
 	{"name": "Gravitational Force", "category": "Calamity",      "color": Color(0.5, 0.0, 1.0), "desc": "Pulls subjects for 5s",                     "index": 9,  "weight": 8, "rarity": "common",   "chars": ["vector"], "min_level": 0},
@@ -2324,7 +2371,7 @@ func _build_all_upgrades() -> void:
 	{"name": "Supercooling",       "category": "Utility",       "color": Color(0.5, 0.8, 1.0), "desc": "Cryo Slow +%15",                 "index": 71,  "weight": 8,  "rarity": "uncommon", "chars": ["leila"], "min_level": 0},
 	{"name": "Thermal Vision",     "category": "Utility",       "color": Color(1.0, 0.5, 0.1), "desc": "Burn tick hasarı +%20",            "index": 73,  "weight": 6,  "rarity": "uncommon", "chars": ["leila"], "min_level": 1},
 	{"name": "Mystic Flow",        "category": "Individuality", "color": Color(0.5, 0.7, 1.0), "desc": "Each unique element applied\n→ +1% Move Speed (max 20%)", "index": 76, "weight": 6, "rarity": "uncommon", "chars": ["leila"], "min_level": 1},
-	{"name": "Elemental Memory",   "category": "Individuality", "color": Color(0.7, 0.7, 1.0), "desc": "Reacted enemies hold new elements\n100% longer (4s)", "index": 86, "weight": 4, "rarity": "uncommon", "chars": ["leila"], "min_level": 0},
+	{"name": "Elemental Memory",   "category": "Individuality", "color": Color(0.7, 0.7, 1.0), "desc": "Reaksiyon geçiren düşmana\nsonraki debuff 2× uzun sürer", "index": 86, "weight": 4, "rarity": "uncommon", "chars": ["leila"], "min_level": 0},
 	{"name": "Resonant Soul",      "category": "Individuality", "color": Color(0.8, 0.6, 1.0), "desc": "Each Reaction → restore 2 HP",                "index": 85,  "weight": 5,  "rarity": "uncommon", "chars": ["leila"], "min_level": 0},
 	# Lv1: İlk özel core'lar + reaksiyon temeli
 	{"name": "Plasma Core",        "category": "Identity",      "color": Color(0.4, 0.6, 1.0), "desc": "Bounces to Electrified enemies",             "index": 61, "weight": 8,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 1},
@@ -2352,8 +2399,6 @@ func _build_all_upgrades() -> void:
 	{"name": "Mana Overflow",      "category": "Utility",       "color": Color(0.6, 0.4, 1.0), "desc": "Using Calamity empowers\nall Cores briefly",   "index": 90, "weight": 3,  "rarity": "epic",      "chars": ["leila"], "min_level": 4},
 	# Lv5: Legendary endgame
 	{"name": "Perfect Catalyst",   "category": "Utility",       "color": Color(0.9, 0.7, 1.0), "desc": "Reaction → reapply last used element",        "index": 91, "weight": 3,  "rarity": "epic",      "chars": ["leila"], "min_level": 5},
-	{"name": "Catalyst Mind",      "category": "Individuality", "color": Color(0.9, 0.6, 1.0), "desc": "After a Reaction, next element\napplies twice (5s cooldown)", "index": 93, "weight": 2, "rarity": "legendary", "chars": ["leila"], "min_level": 5},
-	{"name": "Volatile Mixture",   "category": "Individuality", "color": Color(0.9, 0.4, 1.0), "desc": "3rd element on target:\ninstantly triggers Reaction", "index": 107, "weight": 4, "rarity": "rare", "chars": ["leila"], "min_level": 3},
 	# ── Leila Calamity ────────────────────────────────────────────────────────
 	{"name": "Blizzard",           "category": "Calamity",      "color": Color(0.6, 0.9, 1.0), "desc": "Islak tüm düşmanları\nanında dondurur",        "index": 94, "weight": 2,  "rarity": "legendary", "chars": ["leila"], "min_level": 4},
 	{"name": "Volcanic Rift",      "category": "Calamity",      "color": Color(1.0, 0.3, 0.0), "desc": "Leaves lava trail on ground",                 "index": 97, "weight": 2,  "rarity": "legendary", "chars": ["leila"], "min_level": 4},
@@ -2368,10 +2413,10 @@ func _build_all_upgrades() -> void:
 	{"name": "Elemental Shield Core", "category": "Identity",      "color": Color(0.3, 0.9, 0.6),  "desc": "Son uyguladığın element:\no elementin hasarına %20 direnç",        "index": 191, "weight": 4, "rarity": "rare",      "chars": ["leila"], "min_level": 2},
 	# Individuality
 	{"name": "Wet Armor",       "category": "Individuality", "color": Color(0.1, 0.5, 0.9),  "desc": "Islak düşman varken\n%10 az hasar alırsın",                    "index": 200, "weight": 8,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 0},
-	{"name": "Burn Frenzy",     "category": "Individuality", "color": Color(1.0, 0.4, 0.1),  "desc": "Her Yanan düşman için\n+2% Core Hızı (maks +14%)",             "index": 201, "weight": 8,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 1},
+	{"name": "Burn Frenzy",     "category": "Individuality", "color": Color(1.0, 0.4, 0.1),  "desc": "Her yanan düşman için\nburn tick hasarı +1 (maks +7)",             "index": 201, "weight": 8,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 1},
 	{"name": "Steam Surge",     "category": "Individuality", "color": Color(0.7, 0.9, 1.0),  "desc": "Steam reaksiyonu:\n3s boyunca +15% hareket hızı",              "index": 202, "weight": 8,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 1},
 	{"name": "Shock Reflex",    "category": "Individuality", "color": Color(0.4, 0.6, 1.0),  "desc": "Electrocute reaksiyonu:\n3s için +8% hasar kaçınma",            "index": 203, "weight": 7,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 2},
-	{"name": "Frost Barrier",   "category": "Individuality", "color": Color(0.6, 0.9, 1.0),  "desc": "Freeze reaksiyonu:\n4s süren 5 HP kalkanı",                    "index": 204, "weight": 6,  "rarity": "rare",      "chars": ["leila"], "min_level": 2},
+	{"name": "Frost Barrier",   "category": "Individuality", "color": Color(0.6, 0.9, 1.0),  "desc": "Freeze reaksiyonu: +5 HP kalkan\n(birikir, maks 20, 4s)",                    "index": 204, "weight": 6,  "rarity": "rare",      "chars": ["leila"], "min_level": 2},
 	{"name": "Primal Instinct", "category": "Individuality", "color": Color(0.9, 0.7, 1.0),  "desc": "Bir dalgada 3 farklı reaksiyon:\n5s için +10% hasar",           "index": 205, "weight": 5,  "rarity": "rare",      "chars": ["leila"], "min_level": 3},
 	{"name": "Melt Spiral",     "category": "Individuality", "color": Color(1.0, 0.5, 0.2),  "desc": "Melt reaksiyonu:\ndüşmanın konumunda 2s alev bırakır (1/s)",  "index": 206, "weight": 5,  "rarity": "rare",      "chars": ["leila"], "min_level": 3},
 	{"name": "Void Resonance",  "category": "Individuality", "color": Color(0.7, 0.3, 1.0),  "desc": "Dalgada 4 farklı reaksiyon:\nsonraki Calamity slot tüketmez",  "index": 207, "weight": 2,  "rarity": "epic",      "chars": ["leila"], "min_level": 5},
@@ -2483,11 +2528,18 @@ func _build_all_upgrades() -> void:
 func _get_card_art_path(card: Dictionary, char_id: String) -> String:
 	var category: String = card.get("category", "")
 	var card_name: String = card.get("name", "")
+	var chars: Array = card.get("chars", [])
 	var file_name := card_name.to_lower().replace(" ", "_") + "_art.png"
-	var char_folder: String = ({"vector": "Vector", "leila": "Leila", "cyclone": "Cyclone"} as Dictionary).get(char_id, "")
 	var cat_folder: String = ({"Identity": "identityCards", "Utility": "utilityCards",
 		"Individuality": "individualityCards", "Calamity": "calamityCards"} as Dictionary).get(category, "")
-	if char_folder == "" or cat_folder == "":
+	if cat_folder == "":
+		return ""
+	# Shared kart: chars boş veya birden fazla karakter
+	if chars.size() != 1:
+		var shared_path := "res://assets/upgradeCardsArt/Shared/%s/%s" % [cat_folder, file_name]
+		return shared_path
+	var char_folder: String = ({"vector": "Vector", "leila": "Leila", "cyclone": "Cyclone"} as Dictionary).get(char_id, "")
+	if char_folder == "":
 		return ""
 	var path := "res://assets/upgradeCardsArt/%s/%s/%s" % [char_folder, cat_folder, file_name]
 	return path
@@ -4228,7 +4280,8 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 		get_node("Player").first_debuff_duration_mult *= 1.5
 		_seen_individualities.append("Arcane Focus")
 	elif index == 76:  # Mystic Flow
-		get_node("Player").mystic_flow_stacks = 0   # her unique element +1% hız
+		get_node("Player").mystic_flow_stacks = 0
+		get_node("Player").move_speed_bonus_pct = 0.0
 		_seen_individualities.append("Mystic Flow")
 	elif index == 85:  # Resonant Soul
 		get_node("Player").reaction_heal_amount += 2
@@ -4236,11 +4289,6 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 	elif index == 86:  # Elemental Memory
 		get_node("Player").has_elemental_memory = true
 		_seen_individualities.append("Elemental Memory")
-	elif index == 93:  # Catalyst Mind
-		get_node("Player").has_catalyst_mind = true
-		_seen_individualities.append("Catalyst Mind")
-	elif index == 107:  # Volatile Mixture
-		get_node("Player").has_volatile_mixture = true
 	elif index == 200:  # Wet Armor
 		get_node("Player").has_wet_armor = true
 	elif index == 201:  # Burn Frenzy
