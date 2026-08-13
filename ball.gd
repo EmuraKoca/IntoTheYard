@@ -1543,6 +1543,10 @@ func _hit_subject(subject: Node2D) -> void:
 		base_damage = 9
 	var total_damage = base_damage
 
+	# Ricochet Core: hız bonusu → her 10 hız = +1 hasar
+	if can_ricochet_core:
+		total_damage += int((speed - 600.0) / 10.0)
+
 	# Siege Protocol: Siege Core bounce bonus
 	if can_siege and has_meta("siege_bonus"):
 		total_damage += get_meta("siege_bonus", 0)
@@ -1761,7 +1765,7 @@ func _hit_subject(subject: Node2D) -> void:
 		# Static Core: isabette slow
 		if can_static_core and subject.has_method("apply_slow"):
 			var _sl_dur: float = 1.0 if (subject.get("is_glitched") and subject.is_glitched) else 0.5
-			subject.apply_slow(_sl_dur)
+			subject.apply_slow(0.4, _sl_dur)
 
 		# Decay Core: isabette 1 Decay stack
 		if can_decay and subject.has_method("apply_decay"):
