@@ -2951,6 +2951,40 @@ func _activate_systemic_failure() -> void:
 			subject.apply_antivirus(subject.antivirus_stacks * 2 if subject.get("antivirus_stacks") and subject.antivirus_stacks > 0 else _cap)
 	_react_flash_screen(Color(0.05, 0.9, 0.35, 0.45))
 
+func _activate_bounce_barrage() -> void:
+	var p := get_node_or_null("Player")
+	if p == null: return
+	p.bounce_barrage_timer = 5.0
+	_react_flash_screen(Color(0.35, 0.0, 0.9, 0.4))
+
+var _mirror_image_balls: Array = []
+
+func _activate_mirror_image() -> void:
+	var p := get_node_or_null("Player")
+	var launcher := get_node_or_null("BallLauncher")
+	if p == null or launcher == null: return
+	for i in range(2):
+		var ball = launcher.ball_scene.instantiate()
+		ball.max_damage = 4 + p.ball_mastery
+		ball.is_normal_core = true
+		ball.global_position = p.global_position
+		ball.add_to_group("player_balls")
+		add_child(ball)
+		ball.get_node("CollisionShape2D").disabled = true
+		p.add_to_orbit(ball)
+		ball.scale = Vector2(1.0, 1.0)
+		_mirror_image_balls.append(ball)
+	_react_flash_screen(Color(0.2, 0.65, 0.9, 0.4))
+	get_tree().create_timer(5.0).timeout.connect(_clear_mirror_image)
+
+func _clear_mirror_image() -> void:
+	var p := get_node_or_null("Player")
+	for b in _mirror_image_balls:
+		if is_instance_valid(b):
+			if p: p.remove_from_orbit(b)
+			b.queue_free()
+	_mirror_image_balls.clear()
+
 # ── Vector Calamity ───────────────────────────────────────────────────────────
 func _activate_iron_fortress() -> void:
 	var p := get_node_or_null("Player")
@@ -3236,6 +3270,10 @@ func _input(event: InputEvent) -> void:
 				_activate_data_storm()
 			elif calamity == "👾":  # Backdoor
 				_activate_backdoor()
+			elif calamity == "🎱":  # Bounce Barrage
+				_activate_bounce_barrage()
+			elif calamity == "🪞":  # Mirror Image
+				_activate_mirror_image()
 			elif calamity == "🧪":  # Systemic Failure
 				_activate_systemic_failure()
 			elif calamity == "🛡️":  # Iron Fortress

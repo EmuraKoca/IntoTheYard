@@ -230,6 +230,7 @@ const connected_core_count_max: int = 3
 var has_elemental_harmony_util: bool  = false  # 3 element aktifse hız bonusu
 var has_mana_overflow: bool           = false  # Calamity → core'lar güçlenir
 var mana_overflow_timer: float        = 0.0   # Mana Overflow süreci
+var bounce_barrage_timer: float       = 0.0   # Bounce Barrage (Calamity) süreci
 var has_pyroblast: bool               = false
 var has_thermal_expansion: bool       = false
 var elemental_harmony_bonus: float    = 0.0   # Elemental Harmony: unique element başına +5% hız
@@ -639,6 +640,10 @@ func _physics_process(delta: float) -> void:
 	if mana_overflow_timer > 0.0:
 		mana_overflow_timer -= delta
 		_effective_orbit_speed *= 1.5
+	# Bounce Barrage (Calamity): 5s boyunca Core Speed ×3
+	if bounce_barrage_timer > 0.0:
+		bounce_barrage_timer -= delta
+		_effective_orbit_speed *= 3.0
 	# Elemental Harmony: aktif unique element başına +%5 Core Speed
 	if has_elemental_harmony_util and elemental_harmony_bonus > 0.0:
 		_effective_orbit_speed *= (1.0 + elemental_harmony_bonus)
