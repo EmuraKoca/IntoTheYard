@@ -31,7 +31,7 @@ var _chip_node: Node2D = null
 var attack_cooldown: float = 0.0
 var attack_rate: float = 1.0
 var chip_duration: float = 15.0
-var _elem_indicator = null
+var _debuff_nodes: Dictionary = {}
 var _anim_dir: String = "S"
 var _freeze_sprite: AnimatedSprite2D = null
 var _reactions_cancelled: bool = false
@@ -119,7 +119,6 @@ func _on_lethal_damage(_from_ally: bool) -> void:
 func _ready() -> void:
 	z_index = 2
 	_setup_sprite()
-	_setup_element_indicator(_elem_indicator_y_offset())
 	_chip_node = Node2D.new()
 	_chip_node.z_as_relative = false
 	_chip_node.z_index = 10
@@ -234,7 +233,8 @@ func die(cause: String = "normal") -> void:
 	collision_layer = 0
 	collision_mask  = 0
 	if _chip_node: _chip_node.visible = false
-	if _elem_indicator: _elem_indicator.visible = false
+	for _di_node in _debuff_nodes.values():
+		if is_instance_valid(_di_node): _di_node.visible = false
 	if _cryo_sprite and is_instance_valid(_cryo_sprite): _cryo_sprite.queue_free(); _cryo_sprite = null
 	if _freeze_sprite and is_instance_valid(_freeze_sprite): _freeze_sprite.queue_free(); _freeze_sprite = null
 	if _melt_frozen_sprite and is_instance_valid(_melt_frozen_sprite): _melt_frozen_sprite.queue_free(); _melt_frozen_sprite = null
@@ -283,7 +283,7 @@ func apply_burn() -> void:
 	if not is_instance_valid(self): return
 	is_burning = true
 	_notify_mystic_flow("fire")
-	_set_element("burn")
+	_show_debuff("burn")
 	var p := _get_player()
 	var tick_dmg: int = 2
 	if p and p.get("burn_damage_mult"):
@@ -315,7 +315,7 @@ func apply_burn() -> void:
 	if not is_instance_valid(self):
 		return
 	is_burning = false
-	_clear_element()
+	_hide_debuff("burn")
 
 func _react_overheat(saved_count: int = 0) -> void:
 	GameData.record_reaction("overheat")
@@ -337,7 +337,9 @@ func apply_frozen() -> void:
 	GameData.record_reaction("frozen")
 	is_frozen = true
 	is_wet = false
-	_set_element("frozen")
+	_hide_debuff("wet")
+	_hide_debuff("slow")
+	_show_debuff("frozen")
 	var spr := get_sprite()
 	if spr: spr.stop()
 	_spawn_freeze_vfx()
@@ -358,7 +360,7 @@ func apply_frozen() -> void:
 	if is_dead: return
 	var spr2 := get_sprite()
 	if spr2 and is_instance_valid(spr2): spr2.play(get_walk_anim_prefix() + _anim_dir)
-	_clear_element()
+	_hide_debuff("frozen")
 
 func apply_wet() -> void:
 	if is_dead: return
@@ -366,7 +368,7 @@ func apply_wet() -> void:
 	if not is_instance_valid(self): return
 	is_wet = true
 	_notify_mystic_flow("wet")
-	_set_element("wet")
+	_show_debuff("wet")
 	var p := _get_player()
 	var dur := 5.0
 	if p and p.get("has_elemental_memory") and p.has_elemental_memory and _had_reaction:
@@ -378,7 +380,7 @@ func apply_wet() -> void:
 	if not is_instance_valid(self):
 		return
 	is_wet = false
-	_clear_element()
+	_hide_debuff("wet")
 
 func apply_antivirus(stacks: int = 1) -> void:
 	var _ap := get_tree().get_first_node_in_group("player")
@@ -388,6 +390,7 @@ func apply_antivirus(stacks: int = 1) -> void:
 	_antivirus_duration = max(_antivirus_duration, _dur)
 	_antivirus_tick = min(_antivirus_tick if _antivirus_tick > 0 else 0.5, 0.5)
 	is_antivirused = true
+	_show_debuff("virus")
 
 func _process_antivirus(delta: float) -> void:
 	if not is_antivirused:
@@ -409,6 +412,7 @@ func _process_antivirus(delta: float) -> void:
 	if _antivirus_duration <= 0.0:
 		is_antivirused = false
 		antivirus_stacks = 0
+		_hide_debuff("virus")
 
 func apply_glitch(duration: float = 3.0) -> void:
 	if is_dead: return
@@ -419,12 +423,12 @@ func apply_glitch(duration: float = 3.0) -> void:
 	if _gp and _gp.get("has_extended_glitch") and _gp.has_extended_glitch:
 		_dur = max(_dur, 5.0)
 	is_glitched = true
-	_set_element("glitch")
+	_show_debuff("glitch")
 	await get_tree().create_timer(_dur).timeout
 	if not is_instance_valid(self):
 		return
 	is_glitched = false
-	_clear_element()
+	_hide_debuff("glitch")
 
 func apply_electrified() -> void:
 	if is_dead: return
@@ -434,7 +438,7 @@ func apply_electrified() -> void:
 	if not is_instance_valid(self): return
 	is_electrified = true
 	_notify_mystic_flow("electric")
-	_set_element("electrified")
+	_show_debuff("electrified")
 	var p := _get_player()
 	var dur := 5.0
 	if p and p.get("has_elemental_memory") and p.has_elemental_memory and _had_reaction:
@@ -447,7 +451,7 @@ func apply_electrified() -> void:
 	await get_tree().create_timer(dur).timeout
 	if is_instance_valid(self):
 		is_electrified = false
-		_clear_element()
+		_hide_debuff("electrified")
 
 
 func apply_slow(amount, duration: float = 3.0, source: String = "cryo", anchor_pos: Vector2 = Vector2.ZERO) -> void:
@@ -464,7 +468,7 @@ func apply_slow(amount, duration: float = 3.0, source: String = "cryo", anchor_p
 	if p and p.get("cryo_slow_mult"):
 		slow_amount = min(amount * p.cryo_slow_mult, 0.9)
 	speed = speed * (1.0 - slow_amount)
-	_set_element("slow")
+	_show_debuff("slow")
 	if source != "anchor":
 		_spawn_cryo_vfx()
 	var dur := duration
@@ -485,7 +489,7 @@ func apply_slow(amount, duration: float = 3.0, source: String = "cryo", anchor_p
 		_cryo_sprite = null
 	speed = original_speed
 	is_slowed = false
-	_clear_element()
+	_hide_debuff("slow")
 
 # ── Reaksiyon sistemi ────────────────────────────────────────────────────────
 
@@ -499,6 +503,7 @@ func apply_decay() -> void:
 	var _max_stacks: int = 3
 	if decay_stacks >= _max_stacks: return
 	decay_stacks += 1
+	_show_debuff("decay")
 	var _slow_per_stack: float = 0.05
 	var _new_slow: float = decay_stacks * _slow_per_stack
 	var _delta_slow: float = _new_slow - _decay_slow_applied
@@ -516,6 +521,9 @@ func apply_decay() -> void:
 
 func _on_decay_death() -> void:
 	if decay_stacks <= 0: return
+	decay_stacks = 0
+	_decay_slow_applied = 0.0
+	_hide_debuff("decay")
 	var _p := _get_player()
 	var _dmg_per_stack: int = 3 if (_p and _p.get("has_decay_amp") and _p.has_decay_amp) else 2
 	var _dmg: int = decay_stacks * _dmg_per_stack
@@ -618,7 +626,7 @@ func _react_electrocute(mult: float, game: Node, player: Node) -> void:
 	if not is_instance_valid(self): return
 	if _reactions_cancelled: _reactions_cancelled = false; return
 	speed = prev_speed
-	_clear_element()
+	_hide_debuff("wet"); _hide_debuff("electrified")
 	if player and player.get("has_shock_reflex") and player.has_shock_reflex:
 		player._shock_reflex_timer = 3.0
 	_notify_reaction(game, player)
@@ -641,7 +649,7 @@ func _react_steam(mult: float, game: Node, player: Node) -> void:
 			if body.health <= 0: body.die("steam")
 	health -= dmg
 	_react_flash(Color(0.9, 0.9, 1.0))
-	_clear_element()
+	_hide_debuff("wet"); _hide_debuff("burn")
 	if player and player.get("has_steam_surge") and player.has_steam_surge:
 		player._steam_surge_timer = 3.0
 	_notify_reaction(game, player)
@@ -660,7 +668,7 @@ func _react_cryostatic(mult: float, game: Node, player: Node) -> void:
 			if body.health <= 0: body.die("freeze")
 	health -= dmg
 	_react_flash(Color(0.5, 0.8, 1.0))
-	_clear_element()
+	_hide_debuff("slow"); _hide_debuff("electrified")
 	if player and player.get("has_frost_barrier") and player.has_frost_barrier:
 		player.frost_barrier_hp = mini(player.frost_barrier_hp + 5, 20)
 		player._frost_barrier_timer = 4.0
@@ -675,7 +683,7 @@ func _react_shatter(mult: float, game: Node, player: Node) -> void:
 	var dmg := int(22 * mult)
 	health -= dmg
 	_react_flash(Color(0.6, 0.9, 1.0))
-	_clear_element()
+	_hide_debuff("frozen"); _hide_debuff("electrified")
 	_notify_reaction(game, player)
 	if health <= 0: die("freeze")
 
@@ -688,7 +696,7 @@ func _react_melt_frozen(mult: float, game: Node, player: Node) -> void:
 	var dmg := int(20 * mult)
 	health -= dmg
 	_react_flash(Color(1.0, 0.5, 0.2))
-	_clear_element()
+	_hide_debuff("frozen")
 	_notify_reaction(game, player)
 	if health <= 0: die()
 
@@ -703,7 +711,7 @@ func _react_overcharge(mult: float, game: Node, player: Node) -> void:
 			if body.health <= 0: body.die("electric")
 	health -= dmg
 	_react_flash(Color(1.0, 0.6, 0.0))
-	_clear_element()
+	_hide_debuff("burn"); _hide_debuff("electrified")
 	_notify_reaction(game, player)
 	if health <= 0: die("electric")
 
@@ -713,7 +721,7 @@ func _react_melt(mult: float) -> void:
 	var dmg := int(18 * mult)
 	health -= dmg
 	_react_flash(Color(1.0, 0.6, 0.1))
-	_clear_element()
+	_hide_debuff("burn"); _hide_debuff("slow")
 	if health <= 0: die("burn")
 
 func _react_flash(color: Color) -> void:
@@ -1023,19 +1031,34 @@ func _spawn_overcharge_vfx() -> void:
 
 # ── Element göstergesi ───────────────────────────────────────────────────────
 
-func _setup_element_indicator(y_offset: float) -> void:
-	_elem_indicator = load("res://elem_indicator.gd").new()
-	_elem_indicator.position = Vector2(0, y_offset)
-	_elem_indicator.visible = false
-	add_child(_elem_indicator)
+func _show_debuff(elem: String) -> void:
+	if _debuff_nodes.has(elem):
+		return
+	var ind = load("res://elem_indicator.gd").new()
+	add_child(ind)
+	_debuff_nodes[elem] = ind
+	ind.set_element(elem)
+	_reposition_debuffs()
 
-func _set_element(elem: String) -> void:
-	if _elem_indicator != null:
-		_elem_indicator.set_element(elem)
+func _hide_debuff(elem: String) -> void:
+	if not _debuff_nodes.has(elem):
+		return
+	_debuff_nodes[elem].queue_free()
+	_debuff_nodes.erase(elem)
+	_reposition_debuffs()
 
-func _clear_element() -> void:
-	if _elem_indicator != null:
-		_elem_indicator.clear_element()
+func _reposition_debuffs() -> void:
+	var keys: Array = _debuff_nodes.keys()
+	var count: int = keys.size()
+	if count == 0:
+		return
+	var y: float = _elem_indicator_y_offset()
+	var spacing: float = 18.0
+	var start_x: float = -(count - 1) * spacing * 0.5
+	for i in range(count):
+		var node = _debuff_nodes[keys[i]]
+		if is_instance_valid(node):
+			node.position = Vector2(start_x + i * spacing, y)
 
 # ── Chip çizimi ──────────────────────────────────────────────────────────────
 

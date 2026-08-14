@@ -11,6 +11,8 @@ const _TEXTURES: Dictionary = {
 	"glitch":      "res://assets/elemIndicators/glitch.png",
 	"electrified": "res://assets/elemIndicators/electrified.png",
 	"slow":        "res://assets/elemIndicators/slow.png",
+	"virus":       "res://assets/elemIndicators/virus.png",
+	"decay":       "res://assets/elemIndicators/decay.png",
 }
 
 func _ready() -> void:
