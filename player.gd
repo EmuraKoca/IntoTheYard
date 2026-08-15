@@ -128,20 +128,15 @@ var has_arc_overload: bool        = false # Electrocute zinciri +2 düşmana sı
 
 # ── Cyclone — Rogue ──────────────────────────────────────────────────────────
 var has_ricochet_strike: bool     = false
-var has_data_exploit: bool        = false
+var data_exploit_level: int       = 0     # Bonus hasar = 2 + level (Lv1:+3, Lv2:+4, Lv3:+5)
 var has_shadow_strike: bool       = false
 var has_exploit_network: bool     = false
 var has_phantom_circuit: bool     = false  # eski Individuality (geriye uyumluluk)
 var _phantom_hit_counter: int     = 0
 # Glitch Assassin
-var has_extended_glitch: bool     = false # Glitch 3→5s
-var has_signal_jam: bool          = false # Glitch → -25% move speed
+var extended_glitch_bonus: int    = 0     # Glitch süresi +1s/seviye (3 → 4 → 5 → 6s)
 var has_data_siphon: bool         = false # Data Leech +2 on Glitched
-var has_exploit_stack: bool       = false # Konsekütif Glitch vur → +1 (max +5)
-var _exploit_stack_target         = null  # Son Glitch hedefi
-var _exploit_stack_count: int     = 0
 var has_virus_spread: bool        = false # Network range 350px
-var has_interference: bool        = false # Glitch'li → -%20 dmg
 var has_exploit_mastery: bool     = false # Data Exploit +3→+6
 var has_system_overload: bool     = false # 5+ Glitch aktif → +%20 dmg
 var has_mind_hack: bool           = false # 3 ardışık hit → ally saldırsın
@@ -150,9 +145,10 @@ var _mind_hack_count: int         = 0
 var has_neural_overwrite: bool    = false # Glitch timer reset
 var has_data_siphon_active: bool  = false # (internal flag, not card)
 # Ricochet Master
-var has_angular_precision: bool   = false # İlk vuruş +%15
+var angular_precision_level: int  = 0     # İlk vuruş bonusu = %10 + %5/seviye (Lv1:%15, Lv2:%20, Lv3:%25)
+var signal_jam_level: int         = 0     # Glitch'li düşman hızı: +%10 + %5/seviye (Lv1:%15, Lv2:%20, Lv3:%25)
 var has_wallrunner: bool          = false # +%8 speed per bounce
-var has_bounce_mastery: bool      = false # Ricochet +4→+7
+var bounce_mastery_level: int     = 0     # Ricochet Strike bonus: 4 → 5+level (Lv1:6, Lv2:7, Lv3:8)
 var has_pinball_protocol: bool    = false # 3+ bounce → pierce
 var has_ricochet_memory: bool     = false # Ricochet bonus sıfırlanmaz
 var has_kinetic_rogue: bool       = false # Her 3 bounce → +1 kalıcı base dmg

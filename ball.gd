@@ -402,6 +402,7 @@ func _get_player() -> Node2D:
 	return _cached_player
 
 func launch(direction: Vector2, spd: float = 600.0) -> void:
+	hit_subjects.clear()
 	move_direction = direction.normalized()
 	# Kinetic Surge: 15+ Momentum → max hızda başla
 	var _ks := _get_player()
@@ -421,6 +422,7 @@ func launch(direction: Vector2, spd: float = 600.0) -> void:
 	_lt.tween_property(self, "scale", Vector2(1.0, 1.0), 0.18)
 
 func launch_with_speed(direction: Vector2, spd: float) -> void:
+	hit_subjects.clear()
 	move_direction = direction.normalized()
 	speed = spd
 	moving = true
@@ -592,8 +594,8 @@ func _physics_process(delta: float) -> void:
 		_play_hit_sfx()
 		if can_steam: _spawn_steam_cloud(global_position)
 
+		_wall_bounce_count += 1
 		if can_kinetic:
-			_wall_bounce_count += 1
 			_update_kinetic_vfx()
 			queue_redraw()
 		if can_ricochet_core:
@@ -1591,24 +1593,12 @@ func _hit_subject(subject: Node2D) -> void:
 	if _rp and is_instance_valid(subject):
 		var _is_glitched: bool = subject.get("is_glitched") and subject.is_glitched
 
-		# Interference: Glitch'li düşman +%20 hasar alır
-		if _rp.get("has_interference") and _rp.has_interference and _is_glitched:
-			subject.take_damage(int(total_damage * 0.2))
-
 		# Data Exploit: Glitch'li düşmana +3 (veya +6 Exploit Mastery ile) bonus hasar
-		if _rp.get("has_data_exploit") and _rp.has_data_exploit and _is_glitched:
-			var _de_bonus: int = 6 if (_rp.get("has_exploit_mastery") and _rp.has_exploit_mastery) else 3
+		if _rp.get("data_exploit_level") and _rp.data_exploit_level > 0 and _is_glitched:
+			var _de_bonus: int = 2 + _rp.data_exploit_level
+			if _rp.get("has_exploit_mastery") and _rp.has_exploit_mastery:
+				_de_bonus += 3
 			subject.take_damage(_de_bonus)
-
-		# Exploit Stack: Aynı Glitch hedefine ardışık hit → +1 hasar (max +5)
-		if _rp.get("has_exploit_stack") and _rp.has_exploit_stack and _is_glitched:
-			if _rp._exploit_stack_target == subject:
-				_rp._exploit_stack_count = min(_rp._exploit_stack_count + 1, 5)
-			else:
-				_rp._exploit_stack_target = subject
-				_rp._exploit_stack_count = 0
-			if _rp._exploit_stack_count > 0:
-				subject.take_damage(_rp._exploit_stack_count)
 
 		# Neural Overwrite: Glitch timer sıfırla
 		if _rp.get("has_neural_overwrite") and _rp.has_neural_overwrite and _is_glitched:
@@ -1630,7 +1620,9 @@ func _hit_subject(subject: Node2D) -> void:
 
 		# Ricochet Strike: Her duvar sekmesi → +4 (veya +7 Bounce Mastery ile) hasar
 		if _rp.get("has_ricochet_strike") and _rp.has_ricochet_strike and _wall_bounce_count > 0:
-			var _rc_bonus: int = 7 if (_rp.get("has_bounce_mastery") and _rp.has_bounce_mastery) else 4
+			var _rc_bonus: int = 4
+			if _rp.get("bounce_mastery_level") and _rp.bounce_mastery_level > 0:
+				_rc_bonus = 5 + _rp.bounce_mastery_level
 			subject.take_damage(_wall_bounce_count * _rc_bonus)
 
 		# Shadow Strike: İlk vuruş duvar sekmesi sonrası → ×1.5
@@ -1639,8 +1631,9 @@ func _hit_subject(subject: Node2D) -> void:
 			subject.take_damage(int(total_damage * 0.5))
 
 		# Angular Precision: Her flight'ın ilk vuruşu +%15
-		if _rp.get("has_angular_precision") and _rp.has_angular_precision and hit_subjects.size() == 1:
-			subject.take_damage(int(total_damage * 0.15))
+		if _rp.get("angular_precision_level") and _rp.angular_precision_level > 0 and hit_subjects.size() == 1:
+			var _ap_pct: float = 0.10 + 0.05 * _rp.angular_precision_level
+			subject.take_damage(int(total_damage * _ap_pct))
 
 		# Pinball Protocol: 3+ bounce → pierce (bounce yapma)
 		if _rp.get("has_pinball_protocol") and _rp.has_pinball_protocol and _wall_bounce_count >= 3:

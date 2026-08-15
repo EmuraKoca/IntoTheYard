@@ -2436,20 +2436,18 @@ func _build_all_upgrades() -> void:
 	{"name": "Ricochet Core",        "category": "Identity",      "color": Color(0.45, 0.1, 0.9),  "desc": "Duvar sekmesi → +%5 hız (maks +%30)\nHer 10 hız = +1 hasar; düşmana çarpınca sıfır", "index": 163, "weight": 8,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
 	{"name": "Phantom Circuit Core", "category": "Identity",      "color": Color(0.3, 0.8, 0.9),  "desc": "Hits 3 enemies → all stunned 1s\nOtherwise: no stun",       "index": 159, "weight": 6,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
 	# Utility — Lv0
-	{"name": "Data Exploit",         "category": "Utility",       "color": Color(0.7, 0.1, 0.5),  "desc": "Glitched target takes\n+3 bonus dmg per hit",              "index": 115, "weight": 10, "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
-	{"name": "Extended Glitch",      "category": "Utility",       "color": Color(0.75, 0.0, 0.7), "desc": "Glitch duration\n3s → 5s",                                 "index": 119, "weight": 9,  "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
-	{"name": "Signal Jam",           "category": "Utility",       "color": Color(0.6, 0.0, 0.6),  "desc": "Glitched enemies move\n25% slower",                        "index": 120, "weight": 9,  "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
-	{"name": "Angular Precision",    "category": "Utility",       "color": Color(0.45, 0.2, 0.8), "desc": "First hit of each flight:\n+15% dmg",                      "index": 131, "weight": 8,  "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
+	{"name": "Data Exploit",         "category": "Utility",       "color": Color(0.7, 0.1, 0.5),  "desc": "Glitch'li hedef +1 bonus hasar\n(taban +3)",                "index": 115, "weight": 10, "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
+	{"name": "Extended Glitch",      "category": "Utility",       "color": Color(0.75, 0.0, 0.7), "desc": "Glitch süresi +1 Saniye\n(3s taban)",                       "index": 119, "weight": 9,  "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
+	{"name": "Angular Precision",    "category": "Utility",       "color": Color(0.45, 0.2, 0.8), "desc": "Her uçuşun ilk vuruşu: +%5 hasar\n(taban +%15)",           "index": 131, "weight": 8,  "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
+	{"name": "Signal Jam",           "category": "Utility",       "color": Color(0.6, 0.0, 0.6),  "desc": "Glitch'li düşman hızı: +%5\n(taban +%15)",                 "index": 120, "weight": 9,  "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
 	# Utility — Lv1
-	{"name": "Exploit Stack",        "category": "Utility",       "color": Color(0.8, 0.05, 0.55),"desc": "Consecutive hits on same\nGlitched target: +1 dmg (max +5)", "index": 122, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [115]},
-	{"name": "Interference",         "category": "Utility",       "color": Color(0.5, 0.0, 0.5),  "desc": "Glitched enemies take\n+20% more damage",                 "index": 124, "weight": 6,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
-	{"name": "Bounce Mastery",       "category": "Utility",       "color": Color(0.45, 0.1, 0.9), "desc": "Ricochet Strike bonus:\n+4 → +7 per bounce",               "index": 133, "weight": 6,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [114]},
+	{"name": "Bounce Mastery",       "category": "Utility",       "color": Color(0.45, 0.1, 0.9), "desc": "Ricochet Strike bonusu: +1\n(taban 4 → 6)",                "index": 133, "weight": 6,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [114]},
 	{"name": "Backstab Protocol",    "category": "Utility",       "color": Color(0.15, 0.55, 0.35),"desc": "North wall bounce:\nnext hit deals ×1.5 damage",           "index": 158, "weight": 6,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
 	{"name": "Stack Overflow",       "category": "Utility",       "color": Color(0.1, 0.8, 0.35),  "desc": "Antivirus stack cap\n3 → 4",                              "index": 148, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [160]},
 	{"name": "Memory Leak",          "category": "Utility",       "color": Color(0.05, 0.65, 0.3), "desc": "Antivirus duration\n3s → 4s",                             "index": 150, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [160]},
 	{"name": "Cascade Delete",       "category": "Utility",       "color": Color(0.1, 0.7, 0.45),  "desc": "Antivirus hit → spreads\n1 stack to nearest (75px)",       "index": 152, "weight": 6,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [160]},
 	# Utility — Lv2
-	{"name": "Exploit Mastery",      "category": "Utility",       "color": Color(0.75, 0.0, 0.55),"desc": "Data Exploit bonus dmg\n+3 → +6",                          "index": 125, "weight": 5,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2, "requires": [115]},
+	{"name": "Exploit Mastery",      "category": "Utility",       "color": Color(0.75, 0.0, 0.55),"desc": "Data Exploit bonus hasarına\n+3 ekler",                    "index": 125, "weight": 5,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2, "requires": [115]},
 	{"name": "Pinball Protocol",     "category": "Utility",       "color": Color(0.4, 0.1, 0.95), "desc": "3+ bounces without hit:\nnext hit pierces",                 "index": 134, "weight": 5,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
 	{"name": "Stealth Pass",         "category": "Utility",       "color": Color(0.25, 0.7, 0.85),"desc": "Phantom Circuit Core:\n3 enemy req → 2",                   "index": 139, "weight": 5,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 2, "requires": [159]},
 	{"name": "Ghost Protocol",       "category": "Utility",       "color": Color(0.2, 0.75, 0.9), "desc": "Phantom Circuit Core\nstun: 1s → 1.5s",                    "index": 140, "weight": 4,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2, "requires": [159]},
@@ -4389,20 +4387,18 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 		var p := get_node("Player")
 		match index:
 			114: p.has_ricochet_strike    = true
-			115: p.has_data_exploit        = true
+			115: pass  # level bazlı bonus _apply_utility_level'da uygulanıyor
 			116: p.has_shadow_strike       = true
-			119: p.has_extended_glitch     = true
-			120: p.has_signal_jam          = true
+			119: pass  # level bazlı bonus _apply_utility_level'da uygulanıyor
+			120: pass  # level bazlı bonus _apply_utility_level'da uygulanıyor
 			121: p.has_data_siphon         = true
-			122: p.has_exploit_stack       = true
-			124: p.has_interference        = true
 			125: p.has_exploit_mastery     = true
 			126: p.has_system_overload     = true
 			129: if calamity_slots.size() < max_calamity_slots: calamity_slots.append("💾")
 			130: if calamity_slots.size() < max_calamity_slots: calamity_slots.append("👾")
-			131: p.has_angular_precision   = true
+			131: pass  # level bazlı bonus _apply_utility_level'da uygulanıyor
 			132: p.has_wallrunner          = true
-			133: p.has_bounce_mastery      = true
+			133: pass  # level bazlı bonus _apply_utility_level'da uygulanıyor
 			134: p.has_pinball_protocol    = true
 			135: p.has_ricochet_memory     = true
 			136: p.has_kinetic_rogue       = true
@@ -4542,6 +4538,16 @@ func _apply_utility_level(index: int, level: int) -> void:
 				1: p.last_stand_hp_mult = 0.005; p.last_stand_armor_mult = 0.0
 				2: p.last_stand_hp_mult = 0.008; p.last_stand_armor_mult = 0.003
 				3: p.last_stand_hp_mult = 0.012; p.last_stand_armor_mult = 0.005
+		119:  # Extended Glitch
+			p.extended_glitch_bonus = level
+		115:  # Data Exploit
+			p.data_exploit_level = level
+		131:  # Angular Precision
+			p.angular_precision_level = level
+		120:  # Signal Jam
+			p.signal_jam_level = level
+		133:  # Bounce Mastery
+			p.bounce_mastery_level = level
 
 func show_dialog(text: String, pos: Vector2) -> void:
 	var label = Label.new()

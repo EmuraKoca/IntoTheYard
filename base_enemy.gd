@@ -420,15 +420,22 @@ func apply_glitch(duration: float = 3.0) -> void:
 		return
 	var _gp := get_tree().get_first_node_in_group("player")
 	var _dur := duration
-	if _gp and _gp.get("has_extended_glitch") and _gp.has_extended_glitch:
-		_dur = max(_dur, 5.0)
+	if _gp and _gp.get("extended_glitch_bonus") and _gp.extended_glitch_bonus > 0:
+		_dur = max(_dur, 3.0 + float(_gp.extended_glitch_bonus))
 	is_glitched = true
 	_show_debuff("glitch")
+	# Signal Jam: Glitch'li düşman daha hızlı hareket eder (diğer düşmanlara daha çabuk ulaşır)
+	var _sj_mult: float = 1.0
+	if _gp and _gp.get("signal_jam_level") and _gp.signal_jam_level > 0:
+		_sj_mult = 1.0 + (0.10 + 0.05 * float(_gp.signal_jam_level))
+		speed *= _sj_mult
 	await get_tree().create_timer(_dur).timeout
 	if not is_instance_valid(self):
 		return
 	is_glitched = false
 	_hide_debuff("glitch")
+	if _sj_mult != 1.0:
+		speed /= _sj_mult
 
 func apply_electrified() -> void:
 	if is_dead: return
