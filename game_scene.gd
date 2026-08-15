@@ -90,7 +90,7 @@ const _CALAMITY_DISPLAY_NAMES: Dictionary = {
 	"🔥💥": "Wildfire",
 	"💣":   "Glitch Bomb",
 	"💻💥": "System Crash",
-	"🦠":   "Antivirus Rain",
+	"🦠":   "Virus Rain",
 	"☠️":  "Decay Field",
 }
 
@@ -2476,7 +2476,7 @@ func _build_all_upgrades() -> void:
 	{"name": "Data Storm",           "category": "Calamity",      "color": Color(0.7, 0.0, 0.8),  "desc": "All Glitched enemies\nin the Yard take 10 dmg",             "index": 129, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 3},
 	{"name": "Backdoor",             "category": "Calamity",      "color": Color(0.6, 0.0, 0.7),  "desc": "All enemies in the Yard\nGlitched for 3s",                  "index": 130, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
 	{"name": "Bounce Barrage",       "category": "Calamity",      "color": Color(0.35, 0.0, 0.9),  "desc": "Core Speed ×3 for 5s",                                   "index": 138, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
-	{"name": "Mirror Image",         "category": "Calamity",      "color": Color(0.2, 0.65, 0.9),  "desc": "Spawn 2 phantom cores\nfor 5s",                          "index": 144, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
+	{"name": "Mirror Image",         "category": "Calamity",      "color": Color(0.2, 0.65, 0.9),  "desc": "Spawn 2 phantom cores\nfor 25s",                          "index": 144, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
 	{"name": "Systemic Failure",     "category": "Calamity",      "color": Color(0.0, 0.7, 0.35),  "desc": "All enemies in the Yard\nget 2× Antivirus stacks",        "index": 156, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
 	# ── Cyclone Connected Cores (iç yörünge) ─────────────────────────────────
 	{"name": "Glitch Pulse Core",    "category": "Identity",      "color": Color(0.8, 0.0, 0.8),   "desc": "Her 4s: 80px içinde 1 düşmana\nGlitch uygular",                 "index": 192, "weight": 5, "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
@@ -2492,7 +2492,7 @@ func _build_all_upgrades() -> void:
 	# Calamity — Rare/Epic
 	{"name": "Glitch Bomb",    "category": "Calamity",      "color": Color(0.75, 0.0, 0.85),"desc": "Seçilen 120px alana 4s Glitch uygular",                              "index": 215, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 3},
 	{"name": "System Crash",   "category": "Calamity",      "color": Color(0.8, 0.1, 0.6),  "desc": "Tüm Glitch'li düşmanlar\nmevcut HP'nin %%30'unu kaybeder",          "index": 216, "weight": 4,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3},
-	{"name": "Antivirus Rain", "category": "Calamity",      "color": Color(0.1, 0.85, 0.4),  "desc": "3s boyunca her 0.5s:\ntüm düşmanlara 1 Antivirus stack",           "index": 217, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 3},
+	{"name": "Virus Rain", "category": "Calamity",      "color": Color(0.1, 0.85, 0.4),  "desc": "3s boyunca her 0.5s:\ntüm düşmanlara 1 Antivirus stack",           "index": 217, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 3},
 	{"name": "Decay Field",    "category": "Calamity",      "color": Color(0.45, 0.2, 0.0),  "desc": "5s: seçilen 100px alana aura\ngiren düşmanlar her 1s'de 1 Decay alır","index": 218, "weight": 4,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3},
 	# Individuality
 	{"name": "Decay Harvest",       "category": "Individuality", "color": Color(0.5, 0.25, 0.0), "desc": "Decay patlaması tetiklenince:\n+2 HP kazan",                    "index": 219, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
@@ -2948,7 +2948,7 @@ func _activate_systemic_failure() -> void:
 	var _cap: int = 5 if (p and p.get("has_stack_overflow") and p.has_stack_overflow) else 3
 	for subject in get_tree().get_nodes_in_group("subjects"):
 		if is_instance_valid(subject) and subject.global_position.x >= 385.0 and subject.has_method("apply_antivirus"):
-			subject.apply_antivirus(subject.antivirus_stacks * 2 if subject.get("antivirus_stacks") and subject.antivirus_stacks > 0 else _cap)
+			subject.apply_antivirus(subject.antivirus_stacks if subject.get("antivirus_stacks") and subject.antivirus_stacks > 0 else _cap)
 	_react_flash_screen(Color(0.05, 0.9, 0.35, 0.45))
 
 func _activate_bounce_barrage() -> void:
@@ -2975,7 +2975,7 @@ func _activate_mirror_image() -> void:
 		ball.scale = Vector2(1.0, 1.0)
 		_mirror_image_balls.append(ball)
 	_react_flash_screen(Color(0.2, 0.65, 0.9, 0.4))
-	get_tree().create_timer(5.0).timeout.connect(_clear_mirror_image)
+	get_tree().create_timer(25.0).timeout.connect(_clear_mirror_image)
 
 func _clear_mirror_image() -> void:
 	var p := get_node_or_null("Player")
@@ -3160,7 +3160,7 @@ func _activate_glitch_bomb(pos: Vector2) -> void:
 	for e in get_tree().get_nodes_in_group("enemies"):
 		if not is_instance_valid(e): continue
 		if e.global_position.distance_to(pos) <= 120.0:
-			if e.get("apply_glitch"): e.apply_glitch()
+			if e.get("apply_glitch"): e.apply_glitch(4.0)
 	_react_flash_screen(Color(0.75, 0.0, 0.85, 0.2))
 
 func _activate_system_crash() -> void:
@@ -3180,7 +3180,7 @@ func _activate_antivirus_rain() -> void:
 			if e.get("apply_antivirus"): e.apply_antivirus()
 	_do_tick.call()
 	for i in range(1, ticks):
-		await get_tree().create_timer(0.5 * i).timeout
+		await get_tree().create_timer(0.5).timeout
 		_do_tick.call()
 	_react_flash_screen(Color(0.1, 0.85, 0.4, 0.2))
 
@@ -3296,7 +3296,7 @@ func _input(event: InputEvent) -> void:
 				_activate_glitch_bomb(mouse_pos)
 			elif calamity == "💻💥":  # System Crash
 				_activate_system_crash()
-			elif calamity == "🦠":  # Antivirus Rain
+			elif calamity == "🦠":  # Virus Rain
 				_activate_antivirus_rain()
 			elif calamity == "☠️":  # Decay Field
 				_activate_decay_field(mouse_pos)
@@ -3956,7 +3956,7 @@ func _process(delta: float) -> void:
 			$UI/CalamityCircle.radius = 120
 		elif calamity == "💻💥":  # System Crash — hedef yok
 			$UI/CalamityCircle.visible = false
-		elif calamity == "🦠":  # Antivirus Rain — hedef yok
+		elif calamity == "🦠":  # Virus Rain — hedef yok
 			$UI/CalamityCircle.visible = false
 		elif calamity == "☠️":  # Decay Field
 			$UI/CalamityCircle.color = Color(0.45, 0.2, 0.0, 0.2)
@@ -4365,7 +4365,7 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 		if calamity_slots.size() < max_calamity_slots:
 			calamity_slots.append("💻💥")
 			update_ui()
-	elif index == 217:  # Antivirus Rain
+	elif index == 217:  # Virus Rain
 		if calamity_slots.size() < max_calamity_slots:
 			calamity_slots.append("🦠")
 			update_ui()
