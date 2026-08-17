@@ -13,6 +13,7 @@ const _TEXTURES: Dictionary = {
 	"slow":        "res://assets/elemIndicators/slow.png",
 	"virus":       "res://assets/elemIndicators/virus.png",
 	"decay":       "res://assets/elemIndicators/decay.png",
+	"stun":        "res://assets/elemIndicators/stun.png",
 }
 
 func _ready() -> void:

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c8e4maxdv6fkj"
-path="res://.godot/imported/rogues_eye_core_art.png-c9392d7f440da56f07f7734f6ab579cc.ctex"
+uid="uid://bilp7g1me7ukn"
+path="res://.godot/imported/decay_amp_art.png-a01b9d121d2d82548e1b103e4f717cef.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/upgradeCardsArt/Cyclone/identityCards/rogues_eye_core_art.png"
-dest_files=["res://.godot/imported/rogues_eye_core_art.png-c9392d7f440da56f07f7734f6ab579cc.ctex"]
+source_file="res://assets/upgradeCardsArt/Cyclone/utilityCards/decay_amp_art.png"
+dest_files=["res://.godot/imported/decay_amp_art.png-a01b9d121d2d82548e1b103e4f717cef.ctex"]
 
 [params]
 

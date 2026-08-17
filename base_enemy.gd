@@ -139,6 +139,7 @@ func _physics_process(delta: float) -> void:
 			_stun_timer -= delta
 			if _stun_timer <= 0.0:
 				is_stunned = false
+				_hide_debuff("stun")
 		return
 	_process_antivirus(delta)
 	_enemy_process(delta)
@@ -384,9 +385,9 @@ func apply_wet() -> void:
 
 func apply_antivirus(stacks: int = 1) -> void:
 	var _ap := get_tree().get_first_node_in_group("player")
-	var _cap: int = 5 if (_ap and _ap.get("has_stack_overflow") and _ap.has_stack_overflow) else 3
+	var _cap: int = 3 + (_ap.stack_overflow_level if (_ap and _ap.get("stack_overflow_level")) else 0)
 	antivirus_stacks = min(antivirus_stacks + stacks, _cap)
-	var _dur: float = 8.0 if (_ap and _ap.get("has_memory_leak") and _ap.has_memory_leak) else 5.0
+	var _dur: float = 5.0 + float(_ap.memory_leak_level if (_ap and _ap.get("memory_leak_level")) else 0)
 	_antivirus_duration = max(_antivirus_duration, _dur)
 	_antivirus_tick = min(_antivirus_tick if _antivirus_tick > 0 else 0.5, 0.5)
 	is_antivirused = true
@@ -402,7 +403,7 @@ func _process_antivirus(delta: float) -> void:
 		health -= antivirus_stacks
 		var _ap2 := get_tree().get_first_node_in_group("player")
 		if _ap2 and _ap2.get("has_root_access") and _ap2.has_root_access:
-			var _cap2: int = 5 if (_ap2.get("has_stack_overflow") and _ap2.has_stack_overflow) else 3
+			var _cap2: int = 3 + (_ap2.stack_overflow_level if (_ap2.get("stack_overflow_level")) else 0)
 			if antivirus_stacks >= _cap2:
 				health -= 5
 		if _ap2 and _ap2.get("has_kernel_panic") and _ap2.has_kernel_panic:
@@ -484,10 +485,6 @@ func apply_slow(amount, duration: float = 3.0, source: String = "cryo", anchor_p
 		_had_reaction = false
 	if p and p.get("first_debuff_duration_mult") and not _had_any_element():
 		dur *= p.first_debuff_duration_mult
-	# Static Link: Glitch'li hedef ise slow süresi 2× uzar
-	if p and p.get("has_static_link") and p.has_static_link:
-		if get("is_glitched") and is_glitched:
-			dur *= 2.0
 	await get_tree().create_timer(dur).timeout
 	if not is_instance_valid(self):
 		return
@@ -504,6 +501,7 @@ func apply_stun(duration: float = 1.0) -> void:
 	if is_dead: return
 	is_stunned = true
 	_stun_timer = maxf(_stun_timer, duration)
+	_show_debuff("stun")
 
 func apply_decay() -> void:
 	if is_dead: return
@@ -518,22 +516,21 @@ func apply_decay() -> void:
 	if original_speed == 0.0:
 		original_speed = speed
 	speed = maxf(speed * (1.0 - _delta_slow), original_speed * 0.1)
-	# Spike Core: 3. stack'e ulaşınca anında patlama tetikle
-	if decay_stacks >= _max_stacks:
-		var _sp := _get_player()
-		if _sp and _sp.get("has_spike_core") and _sp.has_spike_core:
-			_on_decay_death()
-			decay_stacks = 0
-			_decay_slow_applied = 0.0
 
 func _on_decay_death() -> void:
 	if decay_stacks <= 0: return
+	var _stacks_at_death: int = decay_stacks
 	decay_stacks = 0
 	_decay_slow_applied = 0.0
 	_hide_debuff("decay")
 	var _p := _get_player()
-	var _dmg_per_stack: int = 3 if (_p and _p.get("has_decay_amp") and _p.has_decay_amp) else 2
-	var _dmg: int = decay_stacks * _dmg_per_stack
+	var _dmg_per_stack: int = 2
+	if _p and _p.get("decay_amp_level") and _p.decay_amp_level > 0:
+		match _p.decay_amp_level:
+			1: _dmg_per_stack = 3
+			2: _dmg_per_stack = 5
+			3: _dmg_per_stack = 7
+	var _dmg: int = _stacks_at_death * _dmg_per_stack
 	for body in get_tree().get_nodes_in_group("subjects"):
 		if body == self or not is_instance_valid(body): continue
 		if global_position.distance_to(body.global_position) < 80.0:

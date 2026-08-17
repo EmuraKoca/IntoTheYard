@@ -1,4 +1,55 @@
 ───────────────────────────────────────────────────
+Sürüm: v0.1.4.0  |  Tarih: 17.08.2026
+───────────────────────────────────────────────────
+
+Cyclone Identity & Calamity:
+
+  ✅  Cyclone Identity kart görselleri tamamlandı (17 kart)
+  ✅  Cyclone Calamity kart görselleri tamamlandı (9 kart)
+  ✅  Bounce Barrage ve Mirror Image Calamity kartları implement edildi
+      — önceden alınabiliyordu ama hiçbir aktivasyon case'i yoktu
+  ✅  Antivirus Rain → Virus Rain olarak yeniden adlandırıldı
+  ✅  Spike Core gerçek "isabet" mantığına çevrildi — artık sadece
+      Spike Core topu 3 Decay stack'li bir hedefe çarpınca tetikleniyor
+      (önceden pasif bir player flag'iyle Decay Core'un kendi vuruşunda
+      otomatik tetikleniyordu)
+  ✅  Phantom Circuit Core yeniden tasarlandı — her fırlatışta ilk
+      isabeti sersemletir, player'a dönene kadar tekrar tetiklenmez
+      (taban süre 0.5s)
+
+Cyclone Utility — level bazlı scaling ve bugfixler:
+
+  ✅  Extended Glitch, Data Exploit, Angular Precision, Bounce Mastery,
+      Backstab Protocol, Stack Overflow, Memory Leak, Cascade Delete,
+      Pinball Protocol, Stealth Pass, Ghost Protocol, Corruption Protocol,
+      Decay Amp artık gerçekten level bazlı çalışıyor (3 kez alınabiliyordu
+      ama sadece ilk alış etki ediyordu)
+  ✅  Signal Jam kaldırılıp tersine mantıkla geri getirildi — artık
+      Glitch'li düşmanı yavaşlatmak yerine hızlandırıyor
+  ✅  Exploit Stack, Interference, Exploit Mastery, Static Link kartları
+      glitch power-creep / tutarsız tasarım nedeniyle komple kaldırıldı
+  ✅  Kritik bug fix: _wall_bounce_count sayacı sadece Vector'ün Kinetic
+      Core'unda artıyordu, bu yüzden Cyclone'un Ricochet Strike, Bounce
+      Mastery, Pinball Protocol, Pinpoint Strike, Kinetic Rogue kartları
+      hiç tetiklenmiyordu — düzeltildi ve tekrar Ricochet Core'a bağımlı
+      hale getirildi (requires eklendi)
+  ✅  Pinball Protocol gerçek pierce mantığına çevrildi — vurmadan N
+      duvar sekmesi sonrası player'a dönene kadar süren gerçek pierce
+  ✅  Kritik bug fix: _on_decay_death() decay_stacks'i hasar hesaplanmadan
+      önce sıfırlıyordu — Decay patlaması her zaman 0 hasar veriyordu
+  ✅  Stack Overflow / Virus stack cap tutarsızlığı giderildi (bazı
+      yerlerde 4, bazı yerlerde 5 kullanılıyordu — artık tek formül)
+  ✅  Rogue's Eye Core dosya adı apostrof uyuşmazlığı düzeltildi
+
+Debuff Indicator Sistemi:
+
+  ✅  Tek elementli indicator → dinamik Dictionary tabanlı sisteme geçildi
+      (_show_debuff / _hide_debuff) — artık aktif tüm debufflar (burn,
+      wet, virus, decay, stun, glitch vb.) aynı anda düşmanın başının
+      üzerinde ortalanarak gösteriliyor
+  ✅  Stun elem indicator sprite'ı eklendi
+
+───────────────────────────────────────────────────
 Sürüm: v0.1.3.4  |  Tarih: 08.08.2026
 ───────────────────────────────────────────────────
 

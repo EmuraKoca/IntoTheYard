@@ -131,13 +131,10 @@ var has_ricochet_strike: bool     = false
 var data_exploit_level: int       = 0     # Bonus hasar = 2 + level (Lv1:+3, Lv2:+4, Lv3:+5)
 var has_shadow_strike: bool       = false
 var has_exploit_network: bool     = false
-var has_phantom_circuit: bool     = false  # eski Individuality (geriye uyumluluk)
-var _phantom_hit_counter: int     = 0
 # Glitch Assassin
 var extended_glitch_bonus: int    = 0     # Glitch süresi +1s/seviye (3 → 4 → 5 → 6s)
 var has_data_siphon: bool         = false # Data Leech +2 on Glitched
 var has_virus_spread: bool        = false # Network range 350px
-var has_exploit_mastery: bool     = false # Data Exploit +3→+6
 var has_system_overload: bool     = false # 5+ Glitch aktif → +%20 dmg
 var has_mind_hack: bool           = false # 3 ardışık hit → ally saldırsın
 var _mind_hack_target             = null
@@ -149,7 +146,7 @@ var angular_precision_level: int  = 0     # İlk vuruş bonusu = %10 + %5/seviye
 var signal_jam_level: int         = 0     # Glitch'li düşman hızı: +%10 + %5/seviye (Lv1:%15, Lv2:%20, Lv3:%25)
 var has_wallrunner: bool          = false # +%8 speed per bounce
 var bounce_mastery_level: int     = 0     # Ricochet Strike bonus: 4 → 5+level (Lv1:6, Lv2:7, Lv3:8)
-var has_pinball_protocol: bool    = false # 3+ bounce → pierce
+var pinball_protocol_level: int   = 0     # Pierce için gereken sekme: Lv1:5, Lv2:4, Lv3:3
 var has_ricochet_memory: bool     = false # Ricochet bonus sıfırlanmaz
 var has_kinetic_rogue: bool       = false # Her 3 bounce → +1 kalıcı base dmg
 var _kinetic_rogue_bounce_acc: int = 0
@@ -158,8 +155,8 @@ var has_pinpoint_strike: bool     = false # 5 bounce → ×2 crit
 var has_shadow_dance: bool        = false # 7 bounce same flight → +3% speed kalıcı
 var _shadow_dance_acc: float      = 0.0   # Biriken hız bonusu
 # Phantom Infiltrator
-var has_stealth_pass: bool        = false # Phantom 4. (5 yerine)
-var has_ghost_protocol: bool      = false # Phantom → 1.5s stun
+var stealth_pass_level: int       = 0     # Phantom Circuit Core hedef sayısı: taban 1 + level
+var ghost_protocol_level: int     = 0     # Phantom stun süresi: taban 0.5s, Lv1:0.75, Lv2:1.0, Lv3:1.5
 var has_phase_shift: bool         = false # Phantom → ×2 dmg
 var has_interference_cloak: bool  = false # Phantom → Glitch 3s
 var has_circuit_breaker: bool     = false # Her 10. hit → tüm Glitch
@@ -168,7 +165,7 @@ var circuit_overload_active: bool  = false  # Circuit Overload Core tetik sinyal
 var circuit_overload_timer: float  = 0.0
 # Cross-build
 var has_rogues_instinct: bool     = false # Arındırma → +1 HP
-var has_backstab_protocol: bool   = false # North bounce → sonraki isabet ×1.5
+var backstab_protocol_level: int  = 0     # North bounce sonraki isabet: ×1.5 → ×1.75 → ×2.0
 # ── Vector — Yeni Utility ────────────────────────────────────────────────────
 var has_armor_rush: bool          = false # Armor kazanınca +1 Momentum
 var has_combat_rhythm: bool       = false # 3 ardışık isabet → Core anında döner
@@ -182,24 +179,22 @@ var has_kinetic_surge: bool       = false # 15+ Momentum → Core max hızda ç�
 var has_armor_conduit: bool       = false # Armor = Cap → +2 bonus hasar
 # Antivirus sistemi
 var has_antivirus_core: bool      = false # Core hit → Antivirus stack uygular
-var has_stack_overflow: bool      = false # Stack cap 3→5
+var stack_overflow_level: int     = 0     # Antivirus stack cap = 3 + level (Lv1:4, Lv2:5, Lv3:6)
 var has_viral_load: bool          = false # Glitch'li hedef 2× stack alır
-var has_memory_leak: bool         = false # Antivirus süresi 5→8s
-var has_corruption_protocol: bool = false # Antivirused → +%15 hasar alır
-var has_cascade_delete: bool      = false # Antivirus yayılır (150px)
+var memory_leak_level: int        = 0     # Antivirus süresi = 5 + level (Lv1:6, Lv2:7, Lv3:8)
+var corruption_protocol_level: int = 0    # Antivirused hedef bonus hasarı: Lv1:%15, Lv2:%20, Lv3:%25
+var cascade_delete_level: int     = 0     # Antivirus yayılma: Lv1:75px/1 düşman, Lv2:100px/1, Lv3:125px/2
 var has_root_access: bool         = false # Max stack → +5 burst
 var has_zero_day: bool            = false # Antivirused + Glitched → stack iki katı
 var has_kernel_panic: bool        = false # Her tick %5 Glitch şansı
 # Cyclone — yeni kartlar
 var has_tracer_core: bool         = false # Vuruşta 1s iz, izden geçen 0.5s yavaşlar
-var has_spike_core: bool          = false # 3 Decay stack → anında patlama
 var has_leech_nova_core: bool     = false # Öldürünce +2 HP + 80px Glitch
 var has_decay_harvest: bool       = false # Decay patlaması → +2 HP
 var has_ghost_step: bool          = false # Dash sonrası 1.5s bağışıklık (5s CD)
 var _ghost_step_cooldown: float   = 0.0
 var has_overclock_protocol: bool  = false # Circuit Breaker sayacı 2× hızlı
-var has_decay_amp: bool           = false # Decay patlaması: 2 → 3 hasar/stack
-var has_static_link: bool         = false # Glitch'li düşmana Static slow 2× uzar
+var decay_amp_level: int          = 0     # Decay patlaması hasar/stack: taban 2, Lv1:3, Lv2:5, Lv3:7
 
 # ── Leila — Elemental ────────────────────────────────────────────────────────
 var debuff_duration_mult: float   = 1.0   # Elemental Mastery, Arcane Mind, Arcane Focus
@@ -281,6 +276,10 @@ func add_to_orbit(ball: Node2D) -> void:
 	ball._is_striking  = false
 	ball.get_node("CollisionShape2D").disabled = true
 	ball._reset_defense_life()
+	ball._pb_bounce_streak = 0
+	ball._pb_piercing = false
+	ball._phantom_hit_enemies.clear()
+	ball._phantom_triggered = false
 	if ball.get("is_inner_core"):
 		ball.scale = Vector2(1.0, 1.0)  # Connected Core'lar orbit'te görünür
 		inner_orbit_balls.append(ball)
