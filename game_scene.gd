@@ -172,6 +172,7 @@ const _CORE_INDEX_MAP: Dictionary = {
 # Connected Core (iç yörünge) index'leri — kart UI'da badge göstermek için
 const _CONNECTED_CORE_INDICES: Array = [
 	180, 181, 182, 183, 184,           # Vector
+	65,                                # Leila (Prism Core — orbit'te kalır, Connected Core)
 	185, 186, 187, 188, 189, 190, 191, # Leila
 	192, 193, 194, 195, 196, 197,      # Cyclone
 ]
@@ -230,7 +231,6 @@ const _UPGRADE_META: Dictionary = {
 	86: {"name": "Elemental Memory",    "category": "Individuality"},
 	90: {"name": "Mana Overflow",       "category": "Utility"},
 	91: {"name": "Perfect Catalyst",    "category": "Utility"},
-	103: {"name": "Prismatic Core",     "category": "Identity"},
 }
 
 var subject_scene = preload("res://subject.tscn")
@@ -2365,7 +2365,7 @@ func _build_all_upgrades() -> void:
 	{"name": "Hydro Amp",           "category": "Utility",       "color": Color(0.0, 0.5, 1.0), "desc": "Hydro Core +2 damage",                      "index": 100, "weight": 10, "rarity": "common",   "chars": ["leila"], "min_level": 0},
 	{"name": "Pyro Amp",            "category": "Utility",       "color": Color(1.0, 0.3, 0.0), "desc": "Pyro Core +2 damage",                       "index": 101, "weight": 10, "rarity": "common",   "chars": ["leila"], "min_level": 0},
 	{"name": "Conduction",         "category": "Utility",       "color": Color(0.3, 0.5, 1.0), "desc": "Electric reaction range +30%",               "index": 66,  "weight": 8,  "rarity": "uncommon", "chars": ["leila"], "min_level": 0},
-	{"name": "Hydro Pressure",     "category": "Utility",       "color": Color(0.1, 0.5, 0.9), "desc": "Wet-applying Cores orbit faster",             "index": 67,  "weight": 8,  "rarity": "uncommon", "chars": ["leila"], "min_level": 0},
+	{"name": "Hydro Pressure",     "category": "Utility",       "color": Color(0.1, 0.5, 0.9), "desc": "Wet uygulayan core'lar %25 hızlı\nFırlatılan: hız / Connected: orbit dönüşü",  "index": 67,  "weight": 8,  "rarity": "uncommon", "chars": ["leila"], "min_level": 0, "requires_any": [17, 62, 65, 185]},
 	{"name": "Arc Amplifier",      "category": "Utility",       "color": Color(0.2, 0.4, 1.0), "desc": "Arc Core +1 düşmana daha yayar",              "index": 68,  "weight": 8,  "rarity": "uncommon", "chars": ["leila"], "min_level": 0, "requires": [63]},
 	{"name": "Static Charge",      "category": "Utility",       "color": Color(0.4, 0.6, 1.0), "desc": "Electrified enemies transfer damage\nto each other", "index": 69, "weight": 6, "rarity": "uncommon", "chars": ["leila"], "min_level": 0},
 	{"name": "Supercooling",       "category": "Utility",       "color": Color(0.5, 0.8, 1.0), "desc": "Cryo Slow +%15",                 "index": 71,  "weight": 8,  "rarity": "uncommon", "chars": ["leila"], "min_level": 0},
@@ -2393,8 +2393,6 @@ func _build_all_upgrades() -> void:
 	{"name": "EMP Pulse",          "category": "Calamity",      "color": Color(0.2, 0.4, 1.0), "desc": "All Electrified enemies\nin the Yard take 15 dmg","index": 96, "weight": 3,  "rarity": "epic",      "chars": ["leila"], "min_level": 3},
 	# Lv4: Epic tier
 	{"name": "Voltaic Core",       "category": "Identity",      "color": Color(0.2, 0.4, 1.0), "desc": "Electrified hedefe çarptığında\nhasar zinciri (3 düşmana kadar)", "index": 87, "weight": 4, "rarity": "epic", "chars": ["leila"], "min_level": 4},
-	{"name": "Tempest Core",       "category": "Identity",      "color": Color(0.4, 0.6, 1.0), "desc": "Changes to a random Element\nafter each wall bounce",  "index": 88, "weight": 4,  "rarity": "epic",      "chars": ["leila"], "min_level": 4},
-	{"name": "Prismatic Core",     "category": "Identity",      "color": Color(0.8, 0.5, 1.0), "desc": "Randomly changes Element\nafter every enemy hit",        "index": 103, "weight": 5, "rarity": "rare",      "chars": ["leila"], "min_level": 4},
 	{"name": "Thermal Expansion",  "category": "Utility",       "color": Color(0.7, 0.9, 1.0), "desc": "Steam explosion area grows",                        "index": 89,  "weight": 3, "rarity": "epic",  "chars": ["leila"], "min_level": 4},
 	{"name": "Mana Overflow",      "category": "Utility",       "color": Color(0.6, 0.4, 1.0), "desc": "Using Calamity empowers\nall Cores briefly",   "index": 90, "weight": 3,  "rarity": "epic",      "chars": ["leila"], "min_level": 4},
 	# Lv5: Legendary endgame
@@ -2453,7 +2451,6 @@ func _build_all_upgrades() -> void:
 	{"name": "Corruption Protocol",  "category": "Utility",       "color": Color(0.0, 0.6, 0.3),  "desc": "Virus'lü hedef +%5 fazla hasar\nLv1: %15, Lv2: %20, Lv3: %25",  "index": 151, "weight": 5,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2, "requires": [160]},
 	# Individuality — Lv1
 	{"name": "Ricochet Strike",      "category": "Individuality", "color": Color(0.5, 0.2, 0.9),  "desc": "Each wall bounce in flight:\nnext hit +4 dmg",             "index": 114, "weight": 8,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [163]},
-	{"name": "Wallrunner",           "category": "Individuality", "color": Color(0.4, 0.15, 0.85),"desc": "Core Speed +8% per wall bounce\n(resets on enemy hit)",     "index": 132, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
 	{"name": "Rogue's Instinct",     "category": "Individuality", "color": Color(0.6, 0.15, 0.4), "desc": "Enemy purified:\n+1 Integrity",                            "index": 145, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
 	{"name": "Data Siphon",          "category": "Individuality", "color": Color(0.6, 0.0, 0.35), "desc": "Data Leech heals +1 extra\nwhen target is Glitched",        "index": 121, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [115]},
 	{"name": "Viral Load",           "category": "Individuality", "color": Color(0.15, 0.7, 0.4),  "desc": "Glitched target receives\n2× Antivirus stacks",            "index": 149, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [160]},
@@ -2568,6 +2565,15 @@ func show_upgrade_menu() -> void:
 			if r not in _owned_indices:
 				return false
 		return true
+	)
+	upgrades = upgrades.filter(func(u):
+		var req_any: Array = u.get("requires_any", [])
+		if req_any.is_empty():
+			return true
+		for r in req_any:
+			if r in _owned_indices:
+				return true
+		return false
 	)
 	# ── Identity limit filtresi ───────────────────────────────────────────────
 	var _fp := get_node("Player")
@@ -4284,8 +4290,6 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 		get_node("Player").freeze_duration_mult *= 1.1
 	elif index == 71:  # Supercooling
 		get_node("Player").cryo_slow_mult *= 1.15
-	elif index == 72:  # Condensation
-		get_node("Player").has_condensation = true
 	elif index == 73:  # Thermal Vision
 		get_node("Player").burn_damage_mult *= 1.2
 	elif index == 80:  # Arcane Mind
@@ -4389,7 +4393,6 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 			129: if calamity_slots.size() < max_calamity_slots: calamity_slots.append("💾")
 			130: if calamity_slots.size() < max_calamity_slots: calamity_slots.append("👾")
 			131: pass  # level bazlı bonus _apply_utility_level'da uygulanıyor
-			132: p.has_wallrunner          = true
 			133: pass  # level bazlı bonus _apply_utility_level'da uygulanıyor
 			134: pass  # level bazlı bonus _apply_utility_level'da uygulanıyor
 			135: p.has_ricochet_memory     = true

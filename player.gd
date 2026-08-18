@@ -144,7 +144,6 @@ var has_data_siphon_active: bool  = false # (internal flag, not card)
 # Ricochet Master
 var angular_precision_level: int  = 0     # İlk vuruş bonusu = %10 + %5/seviye (Lv1:%15, Lv2:%20, Lv3:%25)
 var signal_jam_level: int         = 0     # Glitch'li düşman hızı: +%10 + %5/seviye (Lv1:%15, Lv2:%20, Lv3:%25)
-var has_wallrunner: bool          = false # +%8 speed per bounce
 var bounce_mastery_level: int     = 0     # Ricochet Strike bonus: 4 → 5+level (Lv1:6, Lv2:7, Lv3:8)
 var pinball_protocol_level: int   = 0     # Pierce için gereken sekme: Lv1:5, Lv2:4, Lv3:3
 var has_ricochet_memory: bool     = false # Ricochet bonus sıfırlanmaz
@@ -211,7 +210,6 @@ var mystic_flow_elements: Array       = []   # Mystic Flow: hangi elementler uyg
 var move_speed_bonus_pct: float       = 0.0  # Mystic Flow hız bonusu
 var has_static_charge: bool           = false  # Electrified → hasar aktarır
 var has_hydro_pressure: bool          = false  # Wet core'lar hızlı döner
-var has_condensation: bool            = false  # Wet core'lar hızlı döner (tümü)
 var has_overheat: bool                = false  # Burn 7 stackte patlar
 var _overheat_counter: int            = 0
 var special_core_count: int = 0      # Identity ile eklenen özellikli core sayısı
@@ -652,7 +650,14 @@ func _physics_process(delta: float) -> void:
 		orbit_balls[i].global_position = global_position + _weapon_offset
 
 	# Connected Core'lar iç yörüngede döner
-	inner_orbit_angle += INNER_ORBIT_SPEED * delta
+	# Hydro Pressure: Wet uygulayan Connected Core (Mist Core / Prism Core) varsa iç yörünge %25 hızlanır
+	var _inner_speed_mult: float = 1.0
+	if has_hydro_pressure:
+		for _ib in inner_orbit_balls:
+			if is_instance_valid(_ib) and (_ib.get("inner_core_type") == "mist_core" or _ib.get("can_orbit") == true):
+				_inner_speed_mult = 1.25
+				break
+	inner_orbit_angle += INNER_ORBIT_SPEED * _inner_speed_mult * delta
 	var ni := inner_orbit_balls.size()
 	for i in range(ni - 1, -1, -1):
 		if not is_instance_valid(inner_orbit_balls[i]):
