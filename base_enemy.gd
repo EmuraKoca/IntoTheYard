@@ -140,6 +140,10 @@ func _physics_process(delta: float) -> void:
 			if _stun_timer <= 0.0:
 				is_stunned = false
 				_hide_debuff("stun")
+				if not is_dead:
+					var _stun_spr2 := get_sprite()
+					if _stun_spr2 and is_instance_valid(_stun_spr2):
+						_stun_spr2.play(get_walk_anim_prefix() + _anim_dir)
 		return
 	_process_antivirus(delta)
 	_enemy_process(delta)
@@ -499,6 +503,9 @@ func apply_slow(amount, duration: float = 3.0, source: String = "cryo", anchor_p
 
 func apply_stun(duration: float = 1.0) -> void:
 	if is_dead: return
+	if not is_stunned:
+		var _stun_spr := get_sprite()
+		if _stun_spr: _stun_spr.stop()
 	is_stunned = true
 	_stun_timer = maxf(_stun_timer, duration)
 	_show_debuff("stun")

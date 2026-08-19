@@ -133,23 +133,20 @@ var has_shadow_strike: bool       = false
 var has_exploit_network: bool     = false
 # Glitch Assassin
 var extended_glitch_bonus: int    = 0     # Glitch süresi +1s/seviye (3 → 4 → 5 → 6s)
-var has_data_siphon: bool         = false # Data Leech +2 on Glitched
+var has_data_siphon: bool         = false # Decay stack'li hedeften Data Leech +1 ekstra
 var has_virus_spread: bool        = false # Network range 350px
 var has_system_overload: bool     = false # 5+ Glitch aktif → +%20 dmg
 var has_mind_hack: bool           = false # 3 ardışık hit → ally saldırsın
 var _mind_hack_target             = null
 var _mind_hack_count: int         = 0
 var has_neural_overwrite: bool    = false # Glitch timer reset
-var has_data_siphon_active: bool  = false # (internal flag, not card)
 # Ricochet Master
 var angular_precision_level: int  = 0     # İlk vuruş bonusu = %10 + %5/seviye (Lv1:%15, Lv2:%20, Lv3:%25)
 var signal_jam_level: int         = 0     # Glitch'li düşman hızı: +%10 + %5/seviye (Lv1:%15, Lv2:%20, Lv3:%25)
 var bounce_mastery_level: int     = 0     # Ricochet Strike bonus: 4 → 5+level (Lv1:6, Lv2:7, Lv3:8)
 var pinball_protocol_level: int   = 0     # Pierce için gereken sekme: Lv1:5, Lv2:4, Lv3:3
-var has_ricochet_memory: bool     = false # Ricochet bonus sıfırlanmaz
-var has_kinetic_rogue: bool       = false # Her 3 bounce → +1 kalıcı base dmg
-var _kinetic_rogue_bounce_acc: int = 0
-var kinetic_rogue_bonus: int      = 0     # Kalıcı biriken bonus
+var has_kinetic_rogue: bool       = false # Her 5 gerçek duvar sekmesi (topun kendi sayacı) → +1 kalıcı base dmg
+var kinetic_rogue_bonus: int      = 0     # Kalıcı biriken bonus — tüm Ricochet Core'larla paylaşılır
 var has_pinpoint_strike: bool     = false # 5 bounce → ×2 crit
 var has_shadow_dance: bool        = false # 7 bounce same flight → +3% speed kalıcı
 var _shadow_dance_acc: float      = 0.0   # Biriken hız bonusu
@@ -278,6 +275,7 @@ func add_to_orbit(ball: Node2D) -> void:
 	ball._pb_piercing = false
 	ball._phantom_hit_enemies.clear()
 	ball._phantom_triggered = false
+	ball._kinetic_rogue_acc = 0
 	if ball.get("is_inner_core"):
 		ball.scale = Vector2(1.0, 1.0)  # Connected Core'lar orbit'te görünür
 		inner_orbit_balls.append(ball)

@@ -87,6 +87,7 @@ var trail: Line2D = null
 var _wall_bounce_count: int = 0  # sonsuz sekme önlemi
 var _pb_bounce_streak: int = 0   # Pinball Protocol: vurmadan sekme sayacı
 var _pb_piercing: bool = false   # Pinball Protocol: 3 sekme sonrası pierce, dönene kadar sürer
+var _kinetic_rogue_acc: int = 0  # Kinetic Rogue: bu topun kendi sekme sayacı, dönene kadar sürer
 var _backstab_ready: bool = false  # North duvarına çarptı, sonraki isabet crit
 var trail_positions: Array = []
 var trail_max_length: int = 24
@@ -410,6 +411,7 @@ func launch(direction: Vector2, spd: float = 600.0) -> void:
 	_pb_piercing = false
 	_phantom_hit_enemies.clear()
 	_phantom_triggered = false
+	_kinetic_rogue_acc = 0
 	move_direction = direction.normalized()
 	# Kinetic Surge: 15+ Momentum → max hızda başla
 	var _ks := _get_player()
@@ -434,6 +436,7 @@ func launch_with_speed(direction: Vector2, spd: float) -> void:
 	_pb_piercing = false
 	_phantom_hit_enemies.clear()
 	_phantom_triggered = false
+	_kinetic_rogue_acc = 0
 	move_direction = direction.normalized()
 	speed = spd
 	moving = true
@@ -572,10 +575,12 @@ func _physics_process(delta: float) -> void:
 
 	# Duvar sınırları + sonsuz sekme koruması
 	var _bounced := false
+	var _side_bounced := false
 	if global_position.x <= 409:
 		global_position.x = 411
 		move_direction.x = abs(move_direction.x)
 		_bounced = true
+		_side_bounced = true
 		# Siege Core — sol duvar: tribün sarsıntısı
 		if can_siege:
 			var _gfx := get_tree().get_first_node_in_group("game")
@@ -587,6 +592,7 @@ func _physics_process(delta: float) -> void:
 		global_position.x = 1578
 		move_direction.x = -abs(move_direction.x)
 		_bounced = true
+		_side_bounced = true
 	if global_position.y <= 260:
 		global_position.y = 262
 		move_direction.y = abs(move_direction.y)
@@ -619,6 +625,12 @@ func _physics_process(delta: float) -> void:
 				var _pb_req: int = 6 - _pb_p.pinball_protocol_level
 				if _pb_bounce_streak >= _pb_req:
 					_pb_piercing = true
+			# Kinetic Rogue: bu topun kendi sayacı, 5 sekmede kazanılan bonus tüm Ricochet Core'lara paylaşılır
+			if _pb_p and _pb_p.get("has_kinetic_rogue") and _pb_p.has_kinetic_rogue:
+				_kinetic_rogue_acc += 1
+				while _kinetic_rogue_acc >= 5:
+					_kinetic_rogue_acc -= 5
+					_pb_p.kinetic_rogue_bonus += 1
 		# Siege Protocol — Siege Core: duvar sekmesinde +1 hasar
 		if can_siege:
 			var _sp := _get_player()
@@ -627,7 +639,7 @@ func _physics_process(delta: float) -> void:
 		var _bp := _get_player()
 		if _bp and _bp.get("has_shadow_dance") and _bp.has_shadow_dance and _wall_bounce_count >= 7:
 			_bp._shadow_dance_acc += 0.03
-		if _bp and _bp.get("has_shadow_strike") and _bp.has_shadow_strike:
+		if _side_bounced and _bp and _bp.get("has_shadow_strike") and _bp.has_shadow_strike:
 			_shadow_primed = true
 
 	# Mimic
@@ -1602,6 +1614,11 @@ func _hit_subject(subject: Node2D) -> void:
 		if _glitch_count >= 5:
 			total_damage = int(float(total_damage) * 1.2)
 
+	# Phase Shift: sersemlemiş düşmana (hangi core vurursa vursun) ×1.5 hasar
+	if _dmg_player and _dmg_player.get("has_phase_shift") and _dmg_player.has_phase_shift:
+		if subject.get("is_stunned") and subject.is_stunned:
+			total_damage = int(float(total_damage) * 1.5)
+
 	var _kill_cause := "brutal" if (can_siege or can_crusher) else "normal"
 	subject.take_damage(total_damage, false, _kill_cause)
 
@@ -1665,14 +1682,9 @@ func _hit_subject(subject: Node2D) -> void:
 			var _bs_pct: float = 0.5 + 0.25 * float(_rp.backstab_protocol_level - 1)
 			subject.take_damage(int(total_damage * _bs_pct))
 
-		# Kinetic Rogue: Her 3 bounce → kalıcı +1 base hasar (sadece Ricochet Core)
-		if can_ricochet_core and _rp.get("has_kinetic_rogue") and _rp.has_kinetic_rogue and _wall_bounce_count > 0:
-			_rp._kinetic_rogue_bounce_acc += _wall_bounce_count
-			if _rp._kinetic_rogue_bounce_acc >= 5:
-				_rp._kinetic_rogue_bounce_acc -= 3
-				_rp.kinetic_rogue_bonus += 1
-			if _rp.kinetic_rogue_bonus > 0:
-				subject.take_damage(_rp.kinetic_rogue_bonus)
+		# Kinetic Rogue: her 5 sekmede kazanılan kalıcı bonus hasarı uygula (sadece Ricochet Core)
+		if can_ricochet_core and _rp.get("has_kinetic_rogue") and _rp.has_kinetic_rogue and _rp.kinetic_rogue_bonus > 0:
+			subject.take_damage(_rp.kinetic_rogue_bonus)
 
 		# Circuit Breaker: Her 10. hit → tüm düşmanlar Glitch
 		if _rp.get("has_circuit_breaker") and _rp.has_circuit_breaker:
@@ -1810,9 +1822,6 @@ func _hit_subject(subject: Node2D) -> void:
 				for _se in _phantom_hit_enemies:
 					if is_instance_valid(_se) and _se.has_method("apply_stun"):
 						_se.apply_stun(_stun_dur)
-						# Phase Shift: sersemlemiş düşmana ×1.5 hasar
-						if _rp.get("has_phase_shift") and _rp.has_phase_shift:
-							_se.take_damage(int(total_damage * 0.5))
 				_phantom_hit_enemies.clear()
 				_phantom_triggered = true
 
@@ -1999,11 +2008,16 @@ func _hit_subject(subject: Node2D) -> void:
 		# Burn + Cryo = Thermal Shock
 		subject.take_damage(12)
 		subject.is_burning = false
-	# Life steal ball 
+	# Life steal ball
 	if can_leech:
 		var game = get_tree().get_first_node_in_group("game")
 		if game:
-			game.player_hp = min(game.player_hp + 2, game.player_max_hp)
+			var _leech_heal: int = 2
+			var _ls_p := _get_player()
+			if _ls_p and _ls_p.get("has_data_siphon") and _ls_p.has_data_siphon:
+				if is_instance_valid(subject) and subject.get("decay_stacks") and subject.decay_stacks > 0:
+					_leech_heal += 1
+			game.player_hp = min(game.player_hp + _leech_heal, game.player_max_hp)
 			game.update_ui()
 	# Hydro Jet - vacuum corridor, accelerates nearby balls
 	if is_fused and fusion_type == "hydro_jet" and is_instance_valid(subject):

@@ -2452,13 +2452,12 @@ func _build_all_upgrades() -> void:
 	# Individuality — Lv1
 	{"name": "Ricochet Strike",      "category": "Individuality", "color": Color(0.5, 0.2, 0.9),  "desc": "Each wall bounce in flight:\nnext hit +4 dmg",             "index": 114, "weight": 8,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [163]},
 	{"name": "Rogue's Instinct",     "category": "Individuality", "color": Color(0.6, 0.15, 0.4), "desc": "Enemy purified:\n+1 Integrity",                            "index": 145, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
-	{"name": "Data Siphon",          "category": "Individuality", "color": Color(0.6, 0.0, 0.35), "desc": "Data Leech heals +1 extra\nwhen target is Glitched",        "index": 121, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [115]},
+	{"name": "Data Siphon",          "category": "Individuality", "color": Color(0.6, 0.0, 0.35), "desc": "Data Leech heals +1 extra\nwhen target has Decay stacks",        "index": 121, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [22, 161]},
 	{"name": "Viral Load",           "category": "Individuality", "color": Color(0.15, 0.7, 0.4),  "desc": "Glitched target receives\n2× Antivirus stacks",            "index": 149, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [160]},
 	# Individuality — Lv2
-	{"name": "Shadow Strike",        "category": "Individuality", "color": Color(0.3, 0.0, 0.5),  "desc": "First hit after wall bounce:\n×1.5 damage",                "index": 116, "weight": 5,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
+	{"name": "Shadow Strike",        "category": "Individuality", "color": Color(0.3, 0.0, 0.5),  "desc": "Sağ/sol duvar sekmesi sonrası\nilk vuruş: ×1.5 hasar",                "index": 116, "weight": 5,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
 	{"name": "System Overload",      "category": "Individuality", "color": Color(0.85, 0.1, 0.7), "desc": "5+ Glitched enemies alive:\nall your dmg +20%",             "index": 126, "weight": 5,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
-	{"name": "Ricochet Memory",      "category": "Individuality", "color": Color(0.5, 0.2, 0.95), "desc": "Ricochet bonus persists\nbetween hits (resets on orbit)",   "index": 135, "weight": 4,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
-	{"name": "Kinetic Rogue",        "category": "Individuality", "color": Color(0.45, 0.15, 0.9),"desc": "Every 5 wall bounces:\n+1 permanent base dmg",              "index": 136, "weight": 4,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2, "requires": [163]},
+	{"name": "Kinetic Rogue",        "category": "Individuality", "color": Color(0.45, 0.15, 0.9),"desc": "Tek fırlatışta 5 sekme: tüm Ricochet\nCore'lara +1 kalıcı hasar (dönünce sıfırlanır)", "index": 136, "weight": 4,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2, "requires": [163]},
 	{"name": "Phase Shift",          "category": "Individuality", "color": Color(0.3, 0.8, 0.9),  "desc": "Stunned enemy hit:\n×1.5 damage",                          "index": 141, "weight": 4,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2, "requires": [159]},
 	{"name": "Shadow Dance",         "category": "Individuality", "color": Color(0.35, 0.05, 0.6),"desc": "7 wall bounces in same flight:\nCore Speed +3% permanently", "index": 146, "weight": 4,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
 	# Individuality — Lv3
@@ -4395,7 +4394,6 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 			131: pass  # level bazlı bonus _apply_utility_level'da uygulanıyor
 			133: pass  # level bazlı bonus _apply_utility_level'da uygulanıyor
 			134: pass  # level bazlı bonus _apply_utility_level'da uygulanıyor
-			135: p.has_ricochet_memory     = true
 			136: p.has_kinetic_rogue       = true
 			137: p.has_pinpoint_strike     = true
 			138: if calamity_slots.size() < max_calamity_slots: calamity_slots.append("🎱")

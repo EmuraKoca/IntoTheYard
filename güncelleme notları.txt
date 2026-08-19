@@ -1,4 +1,41 @@
 ───────────────────────────────────────────────────
+Sürüm: v0.1.5.0  |  Tarih: 19.08.2026
+───────────────────────────────────────────────────
+
+Cyclone Individuality — review ve düzeltmeler:
+
+  ✅  Shadow Strike: artık sadece sağ/sol duvar sekmesinde tetikleniyor
+      — kuzey (üst) duvar artık sadece Backstab Protocol'e özel,
+      iki kart arasındaki çakışma giderildi
+  ✅  Kinetic Rogue: hasar hesaplaması baştan yazıldı
+      — sayaç artık her Ricochet Core topunun kendi üzerinde tutuluyor
+        (player'da paylaşılan tek sayaç değil), player'a dönünce veya
+        yeniden fırlatılınca sıfırlanıyor — aşırı OP birikme önlendi
+      — kazanılan +1 kalıcı hasar hâlâ tüm Ricochet Core'lara paylaşılıyor
+      — eski kod "her 3 bounce" yorumu yazıp ">= 5" kontrolü yapıyordu,
+        düşürme miktarı da 3'tü — üçü birbirini tutmuyordu, düzeltildi
+  ✅  Phase Shift: artık gerçekten "stun süresi boyunca hangi core
+      vurursa vursun ×1.5 hasar" mantığıyla çalışıyor (ana hasar
+      pipeline'ına taşındı) — önceden sadece Phantom Circuit'in kendi
+      stun anına özel dar bir bonus veriyordu, açıklamayla uyuşmuyordu
+  ✅  Data Siphon: Glitch yerine Decay stack'li hedeflerde Data Leech
+      +1 ekstra can veriyor artık, hem Data Leech Core hem Decay Core
+      alınmadan kart havuzda görünmüyor (requires: [22, 161])
+  ✅  Rogue's Instinct, Viral Load, System Overload doğrulandı — bug yok
+
+Ölü kart temizliği:
+
+  ✅  Wallrunner, Ricochet Memory (Cyclone) komple kaldırıldı —
+      kart havuzunda tanımlıydı ama implementasyon kodu hiç okunmuyordu
+
+Bugfix — Stun görsel hatası:
+
+  ✅  Sersemletilmiş (stun) düşmanlar artık donmuş görünüyor — önceden
+      stun sırasında animasyon durmadığı için "yerinde yürüyormuş" gibi
+      görünüyordu. apply_stun() artık sprite'ı durduruyor, stun bitince
+      kaldığı yönden yürüme animasyonuna dönüyor (Frozen ile aynı pattern)
+
+───────────────────────────────────────────────────
 Sürüm: v0.1.4.0  |  Tarih: 17.08.2026
 ───────────────────────────────────────────────────
 
