@@ -1559,12 +1559,13 @@ func _hit_subject(subject: Node2D) -> void:
 			queue_redraw()
 	# Calculate damage based on speed
 	var base_damage = max_damage
+	var _typed_core := true
 	if can_split and not has_split:
 		base_damage = 7
 	elif can_electric:
 		base_damage = 9
 	elif can_pierce:
-		base_damage = 10
+		base_damage = 5
 	elif can_cryo:
 		base_damage = 4
 	elif can_glitch:
@@ -1576,21 +1577,32 @@ func _hit_subject(subject: Node2D) -> void:
 	elif can_leech:
 		base_damage = 2
 	elif can_armor:
-		base_damage = 5
+		base_damage = 4
 	elif can_anchor:
 		base_damage = 8
 	elif can_crusher:
-		base_damage = 12
+		base_damage = 9
 	elif can_kinetic:
 		base_damage = 7
 	elif can_bulwark:
-		base_damage = 6
+		base_damage = 3
 	elif can_siege:
 		base_damage = 15
 	elif can_bloodbound:
 		base_damage = 8
 	elif can_tempered:
 		base_damage = 9
+	else:
+		_typed_core = false
+
+	# Core Mastery: tüm core'lara +ball_mastery hasar
+	# (max_damage zaten ball_mastery içeriyor; sadece tipli core'larda tekrar eklenmeli,
+	# çünkü onların base_damage'ı sabit sayıyla eziliyor)
+	if _typed_core:
+		var _bm_player := _get_player()
+		if _bm_player:
+			base_damage += _bm_player.get("ball_mastery") if _bm_player.get("ball_mastery") != null else 0
+
 	var total_damage = base_damage
 
 	# Ricochet Core: hız bonusu → her 10 hız = +1 hasar
@@ -1632,6 +1644,12 @@ func _hit_subject(subject: Node2D) -> void:
 	if _dmg_player and _dmg_player.get("has_phase_shift") and _dmg_player.has_phase_shift:
 		if subject.get("is_stunned") and subject.is_stunned:
 			total_damage = int(float(total_damage) * 1.5)
+
+	# Crusher Core: zırhlı düşmanın zırhını tek vuruşta sıfırlar
+	if can_crusher and subject.get("enemy_armor") and subject.enemy_armor > 0:
+		subject.enemy_armor = 0
+		if subject.has_method("get_sprite"):
+			subject.get_sprite().modulate = Color(1, 1, 1, 1)
 
 	var _kill_cause := "brutal" if (can_siege or can_crusher) else "normal"
 	subject.take_damage(total_damage, false, _kill_cause)

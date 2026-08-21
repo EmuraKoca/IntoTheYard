@@ -254,7 +254,7 @@ func _launch_typed_ball(ball_type: String) -> void:
 			ball.max_damage   = 9 + player_node.electric_bonus + player_node.ball_mastery
 		"pierce":
 			ball.can_pierce   = true
-			ball.max_damage   = 10 + player_node.pierce_bonus + player_node.ball_mastery
+			ball.max_damage   = 5 + player_node.pierce_bonus + player_node.ball_mastery
 		"cryo":
 			ball.can_cryo     = true
 			ball.max_damage   = 4 + player_node.cryo_bonus + player_node.ball_mastery
@@ -275,19 +275,19 @@ func _launch_typed_ball(ball_type: String) -> void:
 		# ── Vector yeni core'lar ──────────────────────────────────────────────
 		"armor":
 			ball.can_armor    = true
-			ball.max_damage   = 5 + player_node.ball_mastery
+			ball.max_damage   = 4 + player_node.ball_mastery
 		"anchor":
 			ball.can_anchor   = true
 			ball.max_damage   = 8 + player_node.ball_mastery
 		"crusher":
 			ball.can_crusher  = true
-			ball.max_damage   = 12 + player_node.ball_mastery
+			ball.max_damage   = 9 + player_node.ball_mastery
 		"kinetic":
 			ball.can_kinetic  = true
 			ball.max_damage   = 7 + player_node.ball_mastery
 		"bulwark":
 			ball.can_bulwark  = true
-			ball.max_damage   = 6 + player_node.ball_mastery
+			ball.max_damage   = 3 + player_node.ball_mastery
 		"siege":
 			ball.can_siege    = true
 			ball.max_damage   = 15 + player_node.ball_mastery

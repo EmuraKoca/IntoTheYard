@@ -237,13 +237,7 @@ func t(key: String) -> String:
 const _DESC_TR: Dictionary = {
 	# ── Vector — Identity ────────────────────────────────────────────────────
 	0:  "Core 3'e bölünür",
-	2:  "Zırhı olmayan düşmanı deşip geçer",
-	40: "İsabet → Zırh kazan",
-	41: "İsabet → düşman %60 yavaşlar (3sn)",
-	42: "Yüksek hasar, Zırhı kırar",
-	43: "Her duvar sekmesi → +hasar",
-	44: "İsabet → +2 Zırh",
-	45: "En yüksek hasarlı core",
+	# 2, 40, 41, 42, 43, 44, 45: _dynamic_desc() içinde (ball_mastery'ye göre canlı hasar gösterir)
 	46: "Eksik HP → bonus hasar",
 	47: "Zırh aktifken → +3 hasar",
 	# ── Vector — Utility ─────────────────────────────────────────────────────
@@ -296,18 +290,46 @@ const _DESC_TR: Dictionary = {
 # Sadece başka kartlarla değeri değişebilen kartlar burada match'lenir.
 # BBCode kullanılır — [b]..[/b] ile güncel değer kalın gösterilir.
 func _dynamic_desc(index: int, player: Node) -> String:
+	var _bm: int = player.get("ball_mastery") if player.get("ball_mastery") != null else 0
 	match index:
+		2:  # Pierce Core
+			var _dmg: int = 5 + _bm
+			if locale == "en":
+				return "[b]%d[/b] damage.\nPierces through unarmored enemies." % _dmg
+			return "[b]%d[/b] hasar.\nZırhı olmayan düşmanı deşip geçer" % _dmg
 		40:  # Armor Core
 			var amt: int = player.get("armor_gain_per_hit") if player.get("armor_gain_per_hit") != null else 1
+			var _dmg: int = 4 + _bm
 			if locale == "en":
-				return "Hit enemy → gain [b]%d[/b] Armor" % amt
-			return "Düşmana vuruş → [b]%d[/b] Armor kazandırır" % amt
+				return "[b]%d[/b] damage.\nHit enemy → gain [b]%d[/b] Armor" % [_dmg, amt]
+			return "[b]%d[/b] hasar.\nDüşmana vuruş → [b]%d[/b] Armor kazandırır" % [_dmg, amt]
 		41:  # Anchor Core
 			var _mult: float = player.get("slow_duration_mult") if player.get("slow_duration_mult") != null else 1.0
 			var _dur: int = int(3.0 * _mult)
+			var _dmg: int = 8 + _bm
 			if locale == "en":
-				return "Hit enemy → slows 60%% for [b]%d[/b]s" % _dur
-			return "İsabet → düşman [b]%d[/b] Saniye boyunca %%60 yavaşlar" % _dur
+				return "[b]%d[/b] damage.\nHit enemy → slows 60%% for [b]%d[/b]s" % [_dmg, _dur]
+			return "[b]%d[/b] hasar.\nİsabet → düşman [b]%d[/b] Saniye boyunca %%60 yavaşlar" % [_dmg, _dur]
+		42:  # Crusher Core
+			var _dmg: int = 9 + _bm
+			if locale == "en":
+				return "[b]%d[/b] damage.\nHit → instantly breaks enemy Armor" % _dmg
+			return "[b]%d[/b] hasar.\nİsabet → düşmanın Zırhını anında kırar" % _dmg
+		45:  # Siege Core
+			var _dmg: int = 15 + _bm
+			if locale == "en":
+				return "[b]%d[/b] damage.\nHighest damage core" % _dmg
+			return "[b]%d[/b] hasar.\nEn yüksek hasarlı core" % _dmg
+		43:  # Kinetic Core
+			var _dmg: int = 7 + _bm
+			if locale == "en":
+				return "[b]%d[/b] damage.\nEach wall bounce → +dmg" % _dmg
+			return "[b]%d[/b] hasar.\nHer duvar sekmesi → +hasar" % _dmg
+		44:  # Bulwark Core
+			var _dmg: int = 3 + _bm
+			if locale == "en":
+				return "[b]%d[/b] damage.\nHit → +2 Armor" % _dmg
+			return "[b]%d[/b] hasar.\nİsabet → +2 Armor" % _dmg
 	return ""
 
 func desc(index: int, fallback: String, player: Node = null) -> String:

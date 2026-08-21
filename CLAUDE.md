@@ -45,10 +45,26 @@ sırasına göre index artan) şu 4 başlıkta incelenip onaylanıyor:
       hiç görünmez) o yüzden statik bırakıldı.
       Desc dynamic: "İsabet → düşman [b]N[/b] Saniye boyunca %60 yavaşlar" /
       "Hit enemy → slows 60% for [b]N[/b]s"
-- [ ] **SIRADA: Crusher Core (42)**
-- [ ] Siege Core (45)
-- [ ] Kinetic Core (43)
-- [ ] Bulwark Core (44)
+- [x] Crusher Core (42) — **BUG FIX**: "breaks Armor" sadece flavor text'ti, gerçek bir
+      mekaniği yoktu. `ball.gd`'de zırhlı düşmana (heavy_subject) çarpınca `enemy_armor`
+      anında sıfırlanacak + sprite modulate reset edilecek şekilde gerçek mekanik eklendi.
+      Base hasar 12 → **9**'a düşürüldü (dengeleme, aşağıya bak).
+      Desc dynamic: "İsabet → düşmanın Zırhını anında kırar" / "Hit → instantly breaks enemy Armor"
+- [x] Siege Core (45) — implementasyon doğru, özel mekaniği yok, sadece "en yüksek hasar"
+      kimliği (Siege Protocol + Siege Rain ile sinerjik). Base hasar 15 (değişmedi).
+      Desc dynamic: "En yüksek hasarlı core" / "Highest damage core"
+- [x] Kinetic Core (43) — implementasyon doğru: her duvar sekmesi sayaca ekleniyor,
+      düşmana çarpınca base hasarın üstüne sayaç kadar bonus hasar ayrı `take_damage()`
+      ile ekleniyor (crit/damage_mult'tan etkilenmiyor). Base hasar 7 (değişmedi).
+      Desc dynamic: "Her duvar sekmesi → +hasar" / "Each wall bounce → +dmg"
+- [x] Bulwark Core (44) — implementasyon doğru (+2 Armor sabit, Bulwark Echo ile 2s sonra
+      yarısı tekrar). **DENGELEME**: Armor Core'u her yönden domine ediyordu (6 dmg+2 armor
+      > 5 dmg+1 armor). Bulwark hasarı 6 → **3**'e düşürüldü. Ayrıca Impact Feedback (36)
+      sadece Armor Core'un `armor_gain_per_hit`'ini büyütüyordu, Bulwark'ın sabit +2'si
+      bundan hiç etkilenmiyordu — `requires: [40]` eklenerek Impact Feedback artık sadece
+      Armor Core alınmışsa havuza giriyor (Bulwark'tan ayrıştırıldı, karıştırılmasın diye).
+      Desc dynamic: "İsabet → +2 Armor" / "Hit → +2 Armor"
+- [ ] **SIRADA: Bloodbound Core (46)**
 - [ ] Tempered Core (47)
 - [ ] Bloodbound Core (46)
 - [ ] Iron Aura Core (178)
@@ -62,6 +78,53 @@ sırasına göre index artan) şu 4 başlıkta incelenip onaylanıyor:
 Sonrası: Vector Utility → Vector Individuality → Vector Calamity → aynı süreç Leila ve
 Cyclone için de tekrarlanacak (Cyclone Identity/Utility/Individuality zaten önceki session'da
 tam review edilmişti, tekrar gerekmiyor — sadece Vector ve Leila eksik).
+
+### KRİTİK BUG FIX: Core Mastery hiç çalışmıyordu (2026-08-22)
+- Ortak havuzdaki **Core Mastery** kartı ("+1 damage to all cores") aslında hiçbir tipli
+  core'u etkilemiyordu. `ball.gd`'deki `_hit_subject()` içinde `base_damage = max_damage`
+  (ball_mastery dahil) ile başlıyor ama hemen ardından **her tipli core için sabit sayıyla
+  eziliyordu** (`elif can_pierce: base_damage = 10` gibi) — `max_damage` ve içindeki
+  `ball_mastery` bonusu tamamen atılıyordu. Sadece tipsiz/normal top (Identity core
+  alınmadan önce) bundan faydalanıyordu.
+- **Fix**: `_typed_core` flag'i eklendi, tipli core ise elif zincirinden sonra
+  `base_damage += ball_mastery` ekleniyor; tipsiz top zaten `max_damage`'dan geldiği için
+  çift sayılmıyor.
+- Artık **tüm Identity core açıklamaları dinamik** — hasar sayısı Core Mastery alındıkça
+  `[b]N[/b]` ile canlı güncelleniyor. Aynı düzeltme deseni yeni kart eklenince (Siege,
+  Kinetic, Bulwark, Bloodbound, Tempered) her birine tek tek uygulanmalı.
+
+### Base hasar dengeleme (2026-08-22)
+Review sırasında bulunan tutarsızlıklar düzeltildi:
+| Core | Eski | Yeni | Sebep |
+|------|------|------|-------|
+| Pierce (2) | 10 | **5** | Piercing (çoklu düşman) zaten güçlü bir avantaj, üstüne yüksek hasar abartıydı |
+| Armor (40) | 5 | **4** | Bulwark ile dengelemek için düşürüldü |
+| Crusher (42) | 12 | **9** | Zırh kırma bedava bonus, Siege'in (15) altında kalmalı |
+| Bulwark (44) | 6 | **3** | Armor Core'u her yönden domine ediyordu (daha çok hasar + 2× armor) |
+
+`ball.gd` (hasar hesabı) + `ball_launcher.gd` (spawn/fusion max_damage) + `lang.gd`
+(dinamik açıklama) + `game_scene.gd` (EN fallback açıklama) — 4 dosyada senkron tutulmalı,
+biri unutulursa sayılar tutarsız görünür.
+
+## Ev Session Notları (2026-08-21)
+
+- **Cyclone kart art sistemi baştan başlatıldı** — Identity (17/17), Utility (23/23),
+  Individuality (18/18) tamamlandı. Calamity kısmen tamam (art eksikleri var, kontrol
+  edilmeli). Toplamda Cyclone'un görsel eksiği kalmadı denecek durumda.
+- **AntiVirus Core → Virus Core** olarak yeniden adlandırıldı (`game_scene.gd`), internal
+  key (`antivirus_core`) değişmedi, sadece display name.
+- **Static Aura Core** bug fix: per-enemy 3s cooldown eksikti (sadece `is_electrified`
+  guard'ı vardı, düşman debuff bitince hemen tekrar tetikleniyordu). `_static_aura_cd`
+  Dictionary (instance_id → time_left) eklendi, `ball.gd`.
+- **Catalyst Pulse Core** tetik süresi 5s → 3s düşürüldü (kullanıcı "çok uzun" dedi).
+- **Supercooling / Thermal Vision** açıklamaları netleştirildi: Supercooling "Cryo Slow
+  +%15", Thermal Vision "Burn tick hasarı +%20" (önceden belirsiz "daha fazla" ifadeleri
+  vardı).
+- **Vector + Leila kart art'ları doğrulandı**: Vector %100 tam. Leila'da sadece Tempest
+  Core + Prismatic Core eksik görünüyor ama bu ikisi zaten oyundan silinmiş kartlar
+  (xlsx'te kalıntı kayıt), yani Leila da fiilen tam.
+- Kart art dosya adı otomasyonu doğrulandı: `kart_adı.to_lower().replace(" ","_") + "_art.png"`
+  — doğru klasöre (`Identity/Utility/Individuality/Calamity`) atılan her PNG otomatik yükleniyor.
 
 ## Şu an üzerinde çalışılanlar / devam eden işler
 
