@@ -9,6 +9,8 @@ const SURGERY_EXIT := Vector2(850, 1000)
 var speed: float = 28.0
 var health: int = 15
 var max_health: int = 15
+var enemy_armor: int = 0
+var enemy_armor_max: int = 0
 var is_dead: bool = false
 var original_speed: float = 0.0
 var is_slowed: bool = false
@@ -190,6 +192,15 @@ func take_damage(amount, from_ally: bool = false, kill_cause: String = "normal")
 	if not from_ally and _pi_player and _pi_player.get("has_cryo_burst") and _pi_player.has_cryo_burst:
 		if get("is_slowed") and is_slowed:
 			amount += 8
+	if enemy_armor > 0:
+		if enemy_armor >= amount:
+			enemy_armor -= amount
+			amount = 0
+		else:
+			amount -= enemy_armor
+			enemy_armor = 0
+		if enemy_armor <= 0:
+			get_sprite().modulate = Color(1, 1, 1, 1)
 	health -= amount
 	if is_electrified and not from_ally:
 		var p := _get_player()

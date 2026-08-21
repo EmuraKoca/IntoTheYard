@@ -6,9 +6,13 @@ func _ready() -> void:
 	speed = 32.0
 	health = 45
 	max_health = 45
+	enemy_armor = int(health * 0.5)
+	enemy_armor_max = enemy_armor
 	score_value = 3
 	enemy_type = "heavy_subject"
 	super._ready()
+	if enemy_armor > 0:
+		get_sprite().modulate = Color(0.55, 0.55, 0.55)
 
 func get_sprite() -> AnimatedSprite2D:
 	return $HeavySprite

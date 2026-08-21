@@ -237,7 +237,7 @@ func t(key: String) -> String:
 const _DESC_TR: Dictionary = {
 	# ── Vector — Identity ────────────────────────────────────────────────────
 	0:  "Core 3'e bölünür",
-	2:  "Core düşmanları deler",
+	2:  "Zırhı olmayan düşmanı deşip geçer",
 	40: "İsabet → Zırh kazan",
 	41: "İsabet → düşman %60 yavaşlar (3sn)",
 	42: "Yüksek hasar, Zırhı kırar",
@@ -291,7 +291,30 @@ const _DESC_TR: Dictionary = {
 	9:  "Düşmanları 5sn çeker",
 }
 
-func desc(index: int, fallback: String) -> String:
+
+# ── Dinamik kart açıklamaları (runtime'da değişen sayılar) ───────────────────
+# Sadece başka kartlarla değeri değişebilen kartlar burada match'lenir.
+# BBCode kullanılır — [b]..[/b] ile güncel değer kalın gösterilir.
+func _dynamic_desc(index: int, player: Node) -> String:
+	match index:
+		40:  # Armor Core
+			var amt: int = player.get("armor_gain_per_hit") if player.get("armor_gain_per_hit") != null else 1
+			if locale == "en":
+				return "Hit enemy → gain [b]%d[/b] Armor" % amt
+			return "Düşmana vuruş → [b]%d[/b] Armor kazandırır" % amt
+		41:  # Anchor Core
+			var _mult: float = player.get("slow_duration_mult") if player.get("slow_duration_mult") != null else 1.0
+			var _dur: int = int(3.0 * _mult)
+			if locale == "en":
+				return "Hit enemy → slows 60%% for [b]%d[/b]s" % _dur
+			return "İsabet → düşman [b]%d[/b] Saniye boyunca %%60 yavaşlar" % _dur
+	return ""
+
+func desc(index: int, fallback: String, player: Node = null) -> String:
+	if player:
+		var _d: String = _dynamic_desc(index, player)
+		if _d != "":
+			return _d
 	if locale == "en":
 		return fallback
 	return _DESC_TR.get(index, fallback)

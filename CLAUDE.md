@@ -3,6 +3,66 @@
 Bu dosya, farklı bilgisayarlardaki (ev / işyeri) Claude Code oturumları arasında bağlam
 köprüsü olarak kullanılır. Her oturum başında oku, her oturum sonunda güncelle.
 
+## AKTİF SÜREÇ: Kart-kart Full Review (2026-08-21 başladı)
+
+Her karakterin her kartı sırayla (Identity → Utility → Individuality → Calamity, kod
+sırasına göre index artan) şu 4 başlıkta incelenip onaylanıyor:
+
+1. **Implementasyon** — `game_scene.gd`'deki `elif index == N:` handler'ı + `ball.gd`/
+   `player.gd`/`base_enemy.gd`'deki gerçek efekt kodu okunur, açıklamayla birebir eşleşiyor
+   mu doğrulanır. Bug varsa düzeltilir (kullanıcı onayı ile).
+2. **Requires/Requires_any** — kartın önkoşul zinciri mantıklı mı (örn. bir core'a bağımlı
+   bir Utility, o core alınmadan havuza girmemeli) kontrol edilir, eksikse eklenir.
+3. **Türkçe açıklama** — `lang.gd` içindeki `_DESC_TR` (statik) veya `_dynamic_desc()`
+   (değişken sayılı kartlar için) güncellenir.
+4. **İngilizce açıklama** — `game_scene.gd`'deki `upgrades` dizisindeki `desc` alanı
+   (bu alan İngilizce fallback olarak kullanılıyor, `Lang.desc()` locale=="en" olduğunda
+   bunu döndürür).
+
+### Dinamik açıklama sistemi (bu session'da kuruldu)
+- `game_scene.gd`'de kart açıklama Label'ı `RichTextLabel` + `bbcode_enabled=true`.
+- `Lang.desc(index, fallback, player)` çağrısı önce `lang.gd`'deki `_dynamic_desc(index, player)`'a
+  bakar — eğer o kartın sayısı **başka bir kart/upgrade ile değişebiliyorsa**, oraya bir
+  `match index:` dalı eklenip `[b]%d[/b]` gibi BBCode ile canlı değer gösterilir.
+  Sayısı hiç değişmeyen kartlarda dokunmaya gerek yok, eski statik `_DESC_TR` yeterli.
+- Örnek: Armor Core (40) → `armor_gain_per_hit` (Impact Feedback ile artabiliyor),
+  Anchor Core (41) → slow süresi (`slow_duration_mult`, Battlefield Anchor ile ×2 olabiliyor).
+- Yeni bir kart incelerken **her zaman sor**: "bu sayıyı etkileyen başka bir kart var mı?"
+  Varsa dynamic yap, yoksa statik bırak.
+
+### İlerleme — Vector Identity (index sırasına göre)
+- [x] Pierce Core (2) — heavy_subject'e %50 zırh eklendi (gri ton), Cyber-404'ün mevcut
+      armor'ı da pierce'i bloklayacak şekilde `_has_active_armor()` helper'ı yazıldı.
+      Desc: "Zırhı olmayan düşmanı deşip geçer" / "Pierces through unarmored enemies."
+- [x] Armor Core (40) — **BUG FIX**: eski kod hem `can_armor` (sabit +1) hem az önce
+      eklenen `has_armor_core` (armor_gain_per_hit) ile çift sayıyordu, `can_armor` bloğu
+      silinip tek sisteme (armor_gain_per_hit, Impact Feedback ile scale eder) birleştirildi.
+      Desc dynamic: "Düşmana vuruş → [b]N[/b] Armor kazandırır" / "Hit enemy → gain [b]N[/b] Armor"
+- [x] Anchor Core (41) — implementasyon doğru (%60 yavaşlatma, 3sn, sadece düşmana çarpınca,
+      7 basic + 3 boss'un tamamında geçerli, slow debuff ikonu mevcut). Süre
+      `slow_duration_mult` (Battlefield Anchor ×2) ile değişebildiği için dynamic yapıldı;
+      yavaşlatma yüzdesi (%60) hiç değişmiyor (Supercooling Leila-only, Vector run'ında
+      hiç görünmez) o yüzden statik bırakıldı.
+      Desc dynamic: "İsabet → düşman [b]N[/b] Saniye boyunca %60 yavaşlar" /
+      "Hit enemy → slows 60% for [b]N[/b]s"
+- [ ] **SIRADA: Crusher Core (42)**
+- [ ] Siege Core (45)
+- [ ] Kinetic Core (43)
+- [ ] Bulwark Core (44)
+- [ ] Tempered Core (47)
+- [ ] Bloodbound Core (46)
+- [ ] Iron Aura Core (178)
+- [ ] Momentum Field Core (179)
+- [ ] Regen Pulse Core (180)
+- [ ] Fortress Core (181)
+- [ ] Bloodwall Core (182)
+- [ ] Overcharge Core (183)
+- [ ] Anchor Pulse Core (184)
+
+Sonrası: Vector Utility → Vector Individuality → Vector Calamity → aynı süreç Leila ve
+Cyclone için de tekrarlanacak (Cyclone Identity/Utility/Individuality zaten önceki session'da
+tam review edilmişti, tekrar gerekmiyor — sadece Vector ve Leila eksik).
+
 ## Şu an üzerinde çalışılanlar / devam eden işler
 
 **Sprint 1 (2026-07-02 → 2026-07-09) — Stabilizasyon & Kritik Bugfix:**

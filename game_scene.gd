@@ -2283,7 +2283,7 @@ func _build_all_upgrades() -> void:
 	upgrades = [
 	# ── Vector (Kinetik) — min_level: öğrenme eğrisi ─────────────────────────
 	# Lv0: Vector nedir?
-	{"name": "Pierce Core",         "category": "Identity",      "color": Color(1.0, 0.8, 0.0), "desc": "Core pierces through",                      "index": 2,  "weight": 10, "rarity": "common",   "chars": ["vector"], "min_level": 0},
+	{"name": "Pierce Core",         "category": "Identity",      "color": Color(1.0, 0.8, 0.0), "desc": "Pierces through unarmored enemies.",        "index": 2,  "weight": 10, "rarity": "common",   "chars": ["vector"], "min_level": 0},
 	{"name": "Armor Core",          "category": "Identity",      "color": Color(0.5, 0.6, 0.8), "desc": "Hit → gain Armor",                          "index": 40, "weight": 10, "rarity": "common",   "chars": ["vector"], "min_level": 0},
 	{"name": "Anchor Core",         "category": "Identity",      "color": Color(0.3, 0.4, 0.6), "desc": "Hit → slow enemy 60% (3s)",                 "index": 41, "weight": 10, "rarity": "common",   "chars": ["vector"], "min_level": 0},
 	{"name": "Crusher Core",        "category": "Identity",      "color": Color(0.6, 0.3, 0.1), "desc": "High damage, breaks Armor",                 "index": 42, "weight": 10, "rarity": "common",   "chars": ["vector"], "min_level": 0},
@@ -2722,20 +2722,26 @@ func show_upgrade_menu() -> void:
 		desc_panel.add_theme_stylebox_override("panel", empty_sb)
 		canvas.add_child(desc_panel)
 
-		var desc_label = Label.new()
-		var _desc_str: String = Lang.desc(upgrade["index"], upgrade["desc"])
+		var desc_label = RichTextLabel.new()
+		desc_label.bbcode_enabled = true
+		desc_label.fit_content = false
+		desc_label.scroll_active = false
+		var _desc_str: String = Lang.desc(upgrade["index"], upgrade["desc"], get_node("Player"))
 		desc_label.text = _desc_str
 		desc_label.set_anchors_preset(Control.PRESET_FULL_RECT)
 		desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD
 		desc_label.clip_contents = true
+		var _desc_plain_len: int = _desc_str.length()
 		var desc_font_size: int = 13
-		if _desc_str.length() > 40:
+		if _desc_plain_len > 40:
 			desc_font_size = 11
-		if _desc_str.length() > 60:
+		if _desc_plain_len > 60:
 			desc_font_size = 10
-		desc_label.add_theme_font_size_override("font_size", desc_font_size)
-		desc_label.add_theme_font_override("font", _font_regular)
-		desc_label.add_theme_color_override("font_color", Color(0.85, 0.85, 0.85))
+		desc_label.add_theme_font_size_override("normal_font_size", desc_font_size)
+		desc_label.add_theme_font_size_override("bold_font_size", desc_font_size)
+		desc_label.add_theme_font_override("normal_font", _font_regular)
+		desc_label.add_theme_font_override("bold_font", _font_bold)
+		desc_label.add_theme_color_override("default_color", Color(0.85, 0.85, 0.85))
 		desc_panel.add_child(desc_label)
 
 		# ── Connected Core badge ─────────────────────────────────────────────
@@ -4125,6 +4131,7 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 	# ── Vector — Identity yeni core'lar ──────────────────────────────────────
 	elif index == 40:
 		$BallLauncher.queue_upgrade_ball("armor")
+		get_node("Player").has_armor_core = true
 	elif index == 41:
 		$BallLauncher.queue_upgrade_ball("anchor")
 	elif index == 42:

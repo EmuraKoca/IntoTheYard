@@ -671,7 +671,7 @@ func _physics_process(delta: float) -> void:
 		var collider = collision.get_collider()
 		if collider.is_in_group("subjects"):
 			var _was_pierce: bool = can_pierce
-			var _is_heavy: bool = collider.get_script() != null and collider.get_script().resource_path.contains("heavy")
+			var _is_heavy: bool = _has_active_armor(collider)
 			_hit_subject(collider)
 			if _was_pierce and not _is_heavy:
 				var _shape: CollisionShape2D = collider.get_node_or_null("CollisionShape2D")
@@ -813,9 +813,9 @@ func _process_returning(delta: float) -> void:
 	if collision:
 		var collider = collision.get_collider()
 		if collider.is_in_group("subjects"):
-			_hit_subject(collider)
-			var _is_heavy: bool = collider.get_script() != null and collider.get_script().resource_path.contains("heavy")
+			var _is_heavy: bool = _has_active_armor(collider)
 			var _was_pierce: bool = can_pierce
+			_hit_subject(collider)
 			if _was_pierce and not _is_heavy:
 				var _shape2: CollisionShape2D = collider.get_node_or_null("CollisionShape2D")
 				if _shape2:
@@ -827,6 +827,14 @@ func _process_returning(delta: float) -> void:
 		elif not collider.is_in_group("player"):
 			# Bariyer veya statik duvar — aninda geri don
 			_start_returning()
+
+# Pierce Core: zırhı kırılmamış heavy_subject/Cyber-404'ü delemez
+func _has_active_armor(collider: Node) -> bool:
+	if collider.get("enemy_armor") != null and collider.enemy_armor > 0:
+		return true
+	if collider.get("armor") != null and collider.armor > 0:
+		return true
+	return false
 
 # ── Defense helpers ───────────────────────────────────────────────────────────
 func _defense_hit(subject: Node2D) -> void:
@@ -1836,8 +1844,6 @@ func _hit_subject(subject: Node2D) -> void:
 	var player_node := _get_player()
 	var game_node_fx := get_tree().get_first_node_in_group("game")
 	pass  # Siege ve Crusher düşman efektleri kaldırıldı
-	if can_armor and is_instance_valid(player_node) and game_node_fx:
-		game_node_fx.gain_armor(1)
 	if can_bulwark and is_instance_valid(player_node) and game_node_fx:
 		game_node_fx.gain_armor(2)
 		# Bulwark Echo: 2s sonra yarı armor kazanımı tekrar
@@ -1869,8 +1875,8 @@ func _hit_subject(subject: Node2D) -> void:
 		_update_kinetic_vfx()
 		queue_redraw()
 	if is_instance_valid(player_node):
-		# Armor Core upgrade (ayrı flag) — isabet başına armor kazan
-		if player_node.has_armor_core and game_node_fx:
+		# Armor Core — sadece bu topa özel isabet başına armor kazan
+		if can_armor and player_node.has_armor_core and game_node_fx:
 			game_node_fx.gain_armor(player_node.armor_gain_per_hit)
 		# Steel Rhythm — Armor = Cap iken hit → +1 Momentum stack
 		if player_node.get("has_steel_rhythm") != null and player_node.has_steel_rhythm:
