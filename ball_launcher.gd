@@ -426,16 +426,18 @@ func _launch_typed_ball(ball_type: String) -> void:
 	var direction  = (player.global_position - global_position).normalized()
 	var spawn_pos  = _get_muzzle_global()
 
-	if player_node.get("has_shadow_dance") and player_node.has_shadow_dance and player_node._shadow_dance_acc > 0.0:
-		ball.speed = 600.0 * (1.0 + player_node._shadow_dance_acc)
-
 	ball.global_position = spawn_pos
 	ball.add_to_group("player_balls")
 	get_parent().add_child.call_deferred(ball)
 	ball.queue_redraw()
-	# Hydro Pressure: Wet uygulayan fırlatılan core'lar (Hydro/Prism) %25 daha hızlı fırlar
+	# Fırlatma hızı çarpanları: Shadow Dance (kalıcı, kümülatif) + Hydro Pressure (Wet core'lar)
+	var _launch_spd_mult: float = 1.0
+	if player_node.get("has_shadow_dance") and player_node.has_shadow_dance and player_node._shadow_dance_acc > 0.0:
+		_launch_spd_mult += player_node._shadow_dance_acc
 	if ball_type in ["water", "steam"] and player_node.get("has_hydro_pressure") and player_node.has_hydro_pressure:
-		ball.launch(direction, 600.0 * 1.25)
+		_launch_spd_mult *= 1.25
+	if _launch_spd_mult != 1.0:
+		ball.launch(direction, 600.0 * _launch_spd_mult)
 	else:
 		ball.launch(direction)
 	GameData.record_core_fire(ball_type if ball_type != "" else "normal")

@@ -88,6 +88,7 @@ var _wall_bounce_count: int = 0  # sonsuz sekme önlemi
 var _pb_bounce_streak: int = 0   # Pinball Protocol: vurmadan sekme sayacı
 var _pb_piercing: bool = false   # Pinball Protocol: 3 sekme sonrası pierce, dönene kadar sürer
 var _kinetic_rogue_acc: int = 0  # Kinetic Rogue: bu topun kendi sekme sayacı, dönene kadar sürer
+var _shadow_dance_bounce_acc: int = 0   # Shadow Dance: bu topun kendi sekme sayacı, dönene kadar sürer
 var _backstab_ready: bool = false  # North duvarına çarptı, sonraki isabet crit
 var trail_positions: Array = []
 var trail_max_length: int = 24
@@ -412,6 +413,7 @@ func launch(direction: Vector2, spd: float = 600.0) -> void:
 	_phantom_hit_enemies.clear()
 	_phantom_triggered = false
 	_kinetic_rogue_acc = 0
+	_shadow_dance_bounce_acc = 0
 	move_direction = direction.normalized()
 	# Kinetic Surge: 15+ Momentum → max hızda başla
 	var _ks := _get_player()
@@ -437,6 +439,7 @@ func launch_with_speed(direction: Vector2, spd: float) -> void:
 	_phantom_hit_enemies.clear()
 	_phantom_triggered = false
 	_kinetic_rogue_acc = 0
+	_shadow_dance_bounce_acc = 0
 	move_direction = direction.normalized()
 	speed = spd
 	moving = true
@@ -637,8 +640,11 @@ func _physics_process(delta: float) -> void:
 			if _sp and _sp.get("has_siege_protocol") and _sp.has_siege_protocol:
 				set_meta("siege_bonus", get_meta("siege_bonus", 0) + 1)
 		var _bp := _get_player()
-		if _bp and _bp.get("has_shadow_dance") and _bp.has_shadow_dance and _wall_bounce_count >= 7:
-			_bp._shadow_dance_acc += 0.03
+		if _bp and _bp.get("has_shadow_dance") and _bp.has_shadow_dance:
+			_shadow_dance_bounce_acc += 1
+			while _shadow_dance_bounce_acc >= 7:
+				_shadow_dance_bounce_acc -= 7
+				_bp._shadow_dance_acc += 0.03
 		if _side_bounced and _bp and _bp.get("has_shadow_strike") and _bp.has_shadow_strike:
 			_shadow_primed = true
 
@@ -1671,10 +1677,6 @@ func _hit_subject(subject: Node2D) -> void:
 		if _rp.get("angular_precision_level") and _rp.angular_precision_level > 0 and hit_subjects.size() == 1:
 			var _ap_pct: float = 0.10 + 0.05 * _rp.angular_precision_level
 			subject.take_damage(int(total_damage * _ap_pct))
-
-		# Pinpoint Strike: 5 bounce sonrası ×2 crit (sadece Ricochet Core)
-		if can_ricochet_core and _rp.get("has_pinpoint_strike") and _rp.has_pinpoint_strike and _wall_bounce_count >= 5:
-			subject.take_damage(total_damage)
 
 		# Backstab Protocol: North duvarı sekmesi sonrası ilk isabet ×1.5→×2.0 crit
 		if _backstab_ready and _rp.get("backstab_protocol_level") and _rp.backstab_protocol_level > 0:

@@ -5,6 +5,7 @@ var aim_direction = Vector2(0, -1)
 var chain_anchor = Vector2(995, 1040)
 var chain_length = 355.0
 var invincible = false
+var _ghost_step_active: bool = false  # Ghost Step'in kendi bağışıklık penceresi — hit i-frame'inden bağımsız
 var ball_mastery = 0
 var pierce_bonus = 0
 var electric_bonus = 0
@@ -147,7 +148,6 @@ var bounce_mastery_level: int     = 0     # Ricochet Strike bonus: 4 → 5+level
 var pinball_protocol_level: int   = 0     # Pierce için gereken sekme: Lv1:5, Lv2:4, Lv3:3
 var has_kinetic_rogue: bool       = false # Her 5 gerçek duvar sekmesi (topun kendi sayacı) → +1 kalıcı base dmg
 var kinetic_rogue_bonus: int      = 0     # Kalıcı biriken bonus — tüm Ricochet Core'larla paylaşılır
-var has_pinpoint_strike: bool     = false # 5 bounce → ×2 crit
 var has_shadow_dance: bool        = false # 7 bounce same flight → +3% speed kalıcı
 var _shadow_dance_acc: float      = 0.0   # Biriken hız bonusu
 # Phantom Infiltrator
@@ -276,6 +276,7 @@ func add_to_orbit(ball: Node2D) -> void:
 	ball._phantom_hit_enemies.clear()
 	ball._phantom_triggered = false
 	ball._kinetic_rogue_acc = 0
+	ball._shadow_dance_bounce_acc = 0
 	if ball.get("is_inner_core"):
 		ball.scale = Vector2(1.0, 1.0)  # Connected Core'lar orbit'te görünür
 		inner_orbit_balls.append(ball)
@@ -578,10 +579,10 @@ func _physics_process(delta: float) -> void:
 			$CollisionShape2D.disabled = false
 			# Ghost Step: dash bitişi → 1.5s bağışıklık (5s cooldown)
 			if has_ghost_step and _ghost_step_cooldown <= 0.0:
-				invincible = true
+				_ghost_step_active = true
 				_ghost_step_cooldown = 5.0
 				get_tree().create_timer(1.5).timeout.connect(func():
-					if is_instance_valid(self): invincible = false
+					if is_instance_valid(self): _ghost_step_active = false
 				)
 
 	# Wall boundaries
@@ -923,7 +924,7 @@ func _no_ball_nearby() -> bool:
 
 
 func take_damage(amount) -> void:
-	if invincible:
+	if invincible or _ghost_step_active:
 		return
 	invincible = true
 	if false:

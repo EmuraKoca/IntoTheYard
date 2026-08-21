@@ -2461,9 +2461,8 @@ func _build_all_upgrades() -> void:
 	{"name": "Phase Shift",          "category": "Individuality", "color": Color(0.3, 0.8, 0.9),  "desc": "Stunned enemy hit:\n×1.5 damage",                          "index": 141, "weight": 4,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2, "requires": [159]},
 	{"name": "Shadow Dance",         "category": "Individuality", "color": Color(0.35, 0.05, 0.6),"desc": "7 wall bounces in same flight:\nCore Speed +3% permanently", "index": 146, "weight": 4,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
 	# Individuality — Lv3
-	{"name": "Circuit Breaker",      "category": "Individuality", "color": Color(0.25, 0.75, 0.95),"desc": "Every 25th hit: all enemies\nin the Yard Glitched for 2s", "index": 143, "weight": 3,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3},
-	{"name": "Pinpoint Strike",      "category": "Individuality", "color": Color(0.4, 0.1, 1.0),  "desc": "After 5 wall bounces:\nnext hit ×1.5 (crit)",               "index": 137, "weight": 3,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3, "requires": [163]},
-	{"name": "Zero Day",             "category": "Individuality", "color": Color(0.0, 0.85, 0.4),  "desc": "Antivirused + Glitched:\nstack count doubled instantly",   "index": 154, "weight": 3,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3, "requires": [160]},
+	{"name": "Circuit Breaker",      "category": "Individuality", "color": Color(0.25, 0.75, 0.95),"desc": "Every 25th hit: all enemies\nin the Yard Glitched for 3s", "index": 143, "weight": 3,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3},
+	{"name": "Zero Day",             "category": "Individuality", "color": Color(0.0, 0.85, 0.4),  "desc": "Glitch'li düşmana Virus uygulanınca\nmevcut stack ×2 olur",   "index": 154, "weight": 3,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3, "requires": [160]},
 	{"name": "Kernel Panic",         "category": "Individuality", "color": Color(0.05, 0.9, 0.35), "desc": "Each Antivirus tick:\n5% chance to Glitch target",         "index": 155, "weight": 3,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3, "requires": [160]},
 	# Calamity
 	{"name": "Data Storm",           "category": "Calamity",      "color": Color(0.7, 0.0, 0.8),  "desc": "All Glitched enemies\nin the Yard take 10 dmg",             "index": 129, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 3},
@@ -2488,9 +2487,9 @@ func _build_all_upgrades() -> void:
 	{"name": "Virus Rain", "category": "Calamity",      "color": Color(0.1, 0.85, 0.4),  "desc": "3s boyunca her 0.5s:\ntüm düşmanlara 1 Antivirus stack",           "index": 217, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 3},
 	{"name": "Decay Field",    "category": "Calamity",      "color": Color(0.45, 0.2, 0.0),  "desc": "5s: seçilen 100px alana aura\ngiren düşmanlar her 1s'de 1 Decay alır","index": 218, "weight": 4,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3},
 	# Individuality
-	{"name": "Decay Harvest",       "category": "Individuality", "color": Color(0.5, 0.25, 0.0), "desc": "Decay patlaması tetiklenince:\n+2 HP kazan",                    "index": 219, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
+	{"name": "Decay Harvest",       "category": "Individuality", "color": Color(0.5, 0.25, 0.0), "desc": "Decay patlaması tetiklenince:\n+2 HP kazan",                    "index": 219, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [161]},
 	{"name": "Ghost Step",          "category": "Individuality", "color": Color(0.3, 0.8, 0.9),  "desc": "Dash sonrası 1.5s hasar bağışıklığı\n(5s bekleme süresi)",     "index": 220, "weight": 5,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
-	{"name": "Overclock Protocol",  "category": "Individuality", "color": Color(0.25, 0.9, 0.95),"desc": "Circuit Breaker sayacı\n2× hızlı dolar",                       "index": 221, "weight": 3,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 4},
+	{"name": "Overclock Protocol",  "category": "Individuality", "color": Color(0.25, 0.9, 0.95),"desc": "Circuit Breaker sayacı\n2× hızlı dolar",                       "index": 221, "weight": 3,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 4, "requires": [143]},
 	# Utility
 	{"name": "Decay Amp",   "category": "Utility", "color": Color(0.55, 0.25, 0.0), "desc": "Decay patlaması hasarı (stack başına)\nLv1: 3, Lv2: 5, Lv3: 7 (taban 2)",  "index": 222, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
 	{"name": "Chain Extension", "category": "Utility", "color": Color(0.7, 0.6, 0.3), "desc": "Zincir 5 halka uzar\n(hareket alanı genişler)",                         "index": 224, "weight": 6,  "rarity": "uncommon",  "chars": [],           "min_level": 0},
@@ -4395,7 +4394,6 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 			133: pass  # level bazlı bonus _apply_utility_level'da uygulanıyor
 			134: pass  # level bazlı bonus _apply_utility_level'da uygulanıyor
 			136: p.has_kinetic_rogue       = true
-			137: p.has_pinpoint_strike     = true
 			138: if calamity_slots.size() < max_calamity_slots: calamity_slots.append("🎱")
 			139: pass  # level bazlı bonus _apply_utility_level'da uygulanıyor
 			140: pass  # level bazlı bonus _apply_utility_level'da uygulanıyor
