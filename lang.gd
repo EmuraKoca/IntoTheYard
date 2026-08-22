@@ -82,6 +82,7 @@ const _TR := {
 	"ui_upgrade_ready":    "GELİŞTİRME HAZIR",
 	"ui_level_up":         "SEVİYE ATLADI!",
 	"ui_connected_core":   "◈ Bağlantılı Core",
+	"ui_connected_core_tooltip": "Bu core fırlatılamaz — sürekli oyuncunun etrafında döner.",
 	"ui_tactical_mode":    "◈  TAKTİK MOD  //  ×0.5",
 	"ui_settings":         "Ayarlar",
 	"ui_back":             "Geri",
@@ -193,6 +194,7 @@ const _EN := {
 	"ui_upgrade_ready":    "UPGRADE READY",
 	"ui_level_up":         "LEVEL UP!",
 	"ui_connected_core":   "◈ Connected Core",
+	"ui_connected_core_tooltip": "This core cannot be launched — it orbits the player permanently.",
 	"ui_tactical_mode":    "◈  TACTICAL MODE  //  ×0.5",
 	"ui_settings":         "Settings",
 	"ui_back":             "Back",
@@ -267,6 +269,9 @@ const _DESC_TR: Dictionary = {
 	58: "Yavaşlatma süresi ×2 / Oyuncu Hızı -%10",
 	59: "Düşük HP: Zırh +%40 | Yüksek HP: Core Hızı +%10",
 	60: "Alınan hasar → Momentum stack / Zırh Kazanımı -%30",
+	178: "Her 2s: 60px'deki düşmanlara\n1 + Armor×%5 hasar",
+	179: "Hareket ederken her 1s:\n+1 Momentum Stack (pasif)",
+	181: "Armor %75+ doluyken:\n90px içindeki düşmanlar %25 yavaşlar",
 	# ── Leila — Identity ─────────────────────────────────────────────────────
 	1:  "Core elektrik kazanır",
 	15: "Düşmanı %25 yavaşlatır",
@@ -330,6 +335,22 @@ func _dynamic_desc(index: int, player: Node) -> String:
 			if locale == "en":
 				return "[b]%d[/b] damage.\nHit → +2 Armor" % _dmg
 			return "[b]%d[/b] hasar.\nİsabet → +2 Armor" % _dmg
+		46:  # Bloodbound Core
+			var _dmg: int = 8 + _bm
+			if locale == "en":
+				return "[b]%d[/b] damage.\nEvery 5 missing HP → +1 bonus dmg" % _dmg
+			return "[b]%d[/b] hasar.\nHer 5 eksik can için +1 bonus hasar" % _dmg
+		47:  # Tempered Core
+			var _dmg: int = 9 + _bm
+			if locale == "en":
+				return "[b]%d[/b] damage.\nArmor active → +3 dmg" % _dmg
+			return "[b]%d[/b] hasar.\nZırh aktifken → +3 hasar" % _dmg
+		180:  # Regen Pulse Core
+			var _agm: float = player.get("armor_gain_mult") if player.get("armor_gain_mult") != null else 1.0
+			var _amt: int = int(1 * _agm)
+			if locale == "en":
+				return "Every 15s: restore [b]%d[/b] Armor" % _amt
+			return "Her 15s: [b]%d[/b] Armor yeniler" % _amt
 	return ""
 
 func desc(index: int, fallback: String, player: Node = null) -> String:

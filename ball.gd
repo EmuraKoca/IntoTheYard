@@ -894,7 +894,7 @@ func _inner_core_tick(delta: float) -> void:
 					if not is_instance_valid(_s): continue
 					if global_position.distance_to(_s.global_position) <= 90.0:
 						if _s.has_method("apply_slow"):
-							_s.apply_slow(0.25, 0.5)  # kısa süre, her frame yenilenir
+							_s.apply_slow(0.25, 0.5, "anchor")  # kısa süre, her frame yenilenir; cryo VFX'i engeller
 
 	_inner_tick_timer -= delta
 	_inner_tick_timer_b -= delta

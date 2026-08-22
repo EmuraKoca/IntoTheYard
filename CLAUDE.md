@@ -64,16 +64,53 @@ sırasına göre index artan) şu 4 başlıkta incelenip onaylanıyor:
       bundan hiç etkilenmiyordu — `requires: [40]` eklenerek Impact Feedback artık sadece
       Armor Core alınmışsa havuza giriyor (Bulwark'tan ayrıştırıldı, karıştırılmasın diye).
       Desc dynamic: "İsabet → +2 Armor" / "Hit → +2 Armor"
-- [ ] **SIRADA: Bloodbound Core (46)**
-- [ ] Tempered Core (47)
-- [ ] Bloodbound Core (46)
-- [ ] Iron Aura Core (178)
-- [ ] Momentum Field Core (179)
-- [ ] Regen Pulse Core (180)
-- [ ] Fortress Core (181)
-- [ ] Bloodwall Core (182)
+- [x] Tempered Core (47) — çalışıyor: base hasar 9 (+ball_mastery), Armor aktifken ayrı
+      +3 sabit hasar (herhangi bir Armor kaynağından, tek bir core'a bağlı değil). Requires
+      gerekmiyor (oyuncu zaten başlangıçta Armor'lu). Dynamic desc'e (2/40/41/42/43/44/45
+      listesine) eklendi: "[b]N[/b] hasar.\nZırh aktifken → +3 hasar" / "...Armor active → +3 dmg".
+- [x] Bloodbound Core (46) — çalışıyor: base hasar 8 (+ball_mastery), eksik HP'nin her 5'i
+      için ayrı +1 bonus hasar (`take_damage()`, crit'ten etkilenmiyor). Eksik-HP kısmı
+      kullanıcı isteğiyle dinamik yapılmadı (oyuncu kendi hesaplasın), sadece ball_mastery
+      kısmı dynamic: "[b]N[/b] hasar.\nHer 5 eksik can için +1 bonus hasar" / "...Every 5
+      missing HP → +1 bonus dmg".
+- [x] Iron Aura Core (178) — **BUG FIX**: `_CONNECTED_CORE_INDICES`'te eksikti (178/179
+      unutulmuştu, sadece 180-184 vardı) → yanlış limit havuzuna (`special_core_count`
+      yerine `connected_core_count`) sayılıyordu + Connected Core rozetini almıyordu, ikisi
+      de düzeltildi. Hasar Core Mastery'den etkilenmiyor (ayrı `_inner_core_tick()` yolu,
+      `_hit_subject()`'e hiç girmiyor) — dynamic'e gerek yok. Dil bug'ı: `desc` alanı
+      (İngilizce olması gereken yer) Türkçe yazılmıştı, `_DESC_TR`'de hiç girdi yoktu →
+      ikisi de ayrıştırıldı ve düzeltildi. **Bu dil bug'ı 178-184 arası tüm yeni Connected
+      Core'larda muhtemelen var, sırayla kontrol edilip düzeltilecek.**
+- [x] Momentum Field Core (179) — aynı `_CONNECTED_CORE_INDICES` bug'ı + aynı dil bug'ı
+      düzeltildi. Stack üretimi (hareket ederken 1s'de +1) önkoşulsuz çalışıyor ama
+      stack'lerin Core Speed'e dönüşmesi sadece `has_momentum_engine` (Momentum Engine
+      kartı) varsa oluyor — Overcharge Core (183) / Kinetic Surge (171) ise stack'i
+      doğrudan (Momentum Engine'siz) kullanıyor. Bu yüzden `requires_any: [35, 171, 183]`
+      eklendi (üçünden biri alınmadan havuza girmiyor, faydasız pick riski önlendi).
+- [x] Regen Pulse Core (180) — çalışıyor, her 15s +1 Armor. `gain_armor()` fonksiyonu
+      birden fazla çarpan içeriyor (Pain Converter/Glass Engine/Adrenal Armor/Momentum
+      Cascade = HP/Momentum durumuna bağlı, Iron Constitution/Overclocked Reflex/Risk
+      Engine = `armor_gain_mult`, kart kaynaklı kümülatif). Kullanıcı kararı: sadece
+      **kart-kaynaklı** çarpan (`armor_gain_mult`) dynamic'e yansıtıldı, HP/Momentum bazlı
+      olanlar hariç tutuldu. Aynı dil bug'ı düzeltildi.
+- [x] Fortress Core (181) — çalışıyor, Armor %75+ doluyken 90px'e sürekli %25 yavaşlatma
+      (her frame yenilenen kısa süreli slow). **BUG FIX**: `apply_slow()` çağrısı `source`
+      parametresini geçmiyordu → varsayılan "cryo" ile Leila'nın buz VFX'i yanlışlıkla
+      düşmanda oynuyordu; Anchor Core'daki gibi `"anchor"` source'u eklenip VFX engellendi.
+      Sayılar (%75, 90px, %25) hiçbir kartla değişmiyor, statik kaldı. Aynı dil bug'ı
+      düzeltildi.
+- [ ] **SIRADA: Bloodwall Core (182)**
 - [ ] Overcharge Core (183)
 - [ ] Anchor Pulse Core (184)
+
+### UI eklentisi: Connected Core tooltip (2026-08-22)
+- Connected Core rozetinin ("◈ Bağlantılı Core") üzerine gelince artık native Godot
+  tooltip'i açılıyor: "Bu core fırlatılamaz — sürekli oyuncunun etrafında döner." (EN
+  karşılığı da eklendi, `lang.gd` → `ui_connected_core_tooltip`).
+- ÖNEMLİ implementasyon notu: tooltip badge Label'ına değil, kartın tamamını kaplayan ve
+  badge'in üstünde duran `click_area` (Button) node'una eklendi — çünkü `click_area` daha
+  sonra oluşturulup üstte kaldığı için mouse hover'ı önce o yakalıyor, badge'e asla
+  ulaşmıyordu. Yeni bir hover/tooltip eklenecekse bu sıralamaya dikkat edilmeli.
 
 Sonrası: Vector Utility → Vector Individuality → Vector Calamity → aynı süreç Leila ve
 Cyclone için de tekrarlanacak (Cyclone Identity/Utility/Individuality zaten önceki session'da

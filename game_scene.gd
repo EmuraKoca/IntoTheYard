@@ -171,7 +171,7 @@ const _CORE_INDEX_MAP: Dictionary = {
 
 # Connected Core (iç yörünge) index'leri — kart UI'da badge göstermek için
 const _CONNECTED_CORE_INDICES: Array = [
-	180, 181, 182, 183, 184,           # Vector
+	178, 179, 180, 181, 182, 183, 184, # Vector
 	65,                                # Leila (Prism Core — orbit'te kalır, Connected Core)
 	185, 186, 187, 188, 189, 190, 191, # Leila
 	192, 193, 194, 195, 196, 197,      # Cyclone
@@ -2340,10 +2340,10 @@ func _build_all_upgrades() -> void:
 	{"name": "Kinetic Surge",     "category": "Utility",       "color": Color(0.0, 0.9, 1.0),  "desc": "15+ Momentum:\nCore orbit'ten max hızda çıkar",             "index": 171, "weight": 4,  "rarity": "rare",      "chars": ["vector"], "min_level": 3},
 	{"name": "Armor Conduit",     "category": "Utility",       "color": Color(0.5, 0.7, 0.8),  "desc": "Armor = Cap iken isabet:\n+2 bonus hasar",                  "index": 172, "weight": 5,  "rarity": "rare",      "chars": ["vector"], "min_level": 2},
 	# ── Vector — Connected Cores (iç yörünge, fırlatılmaz) ───────────────────
-	{"name": "Iron Aura Core",      "category": "Identity",      "color": Color(0.5, 0.65, 0.9),  "desc": "Her 2s: 60px'deki düşmanlara\n1 + Armor×%5 hasar",              "index": 178, "weight": 5, "rarity": "rare",      "chars": ["vector"], "min_level": 2},
-	{"name": "Momentum Field Core", "category": "Identity",      "color": Color(0.0, 0.85, 1.0),  "desc": "Hareket ederken her 1s:\n+1 Momentum Stack (pasif)",            "index": 179, "weight": 5, "rarity": "rare",      "chars": ["vector"], "min_level": 2},
-	{"name": "Regen Pulse Core",    "category": "Identity",      "color": Color(0.4, 0.7, 0.55),  "desc": "Her 15s: 1 Armor yeniler",                                      "index": 180, "weight": 6, "rarity": "uncommon",  "chars": ["vector"], "min_level": 1},
-	{"name": "Fortress Core",       "category": "Identity",      "color": Color(0.4, 0.5, 0.75),  "desc": "Armor %75+ doluyken:\n90px düşmanlar %25 yavaşlar",             "index": 181, "weight": 5, "rarity": "rare",      "chars": ["vector"], "min_level": 2},
+	{"name": "Iron Aura Core",      "category": "Identity",      "color": Color(0.5, 0.65, 0.9),  "desc": "Every 2s: deal 1 + Armor×5%\ndamage to enemies within 60px",       "index": 178, "weight": 5, "rarity": "rare",      "chars": ["vector"], "min_level": 2},
+	{"name": "Momentum Field Core", "category": "Identity",      "color": Color(0.0, 0.85, 1.0),  "desc": "While moving, every 1s:\n+1 Momentum Stack (passive)",          "index": 179, "weight": 5, "rarity": "rare",      "chars": ["vector"], "min_level": 2, "requires_any": [35, 171, 183]},
+	{"name": "Regen Pulse Core",    "category": "Identity",      "color": Color(0.4, 0.7, 0.55),  "desc": "Every 15s: restore 1 Armor",                                    "index": 180, "weight": 6, "rarity": "uncommon",  "chars": ["vector"], "min_level": 1},
+	{"name": "Fortress Core",       "category": "Identity",      "color": Color(0.4, 0.5, 0.75),  "desc": "Armor 75%+ full:\nenemies within 90px slow 25%",                "index": 181, "weight": 5, "rarity": "rare",      "chars": ["vector"], "min_level": 2},
 	{"name": "Bloodwall Core",      "category": "Identity",      "color": Color(0.7, 0.1, 0.1),   "desc": "HP %50 altındayken:\nher 9s'de 1 HP yeniler",                   "index": 182, "weight": 5, "rarity": "rare",      "chars": ["vector"], "min_level": 3},
 	{"name": "Overcharge Core",     "category": "Identity",      "color": Color(0.0, 0.7, 1.0),   "desc": "Momentum 15+: her 4s\n60px'e 2 hasar pulse",                    "index": 183, "weight": 4, "rarity": "rare",      "chars": ["vector"], "min_level": 3},
 	{"name": "Anchor Pulse Core",   "category": "Identity",      "color": Color(0.35, 0.5, 0.75), "desc": "5s hareketsiz: her 1s\n+1 Armor kazanır",                       "index": 184, "weight": 5, "rarity": "uncommon",  "chars": ["vector"], "min_level": 1},
@@ -2791,6 +2791,8 @@ func show_upgrade_menu() -> void:
 			tween.parallel().tween_property(card_sprite, "position", Vector2(tx, ty), 0.1)
 		)
 		click_area.pressed.connect(_on_card_selected.bind(upgrade["index"], canvas, card_sprite))
+		if upgrade.get("index", -1) in _CONNECTED_CORE_INDICES:
+			click_area.tooltip_text = Lang.t("ui_connected_core_tooltip")
 		canvas.add_child(click_area)
 
 		# ── Card entry animation: bottom to top, staggered ─────────────────────
