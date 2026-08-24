@@ -99,9 +99,25 @@ sırasına göre index artan) şu 4 başlıkta incelenip onaylanıyor:
       düşmanda oynuyordu; Anchor Core'daki gibi `"anchor"` source'u eklenip VFX engellendi.
       Sayılar (%75, 90px, %25) hiçbir kartla değişmiyor, statik kaldı. Aynı dil bug'ı
       düzeltildi.
-- [ ] **SIRADA: Bloodwall Core (182)**
-- [ ] Overcharge Core (183)
-- [ ] Anchor Pulse Core (184)
+- [x] Bloodwall Core (182) — çalışıyor, HP %50 altındayken her 9s +1 HP. **BUG FIX**:
+      `gfx.player_hp` direkt değiştiriliyordu ama `gfx.update_ui()` çağrılmıyordu — HP
+      bar'ı iyileşmeyi anında göstermiyordu, eklendi. Aynı dil bug'ı düzeltildi.
+- [x] Overcharge Core (183) — çalışıyor, Momentum 15+ iken her 4s 60px'e 2 hasar pulse.
+      `requires_any: [35, 109, 179]` eklendi (Momentum Engine / Steel Rhythm / Momentum
+      Field Core — momentum_stacks'i üreten tek yollar bunlar, hiçbiri yoksa kart tamamen
+      pasif kalıyordu). Aynı dil bug'ı düzeltildi.
+- [x] Anchor Pulse Core (184) — çalışıyor, 5s hareketsizlik sonrası her 1s +1 Armor
+      (sayaç sıfırlanmıyor, bilinçli olarak sürekli tekrarlıyor — bug değil, açıklamayla
+      birebir örtüşüyor). `armor_gain_mult` (kart-kaynaklı) dynamic'e eklendi, aynı dil
+      bug'ı düzeltildi.
+
+**VECTOR IDENTITY TAMAMLANDI (16/16 kart) — 2026-08-22**
+
+### SIRADAKİ AŞAMA: Vector Utility
+Henüz başlanmadı. Vector Utility kartları `game_scene.gd`'de `"category": "Utility"` ve
+`"chars": ["vector"]` filtresiyle bulunabilir (index'ler dağınık, örn. 35-38, 171-172 gibi
+Identity kartlarının arasına serpiştirilmiş — sıralı bir blok değil, dikkatli taranmalı).
+Aynı 4 aşamalı süreç (İmplementasyon → Requires → TR açıklama → EN açıklama) uygulanacak.
 
 ### UI eklentisi: Connected Core tooltip (2026-08-22)
 - Connected Core rozetinin ("◈ Bağlantılı Core") üzerine gelince artık native Godot

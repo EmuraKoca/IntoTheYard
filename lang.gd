@@ -272,6 +272,8 @@ const _DESC_TR: Dictionary = {
 	178: "Her 2s: 60px'deki düşmanlara\n1 + Armor×%5 hasar",
 	179: "Hareket ederken her 1s:\n+1 Momentum Stack (pasif)",
 	181: "Armor %75+ doluyken:\n90px içindeki düşmanlar %25 yavaşlar",
+	182: "HP %50 altındayken:\nher 9s'de 1 HP yeniler",
+	183: "Momentum 15+: her 4s\n60px'e 2 hasar pulse",
 	# ── Leila — Identity ─────────────────────────────────────────────────────
 	1:  "Core elektrik kazanır",
 	15: "Düşmanı %25 yavaşlatır",
@@ -351,6 +353,12 @@ func _dynamic_desc(index: int, player: Node) -> String:
 			if locale == "en":
 				return "Every 15s: restore [b]%d[/b] Armor" % _amt
 			return "Her 15s: [b]%d[/b] Armor yeniler" % _amt
+		184:  # Anchor Pulse Core
+			var _agm2: float = player.get("armor_gain_mult") if player.get("armor_gain_mult") != null else 1.0
+			var _amt2: int = int(1 * _agm2)
+			if locale == "en":
+				return "Stationary for 5s: gain\n[b]%d[/b] Armor every 1s" % _amt2
+			return "5s hareketsiz: her 1s\n[b]%d[/b] Armor kazanır" % _amt2
 	return ""
 
 func desc(index: int, fallback: String, player: Node = null) -> String:
