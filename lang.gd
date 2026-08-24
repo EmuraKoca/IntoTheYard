@@ -353,6 +353,95 @@ func _dynamic_desc(index: int, player: Node) -> String:
 			if locale == "en":
 				return "Every 15s: restore [b]%d[/b] Armor" % _amt
 			return "Her 15s: [b]%d[/b] Armor yeniler" % _amt
+		35:  # Momentum Engine
+			var _msb: float = player.get("momentum_speed_bonus") if player.get("momentum_speed_bonus") != null else 0.03
+			var _mmax: int = player.get("momentum_max") if player.get("momentum_max") != null else 20
+			var _msb_pct: int = int(round(_msb * 100.0))
+			if locale == "en":
+				return "Hit → +1 Stack\n+[b]%d[/b]%% Core Speed per stack\n(max [b]%d[/b] stacks)" % [_msb_pct, _mmax]
+			return "İsabet → +1 Stack\n+[b]%d[/b]%% Core Hızı/stack\n(maks [b]%d[/b] stack)" % [_msb_pct, _mmax]
+		37:  # Chain Density
+			var _cdb: int = player.get("chain_density_bonus_per_hit") if player.get("chain_density_bonus_per_hit") != null else 1
+			if locale == "en":
+				return "New enemy hit mid-flight:\n+[b]%d[/b]x cumulative dmg, resets on return" % _cdb
+			return "Uçuşta yeni düşmana çarparsan:\n+[b]%d[/b]x kümülatif hasar, dönünce sıfırlanır" % _cdb
+		36:  # Impact Feedback
+			var _ift: int = player.get("impact_feedback_threshold") if player.get("impact_feedback_threshold") != null else 10
+			if locale == "en":
+				return "Every [b]%d[/b] hits:\nArmor Core gain permanently +1 (max 10)" % _ift
+			return "Her [b]%d[/b] isabette:\nArmor Core kazanımı kalıcı +1 artar (maks 10)" % _ift
+		38:  # Last Stand
+			var _lshm: float = player.get("last_stand_hp_mult") if player.get("last_stand_hp_mult") != null else 0.005
+			var _lsam: float = player.get("last_stand_armor_mult") if player.get("last_stand_armor_mult") != null else 0.0
+			var _pct: float = _lshm * 100.0
+			if locale == "en":
+				var _r_en: String = "Missing HP → Core Speed bonus\n(+[b]%.1f[/b]%% per missing HP)" % _pct
+				if _lsam > 0.0:
+					_r_en += "\nMissing HP → passive Armor regen"
+				return _r_en
+			var _r_tr: String = "Eksik HP → Core Hızı bonusu\n(+[b]%.1f[/b]%% / eksik HP)" % _pct
+			if _lsam > 0.0:
+				_r_tr += "\nEksik HP → pasif Zırh kazanımı"
+			return _r_tr
+		104:  # Pressure Valve
+			var _pvt: int = player.get("pressure_valve_threshold") if player.get("pressure_valve_threshold") != null else 5
+			if locale == "en":
+				return "Every [b]%d[/b] Momentum stacks:\ngain +1 Armor" % _pvt
+			return "Her [b]%d[/b] Momentum stack'inde:\n+1 Armor kazan" % _pvt
+		108:  # Momentum Cascade
+			var _mct: int = player.get("momentum_cascade_threshold") if player.get("momentum_cascade_threshold") != null else 12
+			if locale == "en":
+				return "[b]%d[/b]+ Momentum stacks:\nArmor Gain ×1.5" % _mct
+			return "[b]%d[/b]+ Momentum stack:\nZırh Kazanımı ×1.5" % _mct
+		110:  # Bulwark Surge
+			var _bst: int = int(round((player.get("bulwark_surge_threshold") if player.get("bulwark_surge_threshold") != null else 0.75) * 100.0))
+			var _bsm: float = player.get("bulwark_surge_mult") if player.get("bulwark_surge_mult") != null else 1.15
+			var _bsp: int = int(round((_bsm - 1.0) * 100.0))
+			if locale == "en":
+				return "Armor ≥ [b]%d[/b]%% Cap:\nCore Speed +[b]%d[/b]%%" % [_bst, _bsp]
+			return "Armor ≥ %[b]%d[/b] Cap:\nCore Hızı +%[b]%d[/b]" % [_bst, _bsp]
+		164:  # Armor Rush
+			var _ars: int = player.get("armor_rush_stack_amount") if player.get("armor_rush_stack_amount") != null else 1
+			if locale == "en":
+				return "On Armor gain:\n+[b]%d[/b] Momentum Stack" % _ars
+			return "Armor kazandığında:\n+[b]%d[/b] Momentum Stack" % _ars
+		165:  # Combat Rhythm
+			var _crt: int = player.get("combat_rhythm_threshold") if player.get("combat_rhythm_threshold") != null else 6
+			if locale == "en":
+				return "[b]%d[/b] consecutive hits:\nCore returns instantly" % _crt
+			return "[b]%d[/b] ardışık isabet:\nCore anında geri döner" % _crt
+		166:  # Shield Bash
+			var _sbm: float = player.get("shield_bash_mult") if player.get("shield_bash_mult") != null else 1.25
+			if locale == "en":
+				return "Core return speed:\n+Armor ×[b]%.2f[/b]" % _sbm
+			return "Core dönüş hızı:\n+Armor ×[b]%.2f[/b]" % _sbm
+		167:  # Siege Protocol
+			var _spb: int = player.get("siege_protocol_bonus") if player.get("siege_protocol_bonus") != null else 1
+			if locale == "en":
+				return "Siege Core: each wall bounce\ngains +[b]%d[/b] dmg. (Extra damage resets on hit)" % _spb
+			return "Siege Core: her duvar sekmesinde\n+[b]%d[/b] hasar kazanır. (Kazanılan ekstra hasar isabette sıfırlanır)" % _spb
+		168:  # Bulwark Echo
+			var _bed: float = player.get("bulwark_echo_delay") if player.get("bulwark_echo_delay") != null else 4.0
+			var _bea: int = player.get("bulwark_echo_amount") if player.get("bulwark_echo_amount") != null else 1
+			if locale == "en":
+				return "Bulwark Core hit: after [b]%.0f[/b]s\ngain [b]%d[/b] more Armor" % [_bed, _bea]
+			return "Bulwark Core isabeti: [b]%.0f[/b]s sonra\n[b]%d[/b] Armor daha kazanırsın" % [_bed, _bea]
+		169:  # Momentum Transfer
+			var _mta: int = player.get("momentum_transfer_amount") if player.get("momentum_transfer_amount") != null else 3
+			if locale == "en":
+				return "If Armor hits 0:\n+[b]%d[/b] Momentum Stack" % _mta
+			return "Armor sıfırlanırsa:\n+[b]%d[/b] Momentum Stack" % _mta
+		171:  # Kinetic Surge
+			var _kst: int = player.get("kinetic_surge_threshold") if player.get("kinetic_surge_threshold") != null else 15
+			var _kss: float = player.get("kinetic_surge_speed") if player.get("kinetic_surge_speed") != null else 700.0
+			if locale == "en":
+				return "[b]%d[/b]+ Momentum:\nCore launches at min. [b]%.0f[/b] speed" % [_kst, _kss]
+			return "[b]%d[/b]+ Momentum:\nCore en az [b]%.0f[/b] hızla fırlar" % [_kst, _kss]
+		172:  # Armor Conduit
+			var _acm: float = player.get("armor_conduit_mult") if player.get("armor_conduit_mult") != null else 1.25
+			if locale == "en":
+				return "Armor = Cap:\nAll core damage ×[b]%.2f[/b]" % _acm
+			return "Armor = Cap:\nTüm core hasarı ×[b]%.2f[/b]" % _acm
 		184:  # Anchor Pulse Core
 			var _agm2: float = player.get("armor_gain_mult") if player.get("armor_gain_mult") != null else 1.0
 			var _amt2: int = int(1 * _agm2)

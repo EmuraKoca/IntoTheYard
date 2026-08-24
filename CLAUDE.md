@@ -113,11 +113,95 @@ sırasına göre index artan) şu 4 başlıkta incelenip onaylanıyor:
 
 **VECTOR IDENTITY TAMAMLANDI (16/16 kart) — 2026-08-22**
 
-### SIRADAKİ AŞAMA: Vector Utility
-Henüz başlanmadı. Vector Utility kartları `game_scene.gd`'de `"category": "Utility"` ve
-`"chars": ["vector"]` filtresiyle bulunabilir (index'ler dağınık, örn. 35-38, 171-172 gibi
-Identity kartlarının arasına serpiştirilmiş — sıralı bir blok değil, dikkatli taranmalı).
-Aynı 4 aşamalı süreç (İmplementasyon → Requires → TR açıklama → EN açıklama) uygulanacak.
+### İlerleme — Vector Utility (15 kart, kod sırasına göre) — TAMAMLANDI (2026-08-22)
+- [x] Momentum Engine (35) — çalışıyor. Level scaling: `momentum_speed_bonus` Lv1:%3
+      Lv2:%5 Lv3:%7, `momentum_max` Lv1-2:20 Lv3:30. İsabet sadece düşmana çarpınca sayılıyor
+      (duvar sekmesi saymıyor, `_hit_subject()` içinde). Dynamic desc eklendi.
+- [x] Chain Density (37) — çalışıyor: uçuşta yeni düşmana ilk çarpışta sayaç +1, bonus
+      `sayaç × chain_density_bonus_per_hit` (Lv1:1 Lv2:2 Lv3:3), dönüşe geçince sıfırlanıyor
+      (`_start_returning()`). Dynamic desc eklendi.
+- [x] Impact Feedback (36) — **BUG FIX (mimari)**: sayaç (`impact_hit_count`) player-level
+      paylaşımlıydı, hiç sıfırlanmıyordu (run boyu kümülatif) → Kinetic Rogue deseniyle
+      per-ball'a çevrildi (`_impact_hit_acc`, launch/launch_with_speed/add_to_orbit'te
+      sıfırlanıyor). Açıklama da netleştirildi ("Armor Core kazanımı kalıcı +1 artar" —
+      "direkt zırh puanı" karışıklığı önlendi). `impact_feedback_threshold` Lv1:10 Lv2:7
+      Lv3:5. `armor_gain_per_hit`'e kalıcı etki, hangi core vurursa vursun sayaç artıyor
+      (ödül sadece Armor Core'a yansıyor).
+- [x] Last Stand (38) — **BUG FIX**: Core Speed bonusu (`last_stand_bonus`) tamamen
+      `has_momentum_engine and momentum_stacks > 0` şartının içindeydi → Momentum Engine
+      yoksa kart tamamen pasif kalıyordu, bağımsız hale getirildi (`elif` dalı eklendi).
+      `last_stand_hp_mult`/`last_stand_armor_mult` Lv1:0.5%/0 Lv2:0.8%/0.003 Lv3:1.2%/0.005
+      (Armor Gain verimliliği sadece Lv2-3'te aktif). Dynamic desc Lv1'de tek satır,
+      Lv2-3'te ikinci satırı koşullu ekliyor.
+- [x] Pressure Valve (104) — **BUG FIX (mimari + kapsam)**: `_pressure_valve_acc` artışı
+      sadece Momentum Engine'in kendi RNG şansına (`randf() < momentum_gain_mult`) bağlıydı,
+      Momentum Field Core/Steel Rhythm/Armor Rush/Momentum Transfer/Risk Engine'den gelen
+      stack'leri hiç saymıyordu. **Merkezi `player.gain_momentum(amount)` fonksiyonu
+      kuruldu** — artık tüm momentum kaynakları (ball.gd, base_enemy.gd, game_scene.gd,
+      momentum_zone.gd) buradan geçiyor, Pressure Valve hepsini doğru sayıyor.
+      `requires_any: [35, 60, 109, 164, 169, 179]` eklendi. `pressure_valve_threshold`
+      Lv1:5 Lv2:4 Lv3:3.
+- [x] Momentum Cascade (108) — `requires_any` (aynı 6 kart) eklendi. Level scaling —
+      **kullanıcı kararıyla tasarım değişti**: ilk önerim (eşik sabit, çarpan büyüsün)
+      yerine tam tersi seçildi (çarpan sabit ×1.5, eşik düşsün): `momentum_cascade_threshold`
+      Lv1:12 Lv2:10 Lv3:8.
+- [x] Bulwark Surge (110) — Armor≥eşik → Core Speed ×mult. Level scaling: eşik Lv1-2:%75
+      Lv3:%60, çarpan Lv1:1.15 Lv2:1.20 Lv3:1.30. Kullanılmayan `bulwark_surge_active`
+      flag'i temizlendi (gerçek hesap zaten player.gd'de bağımsız yapılıyordu).
+- [x] Armor Rush (164) — Armor kazanınca +N Momentum (miktar önemli değil, "kazanıldı mı"
+      şartı yeterli — Armor Core 3 versin yine +1 sayılır). Level scaling: `armor_rush_
+      stack_amount` Lv1:1 Lv2:2 Lv3:3. Armor Rush + Pressure Valve zincirleme riski
+      kontrol edildi — minimum eşik 3 olduğu için sonsuz döngü oluşmuyor, güvenli.
+- [x] Combat Rhythm (165) — **BUG FIX (mimari)**: `_combat_rhythm_count` player-level
+      paylaşımlıydı (Kinetic Rogue'un eski hatasıyla aynı) → per-ball'a çevrildi
+      (`_combat_rhythm_acc`, 3 launch/return noktasında sıfırlanıyor). Level scaling —
+      kullanıcı kararı: eşik yükseltildi (düşürülmedi), `combat_rhythm_threshold` Lv1:6
+      Lv2:5 Lv3:4.
+- [x] Shield Bash (166) — dönüş hızı Armor×mult kadar artıyor. Level scaling:
+      `shield_bash_mult` Lv1:1.25 Lv2:1.5 Lv3:2.0.
+- [x] Siege Protocol (167) — Siege Core duvar sekmesinde bonus biriktiriyor, isabette
+      harcanıp sıfırlanıyor (top hiç düşmana çarpmadan dönerse bonus bir sonraki uçuşa
+      taşınıyor — bug değil, açıklamayla tutarlı). Level scaling: `siege_protocol_bonus`
+      Lv1:1 Lv2:2 Lv3:3. requires:[45] zaten mevcuttu.
+- [x] Bulwark Echo (168) — **MANTIK DÜZELTMESİ**: eski açıklama "Armor kazanımının yarısı
+      tekrar" diyordu ama Bulwark Core'un kazanımı hep sabit (+2, hiç değişmiyor) olduğu
+      için "yarısı" ifadesi anlamsızdı → doğrudan sabit miktar olarak yeniden yazıldı.
+      Level scaling — kullanıcı kararı: Lv1/Lv2 aynı miktar (1), sadece gecikme kısalıyor;
+      Lv3'te hem gecikme hem miktar artıyor: `bulwark_echo_delay` Lv1:4s Lv2:3s Lv3:2s,
+      `bulwark_echo_amount` Lv1:1 Lv2:1 Lv3:2.
+- [x] Momentum Transfer (169) — Armor sıfırlanırsa +N Momentum (`gain_momentum()`'a
+      bağlandı). Level scaling: `momentum_transfer_amount` Lv1:3 Lv2:4 Lv3:5.
+- [x] Kinetic Surge (171) — **KRİTİK BUG FIX (ölü kart)**: `spd = max(spd, 600.0)` no-op'tu
+      çünkü oyundaki HER top zaten varsayılan 600 hızla fırlatılıyor (`ball_launcher.gd`
+      `ball.launch(direction)` spd vermeden çağırıyor, default=600.0) — kart hiçbir zaman
+      gerçek bir etki yaratmıyordu. Taban hız gerçek bonusa çevrildi: `kinetic_surge_speed`
+      Lv1:700 Lv2:750 Lv3:750, `kinetic_surge_threshold` Lv1-2:15 Lv3:12 (kullanıcı kararı).
+      Not: `launch_with_speed()` fonksiyonu hâlâ hiçbir yerde çağrılmıyor (dead code,
+      dokunulmadı).
+- [x] Armor Conduit (172) — **TASARIM DEĞİŞİKLİĞİ (kullanıcı kararı)**: eski flat +2 bonus
+      hasar (ayrı `take_damage(2)` çağrısı) yerine tüm core hasarına çarpan uygulanacak
+      şekilde yeniden yazıldı, hesaplama noktası da Phase Shift/System Overload'la aynı
+      yere (crit + damage_mult SONRASI, final `total_damage` üzerinde) taşındı.
+      `armor_conduit_mult` Lv1:1.25 Lv2:1.5 Lv3:2.0.
+
+**Mimari not — merkezi `gain_momentum()` fonksiyonu (player.gd):** Pressure Valve'i
+düzeltirken kuruldu, artık `momentum_stacks`'i artıran HER yer (Momentum Engine, Momentum
+Field Core, Steel Rhythm, Armor Rush, Momentum Transfer, Risk Engine, momentum_zone.gd,
+base_enemy.gd reaksiyon bonusu) bu fonksiyondan geçiyor. Yeni bir momentum-üretici kart
+eklenirse, `momentum_stacks = min(...)` yazmak yerine MUTLAKA `gain_momentum(N)` çağrılmalı
+— yoksa Pressure Valve o kaynağı sayamaz.
+
+**Build hatası (2026-08-22):** `var _echo_amt := player_node.bulwark_echo_amount` tip
+çıkarım hatası verdi (`player_node` generic Node/Variant döndüğü için `:=` tip
+çıkaramıyor) — `var _echo_amt: int = ...` şeklinde açık tip belirtilerek düzeltildi.
+Yeni kod yazarken loosely-typed node'lardan (`_get_player()`, `get_node_or_null` vb.)
+property okurken `:=` yerine açık tip kullanmaya dikkat et.
+
+**VECTOR UTILITY TAMAMLANDI (15/15 kart) — 2026-08-22**
+
+### SIRADAKİ AŞAMA: Vector Individuality
+Henüz başlanmadı. Aynı 4 aşamalı süreç (İmplementasyon → Requires → TR açıklama →
+EN açıklama) uygulanacak.
 
 ### UI eklentisi: Connected Core tooltip (2026-08-22)
 - Connected Core rozetinin ("◈ Bağlantılı Core") üzerine gelince artık native Godot
@@ -128,9 +212,9 @@ Aynı 4 aşamalı süreç (İmplementasyon → Requires → TR açıklama → EN
   sonra oluşturulup üstte kaldığı için mouse hover'ı önce o yakalıyor, badge'e asla
   ulaşmıyordu. Yeni bir hover/tooltip eklenecekse bu sıralamaya dikkat edilmeli.
 
-Sonrası: Vector Utility → Vector Individuality → Vector Calamity → aynı süreç Leila ve
-Cyclone için de tekrarlanacak (Cyclone Identity/Utility/Individuality zaten önceki session'da
-tam review edilmişti, tekrar gerekmiyor — sadece Vector ve Leila eksik).
+Sonrası: Vector Individuality → Vector Calamity → aynı süreç Leila için de tekrarlanacak
+(Cyclone Identity/Utility/Individuality zaten önceki session'da tam review edilmişti,
+tekrar gerekmiyor — sadece Vector Individuality/Calamity ve tüm Leila eksik).
 
 ### KRİTİK BUG FIX: Core Mastery hiç çalışmıyordu (2026-08-22)
 - Ortak havuzdaki **Core Mastery** kartı ("+1 damage to all cores") aslında hiçbir tipli

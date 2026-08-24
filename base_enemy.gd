@@ -760,7 +760,7 @@ func _notify_reaction(game: Node, player: Node) -> void:
 			game.heal_player(player.reaction_heal_amount)
 	if player.get("reaction_core_speed_bonus") and player.reaction_core_speed_bonus > 0:
 		if player.get("momentum_stacks") and player.get("momentum_max"):
-			player.momentum_stacks = mini(player.momentum_stacks + 1, player.momentum_max)
+			player.gain_momentum(1)
 		if player.get("orbit_speed_mult"):
 			player.orbit_speed_mult += player.reaction_core_speed_bonus
 	if player.get("has_perfect_catalyst") and player.has_perfect_catalyst:

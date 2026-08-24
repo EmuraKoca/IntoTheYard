@@ -68,8 +68,20 @@ var momentum_max: int = 20
 var momentum_speed_bonus: float = 0.03  # Lv1:%3  Lv2:%5  Lv3:%7
 const MOMENTUM_MAX: int = 20            # geriye uyumluluk alias
 
+# Momentum stack'i kaynağı fark etmeksizin artırır (Pressure Valve buradan besleniyor)
+func gain_momentum(amount: int) -> void:
+	if amount <= 0: return
+	var _before := momentum_stacks
+	momentum_stacks = min(momentum_stacks + amount, momentum_max)
+	var _gained := momentum_stacks - _before
+	if has_pressure_valve and _gained > 0:
+		_pressure_valve_acc += _gained
+		while _pressure_valve_acc >= pressure_valve_threshold:
+			_pressure_valve_acc -= pressure_valve_threshold
+			var _gfx := get_tree().get_first_node_in_group("game")
+			if _gfx: _gfx.gain_armor(1)
+
 var has_impact_feedback: bool = false
-var impact_hit_count: int = 0
 var impact_stacks: int = 0
 var impact_feedback_threshold: int = 10  # Lv1:10  Lv2:7  Lv3:5
 const IMPACT_STACK_MAX: int = 10
@@ -95,12 +107,15 @@ var has_glass_engine: bool        = false
 var has_adrenal_armor: bool       = false # Adrenal Armor System
 var has_kinetic_nervous: bool     = false # Momentum reset olmaz
 var has_risk_engine: bool         = false # Hasar alınca momentum
-var has_pressure_valve: bool      = false # Her 5 momentum → +1 armor
+var has_pressure_valve: bool      = false # Her N momentum → +1 armor
+var pressure_valve_threshold: int = 5     # Lv1:5  Lv2:4  Lv3:3
 var _pressure_valve_acc: int      = 0     # Momentum sayacı
-var has_momentum_cascade: bool    = false # 10+ momentum → Armor Gain ×1.5
+var has_momentum_cascade: bool       = false # N+ momentum → Armor Gain ×1.5
+var momentum_cascade_threshold: int  = 12    # Lv1:12  Lv2:10  Lv3:8
 var has_steel_rhythm: bool        = false # Armor = Cap iken hit → +1 momentum
-var has_bulwark_surge: bool       = false # Armor ≥ %75 cap → Core Speed +%15
-var bulwark_surge_active: bool    = false # _process tarafından güncellenir
+var has_bulwark_surge: bool          = false # Armor ≥ eşik → Core Speed ×mult
+var bulwark_surge_threshold: float   = 0.75  # Lv1:0.75  Lv2:0.75  Lv3:0.60
+var bulwark_surge_mult: float        = 1.15  # Lv1:1.15  Lv2:1.20  Lv3:1.30
 var has_severance_protocol: bool  = false # HP < %40 → Armor Cap +10 (bir kez)
 var _severance_triggered: bool    = false # Severance Protocol tetiklendi mi
 var has_overclock_threshold: bool = false # 20 momentum → Core Dmg ×1.3 kalıcı
@@ -163,16 +178,25 @@ var circuit_overload_timer: float  = 0.0
 var has_rogues_instinct: bool     = false # Arındırma → +1 HP
 var backstab_protocol_level: int  = 0     # North bounce sonraki isabet: ×1.5 → ×1.75 → ×2.0
 # ── Vector — Yeni Utility ────────────────────────────────────────────────────
-var has_armor_rush: bool          = false # Armor kazanınca +1 Momentum
-var has_combat_rhythm: bool       = false # 3 ardışık isabet → Core anında döner
-var _combat_rhythm_count: int     = 0
+var has_armor_rush: bool          = false # Armor kazanınca +N Momentum
+var armor_rush_stack_amount: int  = 1     # Lv1:1  Lv2:2  Lv3:3
+var has_combat_rhythm: bool       = false # bu topun kendi N ardışık isabeti → Core anında döner
+var combat_rhythm_threshold: int  = 6     # Lv1:6  Lv2:5  Lv3:4
 var has_shield_bash: bool         = false # Dönüş hızı Armor ile orantılı
-var has_siege_protocol: bool      = false # Siege Core bounce → +1 hasar
-var has_bulwark_echo: bool        = false # Bulwark isabet → 2s sonra yarı Armor tekrar
-var has_momentum_transfer: bool   = false # Armor sıfırlanırsa +3 Momentum
+var shield_bash_mult: float       = 1.25  # Lv1:1.25  Lv2:1.5  Lv3:2.0
+var has_siege_protocol: bool      = false # Siege Core bounce → +N hasar
+var siege_protocol_bonus: int     = 1     # Lv1:1  Lv2:2  Lv3:3
+var has_bulwark_echo: bool        = false # Bulwark isabet → Ns sonra +N Armor daha
+var bulwark_echo_delay: float     = 4.0   # Lv1:4s  Lv2:3s  Lv3:2s
+var bulwark_echo_amount: int      = 1     # Lv1:1  Lv2:1  Lv3:2
+var has_momentum_transfer: bool   = false # Armor sıfırlanırsa +N Momentum
+var momentum_transfer_amount: int = 3     # Lv1:3  Lv2:4  Lv3:5
 var has_tactical_reload: bool     = false # Her düşman isabeti +1 max bounce (max +3)
-var has_kinetic_surge: bool       = false # 15+ Momentum → Core max hızda çıkar
-var has_armor_conduit: bool       = false # Armor = Cap → +2 bonus hasar
+var has_kinetic_surge: bool       = false # N+ Momentum → Core min. X hızda çıkar
+var kinetic_surge_threshold: int  = 15    # Lv1:15  Lv2:15  Lv3:12
+var kinetic_surge_speed: float    = 700.0 # Lv1:700  Lv2:750  Lv3:750
+var has_armor_conduit: bool       = false # Armor = Cap → ×mult hasar
+var armor_conduit_mult: float     = 1.25  # Lv1:1.25  Lv2:1.5  Lv3:2.0
 # Antivirus sistemi
 var has_antivirus_core: bool      = false # Core hit → Antivirus stack uygular
 var stack_overflow_level: int     = 0     # Antivirus stack cap = 3 + level (Lv1:4, Lv2:5, Lv3:6)
@@ -277,6 +301,8 @@ func add_to_orbit(ball: Node2D) -> void:
 	ball._phantom_triggered = false
 	ball._kinetic_rogue_acc = 0
 	ball._shadow_dance_bounce_acc = 0
+	ball._impact_hit_acc = 0
+	ball._combat_rhythm_acc = 0
 	if ball.get("is_inner_core"):
 		ball.scale = Vector2(1.0, 1.0)  # Connected Core'lar orbit'te görünür
 		inner_orbit_balls.append(ball)
@@ -603,16 +629,18 @@ func _physics_process(delta: float) -> void:
 	# ── Orbit pozisyonlama ────────────────────────────────────────────────────
 	var _effective_orbit_speed: float = ORBIT_SPEED * orbit_speed_mult
 	var game_node := get_tree().get_first_node_in_group("game")
+	# Last Stand: eksik HP başına ekstra bonus (Momentum Engine'den bağımsız çalışır)
+	var last_stand_bonus: float = 0.0
+	if has_last_stand and game_node:
+		last_stand_bonus = float(game_node.player_max_hp - game_node.player_hp) * last_stand_hp_mult
 	if has_momentum_engine and momentum_stacks > 0:
-		# Last Stand: eksik HP başına ekstra bonus
-		var last_stand_bonus: float = 0.0
-		if has_last_stand and game_node:
-			last_stand_bonus = float(game_node.player_max_hp - game_node.player_hp) * last_stand_hp_mult
 		# Adrenal Surge: HP %30 altında Momentum x2
 		var stack_mult: float = 1.0
 		if has_adrenal_surge and game_node and float(game_node.player_hp) / float(max(game_node.player_max_hp, 1)) < 0.3:
 			stack_mult = 2.0
 		_effective_orbit_speed = ORBIT_SPEED * orbit_speed_mult * (1.0 + float(momentum_stacks) * momentum_speed_bonus * stack_mult + last_stand_bonus)
+	elif last_stand_bonus > 0.0:
+		_effective_orbit_speed = ORBIT_SPEED * orbit_speed_mult * (1.0 + last_stand_bonus)
 	# Blood Circuit: HP <= %70 iken hız artar (max +%50 at 0 HP)
 	if has_blood_circuit and game_node:
 		var hp_ratio: float = float(game_node.player_hp) / float(max(game_node.player_max_hp, 1))
@@ -623,11 +651,11 @@ func _physics_process(delta: float) -> void:
 		var hp_r: float = float(game_node.player_hp) / float(max(game_node.player_max_hp, 1))
 		if hp_r > 0.7:
 			_effective_orbit_speed *= 1.1
-	# Bulwark Surge: Armor ≥ %75 cap → Core Speed +%15
+	# Bulwark Surge: Armor ≥ eşik → Core Speed ×mult
 	if get("has_bulwark_surge") != null and has_bulwark_surge and game_node:
 		var _armor_ratio: float = float(game_node.player_armor) / float(max(game_node.player_armor_cap, 1))
-		if _armor_ratio >= 0.75:
-			_effective_orbit_speed *= 1.15
+		if _armor_ratio >= bulwark_surge_threshold:
+			_effective_orbit_speed *= bulwark_surge_mult
 	# Mana Overflow: Calamity sonrası 5s boyunca Core Speed +%50
 	if mana_overflow_timer > 0.0:
 		mana_overflow_timer -= delta

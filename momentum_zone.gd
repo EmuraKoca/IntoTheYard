@@ -139,7 +139,7 @@ func _on_body_entered(body: Node) -> void:
 	_flash()
 	if _pass_count >= PASSES_PER_STACK:
 		_pass_count = 0
-		player.momentum_stacks = min(player.momentum_stacks + 1, player.momentum_max)
+		player.gain_momentum(1)
 
 func _flash() -> void:
 	var tween := create_tween()

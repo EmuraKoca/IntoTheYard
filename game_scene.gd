@@ -1331,14 +1331,14 @@ func gain_armor(amount: int) -> void:
 			mult *= 1.3
 	# Momentum Cascade: 10+ momentum → Armor Gain ×1.5
 	if p and p.get("has_momentum_cascade") != null and p.has_momentum_cascade:
-		if p.momentum_stacks >= 10:
+		if p.momentum_stacks >= p.momentum_cascade_threshold:
 			mult *= 1.5
 	var boosted := int(float(amount) * mult)
 	player_armor = min(player_armor + boosted, player_armor_cap)
 	player_max_armor = max(player_max_armor, player_armor_cap)
 	# Armor Rush: Armor kazanınca +1 Momentum
 	if boosted > 0 and p and p.get("has_armor_rush") and p.has_armor_rush:
-		p.momentum_stacks = min(p.momentum_stacks + 1, p.momentum_max)
+		p.gain_momentum(p.armor_rush_stack_amount)
 	_update_armor_ui()
 	# Armor/Bulwark Core: kazanım anında altın shield flash
 	if is_instance_valid(_player_node):
@@ -2087,13 +2087,13 @@ func player_damaged(amount: int = 1) -> void:
 		if player_armor <= 0:
 			var _mt := get_node_or_null("Player")
 			if _mt and _mt.get("has_momentum_transfer") and _mt.has_momentum_transfer:
-				_mt.momentum_stacks = mini(_mt.momentum_stacks + 3, _mt.momentum_max)
+				_mt.gain_momentum(_mt.momentum_transfer_amount)
 	if amount <= 0:
 		return
 	# Risk Engine: HP hasarı kadar Momentum stack kazan
 	var _re_player := get_node_or_null("Player")
 	if _re_player and _re_player.get("has_risk_engine") and _re_player.has_risk_engine:
-		_re_player.momentum_stacks = mini(_re_player.momentum_stacks + amount, _re_player.momentum_max)
+		_re_player.gain_momentum(amount)
 	player_hp -= amount
 	update_ui()
 	if player_hp <= 0:
@@ -2300,7 +2300,7 @@ func _build_all_upgrades() -> void:
 	# Lv1: Core davranışlarını öğretir
 	{"name": "Kinetic Core",        "category": "Identity",      "color": Color(0.2, 0.8, 0.6), "desc": "7 damage.\nEach wall bounce → +dmg",                   "index": 43, "weight": 8, "rarity": "uncommon", "chars": ["vector"], "min_level": 1},
 	{"name": "Bulwark Core",        "category": "Identity",      "color": Color(0.4, 0.5, 0.7), "desc": "3 damage.\nHit → +2 Armor",                            "index": 44, "weight": 8, "rarity": "uncommon", "chars": ["vector"], "min_level": 1},
-	{"name": "Impact Feedback",     "category": "Utility",       "color": Color(0.5, 0.3, 0.9), "desc": "Every 10 hits:\n+1 Armor Gain (max 10)",    "index": 36, "weight": 6, "rarity": "uncommon", "chars": ["vector"], "min_level": 2, "requires": [40]},
+	{"name": "Impact Feedback",     "category": "Utility",       "color": Color(0.5, 0.3, 0.9), "desc": "Every 10 hits:\nArmor Core gain permanently +1 (max 10)", "index": 36, "weight": 6, "rarity": "uncommon", "chars": ["vector"], "min_level": 2, "requires": [40]},
 	{"name": "Battlefield Anchor",  "category": "Individuality", "color": Color(0.3, 0.5, 0.7), "desc": "Slow duration ×2 / Player Speed -%10",       "index": 58, "weight": 6, "rarity": "uncommon", "chars": ["vector"], "min_level": 2},
 	{"name": "Blood for Steel",     "category": "Individuality", "color": Color(0.7, 0.1, 0.1), "desc": "-10 HP  |  +10 Max Armor",                   "index": 30, "weight": 6, "rarity": "uncommon", "chars": ["vector"], "min_level": 2},
 	{"name": "Overclocked Reflex",  "category": "Individuality", "color": Color(0.9, 0.9, 0.2), "desc": "Core Speed +%20 / Armor Gain -%15",          "index": 54, "weight": 6, "rarity": "uncommon", "chars": ["vector"], "min_level": 2},
@@ -2322,23 +2322,24 @@ func _build_all_upgrades() -> void:
 	{"name": "Emergency Protocol",  "category": "Individuality", "color": Color(1.0, 0.9, 0.0), "desc": "Alındığında -15 HP\n+%75 Armor Gain (10s)",      "index": 34, "weight": 2,   "rarity": "legendary","chars": ["vector"], "min_level": 5},
 	{"name": "Risk Engine",         "category": "Individuality", "color": Color(0.8, 0.1, 0.3), "desc": "Damage taken → Momentum stacks / Armor Gain -%30", "index": 60, "weight": 3, "rarity": "epic", "chars": ["vector"], "min_level": 5},
 	{"name": "Fractured Frame",     "category": "Individuality", "color": Color(0.9, 0.4, 0.1), "desc": "Core Damage ×1.4 / Max HP -15",               "index": 52, "weight": 2, "rarity": "epic",     "chars": ["vector"], "min_level": 5},
-	{"name": "Pressure Valve",      "category": "Utility",       "color": Color(0.3, 0.8, 0.7), "desc": "Every 5 Momentum stacks:\ngain +1 Armor",     "index": 104, "weight": 6, "rarity": "uncommon", "chars": ["vector"], "min_level": 2},
+	{"name": "Pressure Valve",      "category": "Utility",       "color": Color(0.3, 0.8, 0.7), "desc": "Every 5 Momentum stacks:\ngain +1 Armor",     "index": 104, "weight": 6, "rarity": "uncommon", "chars": ["vector"], "min_level": 2, "requires_any": [35, 60, 109, 164, 169, 179]},
+	# ↑ desc: dinamik gösterim lang.gd _dynamic_desc(104) ile sağlanıyor (pressure_valve_threshold: Lv1=5, Lv2=4, Lv3=3)
 	{"name": "Iron Blood",          "category": "Individuality", "color": Color(0.6, 0.2, 0.2), "desc": "Max HP → Armor Cap:\n+1 Cap per 10 Max HP",   "index": 105, "weight": 4, "rarity": "rare",     "chars": ["vector"], "min_level": 3},
-	{"name": "Momentum Cascade",   "category": "Utility",       "color": Color(0.0, 0.85, 1.0), "desc": "10+ Momentum stacks:\nArmor Gain ×1.5",        "index": 108, "weight": 6, "rarity": "uncommon", "chars": ["vector"], "min_level": 2},
+	{"name": "Momentum Cascade",   "category": "Utility",       "color": Color(0.0, 0.85, 1.0), "desc": "12+ Momentum stacks:\nArmor Gain ×1.5",        "index": 108, "weight": 6, "rarity": "uncommon", "chars": ["vector"], "min_level": 2, "requires_any": [35, 60, 109, 164, 169, 179]},
 	{"name": "Steel Rhythm",       "category": "Individuality", "color": Color(0.5, 0.65, 0.85),"desc": "Each hit while Armor = Cap:\n+1 Momentum stack", "index": 109, "weight": 5, "rarity": "uncommon", "chars": ["vector"], "min_level": 2},
 	{"name": "Bulwark Surge",      "category": "Utility",       "color": Color(0.4, 0.7, 0.55), "desc": "Armor ≥ %75 Cap:\nCore Speed +%15",             "index": 110, "weight": 5, "rarity": "rare",     "chars": ["vector"], "min_level": 3},
 	{"name": "Severance Protocol", "category": "Individuality", "color": Color(0.9, 0.2, 0.15), "desc": "HP drops below 40%:\nArmor Cap +10 (once)",      "index": 111, "weight": 4, "rarity": "rare",     "chars": ["vector"], "min_level": 3},
 	{"name": "Inertia Plating",    "category": "Individuality", "color": Color(0.35, 0.5, 0.75),"desc": "Max Armor +5 per 5 Momentum\n(on pickup, once)", "index": 112, "weight": 4, "rarity": "rare",     "chars": ["vector"], "min_level": 4},
 	{"name": "Overclock Threshold","category": "Individuality", "color": Color(1.0, 0.75, 0.1), "desc": "20 Momentum stacks:\nCore Damage ×1.3 permanently", "index": 113, "weight": 3, "rarity": "epic",  "chars": ["vector"], "min_level": 5},
 	# ── Vector — Utility (yeni) ───────────────────────────────────────────────
-	{"name": "Armor Rush",        "category": "Utility",       "color": Color(0.3, 0.8, 0.6),  "desc": "Armor kazandığında:\n+1 Momentum Stack",                    "index": 164, "weight": 8,  "rarity": "common",    "chars": ["vector"], "min_level": 0},
-	{"name": "Combat Rhythm",     "category": "Utility",       "color": Color(0.4, 0.7, 0.9),  "desc": "3 ardışık isabet:\nCore anında geri döner",                 "index": 165, "weight": 7,  "rarity": "uncommon",  "chars": ["vector"], "min_level": 1},
-	{"name": "Shield Bash",       "category": "Utility",       "color": Color(0.5, 0.6, 0.8),  "desc": "Core dönüş hızı\nArmor miktarıyla artar",                  "index": 166, "weight": 7,  "rarity": "uncommon",  "chars": ["vector"], "min_level": 1},
-	{"name": "Siege Protocol",    "category": "Utility",       "color": Color(0.4, 0.4, 0.5),  "desc": "Siege Core: her duvar sekmesinde\n+1 hasar (isabette sıfır)","index": 167, "weight": 5,  "rarity": "rare",      "chars": ["vector"], "min_level": 2, "requires": [45]},
-	{"name": "Bulwark Echo",      "category": "Utility",       "color": Color(0.4, 0.5, 0.7),  "desc": "Bulwark Core isabeti: 2s sonra\nArmor kazanımının yarısı tekrar", "index": 168, "weight": 5, "rarity": "rare",   "chars": ["vector"], "min_level": 2, "requires": [44]},
-	{"name": "Momentum Transfer", "category": "Utility",       "color": Color(0.0, 0.8, 0.9),  "desc": "Armor sıfırlanırsa:\n+3 Momentum Stack",                    "index": 169, "weight": 6,  "rarity": "uncommon",  "chars": ["vector"], "min_level": 1},
-	{"name": "Kinetic Surge",     "category": "Utility",       "color": Color(0.0, 0.9, 1.0),  "desc": "15+ Momentum:\nCore orbit'ten max hızda çıkar",             "index": 171, "weight": 4,  "rarity": "rare",      "chars": ["vector"], "min_level": 3},
-	{"name": "Armor Conduit",     "category": "Utility",       "color": Color(0.5, 0.7, 0.8),  "desc": "Armor = Cap iken isabet:\n+2 bonus hasar",                  "index": 172, "weight": 5,  "rarity": "rare",      "chars": ["vector"], "min_level": 2},
+	{"name": "Armor Rush",        "category": "Utility",       "color": Color(0.3, 0.8, 0.6),  "desc": "On Armor gain:\n+1 Momentum Stack",                         "index": 164, "weight": 8,  "rarity": "common",    "chars": ["vector"], "min_level": 0},
+	{"name": "Combat Rhythm",     "category": "Utility",       "color": Color(0.4, 0.7, 0.9),  "desc": "6 consecutive hits:\nCore returns instantly",               "index": 165, "weight": 7,  "rarity": "uncommon",  "chars": ["vector"], "min_level": 1},
+	{"name": "Shield Bash",       "category": "Utility",       "color": Color(0.5, 0.6, 0.8),  "desc": "Core return speed\nscales with Armor",                     "index": 166, "weight": 7,  "rarity": "uncommon",  "chars": ["vector"], "min_level": 1},
+	{"name": "Siege Protocol",    "category": "Utility",       "color": Color(0.4, 0.4, 0.5),  "desc": "Siege Core: each wall bounce\ngains +1 dmg. (Extra damage resets on hit)", "index": 167, "weight": 5,  "rarity": "rare",      "chars": ["vector"], "min_level": 2, "requires": [45]},
+	{"name": "Bulwark Echo",      "category": "Utility",       "color": Color(0.4, 0.5, 0.7),  "desc": "Bulwark Core hit: after 4s\ngain 1 more Armor", "index": 168, "weight": 5, "rarity": "rare",   "chars": ["vector"], "min_level": 2, "requires": [44]},
+	{"name": "Momentum Transfer", "category": "Utility",       "color": Color(0.0, 0.8, 0.9),  "desc": "If Armor hits 0:\n+3 Momentum Stack",                       "index": 169, "weight": 6,  "rarity": "uncommon",  "chars": ["vector"], "min_level": 1},
+	{"name": "Kinetic Surge",     "category": "Utility",       "color": Color(0.0, 0.9, 1.0),  "desc": "15+ Momentum:\nCore launches at min. 700 speed",            "index": 171, "weight": 4,  "rarity": "rare",      "chars": ["vector"], "min_level": 3},
+	{"name": "Armor Conduit",     "category": "Utility",       "color": Color(0.5, 0.7, 0.8),  "desc": "Armor = Cap:\nAll core damage ×1.25",                       "index": 172, "weight": 5,  "rarity": "rare",      "chars": ["vector"], "min_level": 2},
 	# ── Vector — Connected Cores (iç yörünge, fırlatılmaz) ───────────────────
 	{"name": "Iron Aura Core",      "category": "Identity",      "color": Color(0.5, 0.65, 0.9),  "desc": "Every 2s: deal 1 + Armor×5%\ndamage to enemies within 60px",       "index": 178, "weight": 5, "rarity": "rare",      "chars": ["vector"], "min_level": 2},
 	{"name": "Momentum Field Core", "category": "Identity",      "color": Color(0.0, 0.85, 1.0),  "desc": "While moving, every 1s:\n+1 Momentum Stack (passive)",          "index": 179, "weight": 5, "rarity": "rare",      "chars": ["vector"], "min_level": 2, "requires_any": [35, 171, 183]},
@@ -3870,11 +3871,6 @@ func _process(delta: float) -> void:
 			_armor_regen_acc = 0.0
 			gain_armor(regen_amount)
 
-	# ── Bulwark Surge: Armor ≥ %75 cap → Core Speed +%15 ─────────────────────
-	if p and p.get("has_bulwark_surge") and p.has_bulwark_surge:
-		var _bs_ratio := float(player_armor) / float(max(player_armor_cap, 1))
-		p.bulwark_surge_active = _bs_ratio >= 0.75
-
 	# ── Severance Protocol: HP < %40 → Armor Cap +10 (bir kez) ───────────────
 	if p and p.get("has_severance_protocol") and p.has_severance_protocol:
 		if not p.get("_severance_triggered") and float(player_hp) / float(max(player_max_hp, 1)) < 0.4:
@@ -4538,6 +4534,61 @@ func _apply_utility_level(index: int, level: int) -> void:
 				1: p.last_stand_hp_mult = 0.005; p.last_stand_armor_mult = 0.0
 				2: p.last_stand_hp_mult = 0.008; p.last_stand_armor_mult = 0.003
 				3: p.last_stand_hp_mult = 0.012; p.last_stand_armor_mult = 0.005
+		104:  # Pressure Valve
+			match level:
+				1: p.pressure_valve_threshold = 5
+				2: p.pressure_valve_threshold = 4
+				3: p.pressure_valve_threshold = 3
+		108:  # Momentum Cascade
+			match level:
+				1: p.momentum_cascade_threshold = 12
+				2: p.momentum_cascade_threshold = 10
+				3: p.momentum_cascade_threshold = 8
+		110:  # Bulwark Surge
+			match level:
+				1: p.bulwark_surge_threshold = 0.75; p.bulwark_surge_mult = 1.15
+				2: p.bulwark_surge_threshold = 0.75; p.bulwark_surge_mult = 1.20
+				3: p.bulwark_surge_threshold = 0.60; p.bulwark_surge_mult = 1.30
+		164:  # Armor Rush
+			match level:
+				1: p.armor_rush_stack_amount = 1
+				2: p.armor_rush_stack_amount = 2
+				3: p.armor_rush_stack_amount = 3
+		165:  # Combat Rhythm
+			match level:
+				1: p.combat_rhythm_threshold = 6
+				2: p.combat_rhythm_threshold = 5
+				3: p.combat_rhythm_threshold = 4
+		166:  # Shield Bash
+			match level:
+				1: p.shield_bash_mult = 1.25
+				2: p.shield_bash_mult = 1.5
+				3: p.shield_bash_mult = 2.0
+		167:  # Siege Protocol
+			match level:
+				1: p.siege_protocol_bonus = 1
+				2: p.siege_protocol_bonus = 2
+				3: p.siege_protocol_bonus = 3
+		168:  # Bulwark Echo
+			match level:
+				1: p.bulwark_echo_delay = 4.0; p.bulwark_echo_amount = 1
+				2: p.bulwark_echo_delay = 3.0; p.bulwark_echo_amount = 1
+				3: p.bulwark_echo_delay = 2.0; p.bulwark_echo_amount = 2
+		169:  # Momentum Transfer
+			match level:
+				1: p.momentum_transfer_amount = 3
+				2: p.momentum_transfer_amount = 4
+				3: p.momentum_transfer_amount = 5
+		171:  # Kinetic Surge
+			match level:
+				1: p.kinetic_surge_threshold = 15; p.kinetic_surge_speed = 700.0
+				2: p.kinetic_surge_threshold = 15; p.kinetic_surge_speed = 750.0
+				3: p.kinetic_surge_threshold = 12; p.kinetic_surge_speed = 750.0
+		172:  # Armor Conduit
+			match level:
+				1: p.armor_conduit_mult = 1.25
+				2: p.armor_conduit_mult = 1.5
+				3: p.armor_conduit_mult = 2.0
 		119:  # Extended Glitch
 			p.extended_glitch_bonus = level
 		115:  # Data Exploit

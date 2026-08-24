@@ -88,6 +88,8 @@ var _wall_bounce_count: int = 0  # sonsuz sekme önlemi
 var _pb_bounce_streak: int = 0   # Pinball Protocol: vurmadan sekme sayacı
 var _pb_piercing: bool = false   # Pinball Protocol: 3 sekme sonrası pierce, dönene kadar sürer
 var _kinetic_rogue_acc: int = 0  # Kinetic Rogue: bu topun kendi sekme sayacı, dönene kadar sürer
+var _impact_hit_acc: int = 0  # Impact Feedback: bu topun kendi isabet sayacı, dönene kadar sürer
+var _combat_rhythm_acc: int = 0  # Combat Rhythm: bu topun kendi ardışık isabet sayacı, dönene kadar sürer
 var _shadow_dance_bounce_acc: int = 0   # Shadow Dance: bu topun kendi sekme sayacı, dönene kadar sürer
 var _backstab_ready: bool = false  # North duvarına çarptı, sonraki isabet crit
 var trail_positions: Array = []
@@ -414,12 +416,14 @@ func launch(direction: Vector2, spd: float = 600.0) -> void:
 	_phantom_triggered = false
 	_kinetic_rogue_acc = 0
 	_shadow_dance_bounce_acc = 0
+	_impact_hit_acc = 0
+	_combat_rhythm_acc = 0
 	move_direction = direction.normalized()
-	# Kinetic Surge: 15+ Momentum → max hızda başla
+	# Kinetic Surge: N+ Momentum → min. X hızda başla
 	var _ks := _get_player()
 	if _ks and _ks.get("has_kinetic_surge") and _ks.has_kinetic_surge:
-		if _ks.momentum_stacks >= 15:
-			spd = max(spd, 600.0)
+		if _ks.momentum_stacks >= _ks.kinetic_surge_threshold:
+			spd = max(spd, _ks.kinetic_surge_speed)
 	speed = spd * GameData.get_shop_speed_mult()
 	moving = true
 	state = "flying"
@@ -440,6 +444,8 @@ func launch_with_speed(direction: Vector2, spd: float) -> void:
 	_phantom_triggered = false
 	_kinetic_rogue_acc = 0
 	_shadow_dance_bounce_acc = 0
+	_impact_hit_acc = 0
+	_combat_rhythm_acc = 0
 	move_direction = direction.normalized()
 	speed = spd
 	moving = true
@@ -638,7 +644,7 @@ func _physics_process(delta: float) -> void:
 		if can_siege:
 			var _sp := _get_player()
 			if _sp and _sp.get("has_siege_protocol") and _sp.has_siege_protocol:
-				set_meta("siege_bonus", get_meta("siege_bonus", 0) + 1)
+				set_meta("siege_bonus", get_meta("siege_bonus", 0) + _sp.siege_protocol_bonus)
 		var _bp := _get_player()
 		if _bp and _bp.get("has_shadow_dance") and _bp.has_shadow_dance:
 			_shadow_dance_bounce_acc += 1
@@ -923,7 +929,7 @@ func _inner_core_tick(delta: float) -> void:
 		"momentum_field_core":
 			# Her 1s: oyuncu hareket ediyorsa +1 Momentum (25s cooldown → zaten 1s tick)
 			if player.velocity.length() > 10.0:
-				player.momentum_stacks = min(player.momentum_stacks + 1, player.momentum_max)
+				player.gain_momentum(1)
 
 		"regen_pulse_core":
 			# Her 15s: 1 Armor yenile
@@ -1248,7 +1254,7 @@ func _start_returning() -> void:
 	if _rp and _rp.get("has_shield_bash") and _rp.has_shield_bash:
 		var _gfx := get_tree().get_first_node_in_group("game")
 		if _gfx and _gfx.get("player_armor"):
-			_base_return += _gfx.player_armor * 1.5
+			_base_return += _gfx.player_armor * _rp.shield_bash_mult
 	speed         = _base_return
 	scale         = Vector2(1.0, 1.0)
 	z_index       = 2
@@ -1645,6 +1651,12 @@ func _hit_subject(subject: Node2D) -> void:
 		if subject.get("is_stunned") and subject.is_stunned:
 			total_damage = int(float(total_damage) * 1.5)
 
+	# Armor Conduit: Armor = Cap iken (hangi core vurursa vursun) ×mult hasar
+	if _dmg_player and _dmg_player.get("has_armor_conduit") and _dmg_player.has_armor_conduit:
+		var _gfx_ac := get_tree().get_first_node_in_group("game")
+		if _gfx_ac and _gfx_ac.player_armor >= _gfx_ac.player_armor_cap and _gfx_ac.player_armor_cap > 0:
+			total_damage = int(float(total_damage) * _dmg_player.armor_conduit_mult)
+
 	# Crusher Core: zırhlı düşmanın zırhını tek vuruşta sıfırlar
 	if can_crusher and subject.get("enemy_armor") and subject.enemy_armor > 0:
 		subject.enemy_armor = 0
@@ -1867,8 +1879,9 @@ func _hit_subject(subject: Node2D) -> void:
 		# Bulwark Echo: 2s sonra yarı armor kazanımı tekrar
 		if player_node.get("has_bulwark_echo") and player_node.has_bulwark_echo:
 			var _gfx := game_node_fx
-			get_tree().create_timer(2.0).timeout.connect(func():
-				if is_instance_valid(_gfx): _gfx.gain_armor(1)
+			var _echo_amt: int = player_node.bulwark_echo_amount
+			get_tree().create_timer(player_node.bulwark_echo_delay).timeout.connect(func():
+				if is_instance_valid(_gfx): _gfx.gain_armor(_echo_amt)
 			)
 	if can_bloodbound and game_node_fx:
 		var missing: int = game_node_fx.player_max_hp - game_node_fx.player_hp
@@ -1899,38 +1912,27 @@ func _hit_subject(subject: Node2D) -> void:
 		# Steel Rhythm — Armor = Cap iken hit → +1 Momentum stack
 		if player_node.get("has_steel_rhythm") != null and player_node.has_steel_rhythm:
 			if game_node_fx and game_node_fx.player_armor >= game_node_fx.player_armor_cap and game_node_fx.player_armor_cap > 0:
-				player_node.momentum_stacks = min(player_node.momentum_stacks + 1, player_node.momentum_max)
+				player_node.gain_momentum(1)
 		# Momentum Engine — isabet başına +1 stack (Fortified Core: %20 ihtimalle atla)
 		if player_node.has_momentum_engine:
 			if randf() < player_node.momentum_gain_mult:
-				player_node.momentum_stacks = min(player_node.momentum_stacks + 1, player_node.momentum_max)
-				# Pressure Valve — her 5 momentum stack'te +1 armor
-				if player_node.has_pressure_valve:
-					player_node._pressure_valve_acc += 1
-					if player_node._pressure_valve_acc >= 5:
-						player_node._pressure_valve_acc = 0
-						if game_node_fx:
-							game_node_fx.gain_armor(1)
-		# Combat Rhythm — 3 ardışık isabet → Core anında geri döner
+				player_node.gain_momentum(1)
+		# Combat Rhythm — bu topun kendi N ardışık isabeti → Core anında geri döner
 		if player_node.get("has_combat_rhythm") and player_node.has_combat_rhythm:
-			player_node._combat_rhythm_count += 1
-			if player_node._combat_rhythm_count >= 3:
-				player_node._combat_rhythm_count = 0
+			_combat_rhythm_acc += 1
+			if _combat_rhythm_acc >= player_node.combat_rhythm_threshold:
+				_combat_rhythm_acc = 0
 				state = "returning"
 		# Tactical Reload — her isabet +1 max bounce (bu uçuş, max +3)
 		if player_node.get("has_tactical_reload") and player_node.has_tactical_reload:
 			if get_meta("tactical_reload_bonus", 0) < 3:
 				var _tr_b: int = get_meta("tactical_reload_bonus", 0)
 				set_meta("tactical_reload_bonus", _tr_b + 1)
-		# Armor Conduit — Armor = Cap → +2 bonus hasar
-		if player_node.get("has_armor_conduit") and player_node.has_armor_conduit and game_node_fx:
-			if game_node_fx.player_armor >= game_node_fx.player_armor_cap and game_node_fx.player_armor_cap > 0:
-				subject.take_damage(2, false)
-		# Impact Feedback — threshold'a göre +1 Impact Stack → +1 Armor Gain
+		# Impact Feedback — bu topun kendi isabet sayacı, threshold'a göre +1 Impact Stack → +1 Armor Gain (paylaşımlı ve kalıcı)
 		if player_node.has_impact_feedback:
-			player_node.impact_hit_count += 1
-			if player_node.impact_hit_count >= player_node.impact_feedback_threshold:
-				player_node.impact_hit_count = 0
+			_impact_hit_acc += 1
+			if _impact_hit_acc >= player_node.impact_feedback_threshold:
+				_impact_hit_acc = 0
 				if player_node.impact_stacks < player_node.IMPACT_STACK_MAX:
 					player_node.impact_stacks += 1
 					player_node.armor_gain_per_hit += 1
