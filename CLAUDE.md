@@ -47,14 +47,29 @@ edince ikisi de anında sıfırlanıyor. Kaynağı ne olursa olsun tüm stack'le
 Önceki session'da kurulan merkezi fonksiyon (`player.gd`) korunuyor, yeni üretim yolu da
 (Momentum Engine'in 4s tick'i) buradan geçiyor — Pressure Valve doğru saymaya devam ediyor.
 
+### BUG FIX (2026-08-25): Momentum yürümeden de birikiyordu
+Kullanıcı test sırasında fark etti — `ball.gd`'de Momentum Engine'in **eski vuruş-bazlı
+üretim kodu** ("isabet başına +1 stack, Fortified Core: %20 ihtimalle atla") silinmemiş
+kalmıştı, hareket şartına hiç bakmadan her core isabetinde tetikleniyordu. Tamamen
+kaldırıldı — artık gerçekten **tek üretim kaynağı hareket**.
+- Yan etki: **Fortified Core System (Individuality, index 50)** — "Armor Cap +15 /
+  Momentum gain -%20" — cezası (`momentum_gain_mult`) artık hiçbir yerde okunmuyor,
+  sadece bedava +15 Armor Cap kalmış kart haline geldi. **Henüz düzeltilmedi**, Vector
+  Individuality review'inde (bu kart zaten o kategoride) ele alınacak.
+- **Momentum Zone (`momentum_zone.gd`) komple silindi** — kontrol edilince hiçbir sahneye
+  bağlı olmadığı, hiçbir yerden spawn edilmediği anlaşıldı (tamamen ölü/kullanılmayan
+  eski bir fikir, kullanıcı onayıyla dosya silindi). "Tek üretim kaynağı hareket" kuralını
+  bozan üçüncü bir gizli yol da böylece ortadan kalkmış oldu.
+
 ### YAPILACAK (bir sonraki session)
-- [ ] **Evde test et**: Momentum Engine almadan bar'ın gizli kaldığını, alınca hareketle
-      stack biriktiğini, durunca 3s sonra tükendiğini, Armor Rush'ın eşik altına düşünce
-      bonusu kaybettiğini, Momentum Transfer'in Armor ilk sıfırlanışta bir kez tetiklenip
-      bir daha çalışmadığını doğrula.
+- [ ] **Evde test et**: Momentum Engine almadan bar'ın gizli kaldığını, alınca SADECE
+      hareketle (vuruşla değil) stack biriktiğini, durunca 3s sonra tükendiğini, Armor
+      Rush'ın eşik altına düşünce bonusu kaybettiğini, Momentum Transfer'in Armor ilk
+      sıfırlanışta bir kez tetiklenip bir daha çalışmadığını doğrula.
 - [ ] Sorun çıkarsa bildir, birlikte düzeltilecek.
-- [ ] Sonrasında Steel Rhythm / Risk Engine / Adrenal Surge'ü de bu yeni mimariye göre
-      gözden geçir (Individuality review'i sırasında zaten planlı).
+- [ ] Fortified Core System (50) düzeltmesi Individuality review'i sırasında yapılacak.
+- [ ] Steel Rhythm / Risk Engine / Adrenal Surge'ü de bu yeni mimariye göre gözden geçir
+      (Individuality review'i sırasında zaten planlı, henüz dokunulmadı).
 
 ## Yeni HUD: Sol Üst Health + Momentum Bar (2026-08-25, TEST BEKLİYOR)
 
@@ -297,8 +312,12 @@ property okurken `:=` yerine açık tip kullanmaya dikkat et.
 **VECTOR UTILITY TAMAMLANDI (15/15 kart) — 2026-08-22**
 
 ### SIRADAKİ AŞAMA: Vector Individuality
-Henüz başlanmadı. Aynı 4 aşamalı süreç (İmplementasyon → Requires → TR açıklama →
-EN açıklama) uygulanacak.
+Henüz başlanmadı, bir sonraki session'da başlanacak. Aynı 4 aşamalı süreç
+(İmplementasyon → Requires → TR açıklama → EN açıklama) uygulanacak. Momentum
+mekaniğinin baştan tasarımı (yukarıda) bu turdan önce bitirildi — Steel Rhythm (109),
+Risk Engine (60), Adrenal Surge (32), Fortified Core System (50) bu listede zaten var,
+Individuality review'i sırasında hem genel 4 aşama hem de yeni Momentum mimarisine göre
+uyumluluk kontrolü birlikte yapılacak.
 
 ### UI eklentisi: Connected Core tooltip (2026-08-22)
 - Connected Core rozetinin ("◈ Bağlantılı Core") üzerine gelince artık native Godot

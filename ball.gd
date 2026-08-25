@@ -1911,10 +1911,6 @@ func _hit_subject(subject: Node2D) -> void:
 		if player_node.get("has_steel_rhythm") != null and player_node.has_steel_rhythm:
 			if game_node_fx and game_node_fx.player_armor >= game_node_fx.player_armor_cap and game_node_fx.player_armor_cap > 0:
 				player_node.gain_momentum(1)
-		# Momentum Engine — isabet başına +1 stack (Fortified Core: %20 ihtimalle atla)
-		if player_node.has_momentum_engine:
-			if randf() < player_node.momentum_gain_mult:
-				player_node.gain_momentum(1)
 		# Combat Rhythm — bu topun kendi N ardışık isabeti → Core anında geri döner
 		if player_node.get("has_combat_rhythm") and player_node.has_combat_rhythm:
 			_combat_rhythm_acc += 1
