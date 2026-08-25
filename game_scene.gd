@@ -4557,9 +4557,9 @@ func _apply_utility_level(index: int, level: int) -> void:
 			pass
 		35:  # Momentum Engine
 			match level:
-				1: p.momentum_speed_bonus = 0.03; p.momentum_max = 20
-				2: p.momentum_speed_bonus = 0.05; p.momentum_max = 20
-				3: p.momentum_speed_bonus = 0.07; p.momentum_max = 30
+				1: p.momentum_speed_bonus = 0.03; p.momentum_max = 20; p.momentum_gen_interval = 4.0
+				2: p.momentum_speed_bonus = 0.05; p.momentum_max = 20; p.momentum_gen_interval = 4.0
+				3: p.momentum_speed_bonus = 0.07; p.momentum_max = 30; p.momentum_gen_interval = 3.0
 		36:  # Impact Feedback
 			match level:
 				1: p.impact_feedback_threshold = 10

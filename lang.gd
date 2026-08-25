@@ -357,10 +357,20 @@ func _dynamic_desc(index: int, player: Node) -> String:
 		35:  # Momentum Engine
 			var _msb: float = player.get("momentum_speed_bonus") if player.get("momentum_speed_bonus") != null else 0.03
 			var _mmax: int = player.get("momentum_max") if player.get("momentum_max") != null else 20
+			var _mgi: float = player.get("momentum_gen_interval") if player.get("momentum_gen_interval") != null else 4.0
 			var _msb_pct: int = int(round(_msb * 100.0))
+			var _is_lv1: bool = _msb_pct <= 3
 			if locale == "en":
-				return "Unlocks the Momentum system.\nWhile walking, every 4s: +1 Stack\n+[b]%d[/b]%% Core Speed per stack (max [b]%d[/b])" % [_msb_pct, _mmax]
-			return "Momentum Mekaniğini açar.\nYürürken her 4s: +1 Stack\n+[b]%d[/b]%% Core Hızı/stack (maks [b]%d[/b])" % [_msb_pct, _mmax]
+				var _r_en: String = ""
+				if _is_lv1:
+					_r_en = "Unlocks the Momentum system.\n"
+				_r_en += "While walking, every [b]%.0f[/b]s: +1 Stack\n+[b]%d[/b]%% Core Speed per stack (max [b]%d[/b])" % [_mgi, _msb_pct, _mmax]
+				return _r_en
+			var _r_tr: String = ""
+			if _is_lv1:
+				_r_tr = "Momentum Mekaniğini açar.\n"
+			_r_tr += "Yürürken her [b]%.0f[/b]s: +1 Stack\n+[b]%d[/b]%% Core Hızı/stack (maks [b]%d[/b])" % [_mgi, _msb_pct, _mmax]
+			return _r_tr
 		37:  # Chain Density
 			var _cdb: int = player.get("chain_density_bonus_per_hit") if player.get("chain_density_bonus_per_hit") != null else 1
 			if locale == "en":

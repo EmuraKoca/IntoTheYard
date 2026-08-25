@@ -71,7 +71,7 @@ var _momentum_still_time: float = 0.0   # hareketsizlik süresi (tükenme için)
 var _momentum_decay_acc: float = 0.0    # 3s'de 1 tükenme sayacı
 var _momentum_gen_timer: float = 0.0    # 4s'de 1 üretim sayacı (Momentum Engine)
 var has_momentum_field_core: bool = false  # Momentum Engine üretimine +1 ekler
-const MOMENTUM_GEN_INTERVAL: float = 4.0
+var momentum_gen_interval: float = 4.0  # Lv1:4s  Lv2:4s  Lv3:3s
 
 # Momentum stack'i kaynağı fark etmeksizin artırır (Pressure Valve buradan besleniyor)
 func gain_momentum(amount: int) -> void:
@@ -635,8 +635,8 @@ func _physics_process(delta: float) -> void:
 	if has_momentum_engine:
 		if velocity.length() > 10.0:
 			_momentum_gen_timer += delta
-			while _momentum_gen_timer >= MOMENTUM_GEN_INTERVAL:
-				_momentum_gen_timer -= MOMENTUM_GEN_INTERVAL
+			while _momentum_gen_timer >= momentum_gen_interval:
+				_momentum_gen_timer -= momentum_gen_interval
 				var _gen_amt: int = 1
 				if has_momentum_field_core:
 					_gen_amt += 1
