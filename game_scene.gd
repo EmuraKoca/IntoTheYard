@@ -1104,6 +1104,15 @@ func _ready() -> void:
 			player_hp     += _shop_hp
 			player_max_hp += _shop_hp
 
+	# Yeni sol üst HUD bar'ları şimdilik sadece Vector'da hazır
+	if char_type == "vector":
+		$UI/IntegrityBar.visible = false
+		$UI/HealthBar2.visible = true
+	else:
+		$UI/IntegrityBar.visible = true
+		$UI/HealthBar2.visible = false
+		$UI/MomentumBar.visible = false
+
 	$UI/BtnPause.pressed.connect(_show_pause_menu)
 	$UI/FusionEnergyBar.max_value = 50
 	$UI/FusionEnergyBar.value = 0
@@ -1152,6 +1161,14 @@ func update_ui() -> void:
 		$UI/IntegrityBar/LabelIntegrity.text = "♥ " + str(player_hp) + "/" + str(player_max_hp) + "   ⬡ " + str(player_armor)
 	else:
 		$UI/IntegrityBar/LabelIntegrity.text = "♥  " + str(player_hp) + " / " + str(player_max_hp)
+
+	# ── Yeni sol üst HUD: Health bar ────────────────────────────────────────
+	$UI/HealthBar2/Fill.max_value = player_max_hp
+	$UI/HealthBar2/Fill.value = player_hp
+	if player_armor > 0:
+		$UI/HealthBar2/Label.text = str(player_hp) + "/" + str(player_max_hp) + "  ⬡" + str(player_armor)
+	else:
+		$UI/HealthBar2/Label.text = str(player_hp) + " / " + str(player_max_hp)
 
 	# Aktif upgrade'ler
 	var upgrade_text = Lang.t("ui_upgrades_header") + "\n"
@@ -1205,27 +1222,34 @@ func subject_died(xp_reward: int = 1, death_pos: Vector2 = Vector2.ZERO, etype: 
 	var particle_count := clampi(xp_reward + 2, 3, 7)
 	_spawn_data_particles(death_pos, float(xp_reward) * 10.0, particle_count)
 
-func _setup_armor_bar() -> void:
-	# IntegrityBar'ın üzerine binen gri zırh overlay'i
-	# Armor, can barının ÜZERİNDE gri katman olarak gösterilir.
-	# Örnek: 40 HP / 20 Armor → barın sağ yarısı gri.
+func _get_hp_bar_rect() -> Rect2:
+	# Vector: yeni sol üst Health bar'ın iç dolgu alanı (UI CanvasLayer'a göre mutlak)
+	if get_node("Player").character_type == "vector":
+		var _fill: Control = $UI/HealthBar2/Fill
+		return Rect2($UI/HealthBar2.position + _fill.position, _fill.size)
+	# Diğer karakterler: eski sağ panel bar'ı
 	var integrity_bar: ProgressBar = $UI/IntegrityBar
+	return Rect2(integrity_bar.position, integrity_bar.size)
+
+func _setup_armor_bar() -> void:
+	# Can barının üzerine binen gri zırh overlay'i (Armor, canın üzerinde gri katman)
+	var _hp_rect := _get_hp_bar_rect()
 	var ab := ColorRect.new()
 	ab.name = "ArmorOverlay"
 	ab.color = Color(0.55, 0.55, 0.6, 0.88)
-	ab.size = Vector2(0.0, integrity_bar.size.y)
-	ab.position = integrity_bar.position  # sola hizalı, genişlik 0 başlangıçta
+	ab.size = Vector2(0.0, _hp_rect.size.y)
+	ab.position = _hp_rect.position  # sola hizalı, genişlik 0 başlangıçta
 	ab.visible = false
 	ab.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	# HP barının z_index'inden bir üste çıksın
-	ab.z_index = integrity_bar.z_index + 1
+	# HP barının üstüne çıksın
+	ab.z_index = 5
 	$UI.add_child(ab)
 	_armor_bar = ab
-	# Label: IntegrityBar label'ının üzerinde göster
+	# Label: HP barının üzerinde göster
 	var lbl := Label.new()
 	lbl.name = "LabelArmor"
-	lbl.size = Vector2(integrity_bar.size.x, integrity_bar.size.y)
-	lbl.position = integrity_bar.position
+	lbl.size = Vector2(_hp_rect.size.x, _hp_rect.size.y)
+	lbl.position = _hp_rect.position
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	lbl.add_theme_font_override("font", _font_bold)
@@ -1284,7 +1308,7 @@ func _update_frost_barrier_ui() -> void:
 func _update_armor_ui() -> void:
 	if _armor_bar == null:
 		return
-	var integrity_bar: ProgressBar = $UI/IntegrityBar
+	var _hp_rect := _get_hp_bar_rect()
 	if player_max_armor <= 0 or player_armor <= 0:
 		_armor_bar.visible = false
 		_armor_label.visible = false
@@ -1292,13 +1316,13 @@ func _update_armor_ui() -> void:
 		return
 	# Armor, max_hp üzerinden oran hesaplanır
 	# Örnek: max_hp=40, armor=20 → oran=0.5 → barın %50'si gri
-	var bar_w: float = integrity_bar.size.x
-	var bar_h: float = integrity_bar.size.y
+	var bar_w: float = _hp_rect.size.x
+	var bar_h: float = _hp_rect.size.y
 	var ratio: float = clampf(float(player_armor) / float(max(player_max_hp, 1)), 0.0, 1.0)
 	var overlay_w: float = bar_w * ratio
 	# Gri overlay soldan başlar (armor, canın üzerinde oturur)
 	(_armor_bar as ColorRect).size = Vector2(overlay_w, bar_h)
-	(_armor_bar as ColorRect).position = integrity_bar.position
+	(_armor_bar as ColorRect).position = _hp_rect.position
 	_armor_bar.visible = true
 	_armor_label.visible = false
 	$UI/IntegrityBar/LabelIntegrity.text = "♥ " + str(player_hp) + "/" + str(player_max_hp) + "   ⬡ " + str(player_armor)
@@ -1334,11 +1358,12 @@ func gain_armor(amount: int) -> void:
 		if p.momentum_stacks >= p.momentum_cascade_threshold:
 			mult *= 1.5
 	var boosted := int(float(amount) * mult)
+	# Armor Rush: Momentum eşiğin üzerindeyse +1 bonus Armor (kalıcı değil, anlık kontrol)
+	if boosted > 0 and p and p.get("has_armor_rush") and p.has_armor_rush:
+		if p.momentum_stacks >= p.armor_rush_threshold:
+			boosted += 1
 	player_armor = min(player_armor + boosted, player_armor_cap)
 	player_max_armor = max(player_max_armor, player_armor_cap)
-	# Armor Rush: Armor kazanınca +1 Momentum
-	if boosted > 0 and p and p.get("has_armor_rush") and p.has_armor_rush:
-		p.gain_momentum(p.armor_rush_stack_amount)
 	_update_armor_ui()
 	# Armor/Bulwark Core: kazanım anında altın shield flash
 	if is_instance_valid(_player_node):
@@ -2083,11 +2108,16 @@ func player_damaged(amount: int = 1) -> void:
 		amount -= absorbed
 		_update_armor_ui()
 		_hex_shield_hit_flash()
-		# Momentum Transfer: Armor sıfırlandıysa +3 Momentum
+		# Momentum Transfer: Armor İLK KEZ sıfırlandığında (run başına 1 kez) tüm
+		# Momentum stack'i ×2 Armor'a çevrilir — acil durum güvenlik ağı
 		if player_armor <= 0:
 			var _mt := get_node_or_null("Player")
-			if _mt and _mt.get("has_momentum_transfer") and _mt.has_momentum_transfer:
-				_mt.gain_momentum(_mt.momentum_transfer_amount)
+			if _mt and _mt.get("has_momentum_transfer") and _mt.has_momentum_transfer and not _mt._momentum_transfer_used:
+				_mt._momentum_transfer_used = true
+				var _consumed: int = _mt.momentum_stacks
+				if _consumed > 0:
+					_mt.momentum_stacks = 0
+					gain_armor(_consumed * 2)
 	if amount <= 0:
 		return
 	# Risk Engine: HP hasarı kadar Momentum stack kazan
@@ -2288,7 +2318,7 @@ func _build_all_upgrades() -> void:
 	{"name": "Anchor Core",         "category": "Identity",      "color": Color(0.3, 0.4, 0.6), "desc": "8 damage.\nHit → slow enemy 60% (3s)",                 "index": 41, "weight": 10, "rarity": "common",   "chars": ["vector"], "min_level": 0},
 	{"name": "Crusher Core",        "category": "Identity",      "color": Color(0.6, 0.3, 0.1), "desc": "9 damage.\nHit → instantly breaks enemy Armor",                 "index": 42, "weight": 10, "rarity": "common",   "chars": ["vector"], "min_level": 0},
 	{"name": "Siege Core",          "category": "Identity",      "color": Color(0.4, 0.4, 0.5), "desc": "15 damage.\nHighest damage core",                       "index": 45, "weight": 6,  "rarity": "uncommon", "chars": ["vector"], "min_level": 2},
-	{"name": "Momentum Engine",     "category": "Utility",       "color": Color(0.0, 0.7, 1.0), "desc": "Hit → +1 Stack\n+3% Core Speed per stack\n(max 20 stacks)", "index": 35, "weight": 4,   "rarity": "uncommon", "chars": ["vector"], "min_level": 1},
+	{"name": "Momentum Engine",     "category": "Utility",       "color": Color(0.0, 0.7, 1.0), "desc": "Unlocks the Momentum system.\nWhile walking, every 4s: +1 Stack\n+3% Core Speed per stack (max 20)", "index": 35, "weight": 4,   "rarity": "uncommon", "chars": ["vector"], "min_level": 1},
 	{"name": "Chain Density",       "category": "Utility",       "color": Color(0.0, 0.9, 0.5), "desc": "New enemy hit mid-flight:\n+dmg ramp, resets on return",     "index": 37, "weight": 8, "rarity": "common", "chars": ["vector"], "min_level": 0},
 	{"name": "Reinforced Frame",    "category": "Individuality", "color": Color(0.5, 0.7, 0.5), "desc": "+20 Max Armor / Core Speed -%10",           "index": 48, "weight": 8, "rarity": "common",   "chars": ["vector"], "min_level": 1},
 	{"name": "Iron Constitution",   "category": "Individuality", "color": Color(0.7, 0.8, 0.6), "desc": "Armor gain efficiency +%25",                 "index": 49, "weight": 8, "rarity": "common",   "chars": ["vector"], "min_level": 1},
@@ -2322,31 +2352,31 @@ func _build_all_upgrades() -> void:
 	{"name": "Emergency Protocol",  "category": "Individuality", "color": Color(1.0, 0.9, 0.0), "desc": "Alındığında -15 HP\n+%75 Armor Gain (10s)",      "index": 34, "weight": 2,   "rarity": "legendary","chars": ["vector"], "min_level": 5},
 	{"name": "Risk Engine",         "category": "Individuality", "color": Color(0.8, 0.1, 0.3), "desc": "Damage taken → Momentum stacks / Armor Gain -%30", "index": 60, "weight": 3, "rarity": "epic", "chars": ["vector"], "min_level": 5},
 	{"name": "Fractured Frame",     "category": "Individuality", "color": Color(0.9, 0.4, 0.1), "desc": "Core Damage ×1.4 / Max HP -15",               "index": 52, "weight": 2, "rarity": "epic",     "chars": ["vector"], "min_level": 5},
-	{"name": "Pressure Valve",      "category": "Utility",       "color": Color(0.3, 0.8, 0.7), "desc": "Every 5 Momentum stacks:\ngain +1 Armor",     "index": 104, "weight": 6, "rarity": "uncommon", "chars": ["vector"], "min_level": 2, "requires_any": [35, 60, 109, 164, 169, 179]},
+	{"name": "Pressure Valve",      "category": "Utility",       "color": Color(0.3, 0.8, 0.7), "desc": "Every 5 Momentum stacks:\ngain +1 Armor",     "index": 104, "weight": 6, "rarity": "uncommon", "chars": ["vector"], "min_level": 2, "requires": [35]},
 	# ↑ desc: dinamik gösterim lang.gd _dynamic_desc(104) ile sağlanıyor (pressure_valve_threshold: Lv1=5, Lv2=4, Lv3=3)
 	{"name": "Iron Blood",          "category": "Individuality", "color": Color(0.6, 0.2, 0.2), "desc": "Max HP → Armor Cap:\n+1 Cap per 10 Max HP",   "index": 105, "weight": 4, "rarity": "rare",     "chars": ["vector"], "min_level": 3},
-	{"name": "Momentum Cascade",   "category": "Utility",       "color": Color(0.0, 0.85, 1.0), "desc": "12+ Momentum stacks:\nArmor Gain ×1.5",        "index": 108, "weight": 6, "rarity": "uncommon", "chars": ["vector"], "min_level": 2, "requires_any": [35, 60, 109, 164, 169, 179]},
+	{"name": "Momentum Cascade",   "category": "Utility",       "color": Color(0.0, 0.85, 1.0), "desc": "12+ Momentum stacks:\nArmor Gain ×1.5",        "index": 108, "weight": 6, "rarity": "uncommon", "chars": ["vector"], "min_level": 2, "requires": [35]},
 	{"name": "Steel Rhythm",       "category": "Individuality", "color": Color(0.5, 0.65, 0.85),"desc": "Each hit while Armor = Cap:\n+1 Momentum stack", "index": 109, "weight": 5, "rarity": "uncommon", "chars": ["vector"], "min_level": 2},
 	{"name": "Bulwark Surge",      "category": "Utility",       "color": Color(0.4, 0.7, 0.55), "desc": "Armor ≥ %75 Cap:\nCore Speed +%15",             "index": 110, "weight": 5, "rarity": "rare",     "chars": ["vector"], "min_level": 3},
 	{"name": "Severance Protocol", "category": "Individuality", "color": Color(0.9, 0.2, 0.15), "desc": "HP drops below 40%:\nArmor Cap +10 (once)",      "index": 111, "weight": 4, "rarity": "rare",     "chars": ["vector"], "min_level": 3},
 	{"name": "Inertia Plating",    "category": "Individuality", "color": Color(0.35, 0.5, 0.75),"desc": "Max Armor +5 per 5 Momentum\n(on pickup, once)", "index": 112, "weight": 4, "rarity": "rare",     "chars": ["vector"], "min_level": 4},
 	{"name": "Overclock Threshold","category": "Individuality", "color": Color(1.0, 0.75, 0.1), "desc": "20 Momentum stacks:\nCore Damage ×1.3 permanently", "index": 113, "weight": 3, "rarity": "epic",  "chars": ["vector"], "min_level": 5},
 	# ── Vector — Utility (yeni) ───────────────────────────────────────────────
-	{"name": "Armor Rush",        "category": "Utility",       "color": Color(0.3, 0.8, 0.6),  "desc": "On Armor gain:\n+1 Momentum Stack",                         "index": 164, "weight": 8,  "rarity": "common",    "chars": ["vector"], "min_level": 0},
+	{"name": "Armor Rush",        "category": "Utility",       "color": Color(0.3, 0.8, 0.6),  "desc": "Momentum ≥ 13:\nArmor gain +1 (cancels below threshold)", "index": 164, "weight": 8,  "rarity": "common",    "chars": ["vector"], "min_level": 0, "requires": [35]},
 	{"name": "Combat Rhythm",     "category": "Utility",       "color": Color(0.4, 0.7, 0.9),  "desc": "6 consecutive hits:\nCore returns instantly",               "index": 165, "weight": 7,  "rarity": "uncommon",  "chars": ["vector"], "min_level": 1},
 	{"name": "Shield Bash",       "category": "Utility",       "color": Color(0.5, 0.6, 0.8),  "desc": "Core return speed\nscales with Armor",                     "index": 166, "weight": 7,  "rarity": "uncommon",  "chars": ["vector"], "min_level": 1},
 	{"name": "Siege Protocol",    "category": "Utility",       "color": Color(0.4, 0.4, 0.5),  "desc": "Siege Core: each wall bounce\ngains +1 dmg. (Extra damage resets on hit)", "index": 167, "weight": 5,  "rarity": "rare",      "chars": ["vector"], "min_level": 2, "requires": [45]},
 	{"name": "Bulwark Echo",      "category": "Utility",       "color": Color(0.4, 0.5, 0.7),  "desc": "Bulwark Core hit: after 4s\ngain 1 more Armor", "index": 168, "weight": 5, "rarity": "rare",   "chars": ["vector"], "min_level": 2, "requires": [44]},
-	{"name": "Momentum Transfer", "category": "Utility",       "color": Color(0.0, 0.8, 0.9),  "desc": "If Armor hits 0:\n+3 Momentum Stack",                       "index": 169, "weight": 6,  "rarity": "uncommon",  "chars": ["vector"], "min_level": 1},
-	{"name": "Kinetic Surge",     "category": "Utility",       "color": Color(0.0, 0.9, 1.0),  "desc": "15+ Momentum:\nCore launches at min. 700 speed",            "index": 171, "weight": 4,  "rarity": "rare",      "chars": ["vector"], "min_level": 3},
+	{"name": "Momentum Transfer", "category": "Individuality", "color": Color(0.0, 0.8, 0.9),  "desc": "First time Armor hits 0:\nall Momentum → Armor ×2 (once per run)", "index": 169, "weight": 6,  "rarity": "uncommon",  "chars": ["vector"], "min_level": 1, "requires": [35]},
+	{"name": "Kinetic Surge",     "category": "Utility",       "color": Color(0.0, 0.9, 1.0),  "desc": "15+ Momentum:\nCore launches at min. 700 speed",            "index": 171, "weight": 4,  "rarity": "rare",      "chars": ["vector"], "min_level": 3, "requires": [35]},
 	{"name": "Armor Conduit",     "category": "Utility",       "color": Color(0.5, 0.7, 0.8),  "desc": "Armor = Cap:\nAll core damage ×1.25",                       "index": 172, "weight": 5,  "rarity": "rare",      "chars": ["vector"], "min_level": 2},
 	# ── Vector — Connected Cores (iç yörünge, fırlatılmaz) ───────────────────
 	{"name": "Iron Aura Core",      "category": "Identity",      "color": Color(0.5, 0.65, 0.9),  "desc": "Every 2s: deal 1 + Armor×5%\ndamage to enemies within 60px",       "index": 178, "weight": 5, "rarity": "rare",      "chars": ["vector"], "min_level": 2},
-	{"name": "Momentum Field Core", "category": "Identity",      "color": Color(0.0, 0.85, 1.0),  "desc": "While moving, every 1s:\n+1 Momentum Stack (passive)",          "index": 179, "weight": 5, "rarity": "rare",      "chars": ["vector"], "min_level": 2, "requires_any": [35, 171, 183]},
+	{"name": "Momentum Field Core", "category": "Identity",      "color": Color(0.0, 0.85, 1.0),  "desc": "Momentum Engine's passive\ngeneration +1 per tick",             "index": 179, "weight": 5, "rarity": "rare",      "chars": ["vector"], "min_level": 2, "requires": [35]},
 	{"name": "Regen Pulse Core",    "category": "Identity",      "color": Color(0.4, 0.7, 0.55),  "desc": "Every 15s: restore 1 Armor",                                    "index": 180, "weight": 6, "rarity": "uncommon",  "chars": ["vector"], "min_level": 1},
 	{"name": "Fortress Core",       "category": "Identity",      "color": Color(0.4, 0.5, 0.75),  "desc": "Armor 75%+ full:\nenemies within 90px slow 25%",                "index": 181, "weight": 5, "rarity": "rare",      "chars": ["vector"], "min_level": 2},
 	{"name": "Bloodwall Core",      "category": "Identity",      "color": Color(0.7, 0.1, 0.1),   "desc": "Below 50% HP:\nrestore 1 HP every 9s",                          "index": 182, "weight": 5, "rarity": "rare",      "chars": ["vector"], "min_level": 3},
-	{"name": "Overcharge Core",     "category": "Identity",      "color": Color(0.0, 0.7, 1.0),   "desc": "15+ Momentum: every 4s\ndeal 2 dmg pulse within 60px",          "index": 183, "weight": 4, "rarity": "rare",      "chars": ["vector"], "min_level": 3, "requires_any": [35, 109, 179]},
+	{"name": "Overcharge Core",     "category": "Identity",      "color": Color(0.0, 0.7, 1.0),   "desc": "15+ Momentum: every 4s\ndeal 2 dmg pulse within 60px",          "index": 183, "weight": 4, "rarity": "rare",      "chars": ["vector"], "min_level": 3, "requires": [35]},
 	{"name": "Anchor Pulse Core",   "category": "Identity",      "color": Color(0.35, 0.5, 0.75), "desc": "Stationary for 5s: gain\n1 Armor every 1s",                     "index": 184, "weight": 5, "rarity": "uncommon",  "chars": ["vector"], "min_level": 1},
 	# ── Vector — Calamity ─────────────────────────────────────────────────────
 	{"name": "Iron Fortress",     "category": "Calamity",      "color": Color(0.4, 0.6, 0.8),  "desc": "Tüm Momentum → Armor\n(stack başına +1, 8s)",               "index": 173, "weight": 2,  "rarity": "epic",      "chars": ["vector"], "min_level": 3},
@@ -3836,6 +3866,15 @@ func _process(delta: float) -> void:
 
 	var p := _player_node
 
+	# ── Sol üst HUD: Momentum bar (sadece Vector, Momentum Engine alındıktan sonra) ──
+	if p and p.get("character_type") == "vector" and p.get("has_momentum_engine") and p.has_momentum_engine:
+		$UI/MomentumBar.visible = true
+		$UI/MomentumBar/Fill.max_value = p.momentum_max
+		$UI/MomentumBar/Fill.value = p.momentum_stacks
+		$UI/MomentumBar/Label.text = str(p.momentum_stacks) + "/" + str(p.momentum_max)
+	else:
+		$UI/MomentumBar.visible = false
+
 	# Yörünge çizgisi: aktifken her frame, bırakılınca bir kez daha (çizgiyi sil)
 	var _lmb := Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
 	if p and (p.auto_mode or _lmb or _lmb_clear_pending):
@@ -4216,7 +4255,9 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 	elif index == 172: get_node("Player").has_armor_conduit     = true
 	# ── Vector — Connected Cores ─────────────────────────────────────────────
 	elif index == 178: $BallLauncher.queue_upgrade_ball("iron_aura_core")
-	elif index == 179: $BallLauncher.queue_upgrade_ball("momentum_field_core")
+	elif index == 179:
+		$BallLauncher.queue_upgrade_ball("momentum_field_core")
+		get_node("Player").has_momentum_field_core = true
 	elif index == 180: $BallLauncher.queue_upgrade_ball("regen_pulse_core")
 	elif index == 181: $BallLauncher.queue_upgrade_ball("fortress_core")
 	elif index == 182: $BallLauncher.queue_upgrade_ball("bloodwall_core")
@@ -4551,9 +4592,9 @@ func _apply_utility_level(index: int, level: int) -> void:
 				3: p.bulwark_surge_threshold = 0.60; p.bulwark_surge_mult = 1.30
 		164:  # Armor Rush
 			match level:
-				1: p.armor_rush_stack_amount = 1
-				2: p.armor_rush_stack_amount = 2
-				3: p.armor_rush_stack_amount = 3
+				1: p.armor_rush_threshold = 13
+				2: p.armor_rush_threshold = 11
+				3: p.armor_rush_threshold = 9
 		165:  # Combat Rhythm
 			match level:
 				1: p.combat_rhythm_threshold = 6
@@ -4574,11 +4615,6 @@ func _apply_utility_level(index: int, level: int) -> void:
 				1: p.bulwark_echo_delay = 4.0; p.bulwark_echo_amount = 1
 				2: p.bulwark_echo_delay = 3.0; p.bulwark_echo_amount = 1
 				3: p.bulwark_echo_delay = 2.0; p.bulwark_echo_amount = 2
-		169:  # Momentum Transfer
-			match level:
-				1: p.momentum_transfer_amount = 3
-				2: p.momentum_transfer_amount = 4
-				3: p.momentum_transfer_amount = 5
 		171:  # Kinetic Surge
 			match level:
 				1: p.kinetic_surge_threshold = 15; p.kinetic_surge_speed = 700.0

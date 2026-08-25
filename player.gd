@@ -67,6 +67,11 @@ var momentum_stacks: int = 0
 var momentum_max: int = 20
 var momentum_speed_bonus: float = 0.03  # Lv1:%3  Lv2:%5  Lv3:%7
 const MOMENTUM_MAX: int = 20            # geriye uyumluluk alias
+var _momentum_still_time: float = 0.0   # hareketsizlik süresi (tükenme için)
+var _momentum_decay_acc: float = 0.0    # 3s'de 1 tükenme sayacı
+var _momentum_gen_timer: float = 0.0    # 4s'de 1 üretim sayacı (Momentum Engine)
+var has_momentum_field_core: bool = false  # Momentum Engine üretimine +1 ekler
+const MOMENTUM_GEN_INTERVAL: float = 4.0
 
 # Momentum stack'i kaynağı fark etmeksizin artırır (Pressure Valve buradan besleniyor)
 func gain_momentum(amount: int) -> void:
@@ -178,8 +183,8 @@ var circuit_overload_timer: float  = 0.0
 var has_rogues_instinct: bool     = false # Arındırma → +1 HP
 var backstab_protocol_level: int  = 0     # North bounce sonraki isabet: ×1.5 → ×1.75 → ×2.0
 # ── Vector — Yeni Utility ────────────────────────────────────────────────────
-var has_armor_rush: bool          = false # Armor kazanınca +N Momentum
-var armor_rush_stack_amount: int  = 1     # Lv1:1  Lv2:2  Lv3:3
+var has_armor_rush: bool          = false # Momentum eşiğin üzerindeyse Armor kazanımına +1
+var armor_rush_threshold: int     = 13    # Lv1:13  Lv2:11  Lv3:9
 var has_combat_rhythm: bool       = false # bu topun kendi N ardışık isabeti → Core anında döner
 var combat_rhythm_threshold: int  = 6     # Lv1:6  Lv2:5  Lv3:4
 var has_shield_bash: bool         = false # Dönüş hızı Armor ile orantılı
@@ -189,8 +194,8 @@ var siege_protocol_bonus: int     = 1     # Lv1:1  Lv2:2  Lv3:3
 var has_bulwark_echo: bool        = false # Bulwark isabet → Ns sonra +N Armor daha
 var bulwark_echo_delay: float     = 4.0   # Lv1:4s  Lv2:3s  Lv3:2s
 var bulwark_echo_amount: int      = 1     # Lv1:1  Lv2:1  Lv3:2
-var has_momentum_transfer: bool   = false # Armor sıfırlanırsa +N Momentum
-var momentum_transfer_amount: int = 3     # Lv1:3  Lv2:4  Lv3:5
+var has_momentum_transfer: bool   = false # Armor ilk sıfırlanışta tüm Momentum ×2 Armor'a döner
+var _momentum_transfer_used: bool = false # Run başına 1 kez, tekrar tetiklenmez
 var has_tactical_reload: bool     = false # Her düşman isabeti +1 max bounce (max +3)
 var has_kinetic_surge: bool       = false # N+ Momentum → Core min. X hızda çıkar
 var kinetic_surge_threshold: int  = 15    # Lv1:15  Lv2:15  Lv3:12
@@ -625,6 +630,35 @@ func _physics_process(delta: float) -> void:
 		global_position = chain_anchor - dir_to_anchor * chain_length
 
 	_update_pranga(delta)
+
+	# ── Momentum üretimi: Momentum Engine yürürken her 4s'de stack üretir ──────
+	if has_momentum_engine:
+		if velocity.length() > 10.0:
+			_momentum_gen_timer += delta
+			while _momentum_gen_timer >= MOMENTUM_GEN_INTERVAL:
+				_momentum_gen_timer -= MOMENTUM_GEN_INTERVAL
+				var _gen_amt: int = 1
+				if has_momentum_field_core:
+					_gen_amt += 1
+				gain_momentum(_gen_amt)
+		else:
+			_momentum_gen_timer = 0.0
+
+	# ── Momentum tükenmesi: 3s hareketsizlik sonrası her 3s'de 1 stack azalır ──
+	if momentum_stacks > 0:
+		if velocity.length() > 10.0:
+			_momentum_still_time = 0.0
+			_momentum_decay_acc = 0.0
+		else:
+			_momentum_still_time += delta
+			if _momentum_still_time >= 3.0:
+				_momentum_decay_acc += delta
+				while _momentum_decay_acc >= 3.0 and momentum_stacks > 0:
+					_momentum_decay_acc -= 3.0
+					momentum_stacks -= 1
+	else:
+		_momentum_still_time = 0.0
+		_momentum_decay_acc = 0.0
 
 	# ── Orbit pozisyonlama ────────────────────────────────────────────────────
 	var _effective_orbit_speed: float = ORBIT_SPEED * orbit_speed_mult

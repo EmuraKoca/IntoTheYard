@@ -35,6 +35,8 @@
 [ext_resource type="Script" uid="uid://cfp0rdguocqnx" path="res://energy_barrier_vfx.gd" id="energy_barrier_vfx"]
 [ext_resource type="FontFile" uid="uid://bdbf1qeb2yg1s" path="res://assets/orbitronfont/Orbitron-Bold.ttf" id="font_bold"]
 [ext_resource type="FontFile" uid="uid://xo24eqnt6ct1" path="res://assets/orbitronfont/Orbitron-Regular.ttf" id="font_regular"]
+[ext_resource type="Texture2D" path="res://assets/hudBars/vector/health_bar_frame.png" id="hp_bar_frame_vector"]
+[ext_resource type="Texture2D" path="res://assets/hudBars/vector/momentum_bar_frame.png" id="momentum_bar_frame_vector"]
 [ext_resource type="Script" uid="uid://bid3xvdmvsmpj" path="res://iso_effect.gd" id="iso_script"]
 
 [sub_resource type="SegmentShape2D" id="SegmentShape2D_mj2jn"]
@@ -73,6 +75,15 @@ border_color = Color(0, 0.5, 0.55, 1)
 
 [sub_resource type="StyleBoxFlat" id="UI_int_fill"]
 bg_color = Color(0, 0.9, 1, 1)
+
+[sub_resource type="StyleBoxFlat" id="UI_hud_bar_bg_transparent"]
+bg_color = Color(0, 0, 0, 0)
+
+[sub_resource type="StyleBoxFlat" id="UI_hp2_fill"]
+bg_color = Color(0, 0.85, 1, 1)
+
+[sub_resource type="StyleBoxFlat" id="UI_momentum_fill"]
+bg_color = Color(0.6, 0.3, 1, 1)
 
 [sub_resource type="SegmentShape2D" id="SegmentShape2D_mixcd"]
 a = Vector2(360, 255)
@@ -3845,6 +3856,82 @@ theme_override_fonts/font = ExtResource("font_bold")
 theme_override_font_sizes/font_size = 12
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="HealthBar2" type="Control" parent="UI"]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 342.0
+offset_bottom = 76.0
+mouse_filter = 2
+
+[node name="Fill" type="ProgressBar" parent="UI/HealthBar2"]
+offset_left = 10.0
+offset_top = 22.0
+offset_right = 310.0
+offset_bottom = 44.0
+theme_override_styles/background = SubResource("UI_hud_bar_bg_transparent")
+theme_override_styles/fill = SubResource("UI_hp2_fill")
+show_percentage = false
+mouse_filter = 2
+
+[node name="Frame" type="TextureRect" parent="UI/HealthBar2"]
+texture = ExtResource("hp_bar_frame_vector")
+offset_right = 322.0
+offset_bottom = 56.0
+texture_filter = 1
+expand_mode = 1
+stretch_mode = 0
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="UI/HealthBar2"]
+offset_left = 10.0
+offset_top = 22.0
+offset_right = 310.0
+offset_bottom = 44.0
+theme_override_colors/font_color = Color(1, 1, 1, 0.95)
+theme_override_fonts/font = ExtResource("font_bold")
+theme_override_font_sizes/font_size = 13
+horizontal_alignment = 1
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="MomentumBar" type="Control" parent="UI"]
+offset_left = 20.0
+offset_top = 84.0
+offset_right = 342.0
+offset_bottom = 120.0
+mouse_filter = 2
+
+[node name="Fill" type="ProgressBar" parent="UI/MomentumBar"]
+offset_left = 72.0
+offset_top = 12.0
+offset_right = 286.0
+offset_bottom = 22.0
+theme_override_styles/background = SubResource("UI_hud_bar_bg_transparent")
+theme_override_styles/fill = SubResource("UI_momentum_fill")
+show_percentage = false
+mouse_filter = 2
+
+[node name="Frame" type="TextureRect" parent="UI/MomentumBar"]
+texture = ExtResource("momentum_bar_frame_vector")
+offset_right = 322.0
+offset_bottom = 36.0
+texture_filter = 1
+expand_mode = 1
+stretch_mode = 0
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="UI/MomentumBar"]
+offset_left = 72.0
+offset_top = 12.0
+offset_right = 286.0
+offset_bottom = 22.0
+theme_override_colors/font_color = Color(1, 1, 1, 0.95)
+theme_override_fonts/font = ExtResource("font_regular")
+theme_override_font_sizes/font_size = 9
+horizontal_alignment = 1
+vertical_alignment = 1
+mouse_filter = 2
 
 [node name="UISep7" type="ColorRect" parent="UI" unique_id=701010708]
 offset_left = 1640.0

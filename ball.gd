@@ -927,9 +927,7 @@ func _inner_core_tick(delta: float) -> void:
 					subject.take_damage(1 + armor_bonus, false)
 
 		"momentum_field_core":
-			# Her 1s: oyuncu hareket ediyorsa +1 Momentum (25s cooldown → zaten 1s tick)
-			if player.velocity.length() > 10.0:
-				player.gain_momentum(1)
+			pass  # Artık kendi üretimi yok — Momentum Engine'in üretimine +1 ekler (player.has_momentum_field_core)
 
 		"regen_pulse_core":
 			# Her 15s: 1 Armor yenile

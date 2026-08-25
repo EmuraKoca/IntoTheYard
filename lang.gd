@@ -269,8 +269,9 @@ const _DESC_TR: Dictionary = {
 	58: "Yavaşlatma süresi ×2 / Oyuncu Hızı -%10",
 	59: "Düşük HP: Zırh +%40 | Yüksek HP: Core Hızı +%10",
 	60: "Alınan hasar → Momentum stack / Zırh Kazanımı -%30",
+	169: "Armor ilk kez sıfırlanınca:\ntüm Momentum → Armor ×2 (run başına 1 kez)",
 	178: "Her 2s: 60px'deki düşmanlara\n1 + Armor×%5 hasar",
-	179: "Hareket ederken her 1s:\n+1 Momentum Stack (pasif)",
+	179: "Momentum Engine'in pasif\nüretimine +1 ekler (tick başına)",
 	181: "Armor %75+ doluyken:\n90px içindeki düşmanlar %25 yavaşlar",
 	182: "HP %50 altındayken:\nher 9s'de 1 HP yeniler",
 	183: "Momentum 15+: her 4s\n60px'e 2 hasar pulse",
@@ -358,8 +359,8 @@ func _dynamic_desc(index: int, player: Node) -> String:
 			var _mmax: int = player.get("momentum_max") if player.get("momentum_max") != null else 20
 			var _msb_pct: int = int(round(_msb * 100.0))
 			if locale == "en":
-				return "Hit → +1 Stack\n+[b]%d[/b]%% Core Speed per stack\n(max [b]%d[/b] stacks)" % [_msb_pct, _mmax]
-			return "İsabet → +1 Stack\n+[b]%d[/b]%% Core Hızı/stack\n(maks [b]%d[/b] stack)" % [_msb_pct, _mmax]
+				return "Unlocks the Momentum system.\nWhile walking, every 4s: +1 Stack\n+[b]%d[/b]%% Core Speed per stack (max [b]%d[/b])" % [_msb_pct, _mmax]
+			return "Momentum Mekaniğini açar.\nYürürken her 4s: +1 Stack\n+[b]%d[/b]%% Core Hızı/stack (maks [b]%d[/b])" % [_msb_pct, _mmax]
 		37:  # Chain Density
 			var _cdb: int = player.get("chain_density_bonus_per_hit") if player.get("chain_density_bonus_per_hit") != null else 1
 			if locale == "en":
@@ -401,10 +402,10 @@ func _dynamic_desc(index: int, player: Node) -> String:
 				return "Armor ≥ [b]%d[/b]%% Cap:\nCore Speed +[b]%d[/b]%%" % [_bst, _bsp]
 			return "Armor ≥ %[b]%d[/b] Cap:\nCore Hızı +%[b]%d[/b]" % [_bst, _bsp]
 		164:  # Armor Rush
-			var _ars: int = player.get("armor_rush_stack_amount") if player.get("armor_rush_stack_amount") != null else 1
+			var _art: int = player.get("armor_rush_threshold") if player.get("armor_rush_threshold") != null else 13
 			if locale == "en":
-				return "On Armor gain:\n+[b]%d[/b] Momentum Stack" % _ars
-			return "Armor kazandığında:\n+[b]%d[/b] Momentum Stack" % _ars
+				return "Momentum ≥ [b]%d[/b]:\nArmor gain +1 (cancels below threshold)" % _art
+			return "Momentum ≥ [b]%d[/b]:\nArmor kazanımı +1 (eşik altına düşünce iptal olur)" % _art
 		165:  # Combat Rhythm
 			var _crt: int = player.get("combat_rhythm_threshold") if player.get("combat_rhythm_threshold") != null else 6
 			if locale == "en":
@@ -426,11 +427,6 @@ func _dynamic_desc(index: int, player: Node) -> String:
 			if locale == "en":
 				return "Bulwark Core hit: after [b]%.0f[/b]s\ngain [b]%d[/b] more Armor" % [_bed, _bea]
 			return "Bulwark Core isabeti: [b]%.0f[/b]s sonra\n[b]%d[/b] Armor daha kazanırsın" % [_bed, _bea]
-		169:  # Momentum Transfer
-			var _mta: int = player.get("momentum_transfer_amount") if player.get("momentum_transfer_amount") != null else 3
-			if locale == "en":
-				return "If Armor hits 0:\n+[b]%d[/b] Momentum Stack" % _mta
-			return "Armor sıfırlanırsa:\n+[b]%d[/b] Momentum Stack" % _mta
 		171:  # Kinetic Surge
 			var _kst: int = player.get("kinetic_surge_threshold") if player.get("kinetic_surge_threshold") != null else 15
 			var _kss: float = player.get("kinetic_surge_speed") if player.get("kinetic_surge_speed") != null else 700.0

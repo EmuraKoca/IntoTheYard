@@ -1,150 +1,3 @@
-───────────────────────────────────────────────────
-Sürüm: v0.1.5.0  |  Tarih: 19.08.2026
-───────────────────────────────────────────────────
-
-Cyclone Individuality — review ve düzeltmeler:
-
-  ✅  Shadow Strike: artık sadece sağ/sol duvar sekmesinde tetikleniyor
-      — kuzey (üst) duvar artık sadece Backstab Protocol'e özel,
-      iki kart arasındaki çakışma giderildi
-  ✅  Kinetic Rogue: hasar hesaplaması baştan yazıldı
-      — sayaç artık her Ricochet Core topunun kendi üzerinde tutuluyor
-        (player'da paylaşılan tek sayaç değil), player'a dönünce veya
-        yeniden fırlatılınca sıfırlanıyor — aşırı OP birikme önlendi
-      — kazanılan +1 kalıcı hasar hâlâ tüm Ricochet Core'lara paylaşılıyor
-      — eski kod "her 3 bounce" yorumu yazıp ">= 5" kontrolü yapıyordu,
-        düşürme miktarı da 3'tü — üçü birbirini tutmuyordu, düzeltildi
-  ✅  Phase Shift: artık gerçekten "stun süresi boyunca hangi core
-      vurursa vursun ×1.5 hasar" mantığıyla çalışıyor (ana hasar
-      pipeline'ına taşındı) — önceden sadece Phantom Circuit'in kendi
-      stun anına özel dar bir bonus veriyordu, açıklamayla uyuşmuyordu
-  ✅  Data Siphon: Glitch yerine Decay stack'li hedeflerde Data Leech
-      +1 ekstra can veriyor artık, hem Data Leech Core hem Decay Core
-      alınmadan kart havuzda görünmüyor (requires: [22, 161])
-  ✅  Rogue's Instinct, Viral Load, System Overload doğrulandı — bug yok
-
-Ölü kart temizliği:
-
-  ✅  Wallrunner, Ricochet Memory (Cyclone) komple kaldırıldı —
-      kart havuzunda tanımlıydı ama implementasyon kodu hiç okunmuyordu
-
-Bugfix — Stun görsel hatası:
-
-  ✅  Sersemletilmiş (stun) düşmanlar artık donmuş görünüyor — önceden
-      stun sırasında animasyon durmadığı için "yerinde yürüyormuş" gibi
-      görünüyordu. apply_stun() artık sprite'ı durduruyor, stun bitince
-      kaldığı yönden yürüme animasyonuna dönüyor (Frozen ile aynı pattern)
-
-Cyclone Individuality — devamı ve tamamlanışı:
-
-  ✅  Shadow Dance: hem kalıcı hız bonusunun launch() içinde ezilip hiç
-      uygulanmadığı bug'ı hem de 7 sekme eşiğinin tüketilmeden sürekli
-      tekrar tetiklenmesi bug'ı düzeltildi (Kinetic Rogue ile aynı
-      per-ball sayaç + while-loop pattern'i)
-  ✅  Circuit Breaker: açıklamadaki yanlış süre (2s → 3s) düzeltildi
-  ✅  Zero Day: açıklaması gerçek davranışa göre netleştirildi
-      (Glitch'li düşmana Virus uygulanınca mevcut stack ×2 olur)
-  ✅  Pinpoint Strike komple kaldırıldı — hasar miktarı (açıklama/yorum/
-      kod üçü farklı sayı veriyordu) ve tetiklenme mantığı (Shadow Dance
-      ile aynı kontrolsüz tekrar tetiklenme bug'ı) düzeltilemeyecek kadar
-      tutarsızdı
-  ✅  Ghost Step: dash bağışıklığı artık kendi ayrı flag'inde
-      (_ghost_step_active) — önceden hit sonrası doğal 0.3s i-frame ile
-      aynı değişkeni paylaşıyordu, nadir bir zamanlama çakışmasında
-      Ghost Step'in 1.5s penceresini erken kesebiliyordu
-  ✅  Decay Harvest, Overclock Protocol: eksik requires bağımlılıkları
-      eklendi (sırasıyla Decay Core, Circuit Breaker)
-  ✅  Cyclone Individuality kart görselleri tamamlandı (15 kart)
-  ✅  Üç karakterin (Vector, Leila, Cyclone) tüm kart görselleri
-      (180 kart) isimlendirme ve eksiklik açısından tam denetlendi —
-      hiçbir sorun bulunmadı
-
-───────────────────────────────────────────────────
-Sürüm: v0.1.4.0  |  Tarih: 17.08.2026
-───────────────────────────────────────────────────
-
-Cyclone Identity & Calamity:
-
-  ✅  Cyclone Identity kart görselleri tamamlandı (17 kart)
-  ✅  Cyclone Calamity kart görselleri tamamlandı (9 kart)
-  ✅  Bounce Barrage ve Mirror Image Calamity kartları implement edildi
-      — önceden alınabiliyordu ama hiçbir aktivasyon case'i yoktu
-  ✅  Antivirus Rain → Virus Rain olarak yeniden adlandırıldı
-  ✅  Spike Core gerçek "isabet" mantığına çevrildi — artık sadece
-      Spike Core topu 3 Decay stack'li bir hedefe çarpınca tetikleniyor
-      (önceden pasif bir player flag'iyle Decay Core'un kendi vuruşunda
-      otomatik tetikleniyordu)
-  ✅  Phantom Circuit Core yeniden tasarlandı — her fırlatışta ilk
-      isabeti sersemletir, player'a dönene kadar tekrar tetiklenmez
-      (taban süre 0.5s)
-
-Cyclone Utility — level bazlı scaling ve bugfixler:
-
-  ✅  Extended Glitch, Data Exploit, Angular Precision, Bounce Mastery,
-      Backstab Protocol, Stack Overflow, Memory Leak, Cascade Delete,
-      Pinball Protocol, Stealth Pass, Ghost Protocol, Corruption Protocol,
-      Decay Amp artık gerçekten level bazlı çalışıyor (3 kez alınabiliyordu
-      ama sadece ilk alış etki ediyordu)
-  ✅  Signal Jam kaldırılıp tersine mantıkla geri getirildi — artık
-      Glitch'li düşmanı yavaşlatmak yerine hızlandırıyor
-  ✅  Exploit Stack, Interference, Exploit Mastery, Static Link kartları
-      glitch power-creep / tutarsız tasarım nedeniyle komple kaldırıldı
-  ✅  Kritik bug fix: _wall_bounce_count sayacı sadece Vector'ün Kinetic
-      Core'unda artıyordu, bu yüzden Cyclone'un Ricochet Strike, Bounce
-      Mastery, Pinball Protocol, Pinpoint Strike, Kinetic Rogue kartları
-      hiç tetiklenmiyordu — düzeltildi ve tekrar Ricochet Core'a bağımlı
-      hale getirildi (requires eklendi)
-  ✅  Pinball Protocol gerçek pierce mantığına çevrildi — vurmadan N
-      duvar sekmesi sonrası player'a dönene kadar süren gerçek pierce
-  ✅  Kritik bug fix: _on_decay_death() decay_stacks'i hasar hesaplanmadan
-      önce sıfırlıyordu — Decay patlaması her zaman 0 hasar veriyordu
-  ✅  Stack Overflow / Virus stack cap tutarsızlığı giderildi (bazı
-      yerlerde 4, bazı yerlerde 5 kullanılıyordu — artık tek formül)
-  ✅  Rogue's Eye Core dosya adı apostrof uyuşmazlığı düzeltildi
-
-Debuff Indicator Sistemi:
-
-  ✅  Tek elementli indicator → dinamik Dictionary tabanlı sisteme geçildi
-      (_show_debuff / _hide_debuff) — artık aktif tüm debufflar (burn,
-      wet, virus, decay, stun, glitch vb.) aynı anda düşmanın başının
-      üzerinde ortalanarak gösteriliyor
-  ✅  Stun elem indicator sprite'ı eklendi
-
-───────────────────────────────────────────────────
-Sürüm: v0.1.3.4  |  Tarih: 08.08.2026
-───────────────────────────────────────────────────
-
-Leila Identity & Calamity:
-
-  ✅  Leila Identity kart görselleri tamamlandı (19 kart)
-  ✅  Leila Calamity kart görselleri tamamlandı (8 kart)
-  ✅  Prism Core implement edildi — orbit'teyken her 2s, 55px içindeki
-      düşmanlara rastgele element uygular. min_level 3 → 2.
-  ✅  Echo Resonance Core implement edildi — orbit'teyken her 5s, 80px
-      içindeki en yakın debufflı düşmanın debufflarını yakındaki düşmanlara yayar
-  ✅  Monsoon Calamity VFX eklendi (saha alanına özel, 4 frame animasyon)
-  ✅  Blizzard güncellendi — artık sadece Islak düşmanları dondurur
-  ✅  Deep Freeze kaldırıldı (özelliği Blizzard'a aktarıldı)
-
-Bugfix & Temizlik:
-
-  ✅  Kart görseli z-order düzeltildi — görsel artık kart çerçevesinin
-      altında kalıyor (Cards Unlocked + upgrade menüsü)
-  ✅  Tempest Core ve Prismatic Core dead code tamamen kaldırıldı
-  ✅  Steam Core açıklaması gerçek implementasyona göre güncellendi
-  ✅  static_aura_core.png → static_aura_core_art.png yeniden adlandırıldı
-
-───────────────────────────────────────────────────
-Sürüm: v0.1.0.8  |  Tarih: 20.07.2026
-───────────────────────────────────────────────────
-
-Bugfix:
-
-  ✅  Auto mode'da toplar fırlatılmıyordu
-     — Normal core'lar add_to_orbit() içinde erken return yapıyordu
-     — auto_mode kontrolü normal core yoluna da eklendi
-
-
 0.0.0.1
 20.03.2026
 
@@ -3970,6 +3823,17 @@ Diğer:
   ✅  Zemin görseli (gameAreaEdited2.png) 1270×840 oranına güncellendi
 
 
+───────────────────────────────────────────────────
+Sürüm: v0.1.0.8  |  Tarih: 20.07.2026
+───────────────────────────────────────────────────
+
+Bugfix:
+
+  ✅  Auto mode'da toplar fırlatılmıyordu
+     — Normal core'lar add_to_orbit() içinde erken return yapıyordu
+     — auto_mode kontrolü normal core yoluna da eklendi
+
+
 ───────────────────────────────────────────────────────
 Sürüm: v0.1.0.9  |  Tarih: 21.07.2026
 ───────────────────────────────────────────────────────
@@ -4217,3 +4081,141 @@ Sürüm: v0.1.3.3  |  Tarih: 03.08.2026
 
   🔧  Bugfix: Upgrade ekranında kart görselleri glitch/slide animasyonuna dahil değildi
      — art_bg ve art_rect artık kart animasyonuyla birlikte belirir
+
+
+───────────────────────────────────────────────────
+Sürüm: v0.1.3.4  |  Tarih: 08.08.2026
+───────────────────────────────────────────────────
+
+Leila Identity & Calamity:
+
+  ✅  Leila Identity kart görselleri tamamlandı (19 kart)
+  ✅  Leila Calamity kart görselleri tamamlandı (8 kart)
+  ✅  Prism Core implement edildi — orbit'teyken her 2s, 55px içindeki
+      düşmanlara rastgele element uygular. min_level 3 → 2.
+  ✅  Echo Resonance Core implement edildi — orbit'teyken her 5s, 80px
+      içindeki en yakın debufflı düşmanın debufflarını yakındaki düşmanlara yayar
+  ✅  Monsoon Calamity VFX eklendi (saha alanına özel, 4 frame animasyon)
+  ✅  Blizzard güncellendi — artık sadece Islak düşmanları dondurur
+  ✅  Deep Freeze kaldırıldı (özelliği Blizzard'a aktarıldı)
+
+Bugfix & Temizlik:
+
+  ✅  Kart görseli z-order düzeltildi — görsel artık kart çerçevesinin
+      altında kalıyor (Cards Unlocked + upgrade menüsü)
+  ✅  Tempest Core ve Prismatic Core dead code tamamen kaldırıldı
+  ✅  Steam Core açıklaması gerçek implementasyona göre güncellendi
+  ✅  static_aura_core.png → static_aura_core_art.png yeniden adlandırıldı
+
+───────────────────────────────────────────────────
+Sürüm: v0.1.4.0  |  Tarih: 17.08.2026
+───────────────────────────────────────────────────
+
+Cyclone Identity & Calamity:
+
+  ✅  Cyclone Identity kart görselleri tamamlandı (17 kart)
+  ✅  Cyclone Calamity kart görselleri tamamlandı (9 kart)
+  ✅  Bounce Barrage ve Mirror Image Calamity kartları implement edildi
+      — önceden alınabiliyordu ama hiçbir aktivasyon case'i yoktu
+  ✅  Antivirus Rain → Virus Rain olarak yeniden adlandırıldı
+  ✅  Spike Core gerçek "isabet" mantığına çevrildi — artık sadece
+      Spike Core topu 3 Decay stack'li bir hedefe çarpınca tetikleniyor
+      (önceden pasif bir player flag'iyle Decay Core'un kendi vuruşunda
+      otomatik tetikleniyordu)
+  ✅  Phantom Circuit Core yeniden tasarlandı — her fırlatışta ilk
+      isabeti sersemletir, player'a dönene kadar tekrar tetiklenmez
+      (taban süre 0.5s)
+
+Cyclone Utility — level bazlı scaling ve bugfixler:
+
+  ✅  Extended Glitch, Data Exploit, Angular Precision, Bounce Mastery,
+      Backstab Protocol, Stack Overflow, Memory Leak, Cascade Delete,
+      Pinball Protocol, Stealth Pass, Ghost Protocol, Corruption Protocol,
+      Decay Amp artık gerçekten level bazlı çalışıyor (3 kez alınabiliyordu
+      ama sadece ilk alış etki ediyordu)
+  ✅  Signal Jam kaldırılıp tersine mantıkla geri getirildi — artık
+      Glitch'li düşmanı yavaşlatmak yerine hızlandırıyor
+  ✅  Exploit Stack, Interference, Exploit Mastery, Static Link kartları
+      glitch power-creep / tutarsız tasarım nedeniyle komple kaldırıldı
+  ✅  Kritik bug fix: _wall_bounce_count sayacı sadece Vector'ün Kinetic
+      Core'unda artıyordu, bu yüzden Cyclone'un Ricochet Strike, Bounce
+      Mastery, Pinball Protocol, Pinpoint Strike, Kinetic Rogue kartları
+      hiç tetiklenmiyordu — düzeltildi ve tekrar Ricochet Core'a bağımlı
+      hale getirildi (requires eklendi)
+  ✅  Pinball Protocol gerçek pierce mantığına çevrildi — vurmadan N
+      duvar sekmesi sonrası player'a dönene kadar süren gerçek pierce
+  ✅  Kritik bug fix: _on_decay_death() decay_stacks'i hasar hesaplanmadan
+      önce sıfırlıyordu — Decay patlaması her zaman 0 hasar veriyordu
+  ✅  Stack Overflow / Virus stack cap tutarsızlığı giderildi (bazı
+      yerlerde 4, bazı yerlerde 5 kullanılıyordu — artık tek formül)
+  ✅  Rogue's Eye Core dosya adı apostrof uyuşmazlığı düzeltildi
+
+Debuff Indicator Sistemi:
+
+  ✅  Tek elementli indicator → dinamik Dictionary tabanlı sisteme geçildi
+      (_show_debuff / _hide_debuff) — artık aktif tüm debufflar (burn,
+      wet, virus, decay, stun, glitch vb.) aynı anda düşmanın başının
+      üzerinde ortalanarak gösteriliyor
+  ✅  Stun elem indicator sprite'ı eklendi
+
+
+───────────────────────────────────────────────────
+Sürüm: v0.1.5.0  |  Tarih: 19.08.2026
+───────────────────────────────────────────────────
+
+Cyclone Individuality — review ve düzeltmeler:
+
+  ✅  Shadow Strike: artık sadece sağ/sol duvar sekmesinde tetikleniyor
+      — kuzey (üst) duvar artık sadece Backstab Protocol'e özel,
+      iki kart arasındaki çakışma giderildi
+  ✅  Kinetic Rogue: hasar hesaplaması baştan yazıldı
+      — sayaç artık her Ricochet Core topunun kendi üzerinde tutuluyor
+        (player'da paylaşılan tek sayaç değil), player'a dönünce veya
+        yeniden fırlatılınca sıfırlanıyor — aşırı OP birikme önlendi
+      — kazanılan +1 kalıcı hasar hâlâ tüm Ricochet Core'lara paylaşılıyor
+      — eski kod "her 3 bounce" yorumu yazıp ">= 5" kontrolü yapıyordu,
+        düşürme miktarı da 3'tü — üçü birbirini tutmuyordu, düzeltildi
+  ✅  Phase Shift: artık gerçekten "stun süresi boyunca hangi core
+      vurursa vursun ×1.5 hasar" mantığıyla çalışıyor (ana hasar
+      pipeline'ına taşındı) — önceden sadece Phantom Circuit'in kendi
+      stun anına özel dar bir bonus veriyordu, açıklamayla uyuşmuyordu
+  ✅  Data Siphon: Glitch yerine Decay stack'li hedeflerde Data Leech
+      +1 ekstra can veriyor artık, hem Data Leech Core hem Decay Core
+      alınmadan kart havuzda görünmüyor (requires: [22, 161])
+  ✅  Rogue's Instinct, Viral Load, System Overload doğrulandı — bug yok
+
+Ölü kart temizliği:
+
+  ✅  Wallrunner, Ricochet Memory (Cyclone) komple kaldırıldı —
+      kart havuzunda tanımlıydı ama implementasyon kodu hiç okunmuyordu
+
+Bugfix — Stun görsel hatası:
+
+  ✅  Sersemletilmiş (stun) düşmanlar artık donmuş görünüyor — önceden
+      stun sırasında animasyon durmadığı için "yerinde yürüyormuş" gibi
+      görünüyordu. apply_stun() artık sprite'ı durduruyor, stun bitince
+      kaldığı yönden yürüme animasyonuna dönüyor (Frozen ile aynı pattern)
+
+Cyclone Individuality — devamı ve tamamlanışı:
+
+  ✅  Shadow Dance: hem kalıcı hız bonusunun launch() içinde ezilip hiç
+      uygulanmadığı bug'ı hem de 7 sekme eşiğinin tüketilmeden sürekli
+      tekrar tetiklenmesi bug'ı düzeltildi (Kinetic Rogue ile aynı
+      per-ball sayaç + while-loop pattern'i)
+  ✅  Circuit Breaker: açıklamadaki yanlış süre (2s → 3s) düzeltildi
+  ✅  Zero Day: açıklaması gerçek davranışa göre netleştirildi
+      (Glitch'li düşmana Virus uygulanınca mevcut stack ×2 olur)
+  ✅  Pinpoint Strike komple kaldırıldı — hasar miktarı (açıklama/yorum/
+      kod üçü farklı sayı veriyordu) ve tetiklenme mantığı (Shadow Dance
+      ile aynı kontrolsüz tekrar tetiklenme bug'ı) düzeltilemeyecek kadar
+      tutarsızdı
+  ✅  Ghost Step: dash bağışıklığı artık kendi ayrı flag'inde
+      (_ghost_step_active) — önceden hit sonrası doğal 0.3s i-frame ile
+      aynı değişkeni paylaşıyordu, nadir bir zamanlama çakışmasında
+      Ghost Step'in 1.5s penceresini erken kesebiliyordu
+  ✅  Decay Harvest, Overclock Protocol: eksik requires bağımlılıkları
+      eklendi (sırasıyla Decay Core, Circuit Breaker)
+  ✅  Cyclone Individuality kart görselleri tamamlandı (15 kart)
+  ✅  Üç karakterin (Vector, Leila, Cyclone) tüm kart görselleri
+      (180 kart) isimlendirme ve eksiklik açısından tam denetlendi —
+      hiçbir sorun bulunmadı

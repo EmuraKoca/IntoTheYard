@@ -3,6 +3,103 @@
 Bu dosya, farklı bilgisayarlardaki (ev / işyeri) Claude Code oturumları arasında bağlam
 köprüsü olarak kullanılır. Her oturum başında oku, her oturum sonunda güncelle.
 
+## Momentum Mekaniği — Baştan Tasarım (2026-08-22, TEST BEKLİYOR)
+
+Vector Utility review'i sırasında Momentum sisteminin dağınık/tutarsız olduğu fark edildi
+(6 farklı bağımsız üretici, görsel geri bildirim yok, hiç tükenmiyor). Kullanıcı ile
+tasarım baştan konuşuldu, şu hale getirildi — **henüz evde test edilmedi, doğrulanması
+gerekiyor**:
+
+### Yeni mimari
+- **Momentum Engine (35)** artık sistemin TEK kapısı. Bu kart alınmadan:
+  - Momentum hiç birikmiyor (üretim mantığı `player.gd::_physics_process`'e taşındı,
+    `has_momentum_engine` şartına bağlı).
+  - HUD'daki Momentum bar'ı hiç görünmüyor (`game_scene.gd::_process`'te
+    `p.has_momentum_engine` kontrolü eklendi).
+  - Üretim: yürürken her 4s'de +1 stack (`MOMENTUM_GEN_INTERVAL`), +%3 Core Hızı/stack,
+    maks 20 stack (Lv2:%5/Lv3:%7, maks 30 Lv3'te — mevcut level scaling korundu).
+- **Momentum Field Core (179)** artık bağımsız üretici DEĞİL — Momentum Engine'in
+  üretimine **+1 ekleyen bir çarpan**. Kendi `_inner_core_tick()` mantığı boşaltıldı
+  (`pass`), `has_momentum_field_core` flag'i pickup handler'da set ediliyor, üretim
+  formülünde (`player.gd`) okunuyor.
+- **Armor Rush (164)** yeniden tasarlandı: eski "Armor kazanınca +1 Momentum" kaldırıldı,
+  yerine "Momentum ≥ eşik → Armor kazanımına anlık +1" geldi. **Kalıcı değil** — her
+  `gain_armor()` çağrısında canlı kontrol ediliyor, momentum eşiğin altına düşerse bonus
+  da otomatik kayboluyor (state saklanmıyor). Eşik: Lv1:13, Lv2:11, Lv3:9.
+- **Momentum Transfer (169)** Utility'den **Individuality**'ye taşındı, tek seviyeli oldu:
+  "Armor ilk kez sıfırlanınca → o anki TÜM Momentum stack'i ×2 Armor'a döner" — run başına
+  **sadece 1 kez** tetikleniyor (`_momentum_transfer_used` flag'i, bir daha asla
+  çalışmıyor). Roguelike "ilk ölümden dirilme" mantığının Armor/Momentum versiyonu.
+- **Requires:** Pressure Valve (104), Momentum Cascade (108), Overcharge Core (183),
+  Kinetic Surge (171), Momentum Field Core (179), Armor Rush (164), Momentum Transfer
+  (169) — hepsi artık tek `requires: [35]` (eski requires_any listeleri kaldırıldı,
+  Momentum Engine tek kapı).
+- **Dokunulmadı (kullanıcı isteğiyle, Individuality review'inde ele alınacak):**
+  Steel Rhythm (109), Risk Engine (60), Adrenal Surge (32) — bunlar da momentum kartları
+  ama henüz eski mantıklarıyla duruyor, sıra gelince yeniden gözden geçirilecek.
+
+### Ayrıca eklenen: Momentum tükenmesi (Yasuo tarzı)
+`player.gd::_physics_process`'e eklendi: oyuncu 3s hareketsiz kalırsa, o andan itibaren
+her 3s'de 1 stack kaybediliyor (`_momentum_still_time`, `_momentum_decay_acc`). Hareket
+edince ikisi de anında sıfırlanıyor. Kaynağı ne olursa olsun tüm stack'leri etkiliyor.
+
+### Merkezi `gain_momentum()` — hâlâ geçerli
+Önceki session'da kurulan merkezi fonksiyon (`player.gd`) korunuyor, yeni üretim yolu da
+(Momentum Engine'in 4s tick'i) buradan geçiyor — Pressure Valve doğru saymaya devam ediyor.
+
+### YAPILACAK (bir sonraki session)
+- [ ] **Evde test et**: Momentum Engine almadan bar'ın gizli kaldığını, alınca hareketle
+      stack biriktiğini, durunca 3s sonra tükendiğini, Armor Rush'ın eşik altına düşünce
+      bonusu kaybettiğini, Momentum Transfer'in Armor ilk sıfırlanışta bir kez tetiklenip
+      bir daha çalışmadığını doğrula.
+- [ ] Sorun çıkarsa bildir, birlikte düzeltilecek.
+- [ ] Sonrasında Steel Rhythm / Risk Engine / Adrenal Surge'ü de bu yeni mimariye göre
+      gözden geçir (Individuality review'i sırasında zaten planlı).
+
+## Yeni HUD: Sol Üst Health + Momentum Bar (2026-08-25, TEST BEKLİYOR)
+
+Kullanıcı, sağ paneldeki eski `IntegrityBar`'ı sol üste taşımak ve altına yeni bir
+Momentum bar eklemek istedi. Pixellab.ai ile iki özel asset üretildi (Vector'ın renk
+paletine uygun, cyberpunk stil, içi şeffaf/boş — dolgu Godot'ta ayrı katman olarak
+ekleniyor):
+- `assets/hudBars/vector/health_bar_frame.png` (161×28, iç dolgu alanı x:5-155 y:11-22)
+- `assets/hudBars/vector/momentum_bar_frame.png` (161×18, iç dolgu alanı x:36-143 y:6-11)
+- İleride Cyclone (yeşilimsi) ve Leila (pembemsi) için de aynı isimlerle ayrı klasörler
+  gelecek (`assets/hudBars/cyclone/`, `assets/hudBars/leila/`), momentum bar'ı ise
+  sadece Vector'a özgü.
+
+### Godot tarafı (`game_scene.tscn`)
+- Yeni node'lar `UI` altında: `HealthBar2` (Control, sol üst 20,20 — 322×56, 2× ölçek) ve
+  `MomentumBar` (Control, 20,84 — 322×36). Her ikisinde de `Fill` (ProgressBar, şeffaf
+  background stylebox + renkli fill stylebox, interior rect'e göre pozisyonlanmış) +
+  `Frame` (TextureRect, `expand_mode=1 stretch_mode=0 texture_filter=1` — pixel-perfect
+  stretch) + `Label` yapısı var.
+- Eski `IntegrityBar` **silinmedi**, sadece karaktere göre `visible` toggle ediliyor
+  (`game_scene.gd::_ready()`): Vector'da gizli+HealthBar2 görünür, diğer karakterlerde
+  eskisi gibi görünür+HealthBar2/MomentumBar gizli.
+
+### BUG FIX: Armor gri overlay'i eski yerde kalıyordu
+`_setup_armor_bar()`/`_update_armor_ui()` fonksiyonları Armor'un gri katmanını hep
+`$UI/IntegrityBar`'ın konumuna göre çiziyordu — IntegrityBar gizlenince overlay boşlukta
+kalmış gibi görünüyordu. Yeni `_get_hp_bar_rect()` helper'ı eklendi (karaktere göre doğru
+bar'ın — HealthBar2/Fill ya da eski IntegrityBar — mutlak rect'ini döndürüyor), her iki
+fonksiyon da buna yönlendirildi.
+
+### YAPILACAK (bir sonraki session)
+- [ ] **Evde test et**: PNG'lerin doğru yerleştiğini, Health/Momentum bar'ların doğru
+      konumda/boyutta göründüğünü, Armor gri katmanının artık doğru yerde çizildiğini
+      doğrula.
+- [ ] Sağ paneli tamamen "alınan güçlendirmeler" listesine ayırma işi hâlâ yapılmadı
+      (kullanıcı bunu ayrı bir tur olarak bıraktı — Level/Toplar/Süre/Yakalama/Fusion
+      Energy/Calamity elemanlarının yeniden konumlandırılması gerekiyor).
+
+### BUG FIX (build hatası, 2026-08-25): ball.gd satır başı boşluk karakteri
+`ball.gd:1882`'de (Bulwark Echo bloğu) satır başında tab'lardan önce fazladan bir boşluk
+karakteri sızmıştı (muhtemelen concurrent bir edit'ten) — Godot "mixed tabs/spaces" hatası
+verip crash oluyordu. Python ile byte-level tespit edilip düzeltildi. Not: bu tür
+görünmez whitespace sorunları normal `Read`/`grep` ile bazen yakalanamayabilir, şüphe
+varsa `python3` ile raw byte taraması yap.
+
 ## AKTİF SÜREÇ: Kart-kart Full Review (2026-08-21 başladı)
 
 Her karakterin her kartı sırayla (Identity → Utility → Individuality → Calamity, kod
