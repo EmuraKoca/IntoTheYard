@@ -68,8 +68,7 @@ const _CORE_DISPLAY_NAMES: Dictionary = {
 const _CALAMITY_DISPLAY_NAMES: Dictionary = {
 	"⚡":  "Calamity Lightning",
 	"🔥":  "Calamity Flame",
-	"🌀":  "Calamity Cyclone",
-	"🔮":  "Calamity Gravity",
+	"🌀":  "Gravitational Force",
 	"❄️": "Calamity Blizzard",
 	"🌊":  "Calamity Flood",
 	"🔋":  "Calamity Battery",
@@ -1138,7 +1137,7 @@ func _ready() -> void:
 	max_calamity_slots = 3 + GameData.get_shop_calamity_slot_bonus()
 	var _cal_start := GameData.get_shop_start_calamity_count()
 	if _cal_start > 0:
-		var _cal_pool := ["⚡", "🔥", "🌀", "🔮", "❄️", "💧", "☠️"]
+		var _cal_pool := ["⚡", "🔥", "🌀", "❄️", "💧", "☠️"]
 		_cal_pool.shuffle()
 		for _ci in range(min(_cal_start, max_calamity_slots)):
 			calamity_slots.append(_cal_pool[_ci])
@@ -2884,19 +2883,6 @@ func _activate_gravity(pos: Vector2) -> void:
 		elapsed += get_process_delta_time()
 		await get_tree().process_frame
 		
-func _activate_arise() -> void:
-	var balls = get_tree().get_nodes_in_group("balls")
-	for ball in balls:
-		if not ball.moving:
-			ball.scale = Vector2(1, 1)
-			ball.z_index = 2
-			ball.get_node("CollisionShape2D").disabled = false
-			ball.damage = 1
-			ball.speed = 400.0
-			ball.moving = true
-			var player = get_node("Player")
-			ball.move_direction = (player.global_position - ball.global_position).normalized()
-
 func _activate_blizzard() -> void:
 	for subject in get_tree().get_nodes_in_group("subjects"):
 		if is_instance_valid(subject) and subject.global_position.x >= 385.0:
@@ -3291,8 +3277,6 @@ func _input(event: InputEvent) -> void:
 				_activate_flame(mouse_pos)
 			elif calamity == "🌀":
 				_activate_gravity(mouse_pos)
-			elif calamity == "🔮":
-				_activate_arise()
 			elif calamity == "❄️":
 				_activate_blizzard()
 			elif calamity == "🌊":
@@ -3981,9 +3965,6 @@ func _process(delta: float) -> void:
 		elif calamity == "🌀":
 			$UI/CalamityCircle.color = Color(0.5, 0.0, 1.0, 0.2)
 			$UI/CalamityCircle.radius = 100
-		elif calamity == "🔮":
-			$UI/CalamityCircle.color = Color(0.8, 0.8, 1.0, 0.2)
-			$UI/CalamityCircle.radius = 200
 		elif calamity == "🌀🕳️":  # WormHole
 			$UI/CalamityCircle.color = Color(0.5, 0.0, 1.0, 0.2)
 			$UI/CalamityCircle.radius = 70
@@ -4085,10 +4066,6 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 	elif index == 9:
 		if calamity_slots.size() < max_calamity_slots:
 			calamity_slots.append("🌀")
-			update_ui()
-	elif index == 10:
-		if calamity_slots.size() < max_calamity_slots:
-			calamity_slots.append("🔮")
 			update_ui()
 	elif index == 11:
 	# Ball Mastery - +1 to all balls

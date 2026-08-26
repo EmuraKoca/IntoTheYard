@@ -382,11 +382,33 @@ property okurken `:=` yerine açık tip kullanmaya dikkat et.
 
 **VECTOR INDIVIDUALITY TAMAMLANDI (21/21 kart) — 2026-08-26**
 
-### SIRADAKİ AŞAMA: Vector Calamity
-Henüz başlanmadı. Aynı 4 aşamalı süreç (İmplementasyon → Requires → TR açıklama →
-EN açıklama) uygulanacak. Vector Calamity kartları tarihsel olarak en az sayıya sahip
-kategoriydi (CLAUDE.md'deki eski "Kart Dengesi" notlarına göre 0'dan başlamıştı,
-sonradan birkaç kart eklendi) — kaç kart olduğu review başında sayılıp teyit edilecek.
+### İlerleme — Vector Calamity (8 kart, index sırasına göre)
+Bu tur ayrıca **VFX ayarlamaları** için de önemli (kullanıcı özellikle belirtti) — her
+kartın implementasyon/requires/dil incelemesinin yanında görsel efekti de gözden
+geçirilecek.
+- [x] Gravitational Force (9) — çalışıyor: tıklanan noktaya 5s boyunca 150px yarıçaptaki
+      düşmanları çekiyor (`_activate_gravity()`), VFX zaten mevcut (mor spiral parçacık +
+      vorteks halkası, `_vfx_gravity()`). **BUG FIX**: `_CALAMITY_DISPLAY_NAMES`
+      sözlüğünde "🌀" ikonu yanlışlıkla "Calamity Cyclone" diye etiketlenmişti (Calamity
+      slot tooltip'inde yanlış isim gösteriyordu) → "Gravitational Force" olarak
+      düzeltildi. **Ölü kod temizliği**: "🔮" ikonu (`_activate_arise()` — topu oyuncuya
+      fırlatan alakasız bir mekanik, muhtemelen çok eski bir kalıntı) hem kart havuzunda
+      hiç yoktu (index 10 tanımsızdı) hem de mağazadan alınan "başlangıç Calamity"
+      rastgele havuzunda hâlâ duruyordu (hayalet calamity riski) — tüm referansları
+      (display name, tetikleme bloğu, Calamity Circle rengi, fonksiyonun kendisi, ölü
+      pickup handler, mağaza havuzu) komple silindi.
+      VFX prompt'u kullanıcıya verildi (Pixellab için, mor/violet spiral vorteks temalı,
+      mevcut parçacık rengiyle `Color(0.65, 0.1, 1.0)` eşleşecek şekilde).
+- [ ] **SIRADA: Iron Fortress (173)**
+- [ ] Shockwave (174)
+- [ ] Full Breach (175)
+- [ ] Momentum Burst (176)
+- [ ] Rampart Collapse (177)
+- [ ] WormHole (198)
+- [ ] Siege Rain (199)
+
+Not: Vector'a ait görünüp aslında Leila'ya ait olan iki Calamity kartı var (Lightning
+index 7, Flame Zone index 8) — bunlar Vector Calamity listesine dahil değil, karıştırma.
 
 ### UI eklentisi: Connected Core tooltip (2026-08-22)
 - Connected Core rozetinin ("◈ Bağlantılı Core") üzerine gelince artık native Godot
