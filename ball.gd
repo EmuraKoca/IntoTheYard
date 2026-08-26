@@ -1907,10 +1907,11 @@ func _hit_subject(subject: Node2D) -> void:
 		# Armor Core — sadece bu topa özel isabet başına armor kazan
 		if can_armor and player_node.has_armor_core and game_node_fx:
 			game_node_fx.gain_armor(player_node.armor_gain_per_hit)
-		# Steel Rhythm — Armor = Cap iken hit → +1 Momentum stack
+		# Steel Rhythm — Armor = Cap iken hit → +1 Momentum stack (maks %50'ye kadar doldurur)
 		if player_node.get("has_steel_rhythm") != null and player_node.has_steel_rhythm:
 			if game_node_fx and game_node_fx.player_armor >= game_node_fx.player_armor_cap and game_node_fx.player_armor_cap > 0:
-				player_node.gain_momentum(1)
+				if player_node.momentum_stacks < player_node.momentum_max * 0.5:
+					player_node.gain_momentum(1)
 		# Combat Rhythm — bu topun kendi N ardışık isabeti → Core anında geri döner
 		if player_node.get("has_combat_rhythm") and player_node.has_combat_rhythm:
 			_combat_rhythm_acc += 1

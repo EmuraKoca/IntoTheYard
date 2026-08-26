@@ -311,13 +311,82 @@ property okurken `:=` yerine açık tip kullanmaya dikkat et.
 
 **VECTOR UTILITY TAMAMLANDI (15/15 kart) — 2026-08-22**
 
-### SIRADAKİ AŞAMA: Vector Individuality
-Henüz başlanmadı, bir sonraki session'da başlanacak. Aynı 4 aşamalı süreç
-(İmplementasyon → Requires → TR açıklama → EN açıklama) uygulanacak. Momentum
-mekaniğinin baştan tasarımı (yukarıda) bu turdan önce bitirildi — Steel Rhythm (109),
-Risk Engine (60), Adrenal Surge (32), Fortified Core System (50) bu listede zaten var,
-Individuality review'i sırasında hem genel 4 aşama hem de yeni Momentum mimarisine göre
-uyumluluk kontrolü birlikte yapılacak.
+### İlerleme — Vector Individuality (21 kart, index sırasına göre) — TAMAMLANDI (2026-08-26)
+- [x] Blood for Steel (30) — çalışıyor: -10 Max HP, +10 Max Armor/Cap. Dil temiz, bug yok.
+- [x] Pain Converter (31) — çalışıyor: HP<%50 → Armor Gain ×1.5 (genel `mult` üzerinden,
+      tüm armor kaynaklarını etkiliyor). Dil temiz, bug yok.
+- [x] Adrenal Surge (32) — HP<%30 → Momentum stack'lerin Core Speed'e dönüşüm oranı ×2.
+      Tamamen `has_momentum_engine` bloğunun içinde, `requires: [35]` eklendi.
+- [x] Scar Tissue (33) — **BUG FIX**: kod -10 HP uyguluyordu ama TR açıklama "-5 HP"
+      diyordu (EN ile bile uyuşmuyordu) — TR "-10" olarak düzeltildi, Armor Cap/Regen
+      miktarları (+5 / +1 sn) da iki dile de eklendi (önceden hiç belirtilmiyordu).
+- [x] Emergency Protocol (34) — **KRİTİK BUG FIX**: -15 HP bedeli `player_damaged()`
+      (genel düşman hasar fonksiyonu) üzerinden veriliyordu — Armor önce absorbe ettiği
+      için gerçek HP kaybı garanti değildi, üstelik Armor tam sıfırlanırsa Momentum
+      Transfer'in run başına 1 kez çalışan acil "revive" hakkını boşa harcayabiliyordu.
+      Doğrudan `player_hp = max(1, player_hp - 15)` yapılacak şekilde düzeltildi. Ayrıca
+      TR açıklamadaki yanlış sayı (%100 → doğrusu %75) düzeltildi, EN alanındaki Türkçe
+      metin İngilizceye çevrildi.
+- [x] Reinforced Frame (48) — çalışıyor: +20 Armor Cap / Core Speed -%10. Tutarlılık için
+      `player_max_armor` senkron satırı eklendi (diğer benzer kartlarla aynı desen).
+- [x] Iron Constitution (49) — çalışıyor: `armor_gain_mult` ×1.25 (kümülatif havuz).
+      Dil temiz, bug yok.
+- [x] Fortified Core System (50) — **BUG FIX (bugünkü Momentum redesign'in yan etkisi)**:
+      cezası (`momentum_gain_mult *= 0.8`) artık hiçbir yerde okunmuyordu (eski vuruş
+      bazlı üretimin RNG şansıydı, silindi). Yeni hareket-bazlı sisteme uyarlandı:
+      `momentum_gen_interval *= 1.25` (matematiksel olarak yine tam -%20 üretim hızı).
+      `requires: [35]` eklendi.
+- [x] Blood Circuit (51) — çalışıyor: HP≤%70 iken Core Speed'e doğrusal +%0→%50 bonus.
+      Dil temiz, bug yok.
+- [x] Fractured Frame (52) — çalışıyor: Core Damage ×1.4 / Max HP -15. **BUG FIX**: HP
+      düşürme satırında güvenlik payı (floor clamp) yoktu, `max(1, ...)` eklendi (diğer
+      -HP kartlarıyla tutarlı hale getirildi).
+- [x] Glass Engine (53) — çalışıyor: HP<%50 → Armor Gain ×1.5, HP>%70 → Armor Gain ×0.7.
+      Açıklamaya kesin eşik sayıları (%50/%70) ve "Armor Gain" (sadece "Armor" değil)
+      netliği eklendi — kullanıcı isteğiyle.
+- [x] Overclocked Reflex (54) — çalışıyor: Core Speed ×1.2 / Armor Gain ×0.85. Dil temiz.
+- [x] Hyper Recovery Loop (56) — **ÇİFT BUG FIX**: TR açıklaması tamamen eski/yanlıştı
+      ("Core sıfır hasar verir" — kartın çok önceki bir versiyonundan kalma, patch
+      notlarına göre bu mekanik `hyper_loop_max_bounce`'a çevrilmiş ama TR hiç
+      güncellenmemiş). Üstelik `hyper_loop_max_bounce` değişkeninin kendisi de
+      `ball.gd`'de hiçbir yerde okunmuyordu — tamamen ölü kod. Kullanıcı kararıyla kart
+      sadeleştirildi: sadece "Core dönüş hızı ×1.5" kaldı, ölü değişken/atama silindi.
+- [x] Battlefield Anchor (58) — çalışıyor: `slow_duration_mult` ×2 (sadece Anchor Core'u
+      etkiliyor) / Player Speed -%10. `requires: [41]` eklendi (Anchor Core olmadan
+      upside tamamen ölüydü). Açıklama "Yavaşlatma süresi" yerine netlik için "Düşman
+      yavaşlama süresi" olarak güncellendi (kullanıcı isteğiyle, yanlış anlaşılabilirdi).
+- [x] Risk Engine (60) — **BUG FIX**: "Armor Gain -%30" cezası hiç implemente edilmemişti
+      (sadece "hasar→momentum" upside'ı vardı, kod tabanında ceza için hiçbir satır
+      yoktu) — Iron Constitution/Overclocked Reflex'le aynı desende `armor_gain_mult
+      *= 0.7` eklendi. `requires: [35]` eklendi.
+- [x] Iron Blood (105) — çalışıyor: alım anındaki Max HP'nin her 10'u için +1 Armor Cap
+      (tek seferlik). Ölü `var p` satırı temizlendi, açıklamaya "(tek seferlik/once)"
+      netliği eklendi, TR dil eksikliği giderildi.
+- [x] Steel Rhythm (109) — çalışıyor: Armor=Cap iken hit → +1 Momentum. **YENİ KOŞUL
+      (kullanıcı isteği)**: artık momentum'u sadece **maks %50'ye kadar** doldurabiliyor
+      (`momentum_stacks < momentum_max * 0.5` şartı eklendi) — geri kalan %50-100 aralığı
+      sadece hareketle (Momentum Engine) doldurulabiliyor, "asıl kaynak hareket" felsefesi
+      korunuyor. `requires: [35]` + TR dil eksikliği giderildi.
+- [x] Severance Protocol (111) — çalışıyor: HP ilk kez %40 altına düşünce +10 Armor Cap
+      (tek seferlik, bayrakla korunuyor). TR dil eksikliği giderildi.
+- [x] Inertia Plating (112) — çalışıyor: alım anındaki Momentum stack'inin 5'e bölünüp
+      yuvarlanmış hali kadar Armor Cap (tek seferlik). `requires: [35]` eklendi (Momentum
+      Engine'siz momentum_stacks hep 0, kart tamamen ölü kalıyordu), TR dil eksikliği
+      giderildi.
+- [x] Overclock Threshold (113) — çalışıyor: 20 Momentum stack'ine ulaşınca kalıcı Core
+      Damage ×1.3 (tek seferlik, bayrakla korunuyor). `requires: [35]` eklendi, TR dil
+      eksikliği giderildi.
+- [x] Momentum Transfer (169) — bugünkü Momentum redesign sırasında Utility'den bu
+      kategoriye taşınmış ve tamamen elden geçirilmişti (bkz. yukarıdaki Momentum bölümü),
+      Individuality review'inde ayrıca ele alınmadı.
+
+**VECTOR INDIVIDUALITY TAMAMLANDI (21/21 kart) — 2026-08-26**
+
+### SIRADAKİ AŞAMA: Vector Calamity
+Henüz başlanmadı. Aynı 4 aşamalı süreç (İmplementasyon → Requires → TR açıklama →
+EN açıklama) uygulanacak. Vector Calamity kartları tarihsel olarak en az sayıya sahip
+kategoriydi (CLAUDE.md'deki eski "Kart Dengesi" notlarına göre 0'dan başlamıştı,
+sonradan birkaç kart eklendi) — kaç kart olduğu review başında sayılıp teyit edilecek.
 
 ### UI eklentisi: Connected Core tooltip (2026-08-22)
 - Connected Core rozetinin ("◈ Bağlantılı Core") üzerine gelince artık native Godot

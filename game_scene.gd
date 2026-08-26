@@ -2326,41 +2326,41 @@ func _build_all_upgrades() -> void:
 	{"name": "Max Health Up",       "category": "Individuality", "color": Color(0.8, 0.2, 0.2), "desc": "Maximum HP +5",                             "index": 21, "weight": 8, "rarity": "common",   "chars": [],         "min_level": 0},
 	{"name": "Medkit",              "category": "Individuality", "color": Color(0.9, 0.1, 0.1), "desc": "+10 HP restored",                           "index": 20, "weight": 8, "rarity": "common",   "chars": [],         "min_level": 0},
 	{"name": "Gravitational Force", "category": "Calamity",      "color": Color(0.5, 0.0, 1.0), "desc": "Pulls subjects for 5s",                     "index": 9,  "weight": 8, "rarity": "common",   "chars": ["vector"], "min_level": 0},
-	{"name": "Hyper Recovery Loop", "category": "Individuality", "color": Color(0.3, 0.7, 1.0), "desc": "Core Return Speed ×1.5\nMax Bounce -2",        "index": 56, "weight": 8, "rarity": "common",   "chars": ["vector"], "min_level": 1},
+	{"name": "Hyper Recovery Loop", "category": "Individuality", "color": Color(0.3, 0.7, 1.0), "desc": "Core Return Speed ×1.5",        "index": 56, "weight": 8, "rarity": "common",   "chars": ["vector"], "min_level": 1},
 	# Lv1: Core davranışlarını öğretir
 	{"name": "Kinetic Core",        "category": "Identity",      "color": Color(0.2, 0.8, 0.6), "desc": "7 damage.\nEach wall bounce → +dmg",                   "index": 43, "weight": 8, "rarity": "uncommon", "chars": ["vector"], "min_level": 1},
 	{"name": "Bulwark Core",        "category": "Identity",      "color": Color(0.4, 0.5, 0.7), "desc": "3 damage.\nHit → +2 Armor",                            "index": 44, "weight": 8, "rarity": "uncommon", "chars": ["vector"], "min_level": 1},
 	{"name": "Impact Feedback",     "category": "Utility",       "color": Color(0.5, 0.3, 0.9), "desc": "Every 10 hits:\nArmor Core gain permanently +1 (max 10)", "index": 36, "weight": 6, "rarity": "uncommon", "chars": ["vector"], "min_level": 2, "requires": [40]},
-	{"name": "Battlefield Anchor",  "category": "Individuality", "color": Color(0.3, 0.5, 0.7), "desc": "Slow duration ×2 / Player Speed -%10",       "index": 58, "weight": 6, "rarity": "uncommon", "chars": ["vector"], "min_level": 2},
+	{"name": "Battlefield Anchor",  "category": "Individuality", "color": Color(0.3, 0.5, 0.7), "desc": "Enemy slow duration ×2 / Player Speed -%10",       "index": 58, "weight": 6, "rarity": "uncommon", "chars": ["vector"], "min_level": 2, "requires": [41]},
 	{"name": "Blood for Steel",     "category": "Individuality", "color": Color(0.7, 0.1, 0.1), "desc": "-10 HP  |  +10 Max Armor",                   "index": 30, "weight": 6, "rarity": "uncommon", "chars": ["vector"], "min_level": 2},
 	{"name": "Overclocked Reflex",  "category": "Individuality", "color": Color(0.9, 0.9, 0.2), "desc": "Core Speed +%20 / Armor Gain -%15",          "index": 54, "weight": 6, "rarity": "uncommon", "chars": ["vector"], "min_level": 2},
 	# Lv2: Armor ekonomisi
 	{"name": "Last Stand",          "category": "Utility",       "color": Color(1.0, 0.6, 0.0), "desc": "Low HP → bonus Core Speed\n& Armor Gain efficiency", "index": 38, "weight": 5, "rarity": "rare", "chars": ["vector"], "min_level": 3},
 	{"name": "Pain Converter",      "category": "Individuality", "color": Color(0.8, 0.2, 0.3), "desc": "HP <50%  →  Armor Gain +50%",                "index": 31, "weight": 5, "rarity": "rare",     "chars": ["vector"], "min_level": 3},
-	{"name": "Scar Tissue",         "category": "Individuality", "color": Color(0.6, 0.1, 0.1), "desc": "-10 Max HP  |  +Armor Cap  |  +Armor Regen",  "index": 33, "weight": 5, "rarity": "rare",     "chars": ["vector"], "min_level": 3},
+	{"name": "Scar Tissue",         "category": "Individuality", "color": Color(0.6, 0.1, 0.1), "desc": "-10 Max HP  |  +5 Armor Cap  |  +1 Armor Regen/s",  "index": 33, "weight": 5, "rarity": "rare",     "chars": ["vector"], "min_level": 3},
 	{"name": "Blood Circuit",       "category": "Individuality", "color": Color(0.8, 0.1, 0.1), "desc": "HP <= %70: Core Speed scales up to +%50",    "index": 51, "weight": 5, "rarity": "rare",     "chars": ["vector"], "min_level": 3},
 	{"name": "Kinetic Nervous System","category":"Individuality", "color": Color(0.2, 0.9, 0.6), "desc": "Momentum cap +10\n(20 → 30)", "index": 55, "weight": 4, "rarity": "rare", "chars": ["vector"], "min_level": 3},
 	# Lv3: Risk / Ödül
 	{"name": "Tempered Core",       "category": "Identity",      "color": Color(0.9, 0.7, 0.2), "desc": "Armor active → +3 dmg",                      "index": 47, "weight": 5, "rarity": "rare",     "chars": ["vector"], "min_level": 4},
-	{"name": "Glass Engine",        "category": "Individuality", "color": Color(0.5, 0.8, 0.9), "desc": "Low HP: Armor +%50 | High HP: Armor -%30",   "index": 53, "weight": 4, "rarity": "rare",     "chars": ["vector"], "min_level": 4},
-	{"name": "Fortified Core System","category":"Individuality",  "color": Color(0.4, 0.6, 0.8), "desc": "Armor Cap +15 / Momentum gain -%20",          "index": 50, "weight": 4, "rarity": "rare",     "chars": ["vector"], "min_level": 4},
+	{"name": "Glass Engine",        "category": "Individuality", "color": Color(0.5, 0.8, 0.9), "desc": "HP <50%: Armor Gain +50% | HP >70%: Armor Gain -30%",   "index": 53, "weight": 4, "rarity": "rare",     "chars": ["vector"], "min_level": 4},
+	{"name": "Fortified Core System","category":"Individuality",  "color": Color(0.4, 0.6, 0.8), "desc": "Armor Cap +15 / Momentum gain -%20",          "index": 50, "weight": 4, "rarity": "rare",     "chars": ["vector"], "min_level": 4, "requires": [35]},
 	{"name": "Adrenal Armor System", "category":"Individuality",  "color": Color(0.9, 0.3, 0.5), "desc": "Low HP: Armor +%30 | High HP: Core Speed +%10", "index": 59, "weight": 4, "rarity": "rare",  "chars": ["vector"], "min_level": 4},
 	# Lv4: Build specialization
 	{"name": "Bloodbound Core",     "category": "Identity",      "color": Color(0.7, 0.0, 0.1), "desc": "Missing HP → bonus dmg",                     "index": 46, "weight": 4,  "rarity": "epic",     "chars": ["vector"], "min_level": 4},
-	{"name": "Adrenal Surge",       "category": "Individuality", "color": Color(1.0, 0.4, 0.1), "desc": "HP <30%  →  Momentum Engine x2",             "index": 32, "weight": 3, "rarity": "epic",     "chars": ["vector"], "min_level": 5},
+	{"name": "Adrenal Surge",       "category": "Individuality", "color": Color(1.0, 0.4, 0.1), "desc": "HP <30%  →  Momentum Engine x2",             "index": 32, "weight": 3, "rarity": "epic",     "chars": ["vector"], "min_level": 5, "requires": [35]},
 	# Lv5: Run breaker
-	{"name": "Emergency Protocol",  "category": "Individuality", "color": Color(1.0, 0.9, 0.0), "desc": "Alındığında -15 HP\n+%75 Armor Gain (10s)",      "index": 34, "weight": 2,   "rarity": "legendary","chars": ["vector"], "min_level": 5},
-	{"name": "Risk Engine",         "category": "Individuality", "color": Color(0.8, 0.1, 0.3), "desc": "Damage taken → Momentum stacks / Armor Gain -%30", "index": 60, "weight": 3, "rarity": "epic", "chars": ["vector"], "min_level": 5},
+	{"name": "Emergency Protocol",  "category": "Individuality", "color": Color(1.0, 0.9, 0.0), "desc": "On pickup: -15 HP\n+75% Armor Gain (10s)",      "index": 34, "weight": 2,   "rarity": "legendary","chars": ["vector"], "min_level": 5},
+	{"name": "Risk Engine",         "category": "Individuality", "color": Color(0.8, 0.1, 0.3), "desc": "Damage taken → Momentum stacks / Armor Gain -%30", "index": 60, "weight": 3, "rarity": "epic", "chars": ["vector"], "min_level": 5, "requires": [35]},
 	{"name": "Fractured Frame",     "category": "Individuality", "color": Color(0.9, 0.4, 0.1), "desc": "Core Damage ×1.4 / Max HP -15",               "index": 52, "weight": 2, "rarity": "epic",     "chars": ["vector"], "min_level": 5},
 	{"name": "Pressure Valve",      "category": "Utility",       "color": Color(0.3, 0.8, 0.7), "desc": "Every 5 Momentum stacks:\ngain +1 Armor",     "index": 104, "weight": 6, "rarity": "uncommon", "chars": ["vector"], "min_level": 2, "requires": [35]},
 	# ↑ desc: dinamik gösterim lang.gd _dynamic_desc(104) ile sağlanıyor (pressure_valve_threshold: Lv1=5, Lv2=4, Lv3=3)
-	{"name": "Iron Blood",          "category": "Individuality", "color": Color(0.6, 0.2, 0.2), "desc": "Max HP → Armor Cap:\n+1 Cap per 10 Max HP",   "index": 105, "weight": 4, "rarity": "rare",     "chars": ["vector"], "min_level": 3},
+	{"name": "Iron Blood",          "category": "Individuality", "color": Color(0.6, 0.2, 0.2), "desc": "On pickup (once):\n+1 Armor Cap per 10 Max HP",   "index": 105, "weight": 4, "rarity": "rare",     "chars": ["vector"], "min_level": 3},
 	{"name": "Momentum Cascade",   "category": "Utility",       "color": Color(0.0, 0.85, 1.0), "desc": "12+ Momentum stacks:\nArmor Gain ×1.5",        "index": 108, "weight": 6, "rarity": "uncommon", "chars": ["vector"], "min_level": 2, "requires": [35]},
-	{"name": "Steel Rhythm",       "category": "Individuality", "color": Color(0.5, 0.65, 0.85),"desc": "Each hit while Armor = Cap:\n+1 Momentum stack", "index": 109, "weight": 5, "rarity": "uncommon", "chars": ["vector"], "min_level": 2},
+	{"name": "Steel Rhythm",       "category": "Individuality", "color": Color(0.5, 0.65, 0.85),"desc": "Each hit while Armor = Cap:\n+1 Momentum stack (fills up to 50% max)", "index": 109, "weight": 5, "rarity": "uncommon", "chars": ["vector"], "min_level": 2, "requires": [35]},
 	{"name": "Bulwark Surge",      "category": "Utility",       "color": Color(0.4, 0.7, 0.55), "desc": "Armor ≥ %75 Cap:\nCore Speed +%15",             "index": 110, "weight": 5, "rarity": "rare",     "chars": ["vector"], "min_level": 3},
 	{"name": "Severance Protocol", "category": "Individuality", "color": Color(0.9, 0.2, 0.15), "desc": "HP drops below 40%:\nArmor Cap +10 (once)",      "index": 111, "weight": 4, "rarity": "rare",     "chars": ["vector"], "min_level": 3},
-	{"name": "Inertia Plating",    "category": "Individuality", "color": Color(0.35, 0.5, 0.75),"desc": "Max Armor +5 per 5 Momentum\n(on pickup, once)", "index": 112, "weight": 4, "rarity": "rare",     "chars": ["vector"], "min_level": 4},
-	{"name": "Overclock Threshold","category": "Individuality", "color": Color(1.0, 0.75, 0.1), "desc": "20 Momentum stacks:\nCore Damage ×1.3 permanently", "index": 113, "weight": 3, "rarity": "epic",  "chars": ["vector"], "min_level": 5},
+	{"name": "Inertia Plating",    "category": "Individuality", "color": Color(0.35, 0.5, 0.75),"desc": "Max Armor +5 per 5 Momentum\n(on pickup, once)", "index": 112, "weight": 4, "rarity": "rare",     "chars": ["vector"], "min_level": 4, "requires": [35]},
+	{"name": "Overclock Threshold","category": "Individuality", "color": Color(1.0, 0.75, 0.1), "desc": "20 Momentum stacks:\nCore Damage ×1.3 permanently", "index": 113, "weight": 3, "rarity": "epic",  "chars": ["vector"], "min_level": 5, "requires": [35]},
 	# ── Vector — Utility (yeni) ───────────────────────────────────────────────
 	{"name": "Armor Rush",        "category": "Utility",       "color": Color(0.3, 0.8, 0.6),  "desc": "Momentum ≥ 13:\nArmor gain +1 (cancels below threshold)", "index": 164, "weight": 8,  "rarity": "common",    "chars": ["vector"], "min_level": 0, "requires": [35]},
 	{"name": "Combat Rhythm",     "category": "Utility",       "color": Color(0.4, 0.7, 0.9),  "desc": "6 consecutive hits:\nCore returns instantly",               "index": 165, "weight": 7,  "rarity": "uncommon",  "chars": ["vector"], "min_level": 1},
@@ -4148,7 +4148,8 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 		player_armor_regen_rate += 1.0
 		_update_armor_ui()
 	elif index == 34:  # Emergency Protocol
-		player_damaged(15)
+		player_hp = max(1, player_hp - 15)
+		update_ui()
 		_armor_gain_boost = 1.75
 		_armor_gain_boost_timer = 10.0
 		_spawn_emergency_vfx()
@@ -4186,16 +4187,18 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 	# ── Vector — Yeni Individuality kartlar ──────────────────────────────────
 	elif index == 48:  # Reinforced Frame
 		player_armor_cap += 20
+		player_max_armor = max(player_max_armor, player_armor_cap)
 		get_node("Player").orbit_speed_mult *= 0.9
 	elif index == 49:  # Iron Constitution
 		get_node("Player").armor_gain_mult *= 1.25
 	elif index == 50:  # Fortified Core System
 		player_armor_cap += 15
-		get_node("Player").momentum_gain_mult *= 0.8
+		player_max_armor = max(player_max_armor, player_armor_cap)
+		get_node("Player").momentum_gen_interval *= 1.25
 	elif index == 51:  # Blood Circuit
 		get_node("Player").has_blood_circuit = true
 	elif index == 52:  # Fractured Frame
-		player_max_hp -= 15
+		player_max_hp = max(1, player_max_hp - 15)
 		player_hp = mini(player_hp, player_max_hp)
 		get_node("Player").damage_mult *= 1.4
 		update_ui()
@@ -4208,7 +4211,6 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 		get_node("Player").momentum_max += 10
 	elif index == 56:  # Hyper Recovery Loop
 		get_node("Player").return_speed_mult     = 1.5
-		get_node("Player").hyper_loop_max_bounce = 4
 	elif index == 57:  # Magnetic Weight
 		get_node("Player").knockback_force_mult = 2.0
 		get_node("Player").orbit_speed_mult    *= 0.9
@@ -4220,10 +4222,10 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 	elif index == 60:  # Risk Engine
 		get_node("Player").has_risk_engine   = true
 		get_node("Player").armor_gain_mult  *= 0.7
+		get_node("Player").armor_gain_mult  *= 0.7
 	elif index == 104:  # Pressure Valve
 		get_node("Player").has_pressure_valve = true
 	elif index == 105:  # Iron Blood
-		var p := get_node("Player")
 		player_armor_cap += int(player_max_hp / 10)
 		player_max_armor = max(player_max_armor, player_armor_cap)
 		_update_armor_ui()

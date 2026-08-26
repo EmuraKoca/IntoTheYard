@@ -106,7 +106,6 @@ var damage_mult: float            = 1.0   # Fractured Frame
 var knockback_force_mult: float   = 1.0   # Magnetic Weight
 var slow_duration_mult: float     = 1.0   # Battlefield Anchor
 var return_speed_mult: float      = 1.0   # Hyper Recovery Loop
-var hyper_loop_max_bounce: int    = 6     # Hyper Recovery Loop: max bounce (4 olur)
 var has_blood_circuit: bool       = false
 var has_glass_engine: bool        = false
 var has_adrenal_armor: bool       = false # Adrenal Armor System
