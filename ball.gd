@@ -2647,8 +2647,10 @@ func _update_trail(_delta: float) -> void:
 		_update_trail_color()
 
 	if state == "flying" or state == "returning":
-		# Trail uzunluğu hıza göre dinamik: varsayılan hızda (600) yok, hız arttıkça uzar
-		var _dynamic_len: int = clamp(int((speed - 600.0) / 5.0), 0, 40)
+		# Trail uzunluğu hıza göre dinamik: dönüş rampasının doğal tavanı (680) referans
+		# alınıyor — vanilla dönüş hızlanması (600→680) trail'i tetiklemesin, sadece
+		# gerçek hız bonusları (Kinetic Surge, Ricochet Core vb.) tetiklesin.
+		var _dynamic_len: int = clamp(int((speed - 680.0) / 5.0), 0, 40)
 		trail_positions.append(global_position)
 		while trail_positions.size() > _dynamic_len:
 			trail_positions.pop_front()
