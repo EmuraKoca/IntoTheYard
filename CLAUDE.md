@@ -415,12 +415,56 @@ geçirilecek.
       kaldırmayı tercih etti — tüm referansları (kart havuzu, display name, tetikleme
       bloğu, `_activate_iron_fortress()` fonksiyonu, upgrade handler, debug test yorumu)
       silindi.
-- [ ] **SIRADA: Shockwave (174)**
-- [ ] Full Breach (175)
-- [ ] Momentum Burst (176)
-- [ ] Rampart Collapse (177)
+- [x] Shockwave (174) — çalışıyor: mevcut Armor/2 kadar (en az 1) AoE hasar, **Yard'daki
+      tüm düşmanlara** (x≥385 sınırı zaten doğruydu). Açıklama netleştirildi ("tüm
+      düşmanlar" → "Avlu'daki tüm düşmanlara", TR/EN'de "Yard" kelimesiyle). Dil bug'ı
+      düzeltildi (EN alanı Türkçe yazılmıştı). **VFX eklendi**: `_vfx_shockwave()` —
+      oyuncu üzerinde merkezlenen tek seferlik patlama sprite'ı (9 frame,
+      `assets/VFX/calamitys/shockwave/`), ölçek 0.6→7.0 büyüyor (kullanıcı 10'dan 7'ye
+      düşürdü), **Yard dışına taşmasın diye `Polygon2D` + `clip_children` ile kırpma
+      alanı eklendi** (x:385-1920, y:255-1080 — cadde/tribün sınırı `SegmentShape2D`
+      referans alındı). `_react_flash_screen()` de aynı Yard sınırına çekildi (paylaşımlı
+      fonksiyon, diğer tüm Calamity flaşlarını da düzeltti).
+- [x] Full Breach (175) — **KRİTİK BUG FIX**: "Armor sıfırlanır, 8s: Core Damage ×2.5"
+      diyordu ama sadece Armor sıfırlanıyordu, `×2.5` hiç uygulanmıyordu (`full_breach_
+      active`/`full_breach_timer` meta'ları set edilip hiç okunmuyordu — Iron Fortress'le
+      aynı hata deseni). Gerçek mekanik kuruldu: `player.gd`'ye `full_breach_mult`/
+      `_full_breach_timer` eklendi, `ball.gd`'nin hasar pipeline'ına bağlandı. **Ekstra
+      "güç hissi" eklendi**: aktivasyonda `screen_shake_heavy()`, 8s boyunca Yard'a sınırlı
+      kırmızı vignette (`_vfx_full_breach_vignette()`), aktifken her isabette büyük kırmızı
+      impact patlaması. `requires` gerekmiyor (Armor zaten Vector'ın temel sistemi). Dil
+      bug'ı düzeltildi.
+- [x] Momentum Burst (176) — **AYNI KRİTİK BUG FIX deseni**: "Tüm Momentum harca: +2 Core
+      Speed/stack (10s)" vaadi tamamen ölüydü (`momentum_burst_bonus`/`momentum_burst_
+      timer` meta'ları hiç okunmuyordu). Gerçek mekanik kuruldu: stack başına **+%5** Core
+      Speed (kullanıcı kararı — +2 sabit/  %2 az bulundu, %5 kabul edildi), `player.gd`'ye
+      `momentum_burst_bonus`/`_momentum_burst_timer` eklendi, orbit speed formülüne
+      `has_momentum_engine` şartından bağımsız bağlandı (stack sıfırlansa da çalışır).
+      `requires: [35]` eklendi, dil bug'ı düzeltildi.
+      **Görsel hız geri bildirimi kuruldu (kullanıcı isteği, momentum sisteminin geneli
+      için de geçerli)**: `ball.gd`'de zaten var olan ama kullanılmayan/bozuk iki trail
+      sistemi bulundu ve düzeltildi:
+      1. `_update_momentum_trail()` (CPUParticles2D, momentum stack sayısına göre
+         yoğunluk/renk/hız ölçekleniyordu) — **BUG FIX**: `top_level=true` eksikti,
+         parçacıklar topla birlikte hareket ediyordu (iz bırakmıyordu); ayrıca Momentum
+         Burst sırasında stack sıfırlandığı için tamamen kayboluyordu — Burst aktifken
+         `t=1.0` zorlanacak şekilde düzeltildi.
+      2. `_setup_trail()` (Line2D, genişlik eğrisi + HDR glow renk gradyanı, core tipine
+         göre renkleniyor) — **tamamen kapalıydı** (`return # devre dışı — test için`
+         satırı), açıldı. **Kullanıcı isteğiyle**: uzunluk artık topun o anki `speed`
+         değerine göre dinamik — `(speed - 600.0) / 5.0` formülü, 0-40 arası clamp
+         (varsayılan 600 hızda hiç görünmüyor, hızlandıkça uzuyor).
+      **DEBUG test kolaylığı eklendi**: `_ready()`'de run başlar başlamaz
+      `has_momentum_engine=true` + `momentum_stacks=10` set ediliyor (test bitince
+      kaldırılmalı).
+- [ ] **SIRADA: Rampart Collapse (177)**
 - [ ] WormHole (198)
 - [ ] Siege Rain (199)
+
+**DEBUG NOTU:** `game_scene.gd::_ready()`'de `_debug_test_calamity` değişkeni run başında
+otomatik bir Calamity veriyor (şu an "💨" Momentum Burst) — test bittiğinde bu satır ve
+momentum debug override'ı (`has_momentum_engine`/`momentum_stacks=10`) kaldırılmalı veya
+boşaltılmalı, kalıcı build'e sızmamalı.
 
 Not: Vector'a ait görünüp aslında Leila'ya ait olan iki Calamity kartı var (Lightning
 index 7, Flame Zone index 8) — bunlar Vector Calamity listesine dahil değil, karıştırma.

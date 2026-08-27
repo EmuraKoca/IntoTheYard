@@ -1635,6 +1635,11 @@ func _hit_subject(subject: Node2D) -> void:
 		if _dmg_player.damage_mult != 1.0:
 			total_damage = int(float(total_damage) * _dmg_player.damage_mult)
 
+	# Full Breach (Calamity): 8s süreyle Core Damage ×2.5 + büyük kırmızı impact patlaması
+	if _dmg_player and _dmg_player.get("full_breach_mult") != null and _dmg_player.full_breach_mult != 1.0:
+		total_damage = int(float(total_damage) * _dmg_player.full_breach_mult)
+		_spawn_impact_burst(global_position, Color(1.0, 0.2, 0.1), 22)
+
 	# System Overload: 5+ Glitch aktif düşman → +%20 hasar
 	if _dmg_player and _dmg_player.get("has_system_overload") and _dmg_player.has_system_overload:
 		var _glitch_count: int = 0
@@ -2504,6 +2509,7 @@ func _setup_momentum_trail() -> void:
 
 func _create_momentum_trail() -> void:
 	_momentum_trail = CPUParticles2D.new()
+	_momentum_trail.top_level = true  # dünya koordinatında sabit kalsın, topu takip etmesin
 	_momentum_trail.emitting = false
 	_momentum_trail.one_shot = false
 	_momentum_trail.explosiveness = 0.0
@@ -2522,18 +2528,23 @@ func _create_momentum_trail() -> void:
 
 func _update_momentum_trail() -> void:
 	var p := _get_player()
-	if not (p and p.get("has_momentum_engine") and p.has_momentum_engine):
+	if p == null:
+		return
+	var _burst_active: bool = p.get("_momentum_burst_timer") != null and p._momentum_burst_timer > 0.0
+	if not _burst_active and not (p.get("has_momentum_engine") and p.has_momentum_engine):
 		return
 	var stacks: int = p.momentum_stacks if p.get("momentum_stacks") != null else 0
-	if stacks <= 0 or state == "orbiting":
+	if (stacks <= 0 and not _burst_active) or state == "orbiting":
 		if is_instance_valid(_momentum_trail):
 			_momentum_trail.emitting = false
 		return
 	# İlk stack gelince trail'ı oluştur
 	if not is_instance_valid(_momentum_trail):
 		_create_momentum_trail()
+	_momentum_trail.global_position = global_position
 	_momentum_trail.emitting = true
-	var t: float = clamp(float(stacks) / 20.0, 0.0, 1.0)
+	# Momentum Burst aktifken kuyruk her zaman maksimum yoğunlukta (stack sıfırlansa bile)
+	var t: float = 1.0 if _burst_active else clamp(float(stacks) / 20.0, 0.0, 1.0)
 	_momentum_trail.amount = int(lerp(3.0, 20.0, t))
 	_momentum_trail.lifetime = lerp(0.12, 0.45, t)
 	_momentum_trail.initial_velocity_max = lerp(20.0, 60.0, t)
@@ -2544,7 +2555,6 @@ func _update_momentum_trail() -> void:
 		lerp(0.5, 0.9, t))
 
 func _setup_trail() -> void:
-	return  # Trail devre dışı — test için
 	trail = Line2D.new()
 	# top_level=true: does not inherit parent transform, drawn in world coordinates
 	trail.top_level = true
@@ -2637,12 +2647,13 @@ func _update_trail(_delta: float) -> void:
 		_update_trail_color()
 
 	if state == "flying" or state == "returning":
+		# Trail uzunluğu hıza göre dinamik: varsayılan hızda (600) yok, hız arttıkça uzar
+		var _dynamic_len: int = clamp(int((speed - 600.0) / 5.0), 0, 40)
 		trail_positions.append(global_position)
-		if trail_positions.size() > trail_max_length:
+		while trail_positions.size() > _dynamic_len:
 			trail_positions.pop_front()
 		trail.points = PackedVector2Array(trail_positions)
-		if not trail.visible:
-			trail.visible = true
+		trail.visible = _dynamic_len > 0
 	else:
 		# Orbiting / durmuş — trail yavaşça söner
 		if trail_positions.size() > 0:

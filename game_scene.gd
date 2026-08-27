@@ -1147,10 +1147,13 @@ func _ready() -> void:
 	#   9=🌀 Gravitational Force | 174=💥 Shockwave
 	#   175=🔓 Full Breach | 176=💨 Momentum Burst | 177=🏚️ Rampart Collapse
 	#   198=🌀🕳️ WormHole | 199=🌧️ Siege Rain
-	var _debug_test_calamity := "🌀"
+	var _debug_test_calamity := "💨"
 	if _debug_test_calamity != "" and calamity_slots.size() < max_calamity_slots:
 		calamity_slots.append(_debug_test_calamity)
 		update_ui()
+	# DEBUG: test kolaylığı için başlangıç momentum stack'i
+	get_node("Player").has_momentum_engine = true
+	get_node("Player").momentum_stacks = 10
 
 	await get_tree().process_frame
 	_spawn_hasmen_entrance()
@@ -2387,9 +2390,9 @@ func _build_all_upgrades() -> void:
 	{"name": "Overcharge Core",     "category": "Identity",      "color": Color(0.0, 0.7, 1.0),   "desc": "15+ Momentum: every 4s\ndeal 2 dmg pulse within 60px",          "index": 183, "weight": 4, "rarity": "rare",      "chars": ["vector"], "min_level": 3, "requires": [35]},
 	{"name": "Anchor Pulse Core",   "category": "Identity",      "color": Color(0.35, 0.5, 0.75), "desc": "Stationary for 5s: gain\n1 Armor every 1s",                     "index": 184, "weight": 5, "rarity": "uncommon",  "chars": ["vector"], "min_level": 1},
 	# ── Vector — Calamity ─────────────────────────────────────────────────────
-	{"name": "Shockwave",         "category": "Calamity",      "color": Color(0.5, 0.5, 0.9),  "desc": "Mevcut Armor/2 kadar AoE hasar\n(tüm düşmanlar)",           "index": 174, "weight": 2,  "rarity": "epic",      "chars": ["vector"], "min_level": 3},
-	{"name": "Full Breach",       "category": "Calamity",      "color": Color(0.9, 0.2, 0.1),  "desc": "Armor sıfırlanır, 8s:\nCore Damage ×2.5",                   "index": 175, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 4},
-	{"name": "Momentum Burst",    "category": "Calamity",      "color": Color(0.0, 0.8, 1.0),  "desc": "Tüm Momentum harca:\n+2 Core Speed/stack (10s)",            "index": 176, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 4},
+	{"name": "Shockwave",         "category": "Calamity",      "color": Color(0.5, 0.5, 0.9),  "desc": "AoE damage equal to Armor/2 to all enemies in the Yard",           "index": 174, "weight": 2,  "rarity": "epic",      "chars": ["vector"], "min_level": 3},
+	{"name": "Full Breach",       "category": "Calamity",      "color": Color(0.9, 0.2, 0.1),  "desc": "Armor resets, 8s:\nCore Damage ×2.5",                   "index": 175, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 4},
+	{"name": "Momentum Burst",    "category": "Calamity",      "color": Color(0.0, 0.8, 1.0),  "desc": "Spend all Momentum:\n+5% Core Speed per stack (10s)",            "index": 176, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 4, "requires": [35]},
 	{"name": "Rampart Collapse",  "category": "Calamity",      "color": Color(0.7, 0.4, 0.2),  "desc": "Armor Cap kadar hasar (tek hedef)\nArmor sıfırlanır",       "index": 177, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 5},
 	{"name": "WormHole",          "category": "Calamity",      "color": Color(0.4, 0.0, 0.8),  "desc": "5s: önünde solucan deliği açılır\nYaklaşan düşmanlar ışınlanır (Boss hariç)", "index": 198, "weight": 2, "rarity": "legendary", "chars": ["vector"], "min_level": 4},
 	{"name": "Siege Rain",        "category": "Calamity",      "color": Color(0.4, 0.4, 0.5),  "desc": "7s boyunca hedef alana\nher 0.5s'de Siege Core düşer",     "index": 199, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 4},
@@ -3023,15 +3026,70 @@ func _activate_shockwave() -> void:
 		if is_instance_valid(subject) and subject.global_position.x >= 385.0:
 			subject.take_damage(dmg, false)
 	_react_flash_screen(Color(0.6, 0.6, 1.0, 0.5))
+	_vfx_shockwave()
+
+func _vfx_shockwave() -> void:
+	var pos: Vector2 = _player_node.global_position if is_instance_valid(_player_node) else get_node("Player").global_position
+
+	# Yard dışına (cadde/tribün tarafına) taşmasın diye kırpma alanı
+	# Saha sınırı: x 385→1920, y 0→1080 (diğer alan-efektleriyle aynı sınır)
+	var clip := Node2D.new()
+	clip.z_index = 1
+	add_child(clip)
+	var mask := Polygon2D.new()
+	mask.color = Color(0, 0, 0, 0)
+	mask.polygon = PackedVector2Array([
+		Vector2(385.0, 255.0), Vector2(1920.0, 255.0),
+		Vector2(1920.0, 1080.0), Vector2(385.0, 1080.0)
+	])
+	clip.add_child(mask)
+	clip.clip_children = CanvasItem.CLIP_CHILDREN_ONLY
+
+	var burst := AnimatedSprite2D.new()
+	burst.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	burst.position = pos
+	burst.scale = Vector2(0.6, 0.6)
+	var sf := SpriteFrames.new()
+	if sf.has_animation("default"): sf.remove_animation("default")
+	sf.add_animation("burst")
+	sf.set_animation_speed("burst", 13.0)
+	sf.set_animation_loop("burst", false)
+	for i in range(9):
+		sf.add_frame("burst", load("res://assets/VFX/calamitys/shockwave/frame_%03d.png" % i))
+	burst.sprite_frames = sf
+	clip.add_child(burst)
+	burst.play("burst")
+	var burst_tw := create_tween()
+	burst_tw.tween_property(burst, "scale", Vector2(7.0, 7.0), 0.7)\
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	burst.animation_finished.connect(func():
+		if is_instance_valid(clip): clip.queue_free()
+	)
 
 func _activate_full_breach() -> void:
 	var p := get_node_or_null("Player")
 	if p == null: return
 	player_armor = 0
 	_update_armor_ui()
-	p.set_meta("full_breach_timer", 8.0)
-	p.set_meta("full_breach_active", true)
+	p.full_breach_mult = 2.5
+	p._full_breach_timer = 8.0
 	_react_flash_screen(Color(1.0, 0.2, 0.1, 0.5))
+	screen_shake_heavy()
+	_vfx_full_breach_vignette()
+
+func _vfx_full_breach_vignette() -> void:
+	var vignette := ColorRect.new()
+	vignette.color = Color(1.0, 0.15, 0.05, 0.0)
+	vignette.position = Vector2(385, 255)
+	vignette.size = Vector2(1920 - 385, 1080 - 255)
+	vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vignette.z_index = 9
+	add_child(vignette)
+	var tw := create_tween()
+	tw.tween_property(vignette, "color:a", 0.18, 0.3)
+	tw.tween_interval(7.2)
+	tw.tween_property(vignette, "color:a", 0.0, 0.5)
+	tw.tween_callback(vignette.queue_free)
 
 func _activate_momentum_burst() -> void:
 	var p := get_node_or_null("Player")
@@ -3039,9 +3097,8 @@ func _activate_momentum_burst() -> void:
 	var stacks: int = p.momentum_stacks
 	if stacks <= 0: return
 	p.momentum_stacks = 0
-	var bonus: float = stacks * 2.0
-	p.set_meta("momentum_burst_bonus", bonus)
-	p.set_meta("momentum_burst_timer", 10.0)
+	p.momentum_burst_bonus = float(stacks) * 0.05
+	p._momentum_burst_timer = 10.0
 	_react_flash_screen(Color(0.0, 0.9, 1.0, 0.4))
 
 func _activate_rampart_collapse() -> void:
@@ -3245,7 +3302,8 @@ func _activate_wildfire() -> void:
 func _react_flash_screen(color: Color) -> void:
 	var flash := ColorRect.new()
 	flash.color = color
-	flash.size = Vector2(1920, 1080)
+	flash.position = Vector2(385, 255)
+	flash.size = Vector2(1920 - 385, 1080 - 255)
 	flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	flash.z_index = 10
 	add_child(flash)

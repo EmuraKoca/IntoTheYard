@@ -103,6 +103,10 @@ var orbit_speed_mult: float       = 1.0   # Reinforced Frame, Overclocked Reflex
 var armor_gain_mult: float        = 1.0   # Iron Constitution, Overclocked Reflex, vb.
 var momentum_gain_mult: float     = 1.0   # Fortified Core System
 var damage_mult: float            = 1.0   # Fractured Frame
+var full_breach_mult: float       = 1.0   # Full Breach (Calamity): 8s süreyle ×2.5
+var _full_breach_timer: float     = 0.0
+var momentum_burst_bonus: float   = 0.0   # Momentum Burst (Calamity): 10s süreyle Core Speed'e ek bonus
+var _momentum_burst_timer: float  = 0.0
 var knockback_force_mult: float   = 1.0   # Magnetic Weight
 var slow_duration_mult: float     = 1.0   # Battlefield Anchor
 var return_speed_mult: float      = 1.0   # Hyper Recovery Loop
@@ -568,6 +572,18 @@ func _physics_process(delta: float) -> void:
 		_primal_instinct_timer -= delta
 	if _ghost_step_cooldown > 0.0:
 		_ghost_step_cooldown -= delta
+	# Full Breach (Calamity): 8s süreyle Core Damage ×2.5
+	if _full_breach_timer > 0.0:
+		_full_breach_timer -= delta
+		if _full_breach_timer <= 0.0:
+			_full_breach_timer = 0.0
+			full_breach_mult = 1.0
+	# Momentum Burst (Calamity): 10s süreyle Core Speed bonusu
+	if _momentum_burst_timer > 0.0:
+		_momentum_burst_timer -= delta
+		if _momentum_burst_timer <= 0.0:
+			_momentum_burst_timer = 0.0
+			momentum_burst_bonus = 0.0
 	# RTS modu — en yakın düşmana otomatik ateş
 	if rts_mode and not orbit_balls.is_empty():
 		_rts_fire_timer -= delta
@@ -674,6 +690,9 @@ func _physics_process(delta: float) -> void:
 		_effective_orbit_speed = ORBIT_SPEED * orbit_speed_mult * (1.0 + float(momentum_stacks) * momentum_speed_bonus * stack_mult + last_stand_bonus)
 	elif last_stand_bonus > 0.0:
 		_effective_orbit_speed = ORBIT_SPEED * orbit_speed_mult * (1.0 + last_stand_bonus)
+	# Momentum Burst (Calamity): 10s süreyle ek Core Speed bonusu (stack sıfırlansa da bağımsız çalışır)
+	if momentum_burst_bonus > 0.0:
+		_effective_orbit_speed *= 1.0 + momentum_burst_bonus
 	# Blood Circuit: HP <= %70 iken hız artar (max +%50 at 0 HP)
 	if has_blood_circuit and game_node:
 		var hp_ratio: float = float(game_node.player_hp) / float(max(game_node.player_max_hp, 1))
