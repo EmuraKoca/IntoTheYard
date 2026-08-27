@@ -399,8 +399,23 @@ geçirilecek.
       pickup handler, mağaza havuzu) komple silindi.
       VFX prompt'u kullanıcıya verildi (Pixellab için, mor/violet spiral vorteks temalı,
       mevcut parçacık rengiyle `Color(0.65, 0.1, 1.0)` eşleşecek şekilde).
-- [ ] **SIRADA: Iron Fortress (173)**
-- [ ] Shockwave (174)
+      **VFX tamamlandı (2026-08-26, evde test edildi)**: kullanıcı `assets/VFX/calamitys/
+      gravitationalForce/` klasörüne 8 frame'lik gerçek sprite animasyonu ekledi, elle
+      çizilmiş vorteks halkası (`draw_arc`) bununla değiştirildi (`AnimatedSprite2D`,
+      10 fps, spin loop). **BUG FIX**: VFX z_index'i (4-5) düşmanların z_index'inin (temel
+      düşmanlar 2, boss'lar 3) üstündeydi, düşmanlar sprite'ın arkasında kalıyordu — hem
+      parçacıklar hem vorteks z_index=1'e çekildi (tüm düşman tiplerinin altında). Ayrıca
+      kullanıcı isteğiyle: %65 saydamlık (`modulate` alpha) + süre başında ortadan büyüyüp
+      (1s, scale 0→2.0, TRANS_BACK) süre bitmeden 1s önce tekrar sıfıra küçülen scale
+      animasyonu eklendi.
+- [x] **Iron Fortress (173) — KALDIRILDI (kullanıcı kararı, 2026-08-26)**: açıklama "Tüm
+      Momentum → Armor (stack başına +1, 8s)" diyordu ama kod tamamen anlık çalışıyordu
+      (`momentum_stacks` sıfırlanıp aynı miktar Armor'a ekleniyordu), "8s" hiçbir yerde
+      karşılığı olmayan anlamsız bir ifadeydi. Kullanıcı düzeltmek yerine kartı komple
+      kaldırmayı tercih etti — tüm referansları (kart havuzu, display name, tetikleme
+      bloğu, `_activate_iron_fortress()` fonksiyonu, upgrade handler, debug test yorumu)
+      silindi.
+- [ ] **SIRADA: Shockwave (174)**
 - [ ] Full Breach (175)
 - [ ] Momentum Burst (176)
 - [ ] Rampart Collapse (177)

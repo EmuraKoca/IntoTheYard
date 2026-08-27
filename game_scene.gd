@@ -79,7 +79,6 @@ const _CALAMITY_DISPLAY_NAMES: Dictionary = {
 	"🎱":  "Bounce Barrage",
 	"🪞":  "Mirror Image",
 	"🧪":  "Systemic Failure",
-	"🛡️": "Iron Fortress",
 	"💥":  "Shockwave",
 	"🔓":  "Full Breach",
 	"💨":  "Momentum Burst",
@@ -1142,6 +1141,16 @@ func _ready() -> void:
 		for _ci in range(min(_cal_start, max_calamity_slots)):
 			calamity_slots.append(_cal_pool[_ci])
 	$UI/CalamityCircle.visible = false
+
+	# ── DEBUG: Test Calamity Override (test bitince kaldır/boşalt) ────────────
+	# Vector Calamity emoji/index tablosu:
+	#   9=🌀 Gravitational Force | 174=💥 Shockwave
+	#   175=🔓 Full Breach | 176=💨 Momentum Burst | 177=🏚️ Rampart Collapse
+	#   198=🌀🕳️ WormHole | 199=🌧️ Siege Rain
+	var _debug_test_calamity := "🌀"
+	if _debug_test_calamity != "" and calamity_slots.size() < max_calamity_slots:
+		calamity_slots.append(_debug_test_calamity)
+		update_ui()
 
 	await get_tree().process_frame
 	_spawn_hasmen_entrance()
@@ -2378,7 +2387,6 @@ func _build_all_upgrades() -> void:
 	{"name": "Overcharge Core",     "category": "Identity",      "color": Color(0.0, 0.7, 1.0),   "desc": "15+ Momentum: every 4s\ndeal 2 dmg pulse within 60px",          "index": 183, "weight": 4, "rarity": "rare",      "chars": ["vector"], "min_level": 3, "requires": [35]},
 	{"name": "Anchor Pulse Core",   "category": "Identity",      "color": Color(0.35, 0.5, 0.75), "desc": "Stationary for 5s: gain\n1 Armor every 1s",                     "index": 184, "weight": 5, "rarity": "uncommon",  "chars": ["vector"], "min_level": 1},
 	# ── Vector — Calamity ─────────────────────────────────────────────────────
-	{"name": "Iron Fortress",     "category": "Calamity",      "color": Color(0.4, 0.6, 0.8),  "desc": "Tüm Momentum → Armor\n(stack başına +1, 8s)",               "index": 173, "weight": 2,  "rarity": "epic",      "chars": ["vector"], "min_level": 3},
 	{"name": "Shockwave",         "category": "Calamity",      "color": Color(0.5, 0.5, 0.9),  "desc": "Mevcut Armor/2 kadar AoE hasar\n(tüm düşmanlar)",           "index": 174, "weight": 2,  "rarity": "epic",      "chars": ["vector"], "min_level": 3},
 	{"name": "Full Breach",       "category": "Calamity",      "color": Color(0.9, 0.2, 0.1),  "desc": "Armor sıfırlanır, 8s:\nCore Damage ×2.5",                   "index": 175, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 4},
 	{"name": "Momentum Burst",    "category": "Calamity",      "color": Color(0.0, 0.8, 1.0),  "desc": "Tüm Momentum harca:\n+2 Core Speed/stack (10s)",            "index": 176, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 4},
@@ -3009,15 +3017,6 @@ func _clear_mirror_image() -> void:
 	_mirror_image_balls.clear()
 
 # ── Vector Calamity ───────────────────────────────────────────────────────────
-func _activate_iron_fortress() -> void:
-	var p := get_node_or_null("Player")
-	if p == null: return
-	var stacks: int = p.momentum_stacks
-	if stacks <= 0: return
-	p.momentum_stacks = 0
-	gain_armor(stacks)
-	_react_flash_screen(Color(0.4, 0.6, 0.9, 0.4))
-
 func _activate_shockwave() -> void:
 	var dmg: int = max(1, player_armor / 2)
 	for subject in get_tree().get_nodes_in_group("subjects"):
@@ -3297,8 +3296,6 @@ func _input(event: InputEvent) -> void:
 				_activate_mirror_image()
 			elif calamity == "🧪":  # Systemic Failure
 				_activate_systemic_failure()
-			elif calamity == "🛡️":  # Iron Fortress
-				_activate_iron_fortress()
 			elif calamity == "💥":  # Shockwave
 				_activate_shockwave()
 			elif calamity == "🔓":  # Full Breach
@@ -3686,7 +3683,7 @@ func _vfx_gravity(pos: Vector2) -> void:
 	# Dönen spiral parçacıklar
 	var particles := CPUParticles2D.new()
 	particles.global_position       = pos
-	particles.z_index                = 4
+	particles.z_index                = 1
 	particles.amount                 = 80
 	particles.lifetime               = 1.2
 	particles.explosiveness          = 0.0
@@ -3705,28 +3702,38 @@ func _vfx_gravity(pos: Vector2) -> void:
 	particles.color_ramp             = _make_gravity_gradient()
 	add_child(particles)
 
-	# Merkez vorteks halkası — büyüyüp küçülüyor
-	var vortex := Node2D.new()
+	# Merkez vorteks — gerçek sprite animasyonu
+	var vortex := AnimatedSprite2D.new()
+	vortex.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	vortex.z_index = 1
+	vortex.modulate = Color(1, 1, 1, 0.65)
+	vortex.scale = Vector2.ZERO
 	vortex.global_position = pos
-	vortex.z_index = 5
+	var vsf := SpriteFrames.new()
+	if vsf.has_animation("default"): vsf.remove_animation("default")
+	vsf.add_animation("spin")
+	vsf.set_animation_speed("spin", 10.0)
+	vsf.set_animation_loop("spin", true)
+	for i in range(8):
+		vsf.add_frame("spin", load("res://assets/VFX/calamitys/gravitationalForce/frame_%03d.png" % i))
+	vortex.sprite_frames = vsf
 	add_child(vortex)
-	var vr := 0.0
-	var vtw := create_tween().set_loops()
-	vtw.tween_method(func(r: float):
-		vr = r
-		if is_instance_valid(vortex): vortex.queue_redraw(),
-		8.0, 55.0, 0.6)
-	vtw.tween_method(func(r: float):
-		vr = r
-		if is_instance_valid(vortex): vortex.queue_redraw(),
-		55.0, 8.0, 0.6)
-	vortex.draw.connect(func():
-		vortex.draw_arc(Vector2.ZERO, vr, 0, TAU, 48, Color(0.8, 0.2, 1.0, 0.7), 3.0)
-		vortex.draw_arc(Vector2.ZERO, vr * 0.5, 0, TAU, 32, Color(0.5, 0.0, 1.0, 0.5), 2.0)
-	)
+	vortex.play("spin")
+
+	# Ortadan büyüyüp süre bitmeden kenardan küçülen scale animasyonu
+	var _target_scale := Vector2(2.0, 2.0)
+	var _grow_time := 1.0
+	var _shrink_time := 1.0
+	var scale_tw := create_tween()
+	scale_tw.tween_property(vortex, "scale", _target_scale, _grow_time)\
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	scale_tw.tween_interval(max(duration - _grow_time - _shrink_time, 0.0))
+	scale_tw.tween_property(vortex, "scale", Vector2.ZERO, _shrink_time)\
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
 
 	await get_tree().create_timer(duration).timeout
-	vtw.kill()
+	if is_instance_valid(scale_tw):
+		scale_tw.kill()
 	if is_instance_valid(vortex):
 		vortex.queue_free()
 	if is_instance_valid(particles):
@@ -4258,9 +4265,6 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 	elif index == 196: $BallLauncher.queue_upgrade_ball("rogues_eye_core")
 	elif index == 197: $BallLauncher.queue_upgrade_ball("circuit_overload_core")
 	# ── Vector — Calamity ─────────────────────────────────────────────────────
-	elif index == 173:  # Iron Fortress
-		if calamity_slots.size() < max_calamity_slots:
-			calamity_slots.append("🛡️")
 	elif index == 174:  # Shockwave
 		if calamity_slots.size() < max_calamity_slots:
 			calamity_slots.append("💥")
