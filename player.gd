@@ -72,6 +72,7 @@ var _momentum_decay_acc: float = 0.0    # 3s'de 1 tükenme sayacı
 var _momentum_gen_timer: float = 0.0    # 4s'de 1 üretim sayacı (Momentum Engine)
 var has_momentum_field_core: bool = false  # Momentum Engine üretimine +1 ekler
 var momentum_gen_interval: float = 4.0  # Lv1:4s  Lv2:4s  Lv3:3s
+var core_speed_mult: float = 1.0        # Fırlatılan/dönen topların hızına uygulanan toplam "Core Speed" çarpanı (ball.gd okur)
 
 # Momentum stack'i kaynağı fark etmeksizin artırır (Pressure Valve buradan besleniyor)
 func gain_momentum(amount: int) -> void:
@@ -676,49 +677,54 @@ func _physics_process(delta: float) -> void:
 		_momentum_decay_acc = 0.0
 
 	# ── Orbit pozisyonlama ────────────────────────────────────────────────────
-	var _effective_orbit_speed: float = ORBIT_SPEED * orbit_speed_mult
 	var game_node := get_tree().get_first_node_in_group("game")
 	# Last Stand: eksik HP başına ekstra bonus (Momentum Engine'den bağımsız çalışır)
 	var last_stand_bonus: float = 0.0
 	if has_last_stand and game_node:
 		last_stand_bonus = float(game_node.player_max_hp - game_node.player_hp) * last_stand_hp_mult
+	# ── Core Speed: fırlatılan/dönen topun gerçek speed'ine uygulanır (ball.gd okur) ──
+	# Not: eskiden bu hesap "_effective_orbit_speed" adında hiçbir yerde okunmayan ölü
+	# bir değişkene yazılıyordu (orbit toplar dönmüyor, silah pozisyonunda duruyor) —
+	# tüm bu kartlar fiilen hiçbir etki yaratmıyordu. Artık core_speed_mult üzerinden
+	# gerçekten fırlatılan/dönen topun hızına uygulanıyor.
+	core_speed_mult = orbit_speed_mult
 	if has_momentum_engine and momentum_stacks > 0:
 		# Adrenal Surge: HP %30 altında Momentum x2
 		var stack_mult: float = 1.0
 		if has_adrenal_surge and game_node and float(game_node.player_hp) / float(max(game_node.player_max_hp, 1)) < 0.3:
 			stack_mult = 2.0
-		_effective_orbit_speed = ORBIT_SPEED * orbit_speed_mult * (1.0 + float(momentum_stacks) * momentum_speed_bonus * stack_mult + last_stand_bonus)
+		core_speed_mult = orbit_speed_mult * (1.0 + float(momentum_stacks) * momentum_speed_bonus * stack_mult + last_stand_bonus)
 	elif last_stand_bonus > 0.0:
-		_effective_orbit_speed = ORBIT_SPEED * orbit_speed_mult * (1.0 + last_stand_bonus)
+		core_speed_mult = orbit_speed_mult * (1.0 + last_stand_bonus)
 	# Momentum Burst (Calamity): 10s süreyle ek Core Speed bonusu (stack sıfırlansa da bağımsız çalışır)
 	if momentum_burst_bonus > 0.0:
-		_effective_orbit_speed *= 1.0 + momentum_burst_bonus
+		core_speed_mult *= 1.0 + momentum_burst_bonus
 	# Blood Circuit: HP <= %70 iken hız artar (max +%50 at 0 HP)
 	if has_blood_circuit and game_node:
 		var hp_ratio: float = float(game_node.player_hp) / float(max(game_node.player_max_hp, 1))
 		if hp_ratio <= 0.7:
-			_effective_orbit_speed *= 1.0 + (0.7 - hp_ratio) / 0.7 * 0.5
+			core_speed_mult *= 1.0 + (0.7 - hp_ratio) / 0.7 * 0.5
 	# Adrenal Armor System: HP > %70 → Core Speed +%10
 	if has_adrenal_armor and game_node:
 		var hp_r: float = float(game_node.player_hp) / float(max(game_node.player_max_hp, 1))
 		if hp_r > 0.7:
-			_effective_orbit_speed *= 1.1
+			core_speed_mult *= 1.1
 	# Bulwark Surge: Armor ≥ eşik → Core Speed ×mult
 	if get("has_bulwark_surge") != null and has_bulwark_surge and game_node:
 		var _armor_ratio: float = float(game_node.player_armor) / float(max(game_node.player_armor_cap, 1))
 		if _armor_ratio >= bulwark_surge_threshold:
-			_effective_orbit_speed *= bulwark_surge_mult
+			core_speed_mult *= bulwark_surge_mult
 	# Mana Overflow: Calamity sonrası 5s boyunca Core Speed +%50
 	if mana_overflow_timer > 0.0:
 		mana_overflow_timer -= delta
-		_effective_orbit_speed *= 1.5
+		core_speed_mult *= 1.5
 	# Bounce Barrage (Calamity): 5s boyunca Core Speed ×3
 	if bounce_barrage_timer > 0.0:
 		bounce_barrage_timer -= delta
-		_effective_orbit_speed *= 3.0
+		core_speed_mult *= 3.0
 	# Elemental Harmony: aktif unique element başına +%5 Core Speed
 	if has_elemental_harmony_util and elemental_harmony_bonus > 0.0:
-		_effective_orbit_speed *= (1.0 + elemental_harmony_bonus)
+		core_speed_mult *= (1.0 + elemental_harmony_bonus)
 	# Orbit topları silah sprite'ının üstünde durur
 	var _weapon_offset := Vector2(20, -24)
 	var n := orbit_balls.size()

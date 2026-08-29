@@ -408,6 +408,12 @@ func _get_player() -> Node2D:
 		_cached_player = get_tree().get_first_node_in_group("player")
 	return _cached_player
 
+func _get_core_speed_mult() -> float:
+	var p := _get_player()
+	if p == null or p.get("core_speed_mult") == null:
+		return 1.0
+	return p.core_speed_mult
+
 func launch(direction: Vector2, spd: float = 600.0) -> void:
 	hit_subjects.clear()
 	_pb_bounce_streak = 0
@@ -672,7 +678,7 @@ func _physics_process(delta: float) -> void:
 		mimic_color_time += get_process_delta_time()
 		queue_redraw()
 
-	var collision = move_and_collide(move_direction * speed * delta)
+	var collision = move_and_collide(move_direction * speed * _get_core_speed_mult() * delta)
 	if collision:
 		var collider = collision.get_collider()
 		if collider.is_in_group("subjects"):
@@ -815,7 +821,7 @@ func _process_returning(delta: float) -> void:
 		move_direction.y = -abs(move_direction.y)
 
 	# Dönerken de düşmana çarpar (tam hasar)
-	var collision = move_and_collide(move_direction * speed * delta)
+	var collision = move_and_collide(move_direction * speed * _get_core_speed_mult() * delta)
 	if collision:
 		var collider = collision.get_collider()
 		if collider.is_in_group("subjects"):
@@ -2647,10 +2653,13 @@ func _update_trail(_delta: float) -> void:
 		_update_trail_color()
 
 	if state == "flying" or state == "returning":
-		# Trail uzunluğu hıza göre dinamik: dönüş rampasının doğal tavanı (680) referans
-		# alınıyor — vanilla dönüş hızlanması (600→680) trail'i tetiklemesin, sadece
-		# gerçek hız bonusları (Kinetic Surge, Ricochet Core vb.) tetiklesin.
-		var _dynamic_len: int = clamp(int((speed - 680.0) / 5.0), 0, 40)
+		# Trail uzunluğu gerçek hıza (Momentum çarpanı dahil) göre dinamik: dönüş
+		# rampasının doğal tavanı (680) referans alınıyor — vanilla dönüş hızlanması
+		# (600→680) trail'i tetiklemesin, sadece gerçek hız bonusları (Kinetic Surge,
+		# Ricochet Core, Momentum stack/Burst vb.) tetiklesin.
+		var _effective_speed: float = speed * _get_core_speed_mult()
+		# Tüm hızlar için uzunluk kısaltıldı (aşırı hızda göz yormasın diye)
+		var _dynamic_len: int = clamp(int((_effective_speed - 680.0) / 5.0 * 0.5), 0, 20)
 		trail_positions.append(global_position)
 		while trail_positions.size() > _dynamic_len:
 			trail_positions.pop_front()

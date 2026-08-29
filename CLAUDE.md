@@ -457,9 +457,69 @@ geçirilecek.
       **DEBUG test kolaylığı eklendi**: `_ready()`'de run başlar başlamaz
       `has_momentum_engine=true` + `momentum_stacks=10` set ediliyor (test bitince
       kaldırılmalı).
-- [ ] **SIRADA: Rampart Collapse (177)**
-- [ ] WormHole (198)
+- [x] Rampart Collapse (177) — implementasyon doğru (en yakın hedefe Armor Cap kadar hasar,
+      Armor sıfırlanır), requires gerekmiyor (Armor Cap her zaman mevcut). **Dil bug'ı**
+      (aynı tekrarlayan desen): EN `desc` alanı Türkçe yazılmıştı → düzeltildi, `lang.gd`'de
+      hiç TR girdisi yoktu → eklendi.
+      **VFX komple yeniden inşa edildi (kullanıcı isteğiyle, 2 aşamalı gerçek sprite akışı)**:
+      önceki tek seferlik ekran flaşı + jenerik parçacık yerine, kullanıcının tarif ettiği
+      "tekli hedefe nişan" hissi kuruldu:
+      1. **Aşama 1 — Şarj**: `_vfx_rampart_charge()`, player üzerinde oynayan bir
+         `AnimatedSprite2D` (`assets/VFX/calamitys/rampartCollapse/charge/frame_000..007.png`,
+         henüz kullanıcı tarafından eklenmedi) — hexagon Armor parçaları bir noktada
+         yoğunlaşıyor.
+      2. **Core fırlatma**: şarj animasyonunun **son frame'i** projectile sprite'ı olarak
+         yeniden kullanılıyor (`_spawn_rampart_projectile()`), hedefe 0.22s'lik bir tween ile
+         fırlıyor (`_fire_rampart_core()`).
+      3. **Aşama 2 — Patlama**: hedefe ulaşınca tek seferlik hasar uygulanıyor, ardından
+         `_vfx_rampart_impact()` oynuyor (`assets/VFX/calamitys/rampartCollapse/impact/
+         frame_000..007.png`, henüz eklenmedi) + screen shake + parçacık patlaması +
+         Yard-sınırlı ekran flaşı.
+      Sprite dosyaları henüz yoksa kod crash etmiyor (`ResourceLoader.exists` guard'ı),
+      sadece kısa bir gecikme + parçacık efektiyle çalışıyor.
+      **Renk düzeltmesi**: ilk taslakta turuncu/kahverengi (rust-orange) renk paleti
+      kullanılmıştı, kullanıcı Vector'ın gerçek Armor görselinin (`assets/VFX/hexShieldWest/
+      hexShieldEast`) parlak **camgöbeği/cyan** tonunda olduğunu hatırlattı — tüm renkler
+      (parçacık patlaması, ekran flaşı, projectile placeholder, kart menü rengi) `Color(0.2,
+      0.85, 1.0)` cyan tonuna çekildi, iki VFX prompt'u da cyan temaya göre yeniden yazıldı.
+      **YAPILACAK**: kullanıcı Pixellab'de 2 ayrı 8-frame animasyon üretip
+      `assets/VFX/calamitys/rampartCollapse/charge/` ve `.../impact/` klasörlerine
+      ekleyecek (henüz eklenmedi).
+- [ ] **SIRADA: WormHole (198)**
 - [ ] Siege Rain (199)
+
+## Core Speed Mimarisi — KRİTİK BUG FIX + Fırlatılan Topa Bağlama (2026-08-29)
+
+Kullanıcı Momentum Burst'ün trail ile hissedilmediğini fark etti, araştırma sırasında
+**dev bir sistemik bug** ortaya çıktı: `player.gd::_physics_process`'teki `_effective_orbit_speed`
+değişkeni — Momentum Engine, Last Stand, Momentum Burst, Blood Circuit, Adrenal Armor
+System, Bulwark Surge, Mana Overflow, Bounce Barrage, Elemental Harmony'nin TÜMÜNÜN
+"Core Speed" bonusunu topladığı yer — **hiçbir yerde okunmuyordu**. Orbit toplar zaten
+dönmüyor (sadece silah pozisyonunda duruyor, "orbiting" state'i sadece Connected Core
+dart-strike mantığı için var), yani bu 9 kartın "Core Speed" vaadi **tamamen ölüydü**,
+run boyu hiçbir gerçek etkileri yoktu.
+
+**Fix**: `_effective_orbit_speed` kaldırıldı, yerine gerçekten okunan `core_speed_mult`
+(player.gd) kondu — aynı hesap zinciri (tüm 9 kart) artık bu tek çarpanda toplanıyor.
+`ball.gd`'ye `_get_core_speed_mult()` helper'ı eklendi, **fırlatılan (flying) ve dönen
+(returning) topun gerçek `speed`'ine** çarpan olarak uygulanıyor (`move_and_collide`
+çağrılarında) — Momentum stack'i/Burst/Bulwark Surge vb. arttıkça top artık gerçekten
+daha hızlı gidiyor.
+
+**Trail entegrasyonu**: `_update_trail()`'deki dinamik uzunluk formülü de `speed *
+_get_core_speed_mult()` (efektif hız) üzerinden hesaplanıyor — böylece Momentum/Core
+Speed kaynaklı hızlanma artık trail ile görsel olarak hissediliyor. Kullanıcı geri
+bildirimiyle uzunluk 2 kademede kısaltıldı (aşırı hızda göz yormasın diye): son formül
+`clamp(int((effective_speed - 680.0) / 5.0 * 0.5), 0, 20)` (orijinal `(speed-680)/5`,
+0-40'a göre toplam yarıya indirildi).
+
+Önceki oturumda (ev, `64f7a44`) ayrıca `ball.gd`'de dönüş rampasının doğal hızlanmasının
+(600→680) trail'i yanlışlıkla tetiklediği bug'ı düzeltilmişti (referans 600→680'e
+çekilmişti) — bu session'daki değişiklikler o düzeltmenin üzerine inşa edildi.
+
+**Not**: Bu mimari değişiklik Vector Calamity review sürecinin bir parçası değil, ayrı
+bir kritik sistemik bug fix'i — ama Momentum Burst'ün (176) VFX/hissiyat kontrolü
+sırasında ortaya çıktığı için o kartın altında değil, ayrı bölümde tutuluyor.
 
 **DEBUG NOTU:** `game_scene.gd::_ready()`'de `_debug_test_calamity` değişkeni run başında
 otomatik bir Calamity veriyor (şu an "💨" Momentum Burst) — test bittiğinde bu satır ve

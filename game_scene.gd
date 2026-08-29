@@ -2393,7 +2393,7 @@ func _build_all_upgrades() -> void:
 	{"name": "Shockwave",         "category": "Calamity",      "color": Color(0.5, 0.5, 0.9),  "desc": "AoE damage equal to Armor/2 to all enemies in the Yard",           "index": 174, "weight": 2,  "rarity": "epic",      "chars": ["vector"], "min_level": 3},
 	{"name": "Full Breach",       "category": "Calamity",      "color": Color(0.9, 0.2, 0.1),  "desc": "Armor resets, 8s:\nCore Damage ×2.5",                   "index": 175, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 4},
 	{"name": "Momentum Burst",    "category": "Calamity",      "color": Color(0.0, 0.8, 1.0),  "desc": "Spend all Momentum:\n+5% Core Speed per stack (10s)",            "index": 176, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 4, "requires": [35]},
-	{"name": "Rampart Collapse",  "category": "Calamity",      "color": Color(0.7, 0.4, 0.2),  "desc": "Armor Cap kadar hasar (tek hedef)\nArmor sıfırlanır",       "index": 177, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 5},
+	{"name": "Rampart Collapse",  "category": "Calamity",      "color": Color(0.2, 0.85, 1.0),  "desc": "Deal damage equal to Armor Cap to closest enemy\nArmor resets",       "index": 177, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 5},
 	{"name": "WormHole",          "category": "Calamity",      "color": Color(0.4, 0.0, 0.8),  "desc": "5s: önünde solucan deliği açılır\nYaklaşan düşmanlar ışınlanır (Boss hariç)", "index": 198, "weight": 2, "rarity": "legendary", "chars": ["vector"], "min_level": 4},
 	{"name": "Siege Rain",        "category": "Calamity",      "color": Color(0.4, 0.4, 0.5),  "desc": "7s boyunca hedef alana\nher 0.5s'de Siege Core düşer",     "index": 199, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 4},
 	# ── Leila (Elemental) ─────────────────────────────────────────────────────
@@ -3104,7 +3104,6 @@ func _activate_momentum_burst() -> void:
 func _activate_rampart_collapse() -> void:
 	var p := get_node_or_null("Player")
 	if p == null: return
-	var dmg: int = player_armor_cap
 	var subjects := get_tree().get_nodes_in_group("subjects")
 	var closest: Node2D = null
 	var closest_d := INF
@@ -3114,11 +3113,118 @@ func _activate_rampart_collapse() -> void:
 		if d < closest_d:
 			closest_d = d
 			closest = s
-	if closest:
-		closest.take_damage(dmg, false)
 	player_armor = 0
 	_update_armor_ui()
-	_react_flash_screen(Color(0.8, 0.4, 0.1, 0.5))
+	if closest:
+		_fire_rampart_core(p.global_position, closest)
+
+# ── Rampart Collapse: 1) Player üzerinde hexagon Armor tek noktada yoğunlaşır
+#                      2) Yoğunlaşan Core, hedefe fırlar ve patlayıp tek seferlik hasar verir ──
+func _fire_rampart_core(start_pos: Vector2, target: Node2D) -> void:
+	await _vfx_rampart_charge(start_pos)
+	if not is_instance_valid(target):
+		return
+	var core := _spawn_rampart_projectile(start_pos)
+	var travel_tw := create_tween()
+	travel_tw.tween_property(core, "global_position", target.global_position, 0.22)\
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	await travel_tw.finished
+	if is_instance_valid(core):
+		core.queue_free()
+	var impact_pos: Vector2 = target.global_position if is_instance_valid(target) else start_pos
+	if is_instance_valid(target):
+		target.take_damage(player_armor_cap, false)
+	_vfx_rampart_impact(impact_pos)
+	_react_flash_screen(Color(0.2, 0.85, 1.0, 0.5))
+
+# Aşama 1 VFX: karakter görünmeksizin, üzerinde hexagon Armor parçaları bir noktada yoğunlaşır
+func _vfx_rampart_charge(pos: Vector2) -> void:
+	if not ResourceLoader.exists("res://assets/VFX/calamitys/rampartCollapse/charge/frame_000.png"):
+		await get_tree().create_timer(0.15).timeout
+		return
+	var chg := AnimatedSprite2D.new()
+	chg.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	chg.global_position = pos
+	chg.z_index = 6
+	var sf := SpriteFrames.new()
+	if sf.has_animation("default"): sf.remove_animation("default")
+	sf.add_animation("charge")
+	sf.set_animation_speed("charge", 14.0)
+	sf.set_animation_loop("charge", false)
+	var i := 0
+	while ResourceLoader.exists("res://assets/VFX/calamitys/rampartCollapse/charge/frame_%03d.png" % i):
+		sf.add_frame("charge", load("res://assets/VFX/calamitys/rampartCollapse/charge/frame_%03d.png" % i))
+		i += 1
+	chg.sprite_frames = sf
+	add_child(chg)
+	chg.play("charge")
+	await chg.animation_finished
+	if is_instance_valid(chg): chg.queue_free()
+
+# Aşama 1'in son frame'i, fırlayan Core'un sprite'ı olarak yeniden kullanılıyor
+func _spawn_rampart_projectile(pos: Vector2) -> Node2D:
+	var proj: Node2D
+	var last_frame_path := ""
+	var i := 0
+	while ResourceLoader.exists("res://assets/VFX/calamitys/rampartCollapse/charge/frame_%03d.png" % i):
+		last_frame_path = "res://assets/VFX/calamitys/rampartCollapse/charge/frame_%03d.png" % i
+		i += 1
+	if last_frame_path != "":
+		var spr := Sprite2D.new()
+		spr.texture = load(last_frame_path)
+		spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		proj = spr
+	else:
+		var ph := CPUParticles2D.new()
+		ph.amount = 1
+		ph.lifetime = 1.0
+		ph.emitting = true
+		ph.color = Color(0.3, 0.9, 1.0)
+		proj = ph
+	proj.global_position = pos
+	proj.z_index = 6
+	add_child(proj)
+	return proj
+
+# Aşama 2 VFX: Core hedefe çarpıp patlar (tek seferlik hasar anı)
+func _vfx_rampart_impact(pos: Vector2) -> void:
+	screen_shake_heavy()
+	var burst_p := CPUParticles2D.new()
+	burst_p.global_position = pos
+	burst_p.emitting = false
+	burst_p.one_shot = true
+	burst_p.explosiveness = 1.0
+	burst_p.amount = 26
+	burst_p.lifetime = 0.4
+	burst_p.initial_velocity_min = 90.0
+	burst_p.initial_velocity_max = 240.0
+	burst_p.gravity = Vector2(0, 320)
+	burst_p.scale_amount_min = 2.5
+	burst_p.scale_amount_max = 5.5
+	burst_p.color = Color(0.2, 0.85, 1.0)
+	add_child(burst_p)
+	burst_p.emitting = true
+	get_tree().create_timer(1.0).timeout.connect(burst_p.queue_free)
+	# Sprite dosyaları eklenince otomatik oynayacak (frame_000..00N.png)
+	if ResourceLoader.exists("res://assets/VFX/calamitys/rampartCollapse/impact/frame_000.png"):
+		var impact := AnimatedSprite2D.new()
+		impact.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		impact.position = pos
+		impact.z_index = 6
+		var sf := SpriteFrames.new()
+		if sf.has_animation("default"): sf.remove_animation("default")
+		sf.add_animation("collapse")
+		sf.set_animation_speed("collapse", 14.0)
+		sf.set_animation_loop("collapse", false)
+		var j := 0
+		while ResourceLoader.exists("res://assets/VFX/calamitys/rampartCollapse/impact/frame_%03d.png" % j):
+			sf.add_frame("collapse", load("res://assets/VFX/calamitys/rampartCollapse/impact/frame_%03d.png" % j))
+			j += 1
+		impact.sprite_frames = sf
+		add_child(impact)
+		impact.play("collapse")
+		impact.animation_finished.connect(func():
+			if is_instance_valid(impact): impact.queue_free())
 
 func _activate_wormhole() -> void:
 	var player := get_node_or_null("Player")
