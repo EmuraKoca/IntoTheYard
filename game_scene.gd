@@ -1147,7 +1147,7 @@ func _ready() -> void:
 	#   9=🌀 Gravitational Force | 174=💥 Shockwave
 	#   175=🔓 Full Breach | 176=💨 Momentum Burst | 177=🏚️ Rampart Collapse
 	#   198=🌀🕳️ WormHole | 199=🌧️ Siege Rain
-	var _debug_test_calamity := "💨"
+	var _debug_test_calamity := "🏚️"
 	if _debug_test_calamity != "" and calamity_slots.size() < max_calamity_slots:
 		calamity_slots.append(_debug_test_calamity)
 		update_ui()
@@ -2393,8 +2393,8 @@ func _build_all_upgrades() -> void:
 	{"name": "Shockwave",         "category": "Calamity",      "color": Color(0.5, 0.5, 0.9),  "desc": "AoE damage equal to Armor/2 to all enemies in the Yard",           "index": 174, "weight": 2,  "rarity": "epic",      "chars": ["vector"], "min_level": 3},
 	{"name": "Full Breach",       "category": "Calamity",      "color": Color(0.9, 0.2, 0.1),  "desc": "Armor resets, 8s:\nCore Damage ×2.5",                   "index": 175, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 4},
 	{"name": "Momentum Burst",    "category": "Calamity",      "color": Color(0.0, 0.8, 1.0),  "desc": "Spend all Momentum:\n+5% Core Speed per stack (10s)",            "index": 176, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 4, "requires": [35]},
-	{"name": "Rampart Collapse",  "category": "Calamity",      "color": Color(0.2, 0.85, 1.0),  "desc": "Deal damage equal to Armor Cap to closest enemy\nArmor resets",       "index": 177, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 5},
-	{"name": "WormHole",          "category": "Calamity",      "color": Color(0.4, 0.0, 0.8),  "desc": "5s: önünde solucan deliği açılır\nYaklaşan düşmanlar ışınlanır (Boss hariç)", "index": 198, "weight": 2, "rarity": "legendary", "chars": ["vector"], "min_level": 4},
+	{"name": "Rampart Collapse",  "category": "Calamity",      "color": Color(0.2, 0.85, 1.0),  "desc": "Auto-targets closest enemy: deals damage\nequal to Armor Cap. Armor resets",       "index": 177, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 5},
+	{"name": "WormHole",          "category": "Calamity",      "color": Color(0.4, 0.0, 0.8),  "desc": "5s: opens a wormhole in front of you\nApproaching enemies are teleported away (Boss immune)", "index": 198, "weight": 2, "rarity": "legendary", "chars": ["vector"], "min_level": 4},
 	{"name": "Siege Rain",        "category": "Calamity",      "color": Color(0.4, 0.4, 0.5),  "desc": "7s boyunca hedef alana\nher 0.5s'de Siege Core düşer",     "index": 199, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 4},
 	# ── Leila (Elemental) ─────────────────────────────────────────────────────
 	{"name": "Electric Core",       "category": "Identity",      "color": Color(0.2, 0.5, 1.0), "desc": "Core gains electricity",                    "index": 1,  "weight": 10, "rarity": "common", "chars": ["leila"], "min_level": 0},
