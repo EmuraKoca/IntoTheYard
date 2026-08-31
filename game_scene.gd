@@ -3347,26 +3347,17 @@ func _activate_wormhole() -> void:
 	if not player: return
 	# Delik pozisyonu: player'ın önünde 120px
 	var worm_pos: Vector2 = player.global_position + Vector2(120, 0)
+	var duration := 5.0
 
-	# Görsel: mor çember, 5s boyunca titreşerek bekler
-	var worm_circle := ColorRect.new()
-	worm_circle.color = Color(0.5, 0.0, 1.0, 0.0)
-	worm_circle.size = Vector2(120, 120)
-	worm_circle.position = worm_pos - Vector2(60, 60)
-	worm_circle.z_index = 5
-	add_child(worm_circle)
-
-	var tw_in := worm_circle.create_tween()
-	tw_in.tween_property(worm_circle, "color:a", 0.7, 0.3)
+	var visual: CanvasItem = _vfx_wormhole_open(worm_pos, duration)
 
 	# 5 saniye boyunca yaklaşan düşmanları ışınla
 	var elapsed := 0.0
 	var check_timer := get_tree().create_timer(0.2)
-	while elapsed < 5.0:
+	while elapsed < duration:
 		await check_timer.timeout
 		elapsed += 0.2
 		check_timer = get_tree().create_timer(0.2)
-		if not is_instance_valid(worm_circle): break
 		for s in get_tree().get_nodes_in_group("subjects"):
 			if not is_instance_valid(s): continue
 			if s.get("is_boss") and s.is_boss: continue  # Boss etkilenmez
@@ -3377,12 +3368,53 @@ func _activate_wormhole() -> void:
 				subject_died(score_val / 2, s.global_position)
 				s.queue_free()
 
-	# Deliği kapat
-	if is_instance_valid(worm_circle):
-		var tw_out := worm_circle.create_tween()
-		tw_out.tween_property(worm_circle, "color:a", 0.0, 0.4)
-		tw_out.tween_callback(worm_circle.queue_free)
+	if is_instance_valid(visual):
+		visual.queue_free()
 	_react_flash_screen(Color(0.4, 0.0, 0.8, 0.3))
+
+# WormHole VFX: gerçek sprite animasyonu (Gravitational Force ile aynı desen) —
+# dosyalar assets/VFX/calamitys/wormhole/frame_000..00N.png'ye eklenince otomatik
+# oynar, eklenmediyse basit bir mor çemberle (eski görsel) devam eder.
+func _vfx_wormhole_open(pos: Vector2, duration: float) -> CanvasItem:
+	if not ResourceLoader.exists("res://assets/VFX/calamitys/wormhole/frame_000.png"):
+		var fallback := ColorRect.new()
+		fallback.color = Color(0.5, 0.0, 1.0, 0.0)
+		fallback.size = Vector2(120, 120)
+		fallback.position = pos - Vector2(60, 60)
+		fallback.z_index = 5
+		add_child(fallback)
+		var tw_in := fallback.create_tween()
+		tw_in.tween_property(fallback, "color:a", 0.7, 0.3)
+		return fallback
+
+	var vortex := AnimatedSprite2D.new()
+	vortex.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	vortex.z_index = 5
+	vortex.modulate = Color(1, 1, 1, 0.85)
+	vortex.scale = Vector2.ZERO
+	vortex.global_position = pos
+	var sf := SpriteFrames.new()
+	if sf.has_animation("default"): sf.remove_animation("default")
+	sf.add_animation("spin")
+	sf.set_animation_speed("spin", 10.0)
+	sf.set_animation_loop("spin", true)
+	var i := 0
+	while ResourceLoader.exists("res://assets/VFX/calamitys/wormhole/frame_%03d.png" % i):
+		sf.add_frame("spin", load("res://assets/VFX/calamitys/wormhole/frame_%03d.png" % i))
+		i += 1
+	vortex.sprite_frames = sf
+	add_child(vortex)
+	vortex.play("spin")
+
+	var _grow_time := 0.6
+	var _shrink_time := 0.6
+	var scale_tw := create_tween()
+	scale_tw.tween_property(vortex, "scale", Vector2(1.6, 1.6), _grow_time)\
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	scale_tw.tween_interval(max(duration - _grow_time - _shrink_time, 0.0))
+	scale_tw.tween_property(vortex, "scale", Vector2.ZERO, _shrink_time)\
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+	return vortex
 
 func _activate_siege_rain(pos: Vector2) -> void:
 	# 7s boyunca her 0.5s'de bir Siege Core düşürür (14 darbe)
@@ -4197,9 +4229,6 @@ func _process(delta: float) -> void:
 		elif calamity == "🌀":
 			$UI/CalamityCircle.color = Color(0.5, 0.0, 1.0, 0.2)
 			$UI/CalamityCircle.radius = 100
-		elif calamity == "🌀🕳️":  # WormHole
-			$UI/CalamityCircle.color = Color(0.5, 0.0, 1.0, 0.2)
-			$UI/CalamityCircle.radius = 70
 		elif calamity == "🌧️":  # Siege Rain
 			$UI/CalamityCircle.color = Color(0.4, 0.4, 0.5, 0.2)
 			$UI/CalamityCircle.radius = 80

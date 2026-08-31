@@ -542,8 +542,19 @@ kullanımı referans alındı). Meğerse zaten **hazır bir altyapı** vardı: `
 
 **Test edildi, kullanıcı onayladı** (drag-to-target akışı evde test edilip düzeltildi).
 
-- [ ] **SIRADA: WormHole (198)**
-- [ ] Siege Rain (199)
+- [x] WormHole (198) — implementasyon doğru: player'ın 120px önünde (sabit yön, mouse'a
+      bağlı değil) 5s'lik delik açılıyor, 70px yarıçapındaki Boss-hariç düşmanlar
+      `subject_died()` + `queue_free()` ile ışınlanıp yarım skor veriyor. Requires
+      gerekmiyor (bağımsız kart). Dil zaten ev session'ında (`8584e4e`) düzeltilmişti.
+      **Ölü kod temizliği**: nişan-önizleme çemberinde (`_process`) WormHole için hâlâ
+      duran `elif calamity == "🌀🕳️":` dalı silindi — WormHole hedeflemeli olmadığı
+      (`_CALAMITY_TARGETED` listesinde yok) için bu dal artık hiç tetiklenmiyordu.
+      **VFX gerçek sprite'a çevrildi** (Gravitational Force ile aynı desen):
+      `_vfx_wormhole_open()` — eski elle çizilen mor `ColorRect` yerine
+      `assets/VFX/calamitys/wormhole/frame_000..008.png`'den (9 frame, kullanıcı ekledi)
+      10fps spin-loop `AnimatedSprite2D`, süre başında büyüyüp (0→1.6 scale) bitmeden
+      küçülüyor. Sprite yoksa eski `ColorRect` fallback'ine düşüyor (crash yok).
+- [ ] **SIRADA: Siege Rain (199)**
 
 ## Core Speed Mimarisi — KRİTİK BUG FIX + Fırlatılan Topa Bağlama (2026-08-29)
 
