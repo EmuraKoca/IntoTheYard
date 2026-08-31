@@ -83,7 +83,7 @@ const _CALAMITY_DISPLAY_NAMES: Dictionary = {
 	"🔓":  "Full Breach",
 	"💨":  "Momentum Burst",
 	"🏚️": "Rampart Collapse",
-	"🌀🕳️": "WormHole",
+	"🕳️": "WormHole",
 	"🌧️": "Siege Rain",
 	"🔥💥": "Wildfire",
 	"💣":   "Glitch Bomb",
@@ -1146,8 +1146,8 @@ func _ready() -> void:
 	# Vector Calamity emoji/index tablosu:
 	#   9=🌀 Gravitational Force | 174=💥 Shockwave
 	#   175=🔓 Full Breach | 176=💨 Momentum Burst | 177=🏚️ Rampart Collapse
-	#   198=🌀🕳️ WormHole | 199=🌧️ Siege Rain
-	var _debug_test_calamity := "🌀🕳️"
+	#   198=🕳️ WormHole | 199=🌧️ Siege Rain
+	var _debug_test_calamity := "🕳️"
 	if _debug_test_calamity != "" and calamity_slots.size() < max_calamity_slots:
 		calamity_slots.append(_debug_test_calamity)
 		update_ui()
@@ -1804,7 +1804,7 @@ func _update_calamity_cells() -> void:
 				sb.bg_color = Color(0.07, 0.07, 0.15, 0.9)
 
 # Bir Calamity hedefleme gerektiriyor mu (mouse_pos parametresi kullanan tipler)?
-const _CALAMITY_TARGETED := ["⚡", "🔥", "🌀", "🌋", "🌧️", "💣", "☠️", "🏚️", "🌀🕳️"]
+const _CALAMITY_TARGETED := ["⚡", "🔥", "🌀", "🌋", "🌧️", "💣", "☠️", "🏚️", "🕳️"]
 func _calamity_needs_target(calamity: String) -> bool:
 	return calamity in _CALAMITY_TARGETED
 
@@ -1859,7 +1859,7 @@ func _dispatch_calamity_effect(calamity: String, mouse_pos: Vector2) -> void:
 		_activate_momentum_burst()
 	elif calamity == "🏚️":  # Rampart Collapse
 		_activate_rampart_collapse(mouse_pos)
-	elif calamity == "🌀🕳️":  # WormHole
+	elif calamity == "🕳️":  # WormHole
 		_activate_wormhole()
 	elif calamity == "🌧️":  # Siege Rain
 		_activate_siege_rain(mouse_pos)
@@ -4275,7 +4275,7 @@ func _process(delta: float) -> void:
 			$UI/CalamityCircle.radius = 80
 		elif calamity == "🔥💥":  # Wildfire — hedef yok, tüm Yanan düşmanlar
 			$UI/CalamityCircle.visible = false
-		elif calamity == "🌀🕳️":  # WormHole — mouse'a değil, karakterin tam önüne sabit açılır
+		elif calamity == "🕳️":  # WormHole — mouse'a değil, karakterin tam önüne sabit açılır
 			var _wp := _player_node
 			if _wp:
 				var _fd: Vector2 = _wp.aim_direction if _wp.get("aim_direction") else Vector2(1, 0)
@@ -4585,7 +4585,7 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 			calamity_slots.append("🏚️")
 	elif index == 198:  # WormHole
 		if calamity_slots.size() < max_calamity_slots:
-			calamity_slots.append("🌀🕳️")
+			calamity_slots.append("🕳️")
 	elif index == 199:  # Siege Rain
 		if calamity_slots.size() < max_calamity_slots:
 			calamity_slots.append("🌧️")
