@@ -266,13 +266,13 @@ func _setup_ball_sprite() -> void:
 		folder = "leechNovaCore";      frame_count = 4
 	elif is_inner_core:
 		if inner_core_type == "elemental_shield_core":
-			# none:5 / cryo:3 / electro:2 / wet:3 / fire:4  → toplam 17 frame
+			# none:5 / cryo:3 / electro:2 / wet:3 / fire:4 — her biri kendi alt klasöründe
 			const ESC_SEGS: Array = [
-				["none",    0,  5],
-				["cryo",    5,  8],
-				["electro", 8,  10],
-				["wet",     10, 13],
-				["fire",    13, 17],
+				["none",    "none",           [7, 8, 9, 10, 11]],
+				["cryo",    "cryoResist",     [3, 4, 5]],
+				["electro", "electricResist", [6, 16]],
+				["wet",     "wetResist",      [0, 1, 2]],
+				["fire",    "fireResist",     [9, 11, 12, 13]],
 			]
 			var esc_frames := SpriteFrames.new()
 			if esc_frames.has_animation("default"):
@@ -281,12 +281,15 @@ func _setup_ball_sprite() -> void:
 				esc_frames.add_animation(seg[0])
 				esc_frames.set_animation_speed(seg[0], 12.0)
 				esc_frames.set_animation_loop(seg[0], true)
-				for i in range(seg[1], seg[2]):
-					esc_frames.add_frame(seg[0], load("res://assets/balls/elementalShieldCore/frame_%03d.png" % i))
+				for i in seg[2]:
+					var _esc_path := "res://assets/balls/elementalShieldCore/%s/frame_%03d.png" % [seg[1], i]
+					if ResourceLoader.exists(_esc_path):
+						esc_frames.add_frame(seg[0], load(_esc_path))
 			_sprite = AnimatedSprite2D.new()
 			_sprite.sprite_frames  = esc_frames
 			_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-			var _esc_size: float = float(esc_frames.get_frame_texture("none", 0).get_width())
+			var _esc_tex: Texture2D = esc_frames.get_frame_texture("none", 0) if esc_frames.get_frame_count("none") > 0 else null
+			var _esc_size: float = float(_esc_tex.get_width()) if _esc_tex else 48.0
 			_sprite.scale = Vector2.ONE * (0.57375 * (48.0 / _esc_size))
 			_sprite.play("none")
 			add_child(_sprite)

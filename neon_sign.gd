@@ -8,7 +8,6 @@ const SIGN_W := 52.0
 const SIGN_H := 160.0
 
 var _label1: Label = null
-var _label2: Label = null
 
 var _flicker_timer: float = 0.0
 var _flicker_next: float  = randf_range(2.0, 5.0)
@@ -23,7 +22,6 @@ func _ready() -> void:
 	_base_y = position.y
 
 	var font_bold = load("res://assets/orbitronfont/Orbitron-Bold.ttf")
-	var font_reg  = load("res://assets/orbitronfont/Orbitron-Regular.ttf")
 
 	# ── Tabela arka plan ──────────────────────────────────────────
 	var panel := ColorRect.new()
@@ -71,17 +69,6 @@ func _ready() -> void:
 	_label1.position = Vector2(5, 8)
 	panel.add_child(_label1)
 
-	# ── Alt yazı ─────────────────────────────────────────────────
-	_label2 = Label.new()
-	_label2.text          = "For\nHuman ITY"
-	_label2.add_theme_font_override("font", font_reg)
-	_label2.add_theme_font_size_override("font_size", 9)
-	_label2.add_theme_color_override("font_color", COLOR_SUB)
-	_label2.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_label2.size     = Vector2(SIGN_W - 8, 40)
-	_label2.position = Vector2(5, 118)
-	panel.add_child(_label2)
-
 func _process(delta: float) -> void:
 	_flicker_timer += delta
 	if _flicker_timer >= _flicker_next:
@@ -92,13 +79,10 @@ func _process(delta: float) -> void:
 func _do_blink(remaining: int) -> void:
 	if remaining <= 0:
 		_label1.add_theme_color_override("font_color", COLOR_MAIN)
-		_label2.add_theme_color_override("font_color", COLOR_SUB)
 		return
 	_label1.add_theme_color_override("font_color", COLOR_OFF)
-	_label2.add_theme_color_override("font_color", COLOR_OFF)
 	get_tree().create_timer(randf_range(0.04, 0.12)).timeout.connect(func() -> void:
 		_label1.add_theme_color_override("font_color", COLOR_MAIN)
-		_label2.add_theme_color_override("font_color", COLOR_SUB)
 		get_tree().create_timer(randf_range(0.06, 0.2)).timeout.connect(func() -> void:
 			_do_blink(remaining - 1)
 		)

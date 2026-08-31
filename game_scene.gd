@@ -280,7 +280,7 @@ var _rts_overlay: CanvasLayer = null
 
 # ── Veri Barı ─────────────────────────────────────────────────────────────────
 var _data_current:    float      = 0.0
-var _data_max:        float      = 20.0
+var _data_max:        float      = 150.0
 var _data_bar_canvas: CanvasLayer = null
 var _data_bar_fill:   ColorRect   = null
 var _data_bar_label:  Label       = null
@@ -1143,19 +1143,6 @@ func _ready() -> void:
 		for _ci in range(min(_cal_start, max_calamity_slots)):
 			calamity_slots.append(_cal_pool[_ci])
 	$UI/CalamityCircle.visible = false
-
-	# ── DEBUG: Test Calamity Override (test bitince kaldır/boşalt) ────────────
-	# Vector Calamity emoji/index tablosu:
-	#   9=🌀 Gravitational Force | 174=💥 Shockwave
-	#   175=🔓 Full Breach | 176=💨 Momentum Burst | 177=🏚️ Rampart Collapse
-	#   198=🕳️ WormHole | 199=🌧️ Siege Rain
-	var _debug_test_calamity := "🔓"
-	if _debug_test_calamity != "" and calamity_slots.size() < max_calamity_slots:
-		calamity_slots.append(_debug_test_calamity)
-		update_ui()
-	# DEBUG: test kolaylığı için başlangıç momentum stack'i
-	get_node("Player").has_momentum_engine = true
-	get_node("Player").momentum_stacks = 10
 
 	await get_tree().process_frame
 	_spawn_hasmen_entrance()
