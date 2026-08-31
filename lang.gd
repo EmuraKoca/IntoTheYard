@@ -277,8 +277,8 @@ const _DESC_TR: Dictionary = {
 	174: "Mevcut Armor/2 kadar Avlu'daki tüm düşmanlara AoE hasar",
 	175: "Armor sıfırlanır, 8s:\nCore Hasarı ×2.5",
 	176: "Tüm Momentum'u harca:\nstack başına +%5 Core Hızı (10sn)",
-	177: "Nişan al ve ateşle: hedef noktaya Armor Cap\nkadar alan hasarı verir, Armor sıfırlanır",
-	198: "5sn: önünde solucan deliği açılır\nYaklaşan düşmanlar ışınlanır (Boss hariç)",
+	177: "Hedeflenen noktaya Armor Cap\nkadar alan hasarı verir, Armor sıfırlanır",
+	198: "Vector'un çevresinde solucan deliği açılır\nYaklaşan düşmanlar sonsuzluğa karışır. (Boss hariç)",
 	199: "7sn: hedef alana her 0.5sn'de\nbir Siege Core düşer",
 	169: "Armor ilk kez sıfırlanınca:\ntüm Momentum → Armor ×2 (run başına 1 kez)",
 	178: "Her 2s: 60px'deki düşmanlara\n1 + Armor×%5 hasar",
@@ -301,7 +301,7 @@ const _DESC_TR: Dictionary = {
 	11: "Tüm core'lara +1 hasar",
 	7:  "Seçilen noktaya yıldırım çarpar",
 	8:  "Seçilen alanda sürekli hasar",
-	9:  "Düşmanları 5sn çeker",
+	9:  "Düşmanları 5 sn boyunca merkeze doğru çeker.",
 }
 
 

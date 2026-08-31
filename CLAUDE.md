@@ -585,6 +585,77 @@ kullanımı referans alındı). Meğerse zaten **hazır bir altyapı** vardı: `
 
 **VECTOR CALAMITY TAMAMLANDI (7/7 kart, Iron Fortress kaldırıldı) — 2026-08-31**
 
+## Vector Calamity — Review Sonrası Cila Turu (2026-08-31, aynı gün devamı)
+
+Kartlar tamamlandıktan sonra kullanıcı açıklamaları tekrar gözden geçirdi ve birkaç
+karta ek VFX/dengeleme turu yaptı.
+
+### Açıklama güncellemeleri (kullanıcı diktesiyle)
+- **Gravitational Force**: "Düşmanları 5 sn boyunca merkeze doğru çeker." (TR),
+  "Pulls enemies toward the center for 5s" (EN) — eski metin belirsizdi.
+- **Rampart Collapse**: "nişan al ve ateşle" ifadesi kaldırıldı (tüm Calamity'ler zaten
+  tıklamalı sistemde), sade: "Hedeflenen noktaya Armor Cap kadar alan hasarı verir,
+  Armor sıfırlanır" (TR) / "Deals AoE damage equal to Armor Cap at the targeted point.
+  Armor resets" (EN).
+- **WormHole**: "Vector'un çevresinde solucan deliği açılır\nYaklaşan düşmanlar
+  sonsuzluğa karışır. (Boss hariç)" (TR) / "Opens a wormhole around Vector\nApproaching
+  enemies vanish into the void (Boss immune)" (EN) — süre ifadesi (5s) kaldırıldı, dil
+  sadeleştirildi. **Not**: "çevresinde" ifadesi kullanıcının tercihi, gerçek
+  implementasyon hâlâ tam önünde (aim_direction) sabit bir noktada açılıyor, çevresini
+  sarmıyor — anlamca sorun yaratmıyor ama tam teknik doğruluk için bilgi amaçlı not.
+
+### WormHole ikon bug fix
+`"🌀🕳️"` (cyclone + hole, iki ayrı emoji birleşimi) Calamity slotunda **iki ayrı ikon**
+gibi görünüyordu (bir hücrede iki glyph). Kullanıcı sağdakini (`🕳️`, hole) seçti, tüm
+referanslar (`_CALAMITY_DISPLAY_NAMES`, `_CALAMITY_TARGETED`, dispatch, debug default,
+mağaza pool) tek emoji'ye çevrildi.
+
+### Siege Rain — VFX + tasarım komple yeniden yapıldı
+Kullanıcı kendi ürettiği 6 frame'lik `assets/VFX/calamitys/siegeRain/` sprite'ının
+aslında **tam bir "düşüş + çarpma" animasyonu** olduğunu fark etti (küçük başlayıp
+büyüyerek inen meteor + patlama) — eskiden ayrı bir "düşen Siege Core topu" sprite'ı
+(oyundaki gerçek Siege Core kartından ödünç alınmış, alakasız) + tween ile taklit
+ediliyordu, bu tamamen kaldırıldı, tek animasyon yeterli.
+- **Uyarı halkası tamamen kaldırıldı** (önceki turda eklenen Polygon2D telegraph),
+  turuncu zemin çatlağı (ColorRect) da kaldırıldı — hepsi yeni sprite'ın kendisiyle
+  gereksiz hale geldi.
+- **Darbe aralığı**: 0.5s → **1s** (toplam süre 7s → 14s, 14 darbe aynı kaldı).
+- **Düşüş yüksekliği/süresi** birkaç iterasyonda ayarlandı: 300px/0.35s → 550px/0.7s
+  (ilk deneme, sonra sprite'ın kendisi düşüşü içerdiği için bu ayrı tween'in kendisi
+  komple silindi).
+- **KRİTİK BUG FIX (pause)**: `get_tree().create_timer()`'ın varsayılanı
+  `process_always=true` — yani `upgrading` sırasında (`get_tree().paused=true`) bu
+  sayaçlar durmadan işlemeye devam ediyordu, menüden çıkınca birikmiş birkaç darbe aynı
+  anda tetikleniyordu ("3 core aynı anda düştü" — kullanıcı bulgusu). Tüm ilgili
+  `create_timer()` çağrılarına `process_always=false` eklendi.
+- **Hedefleme pasiflik sorunu düzeltildi**: kullanıcı "aşırı pasif bir karta dönüşüyor"
+  dedi çünkü darbeler tamamen rastgele (±40px, sonra ±120px) boş noktalara düşüyordu,
+  düşmana isabet garantisi yoktu. Artık her darbe önce seçilen alandaki (170px yarıçap,
+  önizleme çemberiyle aynı) gerçek, **canlı** (`is_dead` filtresi eklendi — ölü
+  düşmanlar/cesetler hedef sayılmıyor) düşmanlar arasından rastgele birini seçip onun
+  konumuna (±20px küçük sapmayla) düşüyor; alanda düşman yoksa eski rastgele nokta
+  davranışına düşüyor.
+- **Nişan önizleme çemberi büyütüldü**: 80px → 170px (yeni ±120px sapma alanının
+  köşegen mesafesine göre gerçekçi boyut).
+- **Kalıcı iz efekti eklendi**: animasyon bitince (son karede durunca) 3sn (5sn'den
+  düşürüldü) öylece kalıp 1sn'de fade-out ile kayboluyor.
+- **z_index — iki aşamalı, dinamik**: **düşerken** (`z_index=4`) düşmanların (2-3)
+  ÖNÜNDE görünüyor (gökten düşme hissi), animasyon bitip son karede (kraterin izi)
+  durunca `animation_finished` içinde `z_index=-1`'e geçiyor — hem canlı hem ölü/ceset
+  (`z_index=0`) düşmanların ARKASINDA kalıyor (kullanıcı iki ayrı bug'ı da buldu, ikisi
+  de düzeltildi).
+
+### Full Breach — gerçek sprite VFX eklendi
+Kullanıcı `assets/VFX/calamitys/fullBreach/` klasörüne 9 frame'lik bir animasyon ekledi
+(cyan hexagon Armor parçalarının kırılıp merkeze doğru parlak bir enerji patlamasına
+dönüşmesi — "Armor sıfırlanır → hasar bonusuna dönüşür" temasıyla birebir örtüşüyor).
+`_vfx_full_breach_burst(pos)` eklendi, `_activate_full_breach()`'ten player pozisyonunda
+çağrılıyor (12fps, tek seferlik), mevcut kırmızı vinyet + screen shake + parçacık
+patlamalarının ÜZERİNE ekleniyor (onlar kaldırılmadı).
+
+**Kalan VFX eksiği**: Rampart Collapse'ın "impact" (patlama) klasörü hâlâ boş (sadece
+"charge" var), Momentum Burst'ün hiç özel VFX'i yok (sadece genel trail hissi).
+
 Sıradaki adım: aynı 4 aşamalı review süreci **Leila** için baştan başlayacak (Cyclone
 Identity/Utility/Individuality zaten önceki session'da tam review edilmişti, tekrar
 gerekmiyor — Leila'nın tamamı + Cyclone Calamity hâlâ eksik, bkz. dosyanın en altındaki
@@ -624,8 +695,9 @@ bir kritik sistemik bug fix'i — ama Momentum Burst'ün (176) VFX/hissiyat kont
 sırasında ortaya çıktığı için o kartın altında değil, ayrı bölümde tutuluyor.
 
 **DEBUG NOTU:** `game_scene.gd::_ready()`'de `_debug_test_calamity` değişkeni run başında
-otomatik bir Calamity veriyor (şu an "💨" Momentum Burst) — test bittiğinde bu satır ve
-momentum debug override'ı (`has_momentum_engine`/`momentum_stacks=10`) kaldırılmalı veya
+otomatik bir Calamity veriyor (şu an "🔓" Full Breach — test turuna göre sık sık
+değişiyor, en son değeri kod içinde kontrol et) — test bittiğinde bu satır ve momentum
+debug override'ı (`has_momentum_engine`/`momentum_stacks=10`) kaldırılmalı veya
 boşaltılmalı, kalıcı build'e sızmamalı.
 
 Not: Vector'a ait görünüp aslında Leila'ya ait olan iki Calamity kartı var (Lightning

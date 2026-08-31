@@ -1147,7 +1147,7 @@ func _ready() -> void:
 	#   9=🌀 Gravitational Force | 174=💥 Shockwave
 	#   175=🔓 Full Breach | 176=💨 Momentum Burst | 177=🏚️ Rampart Collapse
 	#   198=🕳️ WormHole | 199=🌧️ Siege Rain
-	var _debug_test_calamity := "🕳️"
+	var _debug_test_calamity := "🔓"
 	if _debug_test_calamity != "" and calamity_slots.size() < max_calamity_slots:
 		calamity_slots.append(_debug_test_calamity)
 		update_ui()
@@ -2464,7 +2464,7 @@ func _build_all_upgrades() -> void:
 	{"name": "Speed Upgrade",       "category": "Individuality", "color": Color(0.6, 0.2, 0.8), "desc": "Kalıcı: Hareket hızı +50",                  "index": 4,  "weight": 8, "rarity": "common",   "chars": [],         "min_level": 0},
 	{"name": "Max Health Up",       "category": "Individuality", "color": Color(0.8, 0.2, 0.2), "desc": "Maximum HP +5",                             "index": 21, "weight": 8, "rarity": "common",   "chars": [],         "min_level": 0},
 	{"name": "Medkit",              "category": "Individuality", "color": Color(0.9, 0.1, 0.1), "desc": "+10 HP restored",                           "index": 20, "weight": 8, "rarity": "common",   "chars": [],         "min_level": 0},
-	{"name": "Gravitational Force", "category": "Calamity",      "color": Color(0.5, 0.0, 1.0), "desc": "Pulls subjects for 5s",                     "index": 9,  "weight": 8, "rarity": "common",   "chars": ["vector"], "min_level": 0},
+	{"name": "Gravitational Force", "category": "Calamity",      "color": Color(0.5, 0.0, 1.0), "desc": "Pulls enemies toward the center for 5s",                     "index": 9,  "weight": 8, "rarity": "common",   "chars": ["vector"], "min_level": 0},
 	{"name": "Hyper Recovery Loop", "category": "Individuality", "color": Color(0.3, 0.7, 1.0), "desc": "Core Return Speed ×1.5",        "index": 56, "weight": 8, "rarity": "common",   "chars": ["vector"], "min_level": 1},
 	# Lv1: Core davranışlarını öğretir
 	{"name": "Kinetic Core",        "category": "Identity",      "color": Color(0.2, 0.8, 0.6), "desc": "7 damage.\nEach wall bounce → +dmg",                   "index": 43, "weight": 8, "rarity": "uncommon", "chars": ["vector"], "min_level": 1},
@@ -2521,8 +2521,8 @@ func _build_all_upgrades() -> void:
 	{"name": "Shockwave",         "category": "Calamity",      "color": Color(0.5, 0.5, 0.9),  "desc": "AoE damage equal to Armor/2 to all enemies in the Yard",           "index": 174, "weight": 2,  "rarity": "epic",      "chars": ["vector"], "min_level": 3},
 	{"name": "Full Breach",       "category": "Calamity",      "color": Color(0.9, 0.2, 0.1),  "desc": "Armor resets, 8s:\nCore Damage ×2.5",                   "index": 175, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 4},
 	{"name": "Momentum Burst",    "category": "Calamity",      "color": Color(0.0, 0.8, 1.0),  "desc": "Spend all Momentum:\n+5% Core Speed per stack (10s)",            "index": 176, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 4, "requires": [35]},
-	{"name": "Rampart Collapse",  "category": "Calamity",      "color": Color(0.2, 0.85, 1.0),  "desc": "Aim and fire: AoE damage equal to\nArmor Cap at target point. Armor resets",       "index": 177, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 5},
-	{"name": "WormHole",          "category": "Calamity",      "color": Color(0.4, 0.0, 0.8),  "desc": "5s: opens a wormhole in front of you\nApproaching enemies are teleported away (Boss immune)", "index": 198, "weight": 2, "rarity": "legendary", "chars": ["vector"], "min_level": 4},
+	{"name": "Rampart Collapse",  "category": "Calamity",      "color": Color(0.2, 0.85, 1.0),  "desc": "Deals AoE damage equal to Armor Cap\nat the targeted point. Armor resets",       "index": 177, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 5},
+	{"name": "WormHole",          "category": "Calamity",      "color": Color(0.4, 0.0, 0.8),  "desc": "Opens a wormhole around Vector\nApproaching enemies vanish into the void (Boss immune)", "index": 198, "weight": 2, "rarity": "legendary", "chars": ["vector"], "min_level": 4},
 	{"name": "Siege Rain",        "category": "Calamity",      "color": Color(0.4, 0.4, 0.5),  "desc": "7s: a Siege Core falls on the\ntarget area every 0.5s",     "index": 199, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 4},
 	# ── Leila (Elemental) ─────────────────────────────────────────────────────
 	{"name": "Electric Core",       "category": "Identity",      "color": Color(0.2, 0.5, 1.0), "desc": "Core gains electricity",                    "index": 1,  "weight": 10, "rarity": "common", "chars": ["leila"], "min_level": 0},
@@ -3204,6 +3204,32 @@ func _activate_full_breach() -> void:
 	_react_flash_screen(Color(1.0, 0.2, 0.1, 0.5))
 	screen_shake_heavy()
 	_vfx_full_breach_vignette()
+	_vfx_full_breach_burst(p.global_position)
+
+# Armor'ın kırılıp güce dönüşme anı: gerçek sprite animasyonu (9 frame)
+func _vfx_full_breach_burst(pos: Vector2) -> void:
+	var i := 0
+	while ResourceLoader.exists("res://assets/VFX/calamitys/fullBreach/frame_%03d.png" % i):
+		i += 1
+	if i == 0: return
+	var burst := AnimatedSprite2D.new()
+	burst.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	burst.global_position = pos
+	burst.z_index = 6
+	burst.scale = Vector2(1.4, 1.4)
+	var sf := SpriteFrames.new()
+	if sf.has_animation("default"): sf.remove_animation("default")
+	sf.add_animation("breach")
+	sf.set_animation_speed("breach", 12.0)
+	sf.set_animation_loop("breach", false)
+	for f in range(i):
+		sf.add_frame("breach", load("res://assets/VFX/calamitys/fullBreach/frame_%03d.png" % f))
+	burst.sprite_frames = sf
+	add_child(burst)
+	burst.play("breach")
+	burst.animation_finished.connect(func():
+		if is_instance_valid(burst): burst.queue_free()
+	)
 
 func _vfx_full_breach_vignette() -> void:
 	var vignette := ColorRect.new()
@@ -3448,87 +3474,78 @@ func _vfx_wormhole_open(pos: Vector2, duration: float) -> CanvasItem:
 	return vortex
 
 func _activate_siege_rain(pos: Vector2) -> void:
-	# 7s boyunca her 0.5s'de bir Siege Core düşürür (14 darbe)
+	# 14s boyunca her 1s'de bir Siege Core düşürür (14 darbe)
 	var siege_dmg: int = 8
 	var siege_radius: float = 55.0
 	for i in range(14):
-		await get_tree().create_timer(0.5).timeout
-		# Rastgele küçük sapma (±40px) etrafında
-		var hit_pos := pos + Vector2(randf_range(-40, 40), randf_range(-40, 40))
+		# BUG FIX: process_always=false — eskiden varsayılan (true) yüzünden
+		# upgrade menüsü açıkken (get_tree().paused) bu sayaç durmadan işlemeye
+		# devam ediyordu, menüden çıkınca birikmiş birkaç darbe aynı anda tetikleniyordu.
+		await get_tree().create_timer(1.0, false).timeout
+		# Seçilen alandaki gerçek bir düşmanı hedefle — pasif kalmasın diye rastgele
+		# boş noktaya değil, o an alanda duran bir düşmana (küçük sapmayla) düşer.
+		# Alanda düşman yoksa eski davranışa (rastgele nokta) düşer.
+		var _targets: Array = []
+		for s in get_tree().get_nodes_in_group("subjects"):
+			if not is_instance_valid(s): continue
+			if s.get("is_dead") and s.is_dead: continue
+			if s.global_position.distance_to(pos) <= 170.0:
+				_targets.append(s)
+		var hit_pos: Vector2
+		if _targets.size() > 0:
+			var _target = _targets[randi() % _targets.size()]
+			hit_pos = _target.global_position + Vector2(randf_range(-20, 20), randf_range(-20, 20))
+		else:
+			hit_pos = pos + Vector2(randf_range(-120, 120), randf_range(-120, 120))
 		_spawn_siege_rain_impact(hit_pos, siege_dmg, siege_radius)
 
 func _spawn_siege_rain_impact(pos: Vector2, dmg: int, radius: float) -> void:
-	# Gölge uyarısı: hedef alanda küçükten tam isabet yarıçapına büyüyen kırmızı halka
-	# BUG FIX: eskiden script'siz bir Node2D + queue_redraw() vardı — hiçbir _draw()
-	# override'ı olmadığı için hiçbir şey çizilmiyordu, oyuncu nereye vurulacağını
-	# göremiyordu. Gerçek Polygon2D tabanlı bir halkaya çevrildi.
-	var warn_time := 0.6
-	var shadow_node := Polygon2D.new()
-	shadow_node.color = Color(0.9, 0.2, 0.1, 0.35)
-	shadow_node.z_index = 3
-	shadow_node.global_position = pos
-	var _pts := PackedVector2Array()
-	const _SEG := 20
-	for _s in range(_SEG):
-		var _ang: float = TAU * float(_s) / float(_SEG)
-		_pts.append(Vector2(cos(_ang), sin(_ang)) * radius)
-	shadow_node.polygon = _pts
-	shadow_node.scale = Vector2(0.15, 0.15)
-	add_child(shadow_node)
+	# Düşüş + çarpma tek bir sprite dizisinde (assets/VFX/calamitys/siegeRain/) —
+	# ayrı bir "düşen top" sprite'ına gerek yok, animasyonun kendisi zaten yukarıdan
+	# küçük başlayıp büyüyerek merkeze inip patlıyor.
+	var _fps := 8.0
+	var _total_frames := 0
+	while ResourceLoader.exists("res://assets/VFX/calamitys/siegeRain/frame_%03d.png" % _total_frames):
+		_total_frames += 1
 
-	var shadow_tw := create_tween()
-	shadow_tw.tween_property(shadow_node, "scale", Vector2(1.0, 1.0), warn_time)\
-		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	shadow_tw.parallel().tween_property(shadow_node, "color:a", 0.55, warn_time)
+	if _total_frames > 0:
+		var burst := AnimatedSprite2D.new()
+		burst.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		burst.global_position = pos
+		burst.z_index = 4  # düşerken düşmanların (2-3) ÖNÜNDE görünsün
+		var sf := SpriteFrames.new()
+		if sf.has_animation("default"): sf.remove_animation("default")
+		sf.add_animation("fall")
+		sf.set_animation_speed("fall", _fps)
+		sf.set_animation_loop("fall", false)
+		for f in range(_total_frames):
+			sf.add_frame("fall", load("res://assets/VFX/calamitys/siegeRain/frame_%03d.png" % f))
+		burst.sprite_frames = sf
+		add_child(burst)
+		burst.play("fall")
+		burst.animation_finished.connect(func():
+			if not is_instance_valid(burst): return
+			# Animasyon bitip son karede (kraterin izi) durunca artık düşmanların
+			# (2-3) VE ölü/ceset (0) ARKASINDA görünsün — düşerken önde, izde arkada.
+			burst.z_index = -1
+			# Son frame'de 3sn kalıp yavaşça kaybol
+			var _fade_tw := create_tween()
+			_fade_tw.tween_interval(3.0)
+			_fade_tw.tween_property(burst, "modulate:a", 0.0, 1.0)
+			_fade_tw.tween_callback(func():
+				if is_instance_valid(burst): burst.queue_free()
+			)
+		)
 
-	await get_tree().create_timer(warn_time).timeout
-	if not is_instance_valid(shadow_node): return
+	# İsabet anı: son 2 frame'e (patlama) denk gelen noktada hasar + sarsıntı
+	var _impact_delay: float = float(max(_total_frames - 2, 3)) / _fps if _total_frames > 0 else 0.6
+	await get_tree().create_timer(_impact_delay, false).timeout
 
-	# Siege Core görseli tepeden düşer
-	var core_vfx := AnimatedSprite2D.new()
-	core_vfx.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	core_vfx.z_index = 4
-	core_vfx.scale = Vector2(1.5, 1.5)
-	core_vfx.global_position = Vector2(pos.x, pos.y - 300.0)
-	var sf := SpriteFrames.new()
-	if sf.has_animation("default"): sf.remove_animation("default")
-	sf.add_animation("spin")
-	sf.set_animation_speed("spin", 15.0)
-	sf.set_animation_loop("spin", true)
-	for i in range(9):
-		sf.add_frame("spin", load("res://assets/balls/siegeCore/frame_%03d.png" % i))
-	core_vfx.sprite_frames = sf
-	add_child(core_vfx)
-	core_vfx.play("spin")
-
-	# Düşüş tweeni
-	var fall := core_vfx.create_tween()
-	fall.tween_property(core_vfx, "global_position:y", pos.y, 0.35)\
-		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-
-	await get_tree().create_timer(0.35).timeout
-
-	# Çarpma: ekran sarsıntısı + hasar
 	_screen_shake()
-	if is_instance_valid(core_vfx): core_vfx.queue_free()
-	if is_instance_valid(shadow_node): shadow_node.queue_free()
-
-	# Alan hasarı
 	for s in get_tree().get_nodes_in_group("subjects"):
 		if not is_instance_valid(s): continue
 		if pos.distance_to(s.global_position) <= radius:
 			s.take_damage(dmg, false)
-
-	# Zemin çatlağı VFX (geçici kırmızı daire)
-	var crack := ColorRect.new()
-	crack.color = Color(0.9, 0.3, 0.0, 0.6)
-	crack.size = Vector2(radius * 2, radius * 2)
-	crack.position = pos - Vector2(radius, radius)
-	crack.z_index = 2
-	add_child(crack)
-	var tw := crack.create_tween()
-	tw.tween_property(crack, "color:a", 0.0, 0.5)
-	tw.tween_callback(crack.queue_free)
 
 func _activate_glitch_bomb(pos: Vector2) -> void:
 	for e in get_tree().get_nodes_in_group("enemies"):
@@ -4270,9 +4287,9 @@ func _process(delta: float) -> void:
 		elif calamity == "🌀":
 			$UI/CalamityCircle.color = Color(0.5, 0.0, 1.0, 0.2)
 			$UI/CalamityCircle.radius = 100
-		elif calamity == "🌧️":  # Siege Rain
+		elif calamity == "🌧️":  # Siege Rain — gerçek sapma alanı (±120px köşegeni) kadar
 			$UI/CalamityCircle.color = Color(0.4, 0.4, 0.5, 0.2)
-			$UI/CalamityCircle.radius = 80
+			$UI/CalamityCircle.radius = 170
 		elif calamity == "🔥💥":  # Wildfire — hedef yok, tüm Yanan düşmanlar
 			$UI/CalamityCircle.visible = false
 		elif calamity == "🕳️":  # WormHole — mouse'a değil, karakterin tam önüne sabit açılır
