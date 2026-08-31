@@ -1147,7 +1147,7 @@ func _ready() -> void:
 	#   9=🌀 Gravitational Force | 174=💥 Shockwave
 	#   175=🔓 Full Breach | 176=💨 Momentum Burst | 177=🏚️ Rampart Collapse
 	#   198=🌀🕳️ WormHole | 199=🌧️ Siege Rain
-	var _debug_test_calamity := "🏚️"
+	var _debug_test_calamity := "🌀🕳️"
 	if _debug_test_calamity != "" and calamity_slots.size() < max_calamity_slots:
 		calamity_slots.append(_debug_test_calamity)
 		update_ui()
@@ -1804,7 +1804,7 @@ func _update_calamity_cells() -> void:
 				sb.bg_color = Color(0.07, 0.07, 0.15, 0.9)
 
 # Bir Calamity hedefleme gerektiriyor mu (mouse_pos parametresi kullanan tipler)?
-const _CALAMITY_TARGETED := ["⚡", "🔥", "🌀", "🌋", "🌧️", "💣", "☠️", "🏚️"]
+const _CALAMITY_TARGETED := ["⚡", "🔥", "🌀", "🌋", "🌧️", "💣", "☠️", "🏚️", "🌀🕳️"]
 func _calamity_needs_target(calamity: String) -> bool:
 	return calamity in _CALAMITY_TARGETED
 
@@ -3345,28 +3345,59 @@ func _vfx_rampart_impact(pos: Vector2) -> void:
 func _activate_wormhole() -> void:
 	var player := get_node_or_null("Player")
 	if not player: return
-	# Delik pozisyonu: player'ın önünde 120px
-	var worm_pos: Vector2 = player.global_position + Vector2(120, 0)
+	# Delik pozisyonu: player'ın TAM önünde (o anki bakış/nişan yönü — sağ/sol değil)
+	var _face_dir: Vector2 = player.aim_direction if player.get("aim_direction") else Vector2(1, 0)
+	if _face_dir == Vector2.ZERO: _face_dir = Vector2(1, 0)
+	var worm_pos: Vector2 = player.global_position + _face_dir.normalized() * 120.0
 	var duration := 5.0
 
 	var visual: CanvasItem = _vfx_wormhole_open(worm_pos, duration)
+	var _consuming: Array = []  # şu an merkeze çekilip küçülen düşmanlar
 
-	# 5 saniye boyunca yaklaşan düşmanları ışınla
+	# 5 saniye boyunca yaklaşan düşmanları yakalayıp merkeze çekiyor
 	var elapsed := 0.0
-	var check_timer := get_tree().create_timer(0.2)
 	while elapsed < duration:
-		await check_timer.timeout
-		elapsed += 0.2
-		check_timer = get_tree().create_timer(0.2)
+		var _dt := get_process_delta_time()
+		elapsed += _dt
 		for s in get_tree().get_nodes_in_group("subjects"):
-			if not is_instance_valid(s): continue
+			if not is_instance_valid(s) or s in _consuming: continue
 			if s.get("is_boss") and s.is_boss: continue  # Boss etkilenmez
 			if s.get("is_dead") and s.is_dead: continue
 			if worm_pos.distance_to(s.global_position) <= 70.0:
-				# Skor'un yarısını ver
-				var score_val: int = s.get("score_value") if s.get("score_value") else 0
-				subject_died(score_val / 2, s.global_position)
-				s.queue_free()
+				_consuming.append(s)
+				if s.has_method("set_physics_process"): s.set_physics_process(false)
+				if s.has_node("CollisionShape2D"): s.get_node("CollisionShape2D").set_deferred("disabled", true)
+				s.set_meta("wormhole_pull_t", 0.0)
+				s.set_meta("wormhole_start_pos", s.global_position)
+				s.set_meta("wormhole_start_scale", s.scale)
+		# Yakalanmış düşmanları döndürerek + küçülterek merkeze çek
+		for i in range(_consuming.size() - 1, -1, -1):
+			var s2 = _consuming[i]
+			if not is_instance_valid(s2):
+				_consuming.remove_at(i)
+				continue
+			var t: float = s2.get_meta("wormhole_pull_t") + _dt
+			s2.set_meta("wormhole_pull_t", t)
+			var pull_dur := 0.4
+			var pt: float = clamp(t / pull_dur, 0.0, 1.0)
+			var _start_pos: Vector2 = s2.get_meta("wormhole_start_pos")
+			var _start_scale: Vector2 = s2.get_meta("wormhole_start_scale")
+			s2.global_position = _start_pos.lerp(worm_pos, pt)
+			s2.scale = _start_scale.lerp(Vector2.ZERO, pt)
+			s2.rotation += 14.0 * _dt
+			if pt >= 1.0:
+				var score_val: int = s2.get("score_value") if s2.get("score_value") else 0
+				subject_died(score_val / 2, worm_pos)
+				s2.queue_free()
+				_consuming.remove_at(i)
+		await get_tree().process_frame
+
+	# Süre bitiminde hâlâ çekilmekte olan düşman kalırsa donuk kalmasın diye tamamla
+	for s2 in _consuming:
+		if not is_instance_valid(s2): continue
+		var score_val: int = s2.get("score_value") if s2.get("score_value") else 0
+		subject_died(score_val / 2, worm_pos)
+		s2.queue_free()
 
 	if is_instance_valid(visual):
 		visual.queue_free()
@@ -3381,7 +3412,7 @@ func _vfx_wormhole_open(pos: Vector2, duration: float) -> CanvasItem:
 		fallback.color = Color(0.5, 0.0, 1.0, 0.0)
 		fallback.size = Vector2(120, 120)
 		fallback.position = pos - Vector2(60, 60)
-		fallback.z_index = 5
+		fallback.z_index = 1
 		add_child(fallback)
 		var tw_in := fallback.create_tween()
 		tw_in.tween_property(fallback, "color:a", 0.7, 0.3)
@@ -3389,7 +3420,7 @@ func _vfx_wormhole_open(pos: Vector2, duration: float) -> CanvasItem:
 
 	var vortex := AnimatedSprite2D.new()
 	vortex.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	vortex.z_index = 5
+	vortex.z_index = 1  # düşmanların (z_index 2-3) altında kalsın
 	vortex.modulate = Color(1, 1, 1, 0.85)
 	vortex.scale = Vector2.ZERO
 	vortex.global_position = pos
@@ -4234,6 +4265,14 @@ func _process(delta: float) -> void:
 			$UI/CalamityCircle.radius = 80
 		elif calamity == "🔥💥":  # Wildfire — hedef yok, tüm Yanan düşmanlar
 			$UI/CalamityCircle.visible = false
+		elif calamity == "🌀🕳️":  # WormHole — mouse'a değil, karakterin tam önüne sabit açılır
+			var _wp := _player_node
+			if _wp:
+				var _fd: Vector2 = _wp.aim_direction if _wp.get("aim_direction") else Vector2(1, 0)
+				if _fd == Vector2.ZERO: _fd = Vector2(1, 0)
+				$UI/CalamityCircle.position = _wp.global_position + _fd.normalized() * 120.0
+			$UI/CalamityCircle.color = Color(0.5, 0.0, 1.0, 0.2)
+			$UI/CalamityCircle.radius = 70
 		elif calamity == "💣":  # Glitch Bomb
 			$UI/CalamityCircle.color = Color(0.75, 0.0, 0.85, 0.2)
 			$UI/CalamityCircle.radius = 120

@@ -554,6 +554,25 @@ kullanımı referans alındı). Meğerse zaten **hazır bir altyapı** vardı: `
       `assets/VFX/calamitys/wormhole/frame_000..008.png`'den (9 frame, kullanıcı ekledi)
       10fps spin-loop `AnimatedSprite2D`, süre başında büyüyüp (0→1.6 scale) bitmeden
       küçülüyor. Sprite yoksa eski `ColorRect` fallback'ine düşüyor (crash yok).
+      **Kullanıcı testi sonrası 3 ek düzeltme (aynı gün)**:
+      1. **z_index bug fix**: vortex/fallback z_index 5 → 1, düşmanların (z_index 2-3)
+         üzerinde görünüyordu, artık altlarında kalıyor.
+      2. **Emme animasyonu eklendi**: yakalanan düşmanlar artık anında `queue_free()`
+         olmuyor, ~0.4s boyunca dönerek (`rotation += 14·dt`) + küçülerek (`scale→0`)
+         merkeze doğru çekiliyor (vorteksin kendi dönüş hareketiyle tutarlı). Süre
+         bitiminde hâlâ çekilmekte olan biri kalırsa donuk kalmasın diye sonda bir
+         temizleme eklendi.
+      3. **Tıklama davranışı düzeltildi + hedef bug'ı çözüldü**: WormHole artık
+         `_CALAMITY_TARGETED` listesinde — tıklar tıklamaz ateşlenmiyor, tıkla+
+         sürükle+bırak veya tıkla+E gerekiyor (kullanıcı: "mouse tıklar tıklamaz
+         çalışıyor, iyi değil"). **Asıl bug**: açılma konumu sabit `Vector2(120,0)`
+         (her zaman sağa) idi, kullanıcı "karakterin tam önünde, sağında/solunda
+         değil" istedi — `player.aim_direction` (karakterin gerçek anlık bakış/nişan
+         yönü) kullanılacak şekilde düzeltildi. Nişan-önizleme çemberi de gerçek
+         açılış konumunu gösteriyor (mouse pozisyonunu değil).
+
+**WORMHOLE TAMAMLANDI (198) — 2026-08-31**
+
 - [ ] **SIRADA: Siege Rain (199)**
 
 ## Core Speed Mimarisi — KRİTİK BUG FIX + Fırlatılan Topa Bağlama (2026-08-29)
