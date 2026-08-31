@@ -656,6 +656,32 @@ patlamalarının ÜZERİNE ekleniyor (onlar kaldırılmadı).
 **Kalan VFX eksiği**: Rampart Collapse'ın "impact" (patlama) klasörü hâlâ boş (sadece
 "charge" var), Momentum Burst'ün hiç özel VFX'i yok (sadece genel trail hissi).
 
+### Full Breach — kırmızı vinyet kaldırıldı, yerine core aurası eklendi (aynı gün)
+Kullanıcı 8s süren tam ekran kırmızı vinyeti rahatsız edici buldu ("şu kırmızılığı
+kaldırsak, core'lara görsel efekt eklesek, çevrelerini kızartmak gibi"). Yapılan:
+- `_vfx_full_breach_vignette()` fonksiyonu ve çağrısı tamamen silindi (aktivasyon anındaki
+  kısa `_react_flash_screen` + `screen_shake_heavy` kaldı, diğer Calamity'lerle tutarlı).
+- `ball.gd`'ye `_full_breach_aura` (CPUParticles2D, halka şeklinde emission, kırmızı-turuncu
+  ember parçacıkları) eklendi — momentum trail ile aynı lazy-init deseni, `full_breach_mult
+  > 1.0` iken her topun (fırlatılan/dönen) etrafında sürekli parçacık saçıyor, buff bitince
+  otomatik sönüyor.
+- **BUG FIX (crash)**: ilk denemede `emission_ring_axis` (CPUParticles**3D**'ye özgü bir
+  property) yanlışlıkla `CPUParticles2D`'ye set edilmeye çalışıldı, oyun anında crash
+  ediyordu — satır silindi, 2D ring emission zaten eksen istemiyor.
+
+### Yeni genel özellik: Düşük Can Uyarı Vinyeti (tüm karakterler)
+Full Breach sohbeti sırasında kullanıcı, "her oyunda olan, can azalınca ekran kenarında
+kırmızılık" tarzı klasik bir düşük-HP uyarısı istedi — Vector'a özgü değil, genel bir HUD
+özelliği. `_setup_low_hp_vignette()` (`_ready()`'de bir kez kurulur) + `_update_low_hp_
+vignette()` (`_process()`'te her frame) eklendi:
+- `GradientTexture2D` (radial, merkez şeffaf → kenar opak kırmızı, shader'sız) tam ekran
+  `TextureRect`, `$UI` altında.
+- Eşik: HP ≤ %30 iken görünür oluyor. Şiddet (`_severity`) 0 (eşikte) → 1 (0 HP'de) arası
+  ölçekleniyor: hem taban alpha (0.12→0.55) hem nabız hızı (2→5 Hz) hem nabız genliği
+  (0.05→0.18) buna göre artıyor — can azaldıkça daha yoğun ve daha hızlı "kalp atışı" hissi.
+  Sinüs dalgasıyla (`Time.get_ticks_msec()`) pulse ediliyor.
+- `upgrading` (menü açıkken) otomatik gizleniyor.
+
 Sıradaki adım: aynı 4 aşamalı review süreci **Leila** için baştan başlayacak (Cyclone
 Identity/Utility/Individuality zaten önceki session'da tam review edilmişti, tekrar
 gerekmiyor — Leila'nın tamamı + Cyclone Calamity hâlâ eksik, bkz. dosyanın en altındaki

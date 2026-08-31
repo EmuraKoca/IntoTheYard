@@ -119,6 +119,7 @@ var _pos_stuck_timer: float = 0.0
 var _sprite: AnimatedSprite2D = null
 var _kinetic_vfx: Sprite2D = null
 var _momentum_trail: CPUParticles2D = null
+var _full_breach_aura: CPUParticles2D = null
 var _hit_sfx: AudioStreamPlayer2D = null
 
 static var _sfx_classic:  AudioStream = null
@@ -507,6 +508,7 @@ func _process(_delta: float) -> void:
 func _physics_process(delta: float) -> void:
 	_update_trail(delta)
 	_update_momentum_trail()
+	_update_full_breach_aura()
 	if can_bloodbound:
 		queue_redraw()
 		_blood_trail_timer -= delta
@@ -2559,6 +2561,41 @@ func _update_momentum_trail() -> void:
 		lerp(0.7, 0.95, t),
 		1.0,
 		lerp(0.5, 0.9, t))
+
+func _create_full_breach_aura() -> void:
+	_full_breach_aura = CPUParticles2D.new()
+	# top_level=false: topu takip etsin (Momentum trail'in aksine, burada iz değil çevre efekti istiyoruz)
+	_full_breach_aura.emitting = false
+	_full_breach_aura.one_shot = false
+	_full_breach_aura.explosiveness = 0.0
+	_full_breach_aura.emission_shape = CPUParticles2D.EMISSION_SHAPE_RING
+	_full_breach_aura.emission_ring_radius = 14.0
+	_full_breach_aura.emission_ring_inner_radius = 10.0
+	_full_breach_aura.direction = Vector2.ZERO
+	_full_breach_aura.spread = 180.0
+	_full_breach_aura.gravity = Vector2.ZERO
+	_full_breach_aura.initial_velocity_min = 6.0
+	_full_breach_aura.initial_velocity_max = 16.0
+	_full_breach_aura.angular_velocity_min = -90.0
+	_full_breach_aura.angular_velocity_max = 90.0
+	_full_breach_aura.scale_amount_min = 1.0
+	_full_breach_aura.scale_amount_max = 2.2
+	_full_breach_aura.color = Color(1.0, 0.25, 0.1, 0.85)
+	_full_breach_aura.lifetime = 0.35
+	_full_breach_aura.amount = 10
+	_full_breach_aura.z_index = 6
+	add_child(_full_breach_aura)
+
+func _update_full_breach_aura() -> void:
+	var p := _get_player()
+	var _active: bool = p != null and p.get("full_breach_mult") != null and p.full_breach_mult > 1.0
+	if not _active:
+		if is_instance_valid(_full_breach_aura):
+			_full_breach_aura.emitting = false
+		return
+	if not is_instance_valid(_full_breach_aura):
+		_create_full_breach_aura()
+	_full_breach_aura.emitting = true
 
 func _setup_trail() -> void:
 	trail = Line2D.new()

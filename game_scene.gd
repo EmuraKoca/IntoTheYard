@@ -31,6 +31,7 @@ var _pending_core_type: String = ""
 
 # ── Tooltip sistemi ────────────────────────────────────────────────────────────
 var _tooltip_label: Label = null
+var _low_hp_vignette: TextureRect = null
 var _calamity_cells: Array = []
 
 const _CORE_DISPLAY_NAMES: Dictionary = {
@@ -1130,6 +1131,7 @@ func _ready() -> void:
 	max_calamity_slots = 3 + GameData.get_shop_calamity_slot_bonus()
 	_setup_frost_barrier_ui()
 	_setup_core_panel()
+	_setup_low_hp_vignette()
 	update_ui()
 	_update_armor_ui()
 	_run_start_level = GameData.get_level(GameData.selected_character)
@@ -1696,6 +1698,46 @@ func _setup_core_panel() -> void:
 	_core_panel = panel_launch
 	_setup_tooltip()
 	_setup_calamity_cells()
+
+func _setup_low_hp_vignette() -> void:
+	if _low_hp_vignette != null:
+		return
+	var grad := Gradient.new()
+	grad.set_color(0, Color(0.9, 0.0, 0.0, 0.0))  # merkez: şeffaf
+	grad.set_color(1, Color(0.9, 0.0, 0.0, 1.0))  # kenar: opak kırmızı
+	var tex := GradientTexture2D.new()
+	tex.gradient = grad
+	tex.fill = GradientTexture2D.FILL_RADIAL
+	tex.fill_from = Vector2(0.5, 0.5)
+	tex.fill_to = Vector2(1.0, 0.5)
+	tex.width = 512
+	tex.height = 512
+	var rect := TextureRect.new()
+	rect.name = "LowHPVignette"
+	rect.texture = tex
+	rect.stretch_mode = TextureRect.STRETCH_SCALE
+	rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rect.z_index = 12
+	rect.modulate = Color(1, 1, 1, 0.0)
+	$UI.add_child(rect)
+	_low_hp_vignette = rect
+
+func _update_low_hp_vignette() -> void:
+	if _low_hp_vignette == null or player_max_hp <= 0:
+		return
+	var _ratio: float = float(player_hp) / float(player_max_hp)
+	var _threshold := 0.3
+	if _ratio > _threshold or player_hp <= 0 or upgrading:
+		_low_hp_vignette.modulate.a = 0.0
+		return
+	# 0 (eşikte) → 1 (0 HP'de) arası şiddet
+	var _severity: float = clamp(1.0 - _ratio / _threshold, 0.0, 1.0)
+	var _base_alpha: float = lerp(0.12, 0.55, _severity)
+	var _pulse_speed: float = lerp(2.0, 5.0, _severity)
+	var _pulse_amp: float = lerp(0.05, 0.18, _severity)
+	var _t := Time.get_ticks_msec() / 1000.0
+	_low_hp_vignette.modulate.a = _base_alpha + _pulse_amp * (sin(_t * _pulse_speed) * 0.5 + 0.5)
 
 func _setup_tooltip() -> void:
 	if _tooltip_label != null:
@@ -3203,7 +3245,6 @@ func _activate_full_breach() -> void:
 	p._full_breach_timer = 8.0
 	_react_flash_screen(Color(1.0, 0.2, 0.1, 0.5))
 	screen_shake_heavy()
-	_vfx_full_breach_vignette()
 	_vfx_full_breach_burst(p.global_position)
 
 # Armor'ın kırılıp güce dönüşme anı: gerçek sprite animasyonu (9 frame)
@@ -3230,20 +3271,6 @@ func _vfx_full_breach_burst(pos: Vector2) -> void:
 	burst.animation_finished.connect(func():
 		if is_instance_valid(burst): burst.queue_free()
 	)
-
-func _vfx_full_breach_vignette() -> void:
-	var vignette := ColorRect.new()
-	vignette.color = Color(1.0, 0.15, 0.05, 0.0)
-	vignette.position = Vector2(385, 255)
-	vignette.size = Vector2(1920 - 385, 1080 - 255)
-	vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	vignette.z_index = 9
-	add_child(vignette)
-	var tw := create_tween()
-	tw.tween_property(vignette, "color:a", 0.18, 0.3)
-	tw.tween_interval(7.2)
-	tw.tween_property(vignette, "color:a", 0.0, 0.5)
-	tw.tween_callback(vignette.queue_free)
 
 func _activate_momentum_burst() -> void:
 	var p := get_node_or_null("Player")
@@ -4169,6 +4196,7 @@ func _draw_dashed_line(from: Vector2, to: Vector2, color: Color, width: float) -
 
 func _process(delta: float) -> void:
 	_update_core_panel()   # her frame güncelle — deferred add_child'ı yakala
+	_update_low_hp_vignette()
 
 	var p := _player_node
 
