@@ -2523,7 +2523,7 @@ func _build_all_upgrades() -> void:
 	{"name": "Momentum Burst",    "category": "Calamity",      "color": Color(0.0, 0.8, 1.0),  "desc": "Spend all Momentum:\n+5% Core Speed per stack (10s)",            "index": 176, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 4, "requires": [35]},
 	{"name": "Rampart Collapse",  "category": "Calamity",      "color": Color(0.2, 0.85, 1.0),  "desc": "Aim and fire: AoE damage equal to\nArmor Cap at target point. Armor resets",       "index": 177, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 5},
 	{"name": "WormHole",          "category": "Calamity",      "color": Color(0.4, 0.0, 0.8),  "desc": "5s: opens a wormhole in front of you\nApproaching enemies are teleported away (Boss immune)", "index": 198, "weight": 2, "rarity": "legendary", "chars": ["vector"], "min_level": 4},
-	{"name": "Siege Rain",        "category": "Calamity",      "color": Color(0.4, 0.4, 0.5),  "desc": "7s boyunca hedef alana\nher 0.5s'de Siege Core düşer",     "index": 199, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 4},
+	{"name": "Siege Rain",        "category": "Calamity",      "color": Color(0.4, 0.4, 0.5),  "desc": "7s: a Siege Core falls on the\ntarget area every 0.5s",     "index": 199, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 4},
 	# ── Leila (Elemental) ─────────────────────────────────────────────────────
 	{"name": "Electric Core",       "category": "Identity",      "color": Color(0.2, 0.5, 1.0), "desc": "Core gains electricity",                    "index": 1,  "weight": 10, "rarity": "common", "chars": ["leila"], "min_level": 0},
 	{"name": "Cryo Core",           "category": "Identity",      "color": Color(0.5, 0.8, 1.0), "desc": "Slows subject by 25%",                      "index": 15, "weight": 10, "rarity": "common", "chars": ["leila"], "min_level": 0},
@@ -3458,21 +3458,31 @@ func _activate_siege_rain(pos: Vector2) -> void:
 		_spawn_siege_rain_impact(hit_pos, siege_dmg, siege_radius)
 
 func _spawn_siege_rain_impact(pos: Vector2, dmg: int, radius: float) -> void:
-	# Gölge uyarısı — büyükten küçüğe (Smiler sistemiyle aynı mantık)
+	# Gölge uyarısı: hedef alanda küçükten tam isabet yarıçapına büyüyen kırmızı halka
+	# BUG FIX: eskiden script'siz bir Node2D + queue_redraw() vardı — hiçbir _draw()
+	# override'ı olmadığı için hiçbir şey çizilmiyordu, oyuncu nereye vurulacağını
+	# göremiyordu. Gerçek Polygon2D tabanlı bir halkaya çevrildi.
 	var warn_time := 0.6
-	var shadow_node := Node2D.new()
+	var shadow_node := Polygon2D.new()
+	shadow_node.color = Color(0.9, 0.2, 0.1, 0.35)
 	shadow_node.z_index = 3
+	shadow_node.global_position = pos
+	var _pts := PackedVector2Array()
+	const _SEG := 20
+	for _s in range(_SEG):
+		var _ang: float = TAU * float(_s) / float(_SEG)
+		_pts.append(Vector2(cos(_ang), sin(_ang)) * radius)
+	shadow_node.polygon = _pts
+	shadow_node.scale = Vector2(0.15, 0.15)
 	add_child(shadow_node)
 
-	var warn_elapsed := 0.0
-	var warn_tick := get_tree().create_timer(0.05)
-	while warn_elapsed < warn_time:
-		await warn_tick.timeout
-		warn_elapsed += 0.05
-		warn_tick = get_tree().create_timer(0.05)
-		if not is_instance_valid(shadow_node): return
-		var t: float = warn_elapsed / warn_time  # 0→1
-		shadow_node.queue_redraw()
+	var shadow_tw := create_tween()
+	shadow_tw.tween_property(shadow_node, "scale", Vector2(1.0, 1.0), warn_time)\
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	shadow_tw.parallel().tween_property(shadow_node, "color:a", 0.55, warn_time)
+
+	await get_tree().create_timer(warn_time).timeout
+	if not is_instance_valid(shadow_node): return
 
 	# Siege Core görseli tepeden düşer
 	var core_vfx := AnimatedSprite2D.new()

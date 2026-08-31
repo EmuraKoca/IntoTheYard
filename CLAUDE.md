@@ -573,7 +573,22 @@ kullanımı referans alındı). Meğerse zaten **hazır bir altyapı** vardı: `
 
 **WORMHOLE TAMAMLANDI (198) — 2026-08-31**
 
-- [ ] **SIRADA: Siege Rain (199)**
+- [x] Siege Rain (199) — **GERÇEK BUG (görsel)**: 7s boyunca her 0.5s'de düşen Siege Core'un
+      isabet öncesi "gölge uyarısı" (`shadow_node`) script'siz bir `Node2D` idi ve
+      `queue_redraw()` çağırıyordu — ama hiçbir `_draw()` override'ı olmadığı için **hiçbir
+      şey çizilmiyordu**, oyuncu 14 darbeden hiçbirinin nereye düşeceğini göremiyordu.
+      Gerçek bir `Polygon2D` halkasına çevrildi: küçük başlayıp 0.6s'de tam isabet
+      yarıçapına büyüyor (`scale` tween), aynı anda alpha artıyor — artık isabet alanı
+      net görünüyor. Requires gerekmiyor (Siege Core sprite'ı sadece kozmetik ödünç
+      alınmış, mekanik bağımlılık yok). Dil bug'ı (aynı tekrarlayan desen): EN `desc`
+      Türkçe yazılmıştı → düzeltildi, `lang.gd`'de TR girdisi hiç yoktu → eklendi.
+
+**VECTOR CALAMITY TAMAMLANDI (7/7 kart, Iron Fortress kaldırıldı) — 2026-08-31**
+
+Sıradaki adım: aynı 4 aşamalı review süreci **Leila** için baştan başlayacak (Cyclone
+Identity/Utility/Individuality zaten önceki session'da tam review edilmişti, tekrar
+gerekmiyor — Leila'nın tamamı + Cyclone Calamity hâlâ eksik, bkz. dosyanın en altındaki
+"Sonrası" notu).
 
 ## Core Speed Mimarisi — KRİTİK BUG FIX + Fırlatılan Topa Bağlama (2026-08-29)
 

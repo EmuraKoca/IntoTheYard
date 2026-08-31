@@ -279,6 +279,7 @@ const _DESC_TR: Dictionary = {
 	176: "Tüm Momentum'u harca:\nstack başına +%5 Core Hızı (10sn)",
 	177: "Nişan al ve ateşle: hedef noktaya Armor Cap\nkadar alan hasarı verir, Armor sıfırlanır",
 	198: "5sn: önünde solucan deliği açılır\nYaklaşan düşmanlar ışınlanır (Boss hariç)",
+	199: "7sn: hedef alana her 0.5sn'de\nbir Siege Core düşer",
 	169: "Armor ilk kez sıfırlanınca:\ntüm Momentum → Armor ×2 (run başına 1 kez)",
 	178: "Her 2s: 60px'deki düşmanlara\n1 + Armor×%5 hasar",
 	179: "Momentum Engine'in pasif\nüretimine +1 ekler (tick başına)",
