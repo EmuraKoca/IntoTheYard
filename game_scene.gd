@@ -1127,13 +1127,13 @@ func _ready() -> void:
 	_setup_auto_toggle()
 	_setup_neon_sign()
 	_setup_armor_bar()
+	max_calamity_slots = 3 + GameData.get_shop_calamity_slot_bonus()
 	_setup_frost_barrier_ui()
 	_setup_core_panel()
 	update_ui()
 	_update_armor_ui()
 	_run_start_level = GameData.get_level(GameData.selected_character)
 	_run_start_chips = GameData.chips
-	max_calamity_slots = 3 + GameData.get_shop_calamity_slot_bonus()
 	var _cal_start := GameData.get_shop_start_calamity_count()
 	if _cal_start > 0:
 		var _cal_pool := ["⚡", "🔥", "🌀", "❄️", "💧", "☠️"]
@@ -1197,19 +1197,9 @@ func update_ui() -> void:
 	if catch_lbl:
 		catch_lbl.visible = false
 
-	# Calamity slots
-	var calamity_text = Lang.t("ui_calamity_header") + "\n"
-	if calamity_slots.is_empty():
-		calamity_text += "◻  ◻  ◻"
-	else:
-		for i in range(calamity_slots.size()):
-			if i == calamity_index:
-				calamity_text += "◉ " + calamity_slots[i] + "  "
-			else:
-				calamity_text += "◎ " + calamity_slots[i] + "  "
-		for _j in range(max_calamity_slots - calamity_slots.size()):
-			calamity_text += "◻  "
-	$UI/LabelCalamity.text = calamity_text
+	# Calamity slots — tıklamalı hücreler (_calamity_cells) kullanılıyor, Label sadece başlık
+	$UI/LabelCalamity.text = Lang.t("ui_calamity_header")
+	_update_calamity_cells()
 	_update_processor_btn()
 
 func subject_died(xp_reward: int = 1, death_pos: Vector2 = Vector2.ZERO, etype: String = "subject") -> void:
@@ -1734,22 +1724,44 @@ func _setup_tooltip() -> void:
 func _setup_calamity_cells() -> void:
 	const CAL_PX := 1640.0
 	const CAL_PY := 636.0
-	const CELL_W := 32.0
-	const CELL_H := 22.0
+	const CELL_W := 40.0
+	const CELL_H := 34.0
 	const GAP    := 6.0
 	_calamity_cells = []
-	for i in range(3):
+	for i in range(5):  # 3 + max shop bonus (cal_slot max_stack:2)
 		var cell := Panel.new()
-		var sb := StyleBoxEmpty.new()
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = Color(0.07, 0.07, 0.15, 0.9)
+		sb.corner_radius_top_left = 4; sb.corner_radius_top_right = 4
+		sb.corner_radius_bottom_right = 4; sb.corner_radius_bottom_left = 4
+		sb.border_width_top = 1; sb.border_width_bottom = 1
+		sb.border_width_left = 1; sb.border_width_right = 1
+		sb.border_color = Color(0.3, 0.6, 0.9, 0.55)
 		cell.add_theme_stylebox_override("panel", sb)
 		cell.size = Vector2(CELL_W, CELL_H)
 		cell.position = Vector2(CAL_PX + i * (CELL_W + GAP), CAL_PY)
 		cell.mouse_filter = Control.MOUSE_FILTER_STOP
+		cell.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		$UI.add_child(cell)
+		var icon := Label.new()
+		icon.name = "Icon"
+		icon.text = "◻"
+		icon.size = Vector2(CELL_W, CELL_H)
+		icon.position = Vector2.ZERO
+		icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		icon.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		icon.add_theme_font_override("font", _font_bold)
+		icon.add_theme_font_size_override("font_size", 18)
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		cell.add_child(icon)
 		_calamity_cells.append(cell)
 		var ci := i
 		cell.mouse_entered.connect(func(): _on_calamity_cell_hover(ci))
 		cell.mouse_exited.connect(_hide_tooltip)
+		cell.gui_input.connect(func(event):
+			if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+				_on_calamity_cell_clicked(ci)
+		)
 
 func _on_core_cell_hover(index: int) -> void:
 	if _tooltip_label == null:
@@ -1765,6 +1777,122 @@ func _on_core_cell_hover(index: int) -> void:
 	var cell: Panel = _core_cells[index]
 	var pos := cell.global_position + Vector2(0, -28)
 	_show_tooltip(display_name, pos)
+
+func _update_calamity_cells() -> void:
+	for i in range(_calamity_cells.size()):
+		var cell: Panel = _calamity_cells[i]
+		var icon: Label = cell.get_node_or_null("Icon")
+		var sb := cell.get_theme_stylebox("panel") as StyleBoxFlat
+		if i >= max_calamity_slots:
+			cell.visible = false
+			continue
+		cell.visible = true
+		if i < calamity_slots.size():
+			if icon: icon.text = calamity_slots[i]
+			if icon: icon.modulate = Color(1, 1, 1, 1)
+			cell.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		else:
+			if icon: icon.text = "◻"
+			if icon: icon.modulate = Color(1, 1, 1, 0.35)
+			cell.mouse_default_cursor_shape = Control.CURSOR_ARROW
+		if sb:
+			if calamity_aiming and calamity_index == i:
+				sb.border_color = Color(1.0, 0.9, 0.2, 1.0)
+				sb.bg_color = Color(0.25, 0.2, 0.05, 0.9)
+			else:
+				sb.border_color = Color(0.3, 0.6, 0.9, 0.55)
+				sb.bg_color = Color(0.07, 0.07, 0.15, 0.9)
+
+# Bir Calamity hedefleme gerektiriyor mu (mouse_pos parametresi kullanan tipler)?
+const _CALAMITY_TARGETED := ["⚡", "🔥", "🌀", "🌋", "🌧️", "💣", "☠️", "🏚️"]
+func _calamity_needs_target(calamity: String) -> bool:
+	return calamity in _CALAMITY_TARGETED
+
+func _on_calamity_cell_clicked(index: int) -> void:
+	if index >= calamity_slots.size():
+		return
+	var calamity: String = calamity_slots[index]
+	if _calamity_needs_target(calamity):
+		if calamity_aiming and calamity_index == index:
+			# Aynı slota tekrar tıklama → nişanı iptal et
+			calamity_aiming = false
+		else:
+			calamity_index = index
+			calamity_aiming = true
+		update_ui()
+	else:
+		calamity_index = index
+		_consume_calamity(index, get_viewport().get_mouse_position())
+
+func _dispatch_calamity_effect(calamity: String, mouse_pos: Vector2) -> void:
+	if calamity == "⚡":
+		_activate_lightning(mouse_pos)
+	elif calamity == "🔥":
+		_activate_flame(mouse_pos)
+	elif calamity == "🌀":
+		_activate_gravity(mouse_pos)
+	elif calamity == "❄️":
+		_activate_blizzard()
+	elif calamity == "🌊":
+		_activate_monsoon()
+	elif calamity == "🌋":
+		_activate_volcanic_rift(mouse_pos)
+	elif calamity == "⛈️":
+		_activate_thunderstorm()
+	elif calamity == "🔋":
+		_activate_emp()
+	elif calamity == "💾":  # Data Storm
+		_activate_data_storm()
+	elif calamity == "👾":  # Backdoor
+		_activate_backdoor()
+	elif calamity == "🎱":  # Bounce Barrage
+		_activate_bounce_barrage()
+	elif calamity == "🪞":  # Mirror Image
+		_activate_mirror_image()
+	elif calamity == "🧪":  # Systemic Failure
+		_activate_systemic_failure()
+	elif calamity == "💥":  # Shockwave
+		_activate_shockwave()
+	elif calamity == "🔓":  # Full Breach
+		_activate_full_breach()
+	elif calamity == "💨":  # Momentum Burst
+		_activate_momentum_burst()
+	elif calamity == "🏚️":  # Rampart Collapse
+		_activate_rampart_collapse(mouse_pos)
+	elif calamity == "🌀🕳️":  # WormHole
+		_activate_wormhole()
+	elif calamity == "🌧️":  # Siege Rain
+		_activate_siege_rain(mouse_pos)
+	elif calamity == "🔥💥":  # Wildfire
+		_activate_wildfire()
+	elif calamity == "💣":  # Glitch Bomb
+		_activate_glitch_bomb(mouse_pos)
+	elif calamity == "💻💥":  # System Crash
+		_activate_system_crash()
+	elif calamity == "🦠":  # Virus Rain
+		_activate_antivirus_rain()
+	elif calamity == "☠️":  # Decay Field
+		_activate_decay_field(mouse_pos)
+
+func _consume_calamity(index: int, mouse_pos: Vector2) -> void:
+	if index < 0 or index >= calamity_slots.size():
+		return
+	var calamity: String = calamity_slots[index]
+	_dispatch_calamity_effect(calamity, mouse_pos)
+	# Void Resonance: 4 farklı reaksiyon olduysa slot tüketme
+	var _vr_skip := false
+	if _player_node and _player_node.get("has_void_resonance") and _player_node.has_void_resonance:
+		if _player_node.get("_void_resonance_ready") and _player_node._void_resonance_ready:
+			_vr_skip = true
+			_player_node._void_resonance_ready = false
+			_player_node._wave_reaction_types.clear()
+	if not _vr_skip:
+		calamity_slots.remove_at(index)
+	calamity_index = clamp(calamity_index, 0, max(calamity_slots.size() - 1, 0))
+	if _player_node and _player_node.get("has_mana_overflow") and _player_node.has_mana_overflow:
+		_player_node.mana_overflow_timer += 5.0
+	calamity_aiming = false
+	update_ui()
 
 func _on_calamity_cell_hover(index: int) -> void:
 	if _tooltip_label == null or index >= calamity_slots.size():
@@ -2393,7 +2521,7 @@ func _build_all_upgrades() -> void:
 	{"name": "Shockwave",         "category": "Calamity",      "color": Color(0.5, 0.5, 0.9),  "desc": "AoE damage equal to Armor/2 to all enemies in the Yard",           "index": 174, "weight": 2,  "rarity": "epic",      "chars": ["vector"], "min_level": 3},
 	{"name": "Full Breach",       "category": "Calamity",      "color": Color(0.9, 0.2, 0.1),  "desc": "Armor resets, 8s:\nCore Damage ×2.5",                   "index": 175, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 4},
 	{"name": "Momentum Burst",    "category": "Calamity",      "color": Color(0.0, 0.8, 1.0),  "desc": "Spend all Momentum:\n+5% Core Speed per stack (10s)",            "index": 176, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 4, "requires": [35]},
-	{"name": "Rampart Collapse",  "category": "Calamity",      "color": Color(0.2, 0.85, 1.0),  "desc": "Auto-targets closest enemy: deals damage\nequal to Armor Cap. Armor resets",       "index": 177, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 5},
+	{"name": "Rampart Collapse",  "category": "Calamity",      "color": Color(0.2, 0.85, 1.0),  "desc": "Aim and fire: AoE damage equal to\nArmor Cap at target point. Armor resets",       "index": 177, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 5},
 	{"name": "WormHole",          "category": "Calamity",      "color": Color(0.4, 0.0, 0.8),  "desc": "5s: opens a wormhole in front of you\nApproaching enemies are teleported away (Boss immune)", "index": 198, "weight": 2, "rarity": "legendary", "chars": ["vector"], "min_level": 4},
 	{"name": "Siege Rain",        "category": "Calamity",      "color": Color(0.4, 0.4, 0.5),  "desc": "7s boyunca hedef alana\nher 0.5s'de Siege Core düşer",     "index": 199, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 4},
 	# ── Leila (Elemental) ─────────────────────────────────────────────────────
@@ -3101,41 +3229,29 @@ func _activate_momentum_burst() -> void:
 	p._momentum_burst_timer = 10.0
 	_react_flash_screen(Color(0.0, 0.9, 1.0, 0.4))
 
-func _activate_rampart_collapse() -> void:
+func _activate_rampart_collapse(target_pos: Vector2) -> void:
 	var p := get_node_or_null("Player")
 	if p == null: return
-	var subjects := get_tree().get_nodes_in_group("subjects")
-	var closest: Node2D = null
-	var closest_d := INF
-	for s in subjects:
-		if not is_instance_valid(s) or s.global_position.x < 385.0: continue
-		var d: float = p.global_position.distance_to(s.global_position)
-		if d < closest_d:
-			closest_d = d
-			closest = s
 	player_armor = 0
 	_update_armor_ui()
-	if closest:
-		_fire_rampart_core(p.global_position, closest)
+	_fire_rampart_core(p.global_position, target_pos)
 
 # ── Rampart Collapse: 1) Player üzerinde hexagon Armor tek noktada yoğunlaşır
-#                      2) Yoğunlaşan Core, hedefe fırlar ve patlayıp tek seferlik hasar verir ──
-func _fire_rampart_core(start_pos: Vector2, target: Node2D) -> void:
+#                      2) Yoğunlaşan Core, seçilen noktaya fırlar ve patlayıp AoE hasar verir ──
+func _fire_rampart_core(start_pos: Vector2, target_pos: Vector2) -> void:
 	await _vfx_rampart_charge(start_pos)
-	if not is_instance_valid(target):
-		return
 	var core := _spawn_rampart_projectile(start_pos)
 	var travel_tw := create_tween()
-	travel_tw.tween_property(core, "global_position", target.global_position, 0.22)\
+	travel_tw.tween_property(core, "global_position", target_pos, 0.22)\
 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	await travel_tw.finished
 	if is_instance_valid(core):
 		core.queue_free()
-	var impact_pos: Vector2 = target.global_position if is_instance_valid(target) else start_pos
-	if is_instance_valid(target):
-		target.take_damage(player_armor_cap, false)
-	_vfx_rampart_impact(impact_pos)
-	_react_flash_screen(Color(0.2, 0.85, 1.0, 0.5))
+	var dmg: int = player_armor_cap
+	for s in get_tree().get_nodes_in_group("subjects"):
+		if is_instance_valid(s) and s.global_position.x >= 385.0 and s.global_position.distance_to(target_pos) <= 130.0:
+			s.take_damage(dmg, false)
+	_vfx_rampart_impact(target_pos)
 
 # Aşama 1 VFX: karakter görünmeksizin, üzerinde hexagon Armor parçaları bir noktada yoğunlaşır
 func _vfx_rampart_charge(pos: Vector2) -> void:
@@ -3418,91 +3534,36 @@ func _react_flash_screen(color: Color) -> void:
 	tw.tween_callback(flash.queue_free)
 
 func _input(event: InputEvent) -> void:
-	# C key - cycle through Calamity slots
-	if event is InputEventKey and event.keycode == KEY_C and event.pressed:
-		if not calamity_slots.is_empty():
-			calamity_index = (calamity_index + 1) % calamity_slots.size()
-			update_ui()
-			
-	
-	# Right click held - show area of effect
-	# E key - fire Calamity
-	if event is InputEventKey and event.keycode == KEY_E:
-		if event.pressed and not calamity_slots.is_empty():
-			calamity_aiming = true
-		elif not event.pressed and calamity_aiming:
-			calamity_aiming = false
-			var mouse_pos = get_viewport().get_mouse_position()
-			var calamity = calamity_slots[calamity_index]
-			if calamity == "⚡":
-				_activate_lightning(mouse_pos)
-			elif calamity == "🔥":
-				_activate_flame(mouse_pos)
-			elif calamity == "🌀":
-				_activate_gravity(mouse_pos)
-			elif calamity == "❄️":
-				_activate_blizzard()
-			elif calamity == "🌊":
-				_activate_monsoon()
-			elif calamity == "🌋":
-				_activate_volcanic_rift(mouse_pos)
-			elif calamity == "⛈️":
-				_activate_thunderstorm()
-			elif calamity == "🔋":
-				_activate_emp()
-			elif calamity == "💾":  # Data Storm
-				_activate_data_storm()
-			elif calamity == "👾":  # Backdoor
-				_activate_backdoor()
-			elif calamity == "🎱":  # Bounce Barrage
-				_activate_bounce_barrage()
-			elif calamity == "🪞":  # Mirror Image
-				_activate_mirror_image()
-			elif calamity == "🧪":  # Systemic Failure
-				_activate_systemic_failure()
-			elif calamity == "💥":  # Shockwave
-				_activate_shockwave()
-			elif calamity == "🔓":  # Full Breach
-				_activate_full_breach()
-			elif calamity == "💨":  # Momentum Burst
-				_activate_momentum_burst()
-			elif calamity == "🏚️":  # Rampart Collapse
-				_activate_rampart_collapse()
-			elif calamity == "🌀🕳️":  # WormHole
-				_activate_wormhole()
-			elif calamity == "🌧️":  # Siege Rain
-				_activate_siege_rain(mouse_pos)
-			elif calamity == "🔥💥":  # Wildfire
-				_activate_wildfire()
-			elif calamity == "💣":  # Glitch Bomb
-				_activate_glitch_bomb(mouse_pos)
-			elif calamity == "💻💥":  # System Crash
-				_activate_system_crash()
-			elif calamity == "🦠":  # Virus Rain
-				_activate_antivirus_rain()
-			elif calamity == "☠️":  # Decay Field
-				_activate_decay_field(mouse_pos)
-			# Void Resonance: 4 farklı reaksiyon olduysa slot tüketme
-			var _vr_skip := false
-			if _player_node and _player_node.get("has_void_resonance") and _player_node.has_void_resonance:
-				if _player_node.get("_void_resonance_ready") and _player_node._void_resonance_ready:
-					_vr_skip = true
-					_player_node._void_resonance_ready = false
-					_player_node._wave_reaction_types.clear()
-			if not _vr_skip:
-				calamity_slots.remove_at(calamity_index)
-			calamity_index = clamp(calamity_index, 0, max(calamity_slots.size() - 1, 0))
-			if _player_node and _player_node.get("has_mana_overflow") and _player_node.has_mana_overflow:
-				_player_node.mana_overflow_timer += 5.0
-			update_ui()
-	
+	# Calamity seçimi artık sağ paneldeki hücrelere tıklanarak yapılıyor
+	# (bkz. _on_calamity_cell_clicked). Hedef gerektirmeyen Calamity'ler tıklanınca
+	# anında ateşlenir; hedef gerektirenler "nişan" moduna girer (sarı highlight) —
+	# basılı tutup sürükleyip mouse'u BIRAKINCA (drag-to-target) veya E tuşuna
+	# basınca, mevcut mouse pozisyonunda onaylanıp ateşlenir.
+	if calamity_aiming and not calamity_slots.is_empty():
+		var mouse_pos = get_viewport().get_mouse_position()
+		var _confirm := false
+		if event is InputEventKey and event.keycode == KEY_E and event.pressed:
+			_confirm = true
+		elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
+			# Nişanı açan tıklamanın kendi bırakışı (hücrenin üzerinde) sayılmaz —
+			# sadece hücreden sürükleyip sahada bırakınca ateşlenir.
+			var _armed_cell: Panel = _calamity_cells[calamity_index] if calamity_index < _calamity_cells.size() else null
+			var _over_cell: bool = _armed_cell != null and Rect2(_armed_cell.global_position, _armed_cell.size).has_point(mouse_pos)
+			if not _over_cell:
+				_confirm = true
+		if _confirm:
+			_consume_calamity(calamity_index, mouse_pos)
+
 	# Tab → Tactical Mode aç/kapat
 	if event is InputEventKey and event.keycode == KEY_TAB and event.pressed and not event.echo:
 		if not get_tree().paused:
 			_toggle_rts_mode()
 
 	if event is InputEventKey and event.keycode == KEY_ESCAPE and event.pressed:
-		if not upgrading:
+		if calamity_aiming:
+			calamity_aiming = false
+			update_ui()
+		elif not upgrading:
 			_show_pause_menu()
 			
 func _toggle_rts_mode() -> void:
@@ -4154,6 +4215,9 @@ func _process(delta: float) -> void:
 		elif calamity == "☠️":  # Decay Field
 			$UI/CalamityCircle.color = Color(0.45, 0.2, 0.0, 0.2)
 			$UI/CalamityCircle.radius = 100
+		elif calamity == "🏚️":  # Rampart Collapse
+			$UI/CalamityCircle.color = Color(0.2, 0.85, 1.0, 0.2)
+			$UI/CalamityCircle.radius = 130
 		$UI/CalamityCircle.queue_redraw()
 	else:
 		$UI/CalamityCircle.visible = false

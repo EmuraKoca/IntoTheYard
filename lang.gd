@@ -277,7 +277,7 @@ const _DESC_TR: Dictionary = {
 	174: "Mevcut Armor/2 kadar Avlu'daki tüm düşmanlara AoE hasar",
 	175: "Armor sıfırlanır, 8s:\nCore Hasarı ×2.5",
 	176: "Tüm Momentum'u harca:\nstack başına +%5 Core Hızı (10sn)",
-	177: "En yakın düşmanı otomatik hedef alır:\nArmor Cap kadar hasar verir, Armor sıfırlanır",
+	177: "Nişan al ve ateşle: hedef noktaya Armor Cap\nkadar alan hasarı verir, Armor sıfırlanır",
 	198: "5sn: önünde solucan deliği açılır\nYaklaşan düşmanlar ışınlanır (Boss hariç)",
 	169: "Armor ilk kez sıfırlanınca:\ntüm Momentum → Armor ×2 (run başına 1 kez)",
 	178: "Her 2s: 60px'deki düşmanlara\n1 + Armor×%5 hasar",

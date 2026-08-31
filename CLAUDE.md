@@ -485,6 +485,63 @@ geçirilecek.
       **YAPILACAK**: kullanıcı Pixellab'de 2 ayrı 8-frame animasyon üretip
       `assets/VFX/calamitys/rampartCollapse/charge/` ve `.../impact/` klasörlerine
       ekleyecek (henüz eklenmedi).
+
+      **Ev session'ından gelenler (`8584e4e`)**: `charge/` klasörüne 13 frame'lik gerçek
+      sprite eklendi (kod zaten dinamik `while ResourceLoader.exists(...)` ile yüklüyordu,
+      8 sabit sayı varsayımı yoktu — ekstra frame sorunsuz çalıştı). `impact/` klasörü
+      hâlâ boş.
+
+      **Sonraki turda 3 ek değişiklik (kullanıcı isteğiyle, aynı gün)**:
+      1. Mavi ekran flaşı (`_react_flash_screen`) kaldırıldı — sadece screen shake +
+         parçacık patlaması + sprite impact VFX kaldı.
+      2. Hasar **AoE'ye çevrildi**: artık sadece en yakın hedefe değil, çarpma noktasının
+         130px yarıçapındaki (Yard sınırı korunarak) tüm düşmanlara Armor Cap kadar hasar.
+      3. **Hedefleme tamamen manuel oldu**: `_activate_rampart_collapse()` artık en yakın
+         düşmanı otomatik bulmuyor, `target_pos: Vector2` (mouse pozisyonu) parametresi
+         alıyor — core artık oyuncunun tıkladığı/nişan aldığı noktaya uçup orada patlıyor.
+         Kart `_CALAMITY_TARGETED` listesine eklendi, nişan-önizleme çemberine (cyan,
+         130px) dahil edildi. Açıklamalar "otomatik hedefleme" → "nişan al ve ateşle"
+         olarak güncellendi.
+
+## Calamity Kullanım Sistemi — Tıklamalı Seçime Geçiş (2026-08-31)
+
+Kullanıcı eski C-tuşu-ile-cycle + E-tuşu-ile-ateşle akışından rahatsız oldu ("cycle etme
+zorunluluğu rahatsız ediyor, direkt tıklamalı seçim olsun" — Slay the Spire potion
+kullanımı referans alındı). Meğerse zaten **hazır bir altyapı** vardı: `_calamity_cells`
+(sağ panelde, `LabelCalamity`'nin üzerine bindirilmiş, sadece hover-tooltip için var olan
+3 adet görünmez `Panel`) — bunlar gerçek tıklanabilir/görünür hücrelere çevrildi.
+
+### Yapılan değişiklikler
+- **`_setup_calamity_cells()`**: 3 → **5 hücre** (shop'tan max +2 slot alınabiliyordu,
+  eskiden fazla slotlar için hücre yoktu — gizli bug da düzeltildi). Artık görünür
+  `StyleBoxFlat` (kenarlık/arkaplan) + içinde emoji gösteren bir `Label` var, `mouse_filter
+  = STOP` + `gui_input` bağlı.
+- **`update_ui()`**: `LabelCalamity` artık sadece başlık ("— FELAKET —") gösteriyor, slot
+  metni tamamen `_update_calamity_cells()`'e taşındı (her hücrenin emoji/boş/dim/highlight
+  durumunu senkronluyor).
+- **`_CALAMITY_TARGETED`** const listesi eklendi (Lightning, Flame, Gravitational Force,
+  Volcanic Rift, Siege Rain, Glitch Bomb, Decay Field, Rampart Collapse — mouse pozisyonu
+  gerektirenler). `_calamity_needs_target()` bu listeye bakıyor.
+- **Tıklama akışı (`_on_calamity_cell_clicked`)**: hedef gerektirmeyen Calamity'ye tıklayınca
+  **anında ateşleniyor**. Hedef gerektirene tıklayınca **nişan modu** açılıyor (hücre sarı
+  highlight alıyor, mevcut yarıçap-önizleme çemberi — değişmedi — mouse'u takip ediyor).
+- **Ateşleme onayı iki yoldan da çalışıyor**: (1) hücreye basılı tutup sahaya sürükleyip
+  **bırakınca** (drag-to-target, `_input()`'ta global `MOUSE_BUTTON_LEFT` release dinleniyor),
+  (2) nişan halindeyken **E tuşuna** basınca. **Önemli guard**: nişanı açan tıklamanın kendi
+  bırakışı (hâlâ hücrenin üzerindeyken) yanlışlıkla ateşlemesin diye, release pozisyonu
+  armed hücrenin `Rect2`'si içindeyse sayılmıyor — sadece hücre dışında (sahada) bırakılan
+  mouse gerçek ateşleme sayılıyor. Bu iki aşamalı test sırasında bulunan bug'dı ("basılı
+  tutuyorum, bırakınca ateşleme olmuyor" — E dışında hiçbir onay yolu yoktu, eklendi).
+- **Escape** artık önce nişanı iptal ediyor (varsa), yoksa pause menüsünü açıyor (eskisi gibi).
+- **C tuşu (cycle) tamamen kaldırıldı.**
+- Büyük calamity dispatch elif-zinciri `_dispatch_calamity_effect()` fonksiyonuna
+  çıkarıldı, hem tıklama hem E/drag-release onayı `_consume_calamity()` ortak fonksiyonunu
+  paylaşıyor (Void Resonance skip / slot tüketme / Mana Overflow bonusu — hepsi tek yerde).
+- `max_calamity_slots` hesaplama satırı `_ready()`'de daha yukarı taşındı (hücre sayısı
+  ilk `update_ui()` çağrısında doğru görünsün diye).
+
+**Test edildi, kullanıcı onayladı** (drag-to-target akışı evde test edilip düzeltildi).
+
 - [ ] **SIRADA: WormHole (198)**
 - [ ] Siege Rain (199)
 
