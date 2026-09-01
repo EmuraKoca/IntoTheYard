@@ -1142,6 +1142,12 @@ func _ready() -> void:
 		_cal_pool.shuffle()
 		for _ci in range(min(_cal_start, max_calamity_slots)):
 			calamity_slots.append(_cal_pool[_ci])
+
+	# ── DEBUG: Rampart Collapse + Full Breach test override (test bitince kaldır) ──
+	for _dbg_cal in ["🏚️", "🔓"]:
+		if calamity_slots.size() < max_calamity_slots:
+			calamity_slots.append(_dbg_cal)
+	update_ui()
 	$UI/CalamityCircle.visible = false
 
 	await get_tree().process_frame
@@ -3232,17 +3238,17 @@ func _activate_full_breach() -> void:
 	p._full_breach_timer = 8.0
 	_react_flash_screen(Color(1.0, 0.2, 0.1, 0.5))
 	screen_shake_heavy()
-	_vfx_full_breach_burst(p.global_position)
+	_vfx_full_breach_burst(p)
 
 # Armor'ın kırılıp güce dönüşme anı: gerçek sprite animasyonu (9 frame)
-func _vfx_full_breach_burst(pos: Vector2) -> void:
+func _vfx_full_breach_burst(player: Node2D) -> void:
+	if not is_instance_valid(player): return
 	var i := 0
 	while ResourceLoader.exists("res://assets/VFX/calamitys/fullBreach/frame_%03d.png" % i):
 		i += 1
 	if i == 0: return
 	var burst := AnimatedSprite2D.new()
 	burst.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	burst.global_position = pos
 	burst.z_index = 6
 	burst.scale = Vector2(1.4, 1.4)
 	var sf := SpriteFrames.new()
@@ -3253,7 +3259,11 @@ func _vfx_full_breach_burst(pos: Vector2) -> void:
 	for f in range(i):
 		sf.add_frame("breach", load("res://assets/VFX/calamitys/fullBreach/frame_%03d.png" % f))
 	burst.sprite_frames = sf
-	add_child(burst)
+	# BUG FIX: eskiden game_scene'e (dünya sabit, snapshot pozisyon) ekleniyordu —
+	# Vector hareket edince animasyon olduğu yerde kalıyordu. Artık Player'a child
+	# olarak bağlanıyor, otomatik takip ediyor.
+	player.add_child(burst)
+	burst.position = Vector2.ZERO
 	burst.play("breach")
 	burst.animation_finished.connect(func():
 		if is_instance_valid(burst): burst.queue_free()
@@ -3274,12 +3284,17 @@ func _activate_rampart_collapse(target_pos: Vector2) -> void:
 	if p == null: return
 	player_armor = 0
 	_update_armor_ui()
-	_fire_rampart_core(p.global_position, target_pos)
+	_fire_rampart_core(p, target_pos)
 
 # ── Rampart Collapse: 1) Player üzerinde hexagon Armor tek noktada yoğunlaşır
 #                      2) Yoğunlaşan Core, seçilen noktaya fırlar ve patlayıp AoE hasar verir ──
-func _fire_rampart_core(start_pos: Vector2, target_pos: Vector2) -> void:
-	await _vfx_rampart_charge(start_pos)
+func _fire_rampart_core(player: Node2D, target_pos: Vector2) -> void:
+	await _vfx_rampart_charge(player)
+	if not is_instance_valid(player): return
+	# BUG FIX: eskiden şarj başlangıcındaki (eski) pozisyon kullanılıyordu — Vector
+	# şarj sırasında hareket ederse core yanlış yerden fırlıyordu. Artık şarj bitince
+	# oyuncunun O ANKİ pozisyonundan fırlıyor.
+	var start_pos: Vector2 = player.global_position
 	var core := _spawn_rampart_projectile(start_pos)
 	var travel_tw := create_tween()
 	travel_tw.tween_property(core, "global_position", target_pos, 0.22)\
@@ -3294,13 +3309,13 @@ func _fire_rampart_core(start_pos: Vector2, target_pos: Vector2) -> void:
 	_vfx_rampart_impact(target_pos)
 
 # Aşama 1 VFX: karakter görünmeksizin, üzerinde hexagon Armor parçaları bir noktada yoğunlaşır
-func _vfx_rampart_charge(pos: Vector2) -> void:
+func _vfx_rampart_charge(player: Node2D) -> void:
 	if not ResourceLoader.exists("res://assets/VFX/calamitys/rampartCollapse/charge/frame_000.png"):
-		await get_tree().create_timer(0.15).timeout
+		await get_tree().create_timer(0.15, false).timeout
 		return
+	if not is_instance_valid(player): return
 	var chg := AnimatedSprite2D.new()
 	chg.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	chg.global_position = pos
 	chg.z_index = 6
 	var sf := SpriteFrames.new()
 	if sf.has_animation("default"): sf.remove_animation("default")
@@ -3312,7 +3327,11 @@ func _vfx_rampart_charge(pos: Vector2) -> void:
 		sf.add_frame("charge", load("res://assets/VFX/calamitys/rampartCollapse/charge/frame_%03d.png" % i))
 		i += 1
 	chg.sprite_frames = sf
-	add_child(chg)
+	# BUG FIX: eskiden game_scene'e (dünya sabit, snapshot pozisyon) ekleniyordu —
+	# Vector şarj sırasında hareket edince animasyon olduğu yerde kalıyordu. Artık
+	# Player'a child olarak bağlanıyor, otomatik takip ediyor.
+	player.add_child(chg)
+	chg.position = Vector2.ZERO
 	chg.play("charge")
 	await chg.animation_finished
 	if is_instance_valid(chg): chg.queue_free()

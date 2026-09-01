@@ -682,6 +682,35 @@ vignette()` (`_process()`'te her frame) eklendi:
   Sinüs dalgasıyla (`Time.get_ticks_msec()`) pulse ediliyor.
 - `upgrading` (menü açıkken) otomatik gizleniyor.
 
+## Ev Session Sonrası: Fragman Hazırlığı + VFX Takip Bug Fix'leri (2026-08-31/09-01)
+
+Ev session'ında (`c49e8bf`) fragman/tanıtım kaydı hazırlığı yapıldı: Elemental Shield
+Core'da asset yolu crash'i düzeltildi (kod düz dosya yapısı bekliyordu, asset'ler alt
+klasörlere bölünmüştü), `neon_sign.gd`'deki "For Human ITY" alt yazısı kaldırıldı, XP
+eşiği üretim değerine (150) sabitlendi, ve **tüm test/debug override'ları temizlendi**
+(boss gauntlet, hızlı build, `_debug_test_calamity` dahil).
+
+### KRİTİK BUG FIX: Full Breach + Rampart Collapse VFX'i Vector'ı takip etmiyordu
+Kullanıcı fark etti: Vector hareketliyken bu iki Calamity kullanılınca animasyon
+**kullanıldığı yerde sabit kalıyor**, oyuncuyu takip etmiyordu. Kök sebep: her iki VFX de
+(`_vfx_full_breach_burst`, `_vfx_rampart_charge`) `add_child()` ile `game_scene`'e (dünya
+sabit) ekleniyordu, pozisyon sadece aktivasyon anında **bir kere** (`global_position = pos`
+snapshot) set ediliyordu — bir daha hiç güncellenmiyordu.
+- **Fix**: her iki fonksiyon da artık `player: Node2D` parametresi alıyor, VFX doğrudan
+  **Player'a child olarak bağlanıyor** (`player.add_child(...)`, `position = Vector2.ZERO`),
+  Player'ın transform'unu otomatik miras alıp hareketini takip ediyor. Player root'unun
+  scale/rotation hiç manipüle edilmediği doğrulandı (facing flip child sprite'ta yapılıyor),
+  bu yüzden VFX'in bozulma riski yok.
+- **Ek bug (Rampart Collapse)**: `_fire_rampart_core()` şarj animasyonu bitince Core'u eski
+  (şarj başlangıcındaki) `start_pos` snapshot'ından fırlatıyordu — Vector şarj sırasında
+  (0.6-0.7s) hareket ederse core yanlış yerden çıkıyordu. Artık şarj bitince oyuncunun
+  **o anki güncel** `global_position`'ından fırlıyor.
+
+**DEBUG NOTU (yeniden eklendi):** Ev session'ı tüm debug override'ları temizlemişti, bu
+turun testi için `_ready()`'ye geçici bir blok eklendi — run başında `calamity_slots`'a
+hem "🏚️" (Rampart Collapse) hem "🔓" (Full Breach) otomatik ekleniyor. **Test bitince bu
+blok kaldırılmalı**, kalıcı build'e sızmamalı.
+
 Sıradaki adım: aynı 4 aşamalı review süreci **Leila** için baştan başlayacak (Cyclone
 Identity/Utility/Individuality zaten önceki session'da tam review edilmişti, tekrar
 gerekmiyor — Leila'nın tamamı + Cyclone Calamity hâlâ eksik, bkz. dosyanın en altındaki
