@@ -3,6 +3,31 @@ extends Node
 # ── Aktif dil ────────────────────────────────────────────────────────────────
 var locale: String = "en"   # "en" veya "tr"
 
+# ── Durum efekti sözlüğü (kart açıklamalarında bold geçen keyword'ler için) ───
+# Gwent tarzı: kart üzerine gelince, açıklamada geçen keyword'lerin anlamı yan
+# panelde gösterilir. Yeni bir keyword açıklamaya eklenince buraya da eklenmeli.
+const STATUS_KEYWORDS := ["Electrified", "Wet", "Burning", "Slowed", "Frozen"]
+
+const _STATUS_GLOSSARY_EN := {
+	"Electrified": "Enemy is marked for 5s. Triggers electric-based combos and reactions (chain damage, spread effects, etc.) from other cards.",
+	"Wet":         "Enemy is marked as wet. Combines with Fire (→ Steam) or Electric (stronger shock) for elemental reactions.",
+	"Burning":     "Enemy takes damage over time. Combines with Wet (→ Steam) for a reaction.",
+	"Slowed":      "Enemy's movement speed is reduced for a duration.",
+	"Frozen":      "Enemy is completely immobilized for a duration.",
+}
+const _STATUS_GLOSSARY_TR := {
+	"Electrified": "Düşman 5sn işaretlenir. Diğer kartların elektrik tabanlı combo/reaksiyonlarını (zincir hasarı, yayılma efekti vb.) tetikler.",
+	"Wet":         "Düşman ıslak olarak işaretlenir. Ateş (→ Buhar) veya Elektrik (daha güçlü şok) ile birleşince elemental reaksiyon oluşturur.",
+	"Burning":     "Düşman zamana yayılı hasar alır. Islak (→ Buhar) ile birleşince reaksiyon oluşturur.",
+	"Slowed":      "Düşmanın hareket hızı belirli bir süre boyunca düşer.",
+	"Frozen":      "Düşman belirli bir süre boyunca tamamen hareketsiz kalır.",
+}
+
+func status_glossary(keyword: String) -> String:
+	if locale == "en":
+		return _STATUS_GLOSSARY_EN.get(keyword, "")
+	return _STATUS_GLOSSARY_TR.get(keyword, "")
+
 const _TR := {
 	# ── Ana Menü ─────────────────────────────────────────────────────────────
 	"mm_new_game":   "▶  YENİ OYUN",
@@ -311,6 +336,21 @@ const _DESC_TR: Dictionary = {
 func _dynamic_desc(index: int, player: Node) -> String:
 	var _bm: int = player.get("ball_mastery") if player.get("ball_mastery") != null else 0
 	match index:
+		1:  # Electric Core
+			var _dmg1: int = 9 + _bm
+			if locale == "en":
+				return "[b]%d[/b] damage.\nApplies [b]Electrified[/b] to enemy" % _dmg1
+			return "[b]%d[/b] hasar.\nDüşmana [b]Electrified[/b] uygular" % _dmg1
+		17:  # Hydro Core
+			var _dmg17: int = 3 + _bm
+			if locale == "en":
+				return "[b]%d[/b] damage.\nApplies [b]Wet[/b] to enemy" % _dmg17
+			return "[b]%d[/b] hasar.\nDüşmana [b]Wet[/b] uygular" % _dmg17
+		15:  # Cryo Core
+			var _dmg15: int = 4 + _bm
+			if locale == "en":
+				return "[b]%d[/b] damage.\nSlows enemy by 25%%. Freezes instead if\nenemy is already [b]Wet[/b]" % _dmg15
+			return "[b]%d[/b] hasar.\nDüşmanı %%25 yavaşlatır. Düşman zaten\n[b]Wet[/b]se onun yerine dondurur" % _dmg15
 		2:  # Pierce Core
 			var _dmg: int = 5 + _bm
 			if locale == "en":

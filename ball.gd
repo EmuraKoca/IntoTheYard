@@ -2159,8 +2159,6 @@ func _hit_subject(subject: Node2D) -> void:
 		subject.apply_burn()
 	if can_water and is_instance_valid(subject):
 		subject.apply_wet()
-		#queue_free()
-		#return
 	if can_glitch and is_instance_valid(subject):
 		subject.apply_glitch()
 	if can_electric and is_instance_valid(subject):

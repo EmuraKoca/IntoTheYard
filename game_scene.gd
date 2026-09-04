@@ -31,6 +31,8 @@ var _pending_core_type: String = ""
 
 # ── Tooltip sistemi ────────────────────────────────────────────────────────────
 var _tooltip_label: Label = null
+var _glossary_panel: Panel = null
+var _glossary_label: RichTextLabel = null
 var _low_hp_vignette: TextureRect = null
 var _calamity_cells: Array = []
 
@@ -1216,7 +1218,7 @@ func subject_died(xp_reward: int = 1, death_pos: Vector2 = Vector2.ZERO, etype: 
 		spawn_interval = max(spawn_interval - 0.1, min_spawn_interval)
 	# Veri parçacıkları: hasar miktarına göre 3-7 parçacık
 	var particle_count := clampi(xp_reward + 2, 3, 7)
-	_spawn_data_particles(death_pos, float(xp_reward) * 10.0, particle_count)
+	_spawn_data_particles(death_pos, float(xp_reward) * 10.0 * 8.0, particle_count)  # DEBUG: hızlı upgrade testi, test bitince ×8.0 kaldırılmalı
 
 func _get_hp_bar_rect() -> Rect2:
 	# Vector: yeni sol üst Health bar'ın iç dolgu alanı (UI CanvasLayer'a göre mutlak)
@@ -1731,6 +1733,78 @@ func _update_low_hp_vignette() -> void:
 	var _pulse_amp: float = lerp(0.05, 0.18, _severity)
 	var _t := Time.get_ticks_msec() / 1000.0
 	_low_hp_vignette.modulate.a = _base_alpha + _pulse_amp * (sin(_t * _pulse_speed) * 0.5 + 0.5)
+
+func _setup_card_glossary(parent: Node) -> void:
+	# Not: kart seçim ekranının kendi CanvasLayer'ına (parent) ekleniyor — $UI'a
+	# eklenseydi layer sıralaması yüzünden kartların ARKASINDA kalırdı.
+	var panel := Panel.new()
+	panel.name = "CardGlossaryPanel"
+	panel.visible = false
+	panel.z_index = 100
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.05, 0.05, 0.12, 0.96)
+	sb.corner_radius_top_left = 6; sb.corner_radius_top_right = 6
+	sb.corner_radius_bottom_right = 6; sb.corner_radius_bottom_left = 6
+	sb.border_width_top = 1; sb.border_width_bottom = 1
+	sb.border_width_left = 1; sb.border_width_right = 1
+	sb.border_color = Color(0.4, 0.7, 1.0, 0.7)
+	sb.content_margin_left = 12; sb.content_margin_right = 12
+	sb.content_margin_top = 10; sb.content_margin_bottom = 10
+	panel.add_theme_stylebox_override("panel", sb)
+	parent.add_child(panel)
+
+	var lbl := RichTextLabel.new()
+	lbl.bbcode_enabled = true
+	lbl.scroll_active = false
+	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
+	lbl.position = Vector2(12, 10)
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	lbl.add_theme_font_override("normal_font", _font_regular)
+	lbl.add_theme_font_override("bold_font", _font_bold)
+	lbl.add_theme_font_size_override("normal_font_size", 12)
+	lbl.add_theme_font_size_override("bold_font_size", 12)
+	lbl.add_theme_color_override("default_color", Color(0.9, 0.9, 0.95))
+	panel.add_child(lbl)
+
+	_glossary_panel = panel
+	_glossary_label = lbl
+
+# Gwent tarzı: kart açıklamasında geçen keyword'leri (Electrified, Wet, vb.)
+# bulup kartın yanında bir sözlük paneli olarak gösterir.
+func _show_card_glossary(desc_text: String, card_tx: float, card_ty: float, card_w: float) -> void:
+	if _glossary_panel == null:
+		return
+	var _found: Array = []
+	for kw in Lang.STATUS_KEYWORDS:
+		if desc_text.find(kw) != -1:
+			_found.append(kw)
+	if _found.is_empty():
+		_glossary_panel.visible = false
+		return
+	var _bbcode := ""
+	for kw in _found:
+		if _bbcode != "": _bbcode += "\n\n"
+		_bbcode += "[b]%s[/b]\n%s" % [kw, Lang.status_glossary(kw)]
+	_glossary_label.text = _bbcode
+	var _panel_w := 260.0
+	var _label_w: float = _panel_w - 24.0
+	_glossary_label.size = Vector2(_label_w, 0)
+	# Sabit tahmini yükseklik: keyword başına ~2 satır başlık + ~3 satır açıklama
+	var _panel_h: float = 20.0 + _found.size() * 78.0
+	_glossary_panel.size = Vector2(_panel_w, _panel_h)
+	_glossary_label.size = Vector2(_label_w, _panel_h - 20.0)
+
+	# Kartın sağında yer aç, sağa taşarsa sola geç
+	var _panel_x: float = card_tx + card_w + 14
+	if _panel_x + _panel_w > 1900:
+		_panel_x = card_tx - _panel_w - 14
+	_glossary_panel.position = Vector2(_panel_x, card_ty)
+	_glossary_panel.visible = true
+
+func _hide_card_glossary() -> void:
+	if _glossary_panel != null:
+		_glossary_panel.visible = false
 
 func _setup_tooltip() -> void:
 	if _tooltip_label != null:
@@ -2562,7 +2636,7 @@ func _build_all_upgrades() -> void:
 	# ── Leila (Elemental) ─────────────────────────────────────────────────────
 	{"name": "Electric Core",       "category": "Identity",      "color": Color(0.2, 0.5, 1.0), "desc": "Core gains electricity",                    "index": 1,  "weight": 10, "rarity": "common", "chars": ["leila"], "min_level": 0},
 	{"name": "Cryo Core",           "category": "Identity",      "color": Color(0.5, 0.8, 1.0), "desc": "Slows subject by 25%",                      "index": 15, "weight": 10, "rarity": "common", "chars": ["leila"], "min_level": 0},
-	{"name": "Hydro Core",          "category": "Identity",      "color": Color(0.0, 0.5, 1.0), "desc": "Applies wet, single hit",                   "index": 17, "weight": 10, "rarity": "common", "chars": ["leila"], "min_level": 0},
+	{"name": "Hydro Core",          "category": "Identity",      "color": Color(0.0, 0.5, 1.0), "desc": "Applies wet to enemy",                   "index": 17, "weight": 10, "rarity": "common", "chars": ["leila"], "min_level": 0},
 	{"name": "Pyro Core",           "category": "Identity",      "color": Color(1.0, 0.3, 0.0), "desc": "Applies burn to subject",                   "index": 18, "weight": 10, "rarity": "common", "chars": ["leila"], "min_level": 0},
 	{"name": "Electric Amp",        "category": "Utility",       "color": Color(0.2, 0.5, 1.0), "desc": "Electric Core +2 damage",                   "index": 13,  "weight": 10, "rarity": "common",   "chars": ["leila"], "min_level": 0},
 	{"name": "Cryo Amp",            "category": "Utility",       "color": Color(0.5, 0.8, 1.0), "desc": "Cryo Core +2 damage",                       "index": 99,  "weight": 10, "rarity": "common",   "chars": ["leila"], "min_level": 0},
@@ -2792,7 +2866,8 @@ func show_upgrade_menu() -> void:
 	var canvas = CanvasLayer.new()
 	canvas.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(canvas)
-	
+	_setup_card_glossary(canvas)
+
 	# ── Blur background: game scene shown blurred ─────────────────────────
 	var blur_bg_rect = ColorRect.new()
 	blur_bg_rect.size = Vector2(1920, 1080)
@@ -2988,11 +3063,13 @@ func show_upgrade_menu() -> void:
 			var tween := create_tween()
 			tween.tween_property(card_sprite, "scale", Vector2(1.05, 1.05), 0.1)
 			tween.parallel().tween_property(card_sprite, "position", Vector2(tx - 7, ty - 7), 0.1)
+			_show_card_glossary(_desc_str, tx, ty, card_width)
 		)
 		click_area.mouse_exited.connect(func():
 			var tween := create_tween()
 			tween.tween_property(card_sprite, "scale", Vector2(1.0, 1.0), 0.1)
 			tween.parallel().tween_property(card_sprite, "position", Vector2(tx, ty), 0.1)
+			_hide_card_glossary()
 		)
 		click_area.pressed.connect(_on_card_selected.bind(upgrade["index"], canvas, card_sprite))
 		if upgrade.get("index", -1) in _CONNECTED_CORE_INDICES:

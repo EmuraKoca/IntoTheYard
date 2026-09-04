@@ -711,10 +711,69 @@ turun testi için `_ready()`'ye geçici bir blok eklendi — run başında `cala
 hem "🏚️" (Rampart Collapse) hem "🔓" (Full Breach) otomatik ekleniyor. **Test bitince bu
 blok kaldırılmalı**, kalıcı build'e sızmamalı.
 
-Sıradaki adım: aynı 4 aşamalı review süreci **Leila** için baştan başlayacak (Cyclone
+Sıradaki adım: aynı 4 aşamalı review süreci **Leila** için baştan başladı (Cyclone
 Identity/Utility/Individuality zaten önceki session'da tam review edilmişti, tekrar
 gerekmiyor — Leila'nın tamamı + Cyclone Calamity hâlâ eksik, bkz. dosyanın en altındaki
 "Sonrası" notu).
+
+## AKTİF SÜREÇ: Leila Kart-kart Full Review (2026-09-01 başladı)
+
+Vector'da kurulan aynı 4 aşamalı süreç (implementasyon → requires → TR → EN) Leila için
+de başladı, index sırasına göre.
+
+### Yeni sistem: Kart üzerinde hover ile "keyword sözlüğü" popup'ı (Gwent tarzı)
+Kullanıcı, dynamic açıklamalarda geçen durum efekti keyword'lerinin (Electrified, Wet,
+Burning, Slowed, Frozen) üzerine gelince Gwent'teki gibi bir açıklama paneli açılmasını
+istedi. Kuruldu:
+- `lang.gd`: `STATUS_KEYWORDS` listesi + `status_glossary(keyword)` fonksiyonu
+  (`_STATUS_GLOSSARY_EN`/`_STATUS_GLOSSARY_TR` sözlükleri). **Keyword başlığı** (örn.
+  "Electrified") kasıtlı olarak her zaman İngilizce kalıyor — oyunun "kart isimleri/
+  türleri hep İngilizce" kuralıyla tutarlı olsun diye, sadece açıklama gövdesi dile göre
+  değişiyor.
+- `game_scene.gd`: `_setup_card_glossary()` / `_show_card_glossary()` / `_hide_card_glossary()`
+  eklendi. Kart açıklama metni (`_desc_str`) taranıp `STATUS_KEYWORDS`'ten biri geçiyorsa,
+  kartın sağında (sığmazsa solunda) bir panel açılıyor, her keyword için kalın başlık +
+  açıklama gösteriyor.
+  **Mimari not**: panel `$UI`'a DEĞİL, kart seçim ekranının kendi `CanvasLayer`'ına
+  (`show_upgrade_menu()`'deki `canvas` değişkeni) ekleniyor — `$UI`'a eklenseydi
+  CanvasLayer sıralaması yüzünden kartların arkasında kalırdı (her ikisi de default
+  layer=1, `canvas` sonradan eklendiği için üstte kalıyor).
+  Tetikleme: `click_area.mouse_entered`/`mouse_exited` (kart büyütme animasyonuyla aynı
+  yerde) — kartın TAMAMINA hover, sadece kelimenin üzerine değil (click_area tüm kartı
+  kapladığı için RichTextLabel'ın kendi `[hint]` mekanizması hiç tetiklenmiyordu, Connected
+  Core rozetinde daha önce bulunan aynı sorun — bu yüzden bu basit yaklaşım seçildi).
+  Panel boyutu sabit tahmini yükseklik kullanıyor (`20 + keyword_sayısı × 78`) — async
+  `fit_content` hesaplaması yerine, 1 frame gecikme riskini önlemek için.
+
+### İlerleme — Leila Identity (19 kart, index sırasına göre)
+- [x] Electric Core (1) — implementasyon doğru (9 hasar + Electrified uygular, kendi
+      başına hasar vermiyor, reaksiyon/combo tetikleyicisi). Requires gerekmiyor
+      (başlangıç kartı). Dynamic desc eklendi (Core Mastery ile hasar canlı güncelleniyor,
+      "Electrified" kelimesi bold): `[b]9[/b] damage.\nApplies [b]Electrified[/b] to enemy`
+      / TR: `[b]9[/b] hasar.\nDüşmana [b]Electrified[/b] uygular`.
+- [x] Cryo Core (15) — implementasyon doğru ama açıklamada eksik bir sinerji vardı: hedef
+      zaten **Wet** ise Slow yerine tam **Frozen** uyguluyor (`ball.gd:2168-2172`), hiç
+      yazılmamıştı. Requires gerekmiyor. Dynamic desc: `[b]4[/b] damage.\nSlows enemy by
+      25%. Freezes instead if\nenemy is already [b]Wet[/b]` / TR eşleniği.
+- [x] Hydro Core (17) — **BUG FIX**: açıklama "single hit" diyordu (bir kez vurup top yok
+      olmalı) ama bunu sağlayan `queue_free()`/`return` satırları yorum satırına alınmıştı
+      (`ball.gd:2160-2161`) — top hiç yok olmuyordu, diğer core'lar gibi kalıcı kalıp
+      tekrar tekrar Wet uyguluyordu. Kullanıcı kararı: **mevcut (kalıcı) davranış doğru
+      kabul edildi**, ölü/yorumlanmış kod satırları silindi, açıklama ona göre güncellendi
+      ("single hit" ifadesi kaldırıldı, hem dynamic desc hem statik EN fallback'te).
+      Dynamic desc: `[b]3[/b] damage.\nApplies [b]Wet[/b] to enemy` / TR eşleniği.
+- [ ] **SIRADA: Pyro Core (18)**
+- [ ] Plasma Core (61), Steam Core (62), Arc Core (63), Echo Core (64), Prism Core (65),
+      Scatter Core (77), Catalyst Core (78), Voltaic Core (87), Mist Core (185),
+      Frost Aura Core (186), Static Aura Core (187), Catalyst Pulse Core (188),
+      Echo Resonance Core (189), Volatile Aura Core (190), Elemental Shield Core (191)
+
+**DEBUG NOTU (test kolaylığı, aynı gün eklendi):** `game_scene.gd::subject_died()`'da
+`_spawn_data_particles(...)` çağrısına `× 8.0` çarpanı eklendi — düşman öldürünce upgrade
+kartı gelme hızı 8 kat arttı (test için hızlı level almak amacıyla). **Karıştırılmamalı**:
+bu `_data_current`'ı (run-içi upgrade tetikleyicisi) etkiliyor, `GameData.add_xp` (meta/
+karakter seviyesi, run'lar arası) etkilenmiyor — ilk denemede yanlışlıkla ikincisine
+uygulanmıştı, kullanıcı fark edip düzelttirdi. **Test bitince ×8.0 kaldırılmalı.**
 
 ## Core Speed Mimarisi — KRİTİK BUG FIX + Fırlatılan Topa Bağlama (2026-08-29)
 
