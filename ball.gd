@@ -418,8 +418,19 @@ func _get_core_speed_mult() -> float:
 		return 1.0
 	return p.core_speed_mult
 
+func _reset_echo_element() -> void:
+	# Echo Core: kopyalanan element sadece dönüş yolculuğuna özel, kalıcı olmamalı —
+	# her yeni fırlatmada gerçekten sıfırlanır (kopyalamadıysa hiçbir element taşımaz).
+	if can_echo:
+		_echo_element = ""
+		can_electric = false
+		can_fire     = false
+		can_water    = false
+		can_cryo     = false
+
 func launch(direction: Vector2, spd: float = 600.0) -> void:
 	hit_subjects.clear()
+	_reset_echo_element()
 	_pb_bounce_streak = 0
 	_pb_piercing = false
 	_phantom_hit_enemies.clear()
@@ -448,6 +459,7 @@ func launch(direction: Vector2, spd: float = 600.0) -> void:
 
 func launch_with_speed(direction: Vector2, spd: float) -> void:
 	hit_subjects.clear()
+	_reset_echo_element()
 	_pb_bounce_streak = 0
 	_pb_piercing = false
 	_phantom_hit_enemies.clear()
@@ -1575,7 +1587,13 @@ func _hit_subject(subject: Node2D) -> void:
 	# Calculate damage based on speed
 	var base_damage = max_damage
 	var _typed_core := true
-	if can_split and not has_split:
+	if can_plasma:
+		base_damage = 7
+	elif can_steam:
+		base_damage = 5
+	elif can_arc:
+		base_damage = 6
+	elif can_split and not has_split:
 		base_damage = 7
 	elif can_electric:
 		base_damage = 9

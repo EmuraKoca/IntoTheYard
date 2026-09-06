@@ -341,6 +341,32 @@ func _dynamic_desc(index: int, player: Node) -> String:
 			if locale == "en":
 				return "[b]%d[/b] damage.\nApplies [b]Electrified[/b] to enemy" % _dmg1
 			return "[b]%d[/b] hasar.\nDüşmana [b]Electrified[/b] uygular" % _dmg1
+		64:  # Echo Core
+			var _dmg64: int = 5 + _bm
+			if locale == "en":
+				return "[b]%d[/b] damage. Copies element from\ndebuffed enemy — applies it on return" % _dmg64
+			return "[b]%d[/b] hasar. Debufflı düşmandan element\nkopyalar — dönüşte uygular" % _dmg64
+		63:  # Arc Core
+			var _dmg63: int = 6 + _bm
+			var _act: int = 2 + (player.get("arc_chain_targets") if player.get("arc_chain_targets") != null else 1)
+			if locale == "en":
+				return "[b]%d[/b] damage. Applies [b]Electrified[/b].\nSpreads it to [b]%d[/b] nearby enemies" % [_dmg63, _act]
+			return "[b]%d[/b] hasar. [b]Electrified[/b] uygular.\nYakındaki [b]%d[/b] düşmana yayılır" % [_dmg63, _act]
+		62:  # Steam Core
+			var _dmg62: int = 5 + _bm
+			if locale == "en":
+				return "[b]%d[/b] damage. Applies [b]Wet[/b].\nLeaves a steam cloud → nearby enemies get [b]Wet[/b]" % _dmg62
+			return "[b]%d[/b] hasar. [b]Wet[/b] uygular.\nBuhar bulutu bırakır → yakındaki düşmanlar [b]Wet[/b] olur" % _dmg62
+		61:  # Plasma Core
+			var _dmg61: int = 7 + _bm
+			if locale == "en":
+				return "[b]%d[/b] damage. Applies [b]Electrified[/b].\nDeals half damage to nearby [b]Electrified[/b] enemies" % _dmg61
+			return "[b]%d[/b] hasar. [b]Electrified[/b] uygular.\nYakındaki [b]Electrified[/b] düşmanlara yarım hasar sıçratır" % _dmg61
+		18:  # Pyro Core
+			var _dmg18: int = 6 + _bm
+			if locale == "en":
+				return "[b]%d[/b] damage.\nApplies [b]Burning[/b] to enemy" % _dmg18
+			return "[b]%d[/b] hasar.\nDüşmana [b]Burning[/b] uygular" % _dmg18
 		17:  # Hydro Core
 			var _dmg17: int = 3 + _bm
 			if locale == "en":

@@ -762,9 +762,49 @@ istedi. Kuruldu:
       kabul edildi**, ölü/yorumlanmış kod satırları silindi, açıklama ona göre güncellendi
       ("single hit" ifadesi kaldırıldı, hem dynamic desc hem statik EN fallback'te).
       Dynamic desc: `[b]3[/b] damage.\nApplies [b]Wet[/b] to enemy` / TR eşleniği.
-- [ ] **SIRADA: Pyro Core (18)**
-- [ ] Plasma Core (61), Steam Core (62), Arc Core (63), Echo Core (64), Prism Core (65),
-      Scatter Core (77), Catalyst Core (78), Voltaic Core (87), Mist Core (185),
+- [x] Pyro Core (18) — implementasyon doğru (6 hasar + `apply_burn()`, 3 tick × 2 hasar/sn
+      DOT). Requires gerekmiyor. Dynamic desc eklendi: `[b]6[/b] damage.\nApplies
+      [b]Burning[/b] to enemy` / TR eşleniği.
+- [x] Plasma Core (61) — **BUG FIX (launcher/hit-chain uyumsuzluğu, tekrarlayan desen)**:
+      launcher'da `max_damage=7` yazıyordu ama `can_electric=true` da set ettiği için
+      `_hit_subject()`'in ana elif zincirinde `can_electric` dalına düşüp gerçek hasar
+      **9** çıkıyordu (launcher'daki 7 hiç kullanılmıyordu). Kullanıcı kararıyla `can_plasma`
+      elif zincirine en öncelikli eklendi, gerçek hasar artık 7. Mekanik: isabet ettiği
+      düşmana Electrified uygular + 180px (Conduction ile genişleyebilir) içindeki zaten-
+      Electrified düşmanlara hasarın yarısını sıçratır. Requires gerekmiyor.
+      Dynamic desc: `[b]7[/b] damage. Applies [b]Electrified[/b].\nDeals half damage to
+      nearby [b]Electrified[/b] enemies` / TR eşleniği.
+- [x] Steam Core (62) — **AYNI BUG deseni**: `can_water=true` yüzünden gerçek hasar 3
+      çıkıyordu, launcher'ın niyeti 5'ti — kullanıcı onayıyla `can_steam` elif zincirine
+      eklendi, gerçek hasar artık 5. Mekanik: isabette Wet uygular + çarptığı noktada
+      buhar bulutu bırakıp 0.8s sonra 45px'teki diğer düşmanlara da Wet uygular. Requires
+      gerekmiyor. Dil bug'ı (EN alanı Türkçe yazılmıştı) düzeltildi.
+      Dynamic desc: `[b]5[/b] damage. Applies [b]Wet[/b].\nLeaves a steam cloud → nearby
+      enemies get [b]Wet[/b]` / TR eşleniği.
+- [x] Arc Core (63) — **AYNI BUG deseni + ikinci sayı hatası**: `can_electric=true`
+      yüzünden gerçek hasar 9 çıkıyordu, launcher'ın niyeti 6'ydı — düzeltildi. Ayrıca
+      açıklama "2 yakın düşmana yayılır" diyordu ama `arc_chain_targets` varsayılan
+      **1**'den başlıyor (`player.gd:234`), gerçek limit `2+1=3` (Arc Amplifier (68) her
+      alışta +1 daha ekliyor, zaten `requires:[63]` ile doğru bağlı). Dynamic yapıldı,
+      artık doğru sayıyı gösteriyor. Requires gerekmiyor. Dil bug'ı düzeltildi.
+      Dynamic desc: `[b]6[/b] damage. Applies [b]Electrified[/b].\nSpreads it to [b]3[/b]
+      nearby enemies` / TR eşleniği.
+- [x] Echo Core (64) — **KRİTİK BUG FIX**: açıklama "dönüşte uygular" diyordu (kopyalanan
+      elementin sadece o dönüş yolculuğuna özel, geçici olması bekleniyordu) ama kopyalanan
+      element flag'i (`can_electric`/`can_fire`/`can_water`/`can_cryo`) hiçbir yerde
+      sıfırlanmıyordu — top bir element kopyaladıktan sonra **kalıcı olarak** o tipe
+      dönüşüyordu, üstelik farklı bir element daha kopyalarsa flag'ler hiç temizlenmediği
+      için **birikip** aynı anda birden fazla debuff uygulamaya başlıyordu (zamanla
+      giderek güçlenen, tasarım dışı bir top). Kullanıcı kararı: **gerçekten geçici
+      olmalı**. `_reset_echo_element()` eklendi, `launch()`/`launch_with_speed()`'de
+      (her yeni fırlatmada) `_echo_element` ve tüm element flag'leri sıfırlanıyor —
+      kopyalanmadıysa top bir sonraki atışta tamamen "çıplak" başlıyor. Requires
+      gerekmiyor. Damage tipli core değil (elif zincirinde yok), `max_damage` (5+ball_
+      mastery) zaten doğru — dynamic desc'e hasar sayısı da eklendi.
+      Dynamic desc: `[b]5[/b] damage. Copies element from\ndebuffed enemy — applies it
+      on return` / TR eşleniği.
+- [ ] **SIRADA: Prism Core (65)**
+- [ ] Scatter Core (77), Catalyst Core (78), Voltaic Core (87), Mist Core (185),
       Frost Aura Core (186), Static Aura Core (187), Catalyst Pulse Core (188),
       Echo Resonance Core (189), Volatile Aura Core (190), Elemental Shield Core (191)
 
