@@ -56,7 +56,6 @@ const _CORE_DISPLAY_NAMES: Dictionary = {
 	"mist_core":             "Mist Core",
 	"frost_aura_core":       "Frost Aura Core",
 	"static_aura_core":      "Static Aura Core",
-	"catalyst_pulse_core":   "Catalyst Pulse Core",
 	"echo_resonance_core":   "Echo Resonance Core",
 	"volatile_aura_core":    "Volatile Aura Core",
 	"elemental_shield_core": "Elemental Shield Core",
@@ -140,7 +139,6 @@ const _CORE_FOLDER_MAP: Dictionary = {
 	"mist_core":             "mistCore",
 	"frost_aura_core":       "frostAuraCore",
 	"static_aura_core":      "staticAuraCore",
-	"catalyst_pulse_core":   "catalystPulseCore",
 	"echo_resonance_core":   "echoResonanceCore",
 	"volatile_aura_core":    "volatileAuraCore",
 	"elemental_shield_core": "elementalShieldCore",
@@ -164,7 +162,7 @@ const _CORE_INDEX_MAP: Dictionary = {
 	180: "regen_pulse_core", 181: "fortress_core", 182: "bloodwall_core",
 	183: "overcharge_core", 184: "anchor_pulse_core",
 	185: "mist_core", 186: "frost_aura_core", 187: "static_aura_core",
-	188: "catalyst_pulse_core", 189: "echo_resonance_core",
+	189: "echo_resonance_core",
 	190: "volatile_aura_core", 191: "elemental_shield_core",
 	192: "glitch_pulse_core", 193: "shadow_core", 194: "data_drain_core",
 	195: "virus_beacon_core", 196: "rogues_eye_core", 197: "circuit_overload_core",
@@ -174,7 +172,7 @@ const _CORE_INDEX_MAP: Dictionary = {
 const _CONNECTED_CORE_INDICES: Array = [
 	178, 179, 180, 181, 182, 183, 184, # Vector
 	65,                                # Leila (Prism Core — orbit'te kalır, Connected Core)
-	185, 186, 187, 188, 189, 190, 191, # Leila
+	185, 186, 187, 189, 190, 191,      # Leila
 	192, 193, 194, 195, 196, 197,      # Cyclone
 ]
 
@@ -1551,7 +1549,6 @@ func _get_ball_core_type(ball) -> String:
 	if ball.get("can_scatter"):    return "scatter"
 	if ball.get("can_catalyst"):   return "catalyst"
 	if ball.get("can_voltaic"):         return "voltaic"
-	if ball.get("can_echo_resonance"):  return "echo_resonance_core"
 	if ball.get("can_electric"):   return "electric"
 	if ball.get("can_pierce"):     return "pierce"
 	if ball.get("can_split"):      return "split"
@@ -1772,10 +1769,12 @@ func _setup_card_glossary(parent: Node) -> void:
 
 # Gwent tarzı: kart açıklamasında geçen keyword'leri (Electrified, Wet, vb.)
 # bulup kartın yanında bir sözlük paneli olarak gösterir.
-func _show_card_glossary(desc_text: String, card_tx: float, card_ty: float, card_w: float) -> void:
+func _show_card_glossary(desc_text: String, card_tx: float, card_ty: float, card_w: float, is_connected_core: bool = false) -> void:
 	if _glossary_panel == null:
 		return
 	var _found: Array = []
+	if is_connected_core:
+		_found.append("Connected Core")
 	for kw in Lang.STATUS_KEYWORDS:
 		if desc_text.find(kw) != -1:
 			_found.append(kw)
@@ -1783,15 +1782,22 @@ func _show_card_glossary(desc_text: String, card_tx: float, card_ty: float, card
 		_glossary_panel.visible = false
 		return
 	var _bbcode := ""
-	for kw in _found:
-		if _bbcode != "": _bbcode += "\n\n"
-		_bbcode += "[b]%s[/b]\n%s" % [kw, Lang.status_glossary(kw)]
-	_glossary_label.text = _bbcode
 	var _panel_w := 260.0
 	var _label_w: float = _panel_w - 24.0
+	const _CHARS_PER_LINE := 34.0  # ~260px genişlik, 12pt font tahmini
+	const _LINE_H := 16.0
+	var _est_h := 10.0  # üst/alt boşluk
+	for kw in _found:
+		if _bbcode != "": _bbcode += "\n\n"
+		var _body: String = Lang.status_glossary(kw)
+		_bbcode += "[b]%s[/b]\n%s" % [kw, _body]
+		var _body_lines: int = max(1, ceili(float(_body.length()) / _CHARS_PER_LINE))
+		_est_h += _LINE_H  # başlık satırı
+		_est_h += _body_lines * _LINE_H
+		_est_h += 12.0  # entry'ler arası boşluk
+	_glossary_label.text = _bbcode
 	_glossary_label.size = Vector2(_label_w, 0)
-	# Sabit tahmini yükseklik: keyword başına ~2 satır başlık + ~3 satır açıklama
-	var _panel_h: float = 20.0 + _found.size() * 78.0
+	var _panel_h: float = _est_h
 	_glossary_panel.size = Vector2(_panel_w, _panel_h)
 	_glossary_label.size = Vector2(_label_w, _panel_h - 20.0)
 
@@ -2664,13 +2670,13 @@ func _build_all_upgrades() -> void:
 	{"name": "Resonance Engine",   "category": "Utility",       "color": Color(0.6, 0.4, 1.0), "desc": "Reaksiyon → +1 Momentum\n+%2 Core Speed (kalıcı, birikir)", "index": 81, "weight": 5, "rarity": "rare", "chars": ["leila"], "min_level": 2},
 	{"name": "Pyroblast",          "category": "Utility",       "color": Color(1.0, 0.4, 0.0), "desc": "Burn explosions gain Area\nbased on Burn Stacks",       "index": 102, "weight": 3, "rarity": "rare",  "chars": ["leila"], "min_level": 2},
 	# Lv3: Rare core'lar + Calamity giriş
-	{"name": "Prism Core",         "category": "Identity",      "color": Color(0.5, 0.7, 1.0), "desc": "Orbit'te kalır, yakındaki düşmanlara\nrastgele element uygular",           "index": 65, "weight": 5, "rarity": "rare",     "chars": ["leila"], "min_level": 2},
+	{"name": "Prism Core",         "category": "Identity",      "color": Color(0.5, 0.7, 1.0), "desc": "Stays in orbit. Every 2s: applies a random\nelement to enemies in range",           "index": 65, "weight": 5, "rarity": "rare",     "chars": ["leila"], "min_level": 2},
 	{"name": "Scatter Core",       "category": "Identity",      "color": Color(0.5, 0.8, 0.7), "desc": "On hit → splits into 3 small\nrandom Elemental Cores", "index": 77, "weight": 6, "rarity": "rare", "chars": ["leila"], "min_level": 3},
 	{"name": "Catalyst Core",      "category": "Identity",      "color": Color(0.8, 0.6, 1.0), "desc": "Extends duration of existing\nstatus effects on hit",   "index": 78, "weight": 6, "rarity": "rare", "chars": ["leila"], "min_level": 3},
 	{"name": "Monsoon",            "category": "Calamity",      "color": Color(0.1, 0.5, 1.0), "desc": "All enemies in the Yard\ngain Wet",           "index": 95, "weight": 3,  "rarity": "epic",      "chars": ["leila"], "min_level": 3},
 	{"name": "EMP Pulse",          "category": "Calamity",      "color": Color(0.2, 0.4, 1.0), "desc": "All Electrified enemies\nin the Yard take 15 dmg","index": 96, "weight": 3,  "rarity": "epic",      "chars": ["leila"], "min_level": 3},
 	# Lv4: Epic tier
-	{"name": "Voltaic Core",       "category": "Identity",      "color": Color(0.2, 0.4, 1.0), "desc": "Electrified hedefe çarptığında\nhasar zinciri (3 düşmana kadar)", "index": 87, "weight": 4, "rarity": "epic", "chars": ["leila"], "min_level": 4},
+	{"name": "Voltaic Core",       "category": "Identity",      "color": Color(0.2, 0.4, 1.0), "desc": "Applies Electrified.\nHitting an Electrified enemy chains damage (up to 3)", "index": 87, "weight": 4, "rarity": "epic", "chars": ["leila"], "min_level": 4},
 	{"name": "Thermal Expansion",  "category": "Utility",       "color": Color(0.7, 0.9, 1.0), "desc": "Steam explosion area grows",                        "index": 89,  "weight": 3, "rarity": "epic",  "chars": ["leila"], "min_level": 4},
 	{"name": "Mana Overflow",      "category": "Utility",       "color": Color(0.6, 0.4, 1.0), "desc": "Using Calamity empowers\nall Cores briefly",   "index": 90, "weight": 3,  "rarity": "epic",      "chars": ["leila"], "min_level": 4},
 	# Lv5: Legendary endgame
@@ -2680,13 +2686,14 @@ func _build_all_upgrades() -> void:
 	{"name": "Volcanic Rift",      "category": "Calamity",      "color": Color(1.0, 0.3, 0.0), "desc": "Leaves lava trail on ground",                 "index": 97, "weight": 2,  "rarity": "legendary", "chars": ["leila"], "min_level": 4},
 	{"name": "Thunderstorm",       "category": "Calamity",      "color": Color(0.3, 0.5, 1.0), "desc": "Random lightning strikes for 5s",             "index": 98, "weight": 2,  "rarity": "legendary", "chars": ["leila"], "min_level": 5},
 	# ── Leila Connected Cores (iç yörünge) ───────────────────────────────────
-	{"name": "Mist Core",             "category": "Identity",      "color": Color(0.3, 0.6, 1.0),  "desc": "Her 4s: 70px içinde 1 düşmana\nWet uygular",                    "index": 185, "weight": 5, "rarity": "uncommon",  "chars": ["leila"], "min_level": 1},
-	{"name": "Frost Aura Core",       "category": "Identity",      "color": Color(0.5, 0.85, 1.0), "desc": "50px içine giren düşmanlar\notomatik Slow alır",                 "index": 186, "weight": 5, "rarity": "rare",      "chars": ["leila"], "min_level": 2},
-	{"name": "Static Aura Core",      "category": "Identity",      "color": Color(0.9, 0.9, 0.2),  "desc": "60px içine giren düşmanlar\nElectrified olur (3s CD/düşman)",    "index": 187, "weight": 5, "rarity": "rare",      "chars": ["leila"], "min_level": 2},
-	{"name": "Catalyst Pulse Core",   "category": "Identity",      "color": Color(0.7, 0.4, 1.0),  "desc": "Her 3s: 120px'teki debufflı\ndüşmanların süresi +1s uzar",        "index": 188, "weight": 4, "rarity": "rare",      "chars": ["leila"], "min_level": 2},
-	{"name": "Echo Resonance Core",   "category": "Identity",      "color": Color(0.4, 0.7, 1.0),  "desc": "Her 5s: 1s boyunca 80px'e\nson uyguladığın elementi yayar",       "index": 189, "weight": 4, "rarity": "epic",      "chars": ["leila"], "min_level": 3},
-	{"name": "Volatile Aura Core",    "category": "Identity",      "color": Color(0.95, 0.4, 0.9), "desc": "Reaksiyon tetiklince:\n80px'e 2 hasar pulse",                     "index": 190, "weight": 4, "rarity": "epic",      "chars": ["leila"], "min_level": 3},
-	{"name": "Elemental Shield Core", "category": "Identity",      "color": Color(0.3, 0.9, 0.6),  "desc": "Son uyguladığın element:\no elementin hasarına %20 direnç",        "index": 191, "weight": 4, "rarity": "rare",      "chars": ["leila"], "min_level": 2},
+	{"name": "Mist Core",             "category": "Identity",      "color": Color(0.3, 0.6, 1.0),  "desc": "Every 4s: applies Wet to 1 enemy\nwithin range",                    "index": 185, "weight": 5, "rarity": "uncommon",  "chars": ["leila"], "min_level": 1},
+	{"name": "Frost Aura Core",       "category": "Identity",      "color": Color(0.5, 0.85, 1.0), "desc": "Enemies that enter range automatically\nget Slowed",                 "index": 186, "weight": 5, "rarity": "rare",      "chars": ["leila"], "min_level": 2},
+	{"name": "Static Aura Core",      "category": "Identity",      "color": Color(0.9, 0.9, 0.2),  "desc": "Enemies that enter range get Electrified\n(3s cooldown per enemy)",    "index": 187, "weight": 5, "rarity": "rare",      "chars": ["leila"], "min_level": 2},
+	{"name": "Echo Resonance Core",   "category": "Identity",      "color": Color(0.4, 0.7, 1.0),  "desc": "Every 5s: for 1s, spreads the last\nelement you applied to nearby enemies",       "index": 189, "weight": 4, "rarity": "epic",      "chars": ["leila"], "min_level": 3},
+	{"name": "Volatile Aura Core",    "category": "Identity",      "color": Color(0.95, 0.4, 0.9), "desc": "On reaction trigger: deals a\n2 damage pulse to nearby enemies",                     "index": 190, "weight": 4, "rarity": "epic",      "chars": ["leila"], "min_level": 3},
+	# Elemental Shield Core (191) — havuzdan kaldırıldı (2026-09-11, mekanik açıklamayla
+	# tutarsız + boss'lara element uygulanacak gelecekteki sistemle yeniden ele alınacak).
+	# Kod (ball.gd/game_scene.gd/ball_launcher.gd/lang.gd) kasıtlı olarak silinmedi.
 	# Individuality
 	{"name": "Wet Armor",       "category": "Individuality", "color": Color(0.1, 0.5, 0.9),  "desc": "Islak düşman varken\n%10 az hasar alırsın",                    "index": 200, "weight": 8,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 0},
 	{"name": "Burn Frenzy",     "category": "Individuality", "color": Color(1.0, 0.4, 0.1),  "desc": "Her yanan düşman için\nburn tick hasarı +1 (maks +7)",             "index": 201, "weight": 8,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 1},
@@ -3006,7 +3013,8 @@ func show_upgrade_menu() -> void:
 		desc_label.fit_content = false
 		desc_label.scroll_active = false
 		var _desc_str: String = Lang.desc(upgrade["index"], upgrade["desc"], get_node("Player"))
-		desc_label.text = _desc_str
+		var _is_connected_core: bool = upgrade.get("index", -1) in _CONNECTED_CORE_INDICES
+		desc_label.text = ("[b]Connected Core[/b]\n" + _desc_str) if _is_connected_core else _desc_str
 		desc_label.set_anchors_preset(Control.PRESET_FULL_RECT)
 		desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD
 		desc_label.clip_contents = true
@@ -3022,18 +3030,6 @@ func show_upgrade_menu() -> void:
 		desc_label.add_theme_font_override("bold_font", _font_bold)
 		desc_label.add_theme_color_override("default_color", Color(0.85, 0.85, 0.85))
 		desc_panel.add_child(desc_label)
-
-		# ── Connected Core badge ─────────────────────────────────────────────
-		if upgrade.get("index", -1) in _CONNECTED_CORE_INDICES:
-			var badge := Label.new()
-			badge.text = Lang.t("ui_connected_core")
-			badge.position = Vector2(tx + 26, ty + 20)
-			badge.size = Vector2(card_width - 52, 24)
-			badge.add_theme_font_size_override("font_size", 11)
-			badge.add_theme_font_override("font", _font_bold)
-			badge.add_theme_color_override("font_color", Color(0.4, 0.85, 1.0))
-			badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			canvas.add_child(badge)
 
 		# Confirm ve Skip ortada
 		var confirm_btn = Button.new()
@@ -3063,7 +3059,7 @@ func show_upgrade_menu() -> void:
 			var tween := create_tween()
 			tween.tween_property(card_sprite, "scale", Vector2(1.05, 1.05), 0.1)
 			tween.parallel().tween_property(card_sprite, "position", Vector2(tx - 7, ty - 7), 0.1)
-			_show_card_glossary(_desc_str, tx, ty, card_width)
+			_show_card_glossary(_desc_str, tx, ty, card_width, upgrade.get("index", -1) in _CONNECTED_CORE_INDICES)
 		)
 		click_area.mouse_exited.connect(func():
 			var tween := create_tween()
@@ -3072,8 +3068,6 @@ func show_upgrade_menu() -> void:
 			_hide_card_glossary()
 		)
 		click_area.pressed.connect(_on_card_selected.bind(upgrade["index"], canvas, card_sprite))
-		if upgrade.get("index", -1) in _CONNECTED_CORE_INDICES:
-			click_area.tooltip_text = Lang.t("ui_connected_core_tooltip")
 		canvas.add_child(click_area)
 
 		# ── Card entry animation: bottom to top, staggered ─────────────────────
@@ -4687,7 +4681,6 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 	elif index == 185: $BallLauncher.queue_upgrade_ball("mist_core")
 	elif index == 186: $BallLauncher.queue_upgrade_ball("frost_aura_core")
 	elif index == 187: $BallLauncher.queue_upgrade_ball("static_aura_core")
-	elif index == 188: $BallLauncher.queue_upgrade_ball("catalyst_pulse_core")
 	elif index == 189: $BallLauncher.queue_upgrade_ball("echo_resonance_core")
 	elif index == 190: $BallLauncher.queue_upgrade_ball("volatile_aura_core")
 	elif index == 191: $BallLauncher.queue_upgrade_ball("elemental_shield_core")

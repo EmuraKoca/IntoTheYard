@@ -68,10 +68,6 @@ var inner_core_type: String = ""
 var can_scatter: bool  = false  # Vuruşta 3 küçük elemental parça
 var can_catalyst: bool = false  # Mevcut debuff süresini uzatır
 var can_voltaic: bool  = false  # Electrified düşman ölünce zincir
-var can_echo_resonance: bool = false  # Her 5s: yakın debufflı düşmanın debuffını yayar
-var _echo_res_timer: float = 0.0
-const ECHO_RES_INTERVAL: float = 5.0
-const ECHO_RES_RADIUS: float = 80.0
 # ── Cyclone yeni core flag'leri ───────────────────────────────────────────────
 var can_antivirus_core: bool   = false  # İsabette 1 Antivirus stack
 var can_decay: bool            = false  # İsabette 1 Decay stack (max 3)
@@ -335,7 +331,6 @@ func _setup_ball_sprite() -> void:
 			"mist_core":             ["mistCore",            9],
 			"frost_aura_core":       ["frostAuraCore",       9],
 			"static_aura_core":      ["staticAuraCore",      9],
-			"catalyst_pulse_core":   ["catalystPulseCore",   9],
 			"echo_resonance_core":   ["echoResonanceCore",   9],
 			"volatile_aura_core":    ["volatileAuraCore",    9],
 			"circuit_overload_core": ["circuitOverloadCore", 18],
@@ -549,13 +544,6 @@ func _physics_process(delta: float) -> void:
 		if _orbit_element_timer <= 0.0:
 			_orbit_element_timer = ORBIT_ELEMENT_INTERVAL
 			_prism_apply_random_element()
-
-	# Echo Resonance Core: her 5s, yakın debufflı düşmanın debuffını yayar
-	if can_echo_resonance and state == "orbiting":
-		_echo_res_timer -= delta
-		if _echo_res_timer <= 0.0:
-			_echo_res_timer = ECHO_RES_INTERVAL
-			_echo_resonance_spread()
 
 	match state:
 		"orbiting":  _process_orbiting(delta); return
@@ -1021,22 +1009,6 @@ func _inner_core_tick(delta: float) -> void:
 					subject.apply_electrified()
 					_static_aura_cd[sid] = 3.0
 
-		"catalyst_pulse_core":
-			# Her 3s: 120px'teki debufflı düşmanların sürelerini +1s uzat
-			if _inner_tick_timer_b > 0.0: return
-			_inner_tick_timer_b = 3.0
-			for subject in get_tree().get_nodes_in_group("subjects"):
-				if not is_instance_valid(subject): continue
-				if global_position.distance_to(subject.global_position) > 120.0: continue
-				if subject.get("burn_ticks") and subject.burn_ticks > 0:
-					subject.burn_ticks += 2  # ~+1s (burn tick her 0.5s)
-				if subject.get("wet_duration") and subject.wet_duration > 0:
-					subject.wet_duration += 1.0
-				if subject.get("electrified_duration") and subject.electrified_duration > 0:
-					subject.electrified_duration += 1.0
-				if subject.get("slow_duration") and subject.slow_duration > 0:
-					subject.slow_duration += 1.0
-
 		"echo_resonance_core":
 			# Her 5s: 1s boyunca her tick'te 80px içindeki düşmanlara last_applied_element uygular
 			if _inner_tick_timer_b > 0.0: return
@@ -1188,7 +1160,7 @@ func _get_defense_base_damage() -> int:
 	elif can_water:   fd = 3
 	elif can_fire:    fd = 6
 	elif can_leech:   fd = 2
-	else:             fd = 5
+	else:             fd = 6  # Connected Core dart-strike: sonuç 3 hasar (fd*0.5)
 	return max(int(fd * 0.5), 1)
 
 func _prism_apply_random_element() -> void:
@@ -1201,40 +1173,6 @@ func _prism_apply_random_element() -> void:
 			"water":    if body.has_method("apply_wet"):         body.apply_wet()
 			"electric": if body.has_method("apply_electrified"): body.apply_electrified()
 			"cryo":     if body.has_method("apply_slow"):        body.apply_slow(0.4, 2.0)
-
-func _echo_resonance_spread() -> void:
-	var all_subjects := get_tree().get_nodes_in_group("subjects")
-	# 80px içindeki düşmanları bul
-	var nearby := all_subjects.filter(func(b): return is_instance_valid(b) and global_position.distance_to(b.global_position) <= ECHO_RES_RADIUS)
-	if nearby.is_empty(): return
-	# En yakın debufflı düşmanı bul
-	var source: Node = null
-	var source_dist: float = INF
-	for body in nearby:
-		var has_debuff: bool = (body.get("is_burning") and body.is_burning) or \
-							   (body.get("is_wet") and body.is_wet) or \
-							   (body.get("is_electrified") and body.is_electrified) or \
-							   (body.get("is_slowed") and body.is_slowed) or \
-							   (body.get("is_frozen") and body.is_frozen)
-		if not has_debuff: continue
-		var d := global_position.distance_to(body.global_position)
-		if d < source_dist:
-			source_dist = d
-			source = body
-	if not is_instance_valid(source): return
-	# Debuffları diğer yakın düşmanlara yay
-	for body in nearby:
-		if body == source: continue
-		if source.get("is_burning") and source.is_burning and body.has_method("apply_burn"):
-			body.apply_burn()
-		if source.get("is_wet") and source.is_wet and body.has_method("apply_wet"):
-			body.apply_wet()
-		if source.get("is_electrified") and source.is_electrified and body.has_method("apply_electrified"):
-			body.apply_electrified()
-		if source.get("is_slowed") and source.is_slowed and body.has_method("apply_slow"):
-			body.apply_slow(0.4, 2.0)
-		if source.get("is_frozen") and source.is_frozen and body.has_method("apply_frozen"):
-			body.apply_frozen()
 
 func _spawn_steam_cloud(pos: Vector2) -> void:
 	var game := get_node_or_null("/root/GameScene")
@@ -1330,7 +1268,6 @@ func _get_ball_type_str() -> String:
 	if can_bloodbound:       return "bloodbound"
 	if can_tempered:         return "tempered"
 	if can_voltaic:          return "voltaic"
-	if can_echo_resonance:   return "echo_resonance_core"
 	if can_plasma:           return "plasma"
 	if can_arc:              return "arc"
 	if can_steam:            return "steam"
@@ -1593,6 +1530,8 @@ func _hit_subject(subject: Node2D) -> void:
 		base_damage = 5
 	elif can_arc:
 		base_damage = 6
+	elif can_voltaic:
+		base_damage = 8
 	elif can_split and not has_split:
 		base_damage = 7
 	elif can_electric:

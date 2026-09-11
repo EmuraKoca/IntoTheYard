@@ -803,10 +803,144 @@ istedi. Kuruldu:
       mastery) zaten doğru — dynamic desc'e hasar sayısı da eklendi.
       Dynamic desc: `[b]5[/b] damage. Copies element from\ndebuffed enemy — applies it
       on return` / TR eşleniği.
-- [ ] **SIRADA: Prism Core (65)**
-- [ ] Scatter Core (77), Catalyst Core (78), Voltaic Core (87), Mist Core (185),
-      Frost Aura Core (186), Static Aura Core (187), Catalyst Pulse Core (188),
-      Echo Resonance Core (189), Volatile Aura Core (190), Elemental Shield Core (191)
+- [x] Prism Core (65) — Connected Core, orbit'te kalır. Her 2s: 55px içindeki rastgele
+      1 düşmana element uygular (Burning/Wet/Electrified/Slowed). Zaten
+      `_CONNECTED_CORE_INDICES`'te doğru kayıtlıydı. Requires gerekmiyor. Dil bug'ı
+      düzeltildi (EN alanı Türkçe yazılmıştı, TR hiç yoktu), dynamic desc + 4 keyword bold.
+      **Bu incelemede Connected Core'ların ortak "dart-strike" mekaniği fark edildi**
+      (aşağıya bak).
+- [x] Scatter Core (77) — isabette 3 küçük parça oluşturup kendi `queue_free()` oluyor
+      (tek vuruşluk, açıklamayla tutarlı). **Bilinen ama düzeltilmeyen bug**: parçalar
+      `max_damage=3` ile spawn ediliyor ama rastgele element flag'i taşıdıkları için ana
+      hasar zincirinde gerçek hasarları 3-9 arası değişiyor (Electric→9, Fire→6, Cryo→4,
+      Water→3). **Kullanıcı kararı: olduğu gibi kalsın** ("çok da OP bir core değil zaten").
+      Requires gerekmiyor. TR dil eksikliği giderildi.
+- [x] Catalyst Core (78) — Burning/Electrified/Wet/Slowed'ı isabette sıfırlayıp yeniden
+      uygulayarak süre tazeliyor. Frozen kapsam dışı — **kullanıcı kararıyla bilinçli
+      olarak eklenmedi** (Frozen zaten en güçlü durum efekti). Hasar tipli core değil,
+      override bug'ı yok. Requires gerekmiyor. TR eklendi, dynamic desc + bold keyword'ler.
+- [x] Voltaic Core (87) — **AYNI can_electric override bug'ı**: launcher'da 8 yazıyordu,
+      gerçek hasar 9 çıkıyordu (zincirin her sıçraması da yanlış değeri taşıyordu) —
+      düzeltildi, gerçek hasar artık 8. Mekanik: Electrified hedefe çarpınca en yakın
+      diğer Electrified düşmana TAM hasarla (Plasma'nın aksine yarım değil) zincirleniyor,
+      3 sıçramaya kadar. Requires gerekmiyor. Dil bug'ı düzeltildi.
+- [x] Mist Core (185) — Connected Core, her 4s 70px'teki rastgele 1 düşmana Wet. Requires
+      gerekmiyor. Dil bug'ı düzeltildi.
+- [x] Frost Aura Core (186) — Connected Core, 50px içine giren (henüz Slowed olmayan)
+      düşmanlar sürekli kontrol edilip Slow uygulanıyor — sürekli yavaşlatma alanı gibi
+      çalışıyor. Requires gerekmiyor. Dil bug'ı düzeltildi.
+- [x] Static Aura Core (187) — Connected Core, 60px içine giren düşmanlara Electrified,
+      düşman başına 3s cooldown (önceki bir ev session'ında zaten düzeltilmiş bug'dı,
+      dictionary düzgün temizleniyor). Requires gerekmiyor. Dil bug'ı düzeltildi.
+- [x] **Catalyst Pulse Core (188) — KALDIRILDI (kullanıcı kararı, 2026-09-09)**: açıklama
+      "Her 3s: 120px'teki debufflı düşmanların süreleri +1s uzar" diyordu ama kod
+      tamamen ölüydü — `burn_ticks`/`wet_duration`/`electrified_duration`/`slow_duration`
+      diye 4 property kontrol ediyordu, bunlardan HİÇBİRİ gerçekte var olmuyordu
+      (`burn_ticks` sadece `apply_burn()`'ün içinde yerel bir değişken, diğer üçü hiç
+      tanımlı değil). `subject.get(X)` var olmayan property için `null` döndüğünden
+      `if null and ...` hep false oluyor, 4 blok da sessizce hiçbir şey yapmıyordu.
+      **Kök sebep**: gerçek debuff süreleri `await get_tree().create_timer(dur).timeout`
+      ile askıya alınmış coroutine'lerin içinde yerel değişken olarak tutuluyor — dışarıdan
+      "süreyi uzatma" mimari olarak mümkün değil (Catalyst Core (78) bu sorunu "uzatma"
+      yerine "sıfırlayıp yeniden uygulama" ile çözmüştü, aynı çözüm burada da önerildi
+      ama kullanıcı kartı komple kaldırmayı tercih etti — Iron Fortress'teki gibi). Tüm
+      referansları (kart havuzu, pickup handler, display name, art dosya adı eşlemesi,
+      `_CONNECTED_CORE_INDICES`, `ball.gd`'deki ölü mekanik bloğu, `ball_launcher.gd`'deki
+      spawn kodu, index→type dispatch tablosu) silindi.
+- [x] **Echo Resonance Core (189) — KRİTİK BUG FIX (çakışan çifte implementasyon,
+      2026-09-11)**: `ball_launcher.gd`'de "echo_resonance_core" tipi İKİ AYRI `match`
+      bloğunda işleniyordu: (1) `can_echo_resonance=true` set eden eski/farklı bir
+      mekanik (`_echo_resonance_spread()` — en yakın debufflı düşmanın debuff'ını
+      çevresine yayar), (2) `is_inner_core=true`/`inner_core_type="echo_resonance_core"`
+      set eden asıl Connected Core mekaniği (`_inner_core_tick()`'teki gerçek kod —
+      oyuncunun `last_applied_element`'ini 80px'e yayar, kartın açıklamasıyla birebir
+      eşleşen). Her iki `match` de aynı `ball_type` string'ine tepki verdiği için İKİSİ
+      DE aynı anda set ediliyordu — kart aynı anda iki farklı, birbiriyle alakasız
+      mekaniği paralel çalıştırıyordu (Catalyst Pulse Core'daki gibi bir "dead/gölge
+      kod" bug'ı, ama burada ikisi de kısmen çalışıyordu, sadece davranış açıklamadan
+      sapıyordu). Kullanıcı kararıyla eski/fazladan mekanik (`can_echo_resonance` flag'i,
+      `_echo_res_timer`, `ECHO_RES_INTERVAL`/`ECHO_RES_RADIUS` const'ları,
+      `_echo_resonance_spread()` fonksiyonu, ball.gd/game_scene.gd'deki tüm
+      `can_echo_resonance` okuma noktaları, ball_launcher.gd'deki ilk match dalı) komple
+      silindi — sadece Connected Core (`inner_core_type`) yolu kaldı, diğer Mist/Frost
+      Aura/Static Aura Core'larla aynı desende (launcher'da `max_damage` set etmiyor,
+      sadece dart-strike'ın genel 3 hasarını kullanıyor). `last_applied_element`
+      property'si (player.gd:257) gerçekten var ve her element uygulayan core tarafından
+      güncelleniyor (Catalyst Pulse Core'un aksine bu kart ölü değildi, sadece çakışmalıydı)
+      — `requires` gerekmiyor, herhangi bir elementli core alınca zaten çalışır. Dil bug'ı
+      (aynı tekrarlayan desen): EN `desc` Türkçe yazılmıştı → düzeltildi. TR/EN dynamic
+      desc eklendi (`lang.gd`, index 189) — 4 debuff keyword'ü bold gösteriliyor.
+      **Kullanıcı kararı (standart kural)**: Connected Core açıklamalarında artık px
+      değeri yazılmıyor, "80px içindeki düşmanlara" yerine "yakındaki düşmanlara" /
+      "to nearby enemies" gibi genel ifade kullanılıyor — px sayısı oyuncu için anlamsız
+      bir teknik detay. Bundan sonra incelenecek tüm Connected Core'larda (Volatile Aura
+      Core, Elemental Shield Core, ve Vector'da daha önce yazılmış Iron Aura/Fortress/
+      Overcharge Core gibi px içerenler fırsat oldukça) bu kurala göre güncellenmeli.
+- [x] **Volatile Aura Core (190) — BUG FIX (2026-09-11)**: implementasyon doğru —
+      tick-tabanlı değil, `base_enemy.gd::_notify_reaction()`'a eklenen bir hook üzerinden
+      çalışıyor (herhangi bir reaksiyon tetiklenince, kartı taşıyan her ball'un 80px'indeki
+      tüm düşmanlara 2 hasar). **Bug**: `_notify_reaction()` 7 reaksiyon türünden 6'sında
+      çağrılıyordu (Electrocute/Steam/Cryostatic/Shatter/Melt Frozen/Overcharge) ama
+      **Melt reaksiyonunda (`_react_melt()`, Burning+Slowed kombosu) hiç çağrılmıyordu** —
+      hem Volatile Aura Core'un pulse'ı hem Perfect Catalyst'in element-tekrar-uygulaması
+      hem reaction_heal_amount/momentum bonusu bu reaksiyonda sessizce atlanıyordu.
+      Kullanıcı onayıyla düzeltildi: `_react_melt(mult: float)` → `_react_melt(mult, game,
+      player)` imzasına çekildi (diğer 6 reaksiyon fonksiyonuyla aynı), `_check_reaction()`
+      içindeki 2 çağrı noktası güncellendi, `_notify_reaction(game, player)` diğerleriyle
+      aynı sırada (die() kontrolünden ÖNCE, ölüm olsa bile tetiklenecek şekilde) eklendi.
+      Requires gerekmiyor (herhangi 2 element kombosu reaksiyon sayılıyor, tek bir core'a
+      bağlı değil). Dil bug'ı (aynı tekrarlayan desen) + px kuralı (bkz. yukarı) uygulanarak
+      düzeltildi, dynamic desc eklendi.
+- [x] **Elemental Shield Core (191) — HAVUZDAN KALDIRILDI (kullanıcı kararı, 2026-09-11,
+      Iron Fortress/Catalyst Pulse Core'dan FARKLI — komple silinmedi)**: gerçek mekanik
+      (`game_scene.gd::player_damaged()` satır 2350-2357) açıklamayla tutarsızdı —
+      açıklama "son uyguladığın element TÜRÜNE özel direnç" vaat ediyordu ama (1) oyunda
+      düşman saldırıları element tipine göre ayrışmıyor (hasar hep düz sayı), (2)
+      `last_applied_element` hiç sıfırlanmadığı için mekanik aslında "ilk element
+      vuruşundan itibaren TÜM hasara kalıcı %20 direnç" gibi çalışıyordu — Hydro Core'daki
+      gibi bir "açıklama gerçekte olmayan bir sistemi tarif ediyor" durumu. Kullanıcı bu
+      kartı **gereksiz/tutarsız** buldu, ileride boss'lara element uygulanabilen bir
+      sistem kurulunca yeniden ele alınmak üzere kart havuzundan (`upgrades` dizisinden)
+      çıkarıldı — ama Iron Fortress/Catalyst Pulse Core'un aksine **kod bilerek
+      silinmedi**: `ball.gd`'deki sprite-animasyon mantığı, `game_scene.gd`'deki hasar
+      azaltma bloğu + index dispatch + art mapping + pickup handler + `_CONNECTED_CORE_
+      INDICES` kaydı, `ball_launcher.gd`'deki spawn kodu, `lang.gd`'de (henüz) yazılmamış
+      açıklama — hepsi dokunulmadan duruyor, kart sadece havuzdan çekilemez hale getirildi
+      (`upgrades` dizisindeki satır yorum satırına çevrildi). **Sonraki adımda ele
+      alınacak**: boss element sistemi netleşince bu kart ya orijinal haliyle geri
+      eklenecek ya da o sisteme göre yeniden tasarlanacak.
+
+**LEILA IDENTITY TAMAMLANDI (19/19 kart incelendi, Elemental Shield Core havuzdan
+kaldırıldı) — 2026-09-11**
+
+### SIRADA: Leila Utility (21 kart, index sırasına göre)
+
+### Connected Core ortak mekaniği: "dart-strike" (2026-09-09, kullanıcı hatırlattı)
+Prism Core incelenirken kullanıcı "yakındaki düşmana vurma olayı da vardı" diye hatırlattı
+— haklı çıktı. TÜM Connected Core'lar (`is_inner_core=true`) `_process_orbiting()` →
+`_start_strike()` → `_defense_hit()` zinciri üzerinden, 78px'e giren herhangi bir düşmana
+otomatik "dart" hareketiyle saldırıyor. Bu, Vector'ın daha önce incelenen Connected
+Core'larında (Iron Aura, Momentum Field, Regen Pulse, Fortress, Bloodwall, Overcharge,
+Anchor Pulse) da var ama **o turda hiç fark edilmemiş, açıklamalara hiç eklenmemişti**.
+
+**Yapılan**:
+- Hasar `_get_defense_base_damage()`'te elementsiz core'lar için (çoğu Connected Core)
+  2 → **3**'e çıkarıldı (`else: fd=6`, sonuç `int(6*0.5)=3`). Bu fonksiyon SADECE Connected
+  Core'lar tarafından kullanılıyor (dış yörünge toplarını hiç etkilemiyor — `_process_
+  orbiting()` inner olmayanlar için erken `return` ediyor), güvenli bir değişiklik.
+- Her kartın açıklamasına tek tek yazmak yerine, **"Connected Core" yeni bir sözlük
+  keyword'ü oldu** (`Lang.STATUS_KEYWORDS`'e benzer ama ayrı, badge tabanlı): kart
+  `_CONNECTED_CORE_INDICES` listesindeyse, hover popup'ına otomatik olarak "Connected
+  Core: Fırlatılamaz — sürekli oyuncunun etrafında döner. Menziline giren düşmanlara 3
+  hasarlık dart saldırısı yapar." bilgisi ekleniyor (`_show_card_glossary()`'ye
+  `is_connected_core` parametresi eklendi).
+- **UI temizliği**: eski ayrı "◈ Connected Core" badge Label'ı kaldırıldı, yerine kart
+  açıklamasının ilk satırına `[b]Connected Core[/b]` başlığı eklendi (isim altında).
+  Eski native tooltip (`click_area.tooltip_text = ui_connected_core_tooltip`) de
+  kaldırıldı — artık popup zaten bunu kapsıyor, tekrar gereksizdi.
+- **Popup boyutu düzeltildi**: sabit "78px/keyword" tahmini yerine, her keyword'ün gerçek
+  metin uzunluğuna göre satır sayısı hesaplanıp panel/label yüksekliği dinamik büyütülüyor
+  (kullanıcı: "yazı sığmamış" — uzun "Connected Core" metni panelin dışına taşıyordu).
 
 **DEBUG NOTU (test kolaylığı, aynı gün eklendi):** `game_scene.gd::subject_died()`'da
 `_spawn_data_particles(...)` çağrısına `× 8.0` çarpanı eklendi — düşman öldürünce upgrade
@@ -1021,6 +1155,15 @@ Her karakter hedef: **65 kart**
 - Fusion Zone kaldırıldı, güncelleme notlarına yazılmamış
 - Cards Unlocked ekranı unlock_bg.png bağlantısı eksik
 - Roadmap: C:\Project ITY\IntoTheYard\docs\roadmap.md
+
+## Fikirler / Değerlendirilecek (henüz uygulanmadı)
+
+- **Core "çarpma ömrü" mekaniği (2026-09-07, kullanıcı fikri)**: Her core'un bir isabet
+  ömrü olsun (X vuruştan sonra core yok olsun/tükensin) — diğer arkanoid oyunlarına göre
+  farklı bir mekanik olur, ayrıca oto-mod (auto_mode) kullanan oyuncu bile tamamen AFK
+  kalamaz, arada müdahale etmek zorunda kalır. Henüz tasarım detayları netleşmedi (hangi
+  core'lar etkilenecek, ömür nasıl yenilenecek, Connected Core'lar dahil mi vb.) — sadece
+  fikir olarak not düşüldü, review süreci bitince değerlendirilecek.
 
 ## Notlar
 

@@ -8,12 +8,15 @@ var locale: String = "en"   # "en" veya "tr"
 # panelde gösterilir. Yeni bir keyword açıklamaya eklenince buraya da eklenmeli.
 const STATUS_KEYWORDS := ["Electrified", "Wet", "Burning", "Slowed", "Frozen"]
 
+# "Connected Core" keyword açıklamada geçmez, rozet üzerinden ayrıca ekleniyor
+# (bkz. game_scene.gd::_show_card_glossary çağrısı, _CONNECTED_CORE_INDICES kontrolü).
 const _STATUS_GLOSSARY_EN := {
 	"Electrified": "Enemy is marked for 5s. Triggers electric-based combos and reactions (chain damage, spread effects, etc.) from other cards.",
 	"Wet":         "Enemy is marked as wet. Combines with Fire (→ Steam) or Electric (stronger shock) for elemental reactions.",
 	"Burning":     "Enemy takes damage over time. Combines with Wet (→ Steam) for a reaction.",
 	"Slowed":      "Enemy's movement speed is reduced for a duration.",
 	"Frozen":      "Enemy is completely immobilized for a duration.",
+	"Connected Core": "Cannot be launched — orbits the player permanently. Dart-strikes any enemy that comes within range for [b]3[/b] damage.",
 }
 const _STATUS_GLOSSARY_TR := {
 	"Electrified": "Düşman 5sn işaretlenir. Diğer kartların elektrik tabanlı combo/reaksiyonlarını (zincir hasarı, yayılma efekti vb.) tetikler.",
@@ -21,6 +24,7 @@ const _STATUS_GLOSSARY_TR := {
 	"Burning":     "Düşman zamana yayılı hasar alır. Islak (→ Buhar) ile birleşince reaksiyon oluşturur.",
 	"Slowed":      "Düşmanın hareket hızı belirli bir süre boyunca düşer.",
 	"Frozen":      "Düşman belirli bir süre boyunca tamamen hareketsiz kalır.",
+	"Connected Core": "Fırlatılamaz — sürekli oyuncunun etrafında döner. Menziline giren düşmanlara [b]3[/b] hasarlık dart saldırısı yapar.",
 }
 
 func status_glossary(keyword: String) -> String:
@@ -316,6 +320,7 @@ const _DESC_TR: Dictionary = {
 	15: "Düşmanı %25 yavaşlatır",
 	17: "Düşmana ıslak etkisi uygular",
 	18: "Düşmana yanma etkisi uygular",
+	77: "İsabette 3 küçük rastgele\nElemental Core'a ayrılır",
 	# ── Leila — Utility ──────────────────────────────────────────────────────
 	13: "Elektrik core +2 hasar",
 	# ── Cyclone — Identity ───────────────────────────────────────────────────
@@ -352,6 +357,40 @@ func _dynamic_desc(index: int, player: Node) -> String:
 			if locale == "en":
 				return "[b]%d[/b] damage. Applies [b]Electrified[/b].\nSpreads it to [b]%d[/b] nearby enemies" % [_dmg63, _act]
 			return "[b]%d[/b] hasar. [b]Electrified[/b] uygular.\nYakındaki [b]%d[/b] düşmana yayılır" % [_dmg63, _act]
+		190:  # Volatile Aura Core
+			if locale == "en":
+				return "On reaction trigger: deals a\n[b]2[/b] damage pulse to nearby enemies"
+			return "Reaksiyon tetiklenince: yakındaki\ndüşmanlara [b]2[/b] hasarlık pulse"
+		189:  # Echo Resonance Core
+			if locale == "en":
+				return "Every 5s: for 1s, spreads the last element\nyou applied ([b]Burning[/b]/[b]Wet[/b]/[b]Electrified[/b]/[b]Slowed[/b])\nto nearby enemies"
+			return "Her 5sn: 1sn boyunca son uyguladığın\nelementi ([b]Burning[/b]/[b]Wet[/b]/[b]Electrified[/b]/[b]Slowed[/b])\nyakındaki düşmanlara yayar"
+		187:  # Static Aura Core
+			if locale == "en":
+				return "Enemies that enter range get [b]Electrified[/b]\n(3s cooldown per enemy)"
+			return "Menzile giren düşmanlar [b]Electrified[/b] olur\n(düşman başına 3sn CD)"
+		186:  # Frost Aura Core
+			if locale == "en":
+				return "Enemies that enter range automatically\nget [b]Slowed[/b]"
+			return "Menzile giren düşmanlar otomatik\nolarak [b]Slowed[/b] olur"
+		185:  # Mist Core
+			if locale == "en":
+				return "Every 4s: applies [b]Wet[/b] to 1 enemy\nwithin range"
+			return "Her 4sn: menzildeki 1 düşmana\n[b]Wet[/b] uygular"
+		87:  # Voltaic Core
+			var _dmg87: int = 8 + _bm
+			if locale == "en":
+				return "[b]%d[/b] damage. Applies [b]Electrified[/b].\nHitting an Electrified enemy chains damage (up to 3)" % _dmg87
+			return "[b]%d[/b] hasar. [b]Electrified[/b] uygular.\nElectrified düşmana çarpınca hasar zincirlenir (3'e kadar)" % _dmg87
+		78:  # Catalyst Core
+			var _dmg78: int = 5 + _bm
+			if locale == "en":
+				return "[b]%d[/b] damage. Refreshes the duration of\nexisting [b]Burning[/b]/[b]Electrified[/b]/[b]Wet[/b]/[b]Slowed[/b] on hit" % _dmg78
+			return "[b]%d[/b] hasar. İsabet ettiğinde mevcut\n[b]Burning[/b]/[b]Electrified[/b]/[b]Wet[/b]/[b]Slowed[/b] süresini tazeler" % _dmg78
+		65:  # Prism Core
+			if locale == "en":
+				return "Stays in orbit. Every 2s: applies a random\nelement ([b]Burning[/b]/[b]Wet[/b]/[b]Electrified[/b]/[b]Slowed[/b]) to enemies in range"
+			return "Orbit'te kalır. Her 2sn: menzildeki\ndüşmanlara rastgele element uygular ([b]Burning[/b]/[b]Wet[/b]/[b]Electrified[/b]/[b]Slowed[/b])"
 		62:  # Steam Core
 			var _dmg62: int = 5 + _bm
 			if locale == "en":

@@ -231,7 +231,7 @@ func _launch_typed_ball(ball_type: String) -> void:
 	var player_node = get_parent().get_node("Player")
 	var _current_balls := get_tree().get_nodes_in_group("player_balls")
 	_current_balls = _current_balls.filter(func(b): return is_instance_valid(b))
-	var is_inner := ball_type in ["iron_aura_core", "momentum_field_core", "regen_pulse_core", "fortress_core", "bloodwall_core", "overcharge_core", "anchor_pulse_core", "mist_core", "frost_aura_core", "static_aura_core", "catalyst_pulse_core", "echo_resonance_core", "volatile_aura_core", "elemental_shield_core", "glitch_pulse_core", "shadow_core", "data_drain_core", "virus_beacon_core", "rogues_eye_core", "circuit_overload_core", "orbit"]
+	var is_inner := ball_type in ["iron_aura_core", "momentum_field_core", "regen_pulse_core", "fortress_core", "bloodwall_core", "overcharge_core", "anchor_pulse_core", "mist_core", "frost_aura_core", "static_aura_core", "echo_resonance_core", "volatile_aura_core", "elemental_shield_core", "glitch_pulse_core", "shadow_core", "data_drain_core", "virus_beacon_core", "rogues_eye_core", "circuit_overload_core", "orbit"]
 	var is_normal := ball_type == "" and _startup_active
 	if not is_inner and not is_normal:
 		# Özellikli core limiti: normal core'ları sayma
@@ -327,9 +327,6 @@ func _launch_typed_ball(ball_type: String) -> void:
 			ball.can_voltaic  = true
 			ball.can_electric = true
 			ball.max_damage   = 8 + player_node.ball_mastery
-		"echo_resonance_core":
-			ball.can_echo_resonance = true
-			ball.max_damage         = 4 + player_node.ball_mastery
 		# ── Cyclone yeni core'lar ─────────────────────────────────────────────
 		"antivirus_core":
 			ball.can_antivirus_core = true
@@ -386,9 +383,6 @@ func _launch_typed_ball(ball_type: String) -> void:
 		"static_aura_core":
 			ball.is_inner_core       = true
 			ball.inner_core_type     = "static_aura_core"
-		"catalyst_pulse_core":
-			ball.is_inner_core       = true
-			ball.inner_core_type     = "catalyst_pulse_core"
 		"echo_resonance_core":
 			ball.is_inner_core       = true
 			ball.inner_core_type     = "echo_resonance_core"

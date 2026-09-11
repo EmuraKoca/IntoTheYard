@@ -611,11 +611,11 @@ func _check_reaction(incoming: String) -> void:
 	if incoming == "fire" and is_slowed:
 		is_burning = false; is_slowed = false
 		speed = original_speed if original_speed > 0 else speed
-		_react_melt(dmg_mult); return
+		_react_melt(dmg_mult, game, player); return
 	if incoming == "cryo" and is_burning:
 		is_burning = false; is_slowed = false
 		speed = original_speed if original_speed > 0 else speed
-		_react_melt(dmg_mult); return
+		_react_melt(dmg_mult, game, player); return
 
 	if incoming == "fire" and is_electrified:
 		is_burning = false; is_electrified = false
@@ -737,13 +737,14 @@ func _react_overcharge(mult: float, game: Node, player: Node) -> void:
 	_notify_reaction(game, player)
 	if health <= 0: die("electric")
 
-func _react_melt(mult: float) -> void:
+func _react_melt(mult: float, game: Node, player: Node) -> void:
 	_last_reaction_type = "melt"
 	_spawn_melt_vfx()
 	var dmg := int(18 * mult)
 	health -= dmg
 	_react_flash(Color(1.0, 0.6, 0.1))
 	_hide_debuff("burn"); _hide_debuff("slow")
+	_notify_reaction(game, player)
 	if health <= 0: die("burn")
 
 func _react_flash(color: Color) -> void:
