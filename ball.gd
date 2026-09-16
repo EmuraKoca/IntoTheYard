@@ -872,14 +872,6 @@ func _defense_hit(subject: Node2D) -> void:
 		if _applied_elem != "":
 			if _pn.get("last_applied_element") != null:
 				_pn.last_applied_element = _applied_elem
-			# Mystic Flow: yeni unique element → +1% hız
-			if _pn.get("mystic_flow_elements") != null and _applied_elem not in _pn.mystic_flow_elements:
-				_pn.mystic_flow_elements.append(_applied_elem)
-				_pn.mystic_flow_stacks += 1
-				_pn.SPEED += 5  # +1% ≈ +5 (base ~500)
-			# Elemental Harmony (Individuality): per-unique-element +5% core hız
-			if _pn.get("has_elemental_harmony_ind") and _pn.has_elemental_harmony_ind:
-				_pn.orbit_speed_mult = 1.0 + _pn.mystic_flow_stacks * 0.05
 	if can_glitch and is_instance_valid(subject):
 		subject.apply_glitch()
 	defense_life -= defense_damage
@@ -1201,7 +1193,7 @@ func _spawn_steam_cloud(pos: Vector2) -> void:
 	if not is_instance_valid(cloud): return
 	for body in get_tree().get_nodes_in_group("subjects"):
 		if is_instance_valid(body) and body.global_position.distance_to(pos) < 45.0:
-			if not body.get("is_wet") and body.get("apply_wet"):
+			if not body.get("is_wet") and body.has_method("apply_wet"):
 				body.apply_wet()
 
 func _start_returning() -> void:
@@ -1535,17 +1527,21 @@ func _hit_subject(subject: Node2D) -> void:
 	elif can_split and not has_split:
 		base_damage = 7
 	elif can_electric:
-		base_damage = 9
+		base_damage = max_damage
+		_typed_core = false
 	elif can_pierce:
 		base_damage = 5
 	elif can_cryo:
-		base_damage = 4
+		base_damage = max_damage
+		_typed_core = false
 	elif can_glitch:
 		base_damage = 4
 	elif can_water:
-		base_damage = 3
+		base_damage = max_damage
+		_typed_core = false
 	elif can_fire:
-		base_damage = 6
+		base_damage = max_damage
+		_typed_core = false
 	elif can_leech:
 		base_damage = 2
 	elif can_armor:
@@ -2142,13 +2138,14 @@ func _hit_subject(subject: Node2D) -> void:
 	if can_arc and is_instance_valid(subject) and subject.get("is_electrified") and subject.is_electrified:
 		var _arc_p := _get_player()
 		var _arc_limit: int = 2 + (_arc_p.arc_chain_targets if _arc_p and _arc_p.get("arc_chain_targets") else 0)
+		var _arc_range: float = 160.0 * (_arc_p.electric_reaction_range_mult if _arc_p else 1.0)
 		var _arc_hit: int = 0
 		var _arc_enemies := get_tree().get_nodes_in_group("subjects")
 		for _ae in _arc_enemies:
 			if _arc_hit >= _arc_limit: break
 			if _ae == subject: continue
-			if is_instance_valid(_ae) and subject.global_position.distance_to(_ae.global_position) < 160.0:
-				if _ae.get("apply_electrified"):
+			if is_instance_valid(_ae) and subject.global_position.distance_to(_ae.global_position) < _arc_range:
+				if _ae.has_method("apply_electrified"):
 					_ae.apply_electrified()
 					_arc_hit += 1
 
@@ -2216,8 +2213,9 @@ func _voltaic_chain(from: Node2D, dmg: int, hops_left: int) -> void:
 	var _tree := get_tree()
 	if not _tree: return
 	# En yakın Electrified düşmanı bul (from hariç)
+	var _vp := _get_player()
 	var _nearest: Node2D = null
-	var _nearest_dist: float = 220.0
+	var _nearest_dist: float = 220.0 * (_vp.electric_reaction_range_mult if _vp else 1.0)
 	for _en in _tree.get_nodes_in_group("subjects"):
 		if not is_instance_valid(_en) or _en == from: continue
 		if not (_en.get("is_electrified") and _en.is_electrified): continue
@@ -2688,9 +2686,9 @@ func _spawn_tracer_trail(pos: Vector2) -> void:
 			if not is_instance_valid(e): continue
 			if e in _slowed_set: continue
 			if e.global_position.distance_to(pos) <= r:
-				if e.get("apply_slow"): e.apply_slow(0.4, 0.5, "tracer")
+				if e.has_method("apply_slow"): e.apply_slow(0.4, 0.5, "tracer")
 				_slowed_set.append(e)
 	for i in range(10):
-		await game.get_tree().create_timer(0.1 * (i + 1)).timeout
+		await game.get_tree().create_timer(0.1 * (i + 1), false).timeout
 		_tick.call()
 	if is_instance_valid(zone): zone.queue_free()

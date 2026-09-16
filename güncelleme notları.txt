@@ -4219,3 +4219,76 @@ Cyclone Individuality — devamı ve tamamlanışı:
   ✅  Üç karakterin (Vector, Leila, Cyclone) tüm kart görselleri
       (180 kart) isimlendirme ve eksiklik açısından tam denetlendi —
       hiçbir sorun bulunmadı
+
+───────────────────────────────────────────────────
+Sürüm: v0.1.6.0  |  Tarih: 16.09.2026
+───────────────────────────────────────────────────
+
+LEILA CALAMITY — kart-kart review tamamlandı (8/8):
+
+  ✅  Lightning: gerçek sprite VFX'e bağlandı (elle çizilmiş zigzag
+      yerine), isabet flaşı eklendi, hasar 3 → 13'e çıkarıldı
+      (düşman HP değerleriyle dengelendi)
+  ✅  Flame Zone: pause bug'ı + düşük hasar düzeltildi, gerçek sprite
+      VFX'e bağlandı, z-index iki kez düzeltildi (hem canlı düşmanların
+      hem cesetlerin altında kalacak şekilde), hasar alanı görselin
+      gerçek boyutuna göre küçültüldü
+  ✅  Blizzard → "Freezing Cold" olarak yeniden tasarlandı: artık sadece
+      Wet düşmanları dondurmuyor, diğerlerini de yavaşlatıyor; VFX
+      sahayı gezen hareketli bir "hortum" oldu (birkaç iterasyonda
+      hız/rota/mekanik ayarlandı — artık hortumun geçtiği yoldaki
+      düşmanlara etki ediyor, anlık tüm saha değil)
+  ✅  Monsoon, EMP Pulse: yanlış Calamity görüntü isimleri düzeltildi
+      ("Flood"/"Battery" diyordu, gerçek isimleriyle uyuşmuyordu),
+      Monsoon'un mağaza havuzundaki hayalet/işlevsiz emoji'si düzeltildi
+  ✅  Volcanic Rift: pause bug'ı düzeltildi, gerçek sprite VFX'e
+      bağlandı (44 frame, tek seferlik erüpsiyon), hasar alanı görsel
+      boyuta göre küçültüldü, kenarları kesikli/çentikli hale getirildi
+  ✅  Thunderstorm: pause bug'ı, yanlış görüntü ismi, Avlu sınırı eksikliği
+      (sahadaki her yeri değil sadece Avlu'yu etkilemesi gerekiyordu)
+      düzeltildi, hedef sayısı dengelendi (3 → 2/saniye)
+
+YENİ ÖZELLİKLER:
+
+  ✅  Karaktere özel Calamity nişan sprite'ı — nişan alırken gösterilen
+      eski yarı saydam daire yerine artık her karakterin kendi özel
+      görseli kullanılıyor (Vector/Leila/Cyclone)
+  ✅  Kart üzerine gelince "durum efekti sözlüğü" popup'ı (Gwent tarzı) —
+      Electrified/Wet/Burning/Slowed/Frozen/Momentum/Glitched/Antivirus/
+      Decay gibi terimlerin üzerine gelince ne işe yaradıkları açıklanıyor
+  ✅  Düşük can uyarı vinyeti — can azalınca ekran kenarında kırmızı,
+      nabız gibi atan bir uyarı beliriyor (tüm karakterler için)
+  ✅  Düşman HP göstergesi — her düşmanın üzerinde canlı güncellenen
+      bir can göstergesi eklendi
+
+KRİTİK BUG FIX — proje genelinde:
+
+  ✅  Leila'nın Electric/Cryo/Hydro/Pyro Core'larının kendi hasar
+      arttırma kartları (Amp'lar) hiç çalışmıyordu — düzeltildi
+      (sonrasında kullanıcı kararıyla bu 4 kart tamamen kaldırıldı)
+  ✅  Mystic Flow kartı üç katmanlı bir hata içeriyordu (çakışan çifte
+      sayaç sistemi + kartı almanın mevcut bonusu silmesi) — baştan
+      yazıldı
+  ✅  GDScript'te "bu fonksiyon var mı" kontrolü yanlış yazılmıştı
+      (10 farklı yerde) — sonuç olarak Glitch Bomb, Virus Rain, Decay
+      Field, Leech Nova Core, Tracer Core ve bazı element yayma
+      mekanikleri (Steam Core, Arc Core, Thermal Expansion dahil)
+      sessizce hiç çalışmıyordu, hepsi düzeltildi
+  ✅  Leila Utility kartlarının 16 tanesine seviye (Lv1/2/3) sistemi
+      hiç yoktu — artık hepsinde var, 2./3. kez alındığında gerçekten
+      güçleniyor
+
+CYCLONE CALAMITY — kart-kart review başladı:
+
+  ✅  Data Storm: gerçek VFX'e bağlandı — Glitch'li her düşmanın
+      üzerinde ayrı bir "bozulma patlaması" oynuyor, patlama bitince
+      hasar veriyor ve Glitch'i temizliyor
+  ✅  Backdoor: yeni "The Yard Engine" VFX'i eklendi — sahanın
+      merkezinde beliren bir cihazdan tüm Avlu'daki düşmanlara
+      elektrik çizgileri gidiyor, bu anda gerçek Glitch debuff'ı
+      uygulanıyor, sonra cihaz kayboluyor
+
+  Not: Bu review süreci devam ediyor, kalan 7 Cyclone Calamity kartı
+  (Bounce Barrage, Mirror Image, Systemic Failure, Glitch Bomb, System
+  Crash, Virus Rain, Decay Field) ve bazı diğer kartlar sıradaki
+  session'da ele alınacak.

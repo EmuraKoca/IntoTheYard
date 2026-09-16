@@ -71,11 +71,11 @@ const _CALAMITY_DISPLAY_NAMES: Dictionary = {
 	"⚡":  "Calamity Lightning",
 	"🔥":  "Calamity Flame",
 	"🌀":  "Gravitational Force",
-	"❄️": "Calamity Blizzard",
-	"🌊":  "Calamity Flood",
-	"🔋":  "Calamity Battery",
+	"❄️": "Calamity Freezing Cold",
+	"🌊":  "Calamity Monsoon",
+	"🔋":  "Calamity EMP Pulse",
 	"🌋":  "Calamity Volcanic Rift",
-	"⛈️": "Calamity Storm",
+	"⛈️": "Calamity Thunderstorm",
 	"💾":  "Data Storm",
 	"👾":  "Backdoor",
 	"🎱":  "Bounce Barrage",
@@ -229,7 +229,7 @@ const _UPGRADE_META: Dictionary = {
 	85: {"name": "Resonant Soul",       "category": "Individuality"},
 	86: {"name": "Elemental Memory",    "category": "Individuality"},
 	90: {"name": "Mana Overflow",       "category": "Utility"},
-	91: {"name": "Perfect Catalyst",    "category": "Utility"},
+	91: {"name": "Perfect Catalyst",    "category": "Individuality"},
 }
 
 var subject_scene = preload("res://subject.tscn")
@@ -1086,6 +1086,10 @@ func _ready() -> void:
 
 	# Karakter bazlı başlangıç değerleri
 	var char_type: String = get_node("Player").character_type
+	var _aim_path := "res://assets/charsRedesign/%s/%sCalamityAim.png" % [char_type, char_type]
+	if ResourceLoader.exists(_aim_path):
+		$UI/CalamityCircle.aim_texture = load(_aim_path)
+		$UI/CalamityCircle.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	var _shop_hp: int    = GameData.get_shop_hp_bonus()
 	var _shop_arm: int   = GameData.get_shop_armor_bonus()
 	var _p_node := get_node("Player")
@@ -1138,16 +1142,18 @@ func _ready() -> void:
 	_run_start_chips = GameData.chips
 	var _cal_start := GameData.get_shop_start_calamity_count()
 	if _cal_start > 0:
-		var _cal_pool := ["⚡", "🔥", "🌀", "❄️", "💧", "☠️"]
+		var _cal_pool := ["⚡", "🔥", "🌀", "❄️", "🌊", "☠️"]
 		_cal_pool.shuffle()
 		for _ci in range(min(_cal_start, max_calamity_slots)):
 			calamity_slots.append(_cal_pool[_ci])
 
-	# ── DEBUG: Rampart Collapse + Full Breach test override (test bitince kaldır) ──
-	for _dbg_cal in ["🏚️", "🔓"]:
+	# ── DEBUG: Cyclone Calamity sprite test override (test bitince kaldır) ──
+	calamity_slots.clear()
+	for _dbg_cal in ["👾", "👾", "👾"]:
 		if calamity_slots.size() < max_calamity_slots:
 			calamity_slots.append(_dbg_cal)
 	update_ui()
+	$BallLauncher.queue_upgrade_ball("glitch")
 	$UI/CalamityCircle.visible = false
 
 	await get_tree().process_frame
@@ -1947,7 +1953,7 @@ func _dispatch_calamity_effect(calamity: String, mouse_pos: Vector2) -> void:
 	elif calamity == "🌀":
 		_activate_gravity(mouse_pos)
 	elif calamity == "❄️":
-		_activate_blizzard()
+		_activate_freezing_cold()
 	elif calamity == "🌊":
 		_activate_monsoon()
 	elif calamity == "🌋":
@@ -2005,7 +2011,7 @@ func _consume_calamity(index: int, mouse_pos: Vector2) -> void:
 		calamity_slots.remove_at(index)
 	calamity_index = clamp(calamity_index, 0, max(calamity_slots.size() - 1, 0))
 	if _player_node and _player_node.get("has_mana_overflow") and _player_node.has_mana_overflow:
-		_player_node.mana_overflow_timer += 5.0
+		_player_node.mana_overflow_timer += _player_node.mana_overflow_duration
 	calamity_aiming = false
 	update_ui()
 
@@ -2644,47 +2650,47 @@ func _build_all_upgrades() -> void:
 	{"name": "Cryo Core",           "category": "Identity",      "color": Color(0.5, 0.8, 1.0), "desc": "Slows subject by 25%",                      "index": 15, "weight": 10, "rarity": "common", "chars": ["leila"], "min_level": 0},
 	{"name": "Hydro Core",          "category": "Identity",      "color": Color(0.0, 0.5, 1.0), "desc": "Applies wet to enemy",                   "index": 17, "weight": 10, "rarity": "common", "chars": ["leila"], "min_level": 0},
 	{"name": "Pyro Core",           "category": "Identity",      "color": Color(1.0, 0.3, 0.0), "desc": "Applies burn to subject",                   "index": 18, "weight": 10, "rarity": "common", "chars": ["leila"], "min_level": 0},
-	{"name": "Electric Amp",        "category": "Utility",       "color": Color(0.2, 0.5, 1.0), "desc": "Electric Core +2 damage",                   "index": 13,  "weight": 10, "rarity": "common",   "chars": ["leila"], "min_level": 0},
-	{"name": "Cryo Amp",            "category": "Utility",       "color": Color(0.5, 0.8, 1.0), "desc": "Cryo Core +2 damage",                       "index": 99,  "weight": 10, "rarity": "common",   "chars": ["leila"], "min_level": 0},
-	{"name": "Hydro Amp",           "category": "Utility",       "color": Color(0.0, 0.5, 1.0), "desc": "Hydro Core +2 damage",                      "index": 100, "weight": 10, "rarity": "common",   "chars": ["leila"], "min_level": 0},
-	{"name": "Pyro Amp",            "category": "Utility",       "color": Color(1.0, 0.3, 0.0), "desc": "Pyro Core +2 damage",                       "index": 101, "weight": 10, "rarity": "common",   "chars": ["leila"], "min_level": 0},
-	{"name": "Conduction",         "category": "Utility",       "color": Color(0.3, 0.5, 1.0), "desc": "Electric reaction range +30%",               "index": 66,  "weight": 8,  "rarity": "uncommon", "chars": ["leila"], "min_level": 0},
-	{"name": "Hydro Pressure",     "category": "Utility",       "color": Color(0.1, 0.5, 0.9), "desc": "Wet uygulayan core'lar %25 hızlı\nFırlatılan: hız / Connected: orbit dönüşü",  "index": 67,  "weight": 8,  "rarity": "uncommon", "chars": ["leila"], "min_level": 0, "requires_any": [17, 62, 65, 185]},
-	{"name": "Arc Amplifier",      "category": "Utility",       "color": Color(0.2, 0.4, 1.0), "desc": "Arc Core +1 düşmana daha yayar",              "index": 68,  "weight": 8,  "rarity": "uncommon", "chars": ["leila"], "min_level": 0, "requires": [63]},
-	{"name": "Static Charge",      "category": "Utility",       "color": Color(0.4, 0.6, 1.0), "desc": "Electrified enemies transfer damage\nto each other", "index": 69, "weight": 6, "rarity": "uncommon", "chars": ["leila"], "min_level": 0},
-	{"name": "Supercooling",       "category": "Utility",       "color": Color(0.5, 0.8, 1.0), "desc": "Cryo Slow +%15",                 "index": 71,  "weight": 8,  "rarity": "uncommon", "chars": ["leila"], "min_level": 0},
-	{"name": "Thermal Vision",     "category": "Utility",       "color": Color(1.0, 0.5, 0.1), "desc": "Burn tick hasarı +%20",            "index": 73,  "weight": 6,  "rarity": "uncommon", "chars": ["leila"], "min_level": 1},
-	{"name": "Mystic Flow",        "category": "Individuality", "color": Color(0.5, 0.7, 1.0), "desc": "Each unique element applied\n→ +1% Move Speed (max 20%)", "index": 76, "weight": 6, "rarity": "uncommon", "chars": ["leila"], "min_level": 1},
-	{"name": "Elemental Memory",   "category": "Individuality", "color": Color(0.7, 0.7, 1.0), "desc": "Reaksiyon geçiren düşmana\nsonraki debuff 2× uzun sürer", "index": 86, "weight": 4, "rarity": "uncommon", "chars": ["leila"], "min_level": 0},
+	# Electric/Cryo/Hydro/Pyro Amp (13/99/100/101) — havuzdan kaldırıldı (2026-09-14,
+	# kullanıcı kararı). Kod (elif handler'lar, player.gd stat'ları, ball.gd/lang.gd
+	# dynamic desc formülleri) kasıtlı olarak silinmedi — ileride level-up/coin ile
+	# satın alınabilir bir sisteme dönüştürülebilir (bkz. "Fikirler / Değerlendirilecek").
+	{"name": "Conduction",         "category": "Utility",       "color": Color(0.3, 0.5, 1.0), "desc": "Electric spread range +30%\n(Plasma / Arc / Voltaic Core)",               "index": 66,  "weight": 8,  "rarity": "uncommon", "chars": ["leila"], "min_level": 0, "requires_any": [61, 63, 87]},
+	{"name": "Hydro Pressure",     "category": "Utility",       "color": Color(0.1, 0.5, 0.9), "desc": "Wet-applying cores are 25% faster\nLaunched: speed / Connected: orbit speed",  "index": 67,  "weight": 8,  "rarity": "uncommon", "chars": ["leila"], "min_level": 0, "requires_any": [17, 62, 65, 185]},
+	{"name": "Arc Amplifier",      "category": "Utility",       "color": Color(0.2, 0.4, 1.0), "desc": "Arc Core spreads to +1 more enemy",              "index": 68,  "weight": 8,  "rarity": "uncommon", "chars": ["leila"], "min_level": 0, "requires": [63]},
+	{"name": "Static Charge",      "category": "Utility",       "color": Color(0.4, 0.6, 1.0), "desc": "Electrified enemies transfer damage\nto each other", "index": 69, "weight": 6, "rarity": "uncommon", "chars": ["leila"], "min_level": 0, "requires_any": [1, 61, 63, 87]},
+	{"name": "Supercooling",       "category": "Utility",       "color": Color(0.5, 0.8, 1.0), "desc": "Cryo Slow amount +15%",                 "index": 71,  "weight": 8,  "rarity": "uncommon", "chars": ["leila"], "min_level": 0, "requires_any": [15, 186]},
+	{"name": "Thermal Vision",     "category": "Utility",       "color": Color(1.0, 0.5, 0.1), "desc": "Burn tick damage +20%",            "index": 73,  "weight": 6,  "rarity": "uncommon", "chars": ["leila"], "min_level": 1, "requires_any": [18, 65]},
+	{"name": "Mystic Flow",        "category": "Individuality", "color": Color(0.5, 0.7, 1.0), "desc": "Each unique element applied\n→ +1% Move Speed (max 4%)", "index": 76, "weight": 6, "rarity": "uncommon", "chars": ["leila"], "min_level": 1},
+	{"name": "Elemental Memory",   "category": "Individuality", "color": Color(0.7, 0.7, 1.0), "desc": "After a reaction: the enemy's next\ndebuff lasts 2x longer", "index": 86, "weight": 4, "rarity": "uncommon", "chars": ["leila"], "min_level": 0},
 	{"name": "Resonant Soul",      "category": "Individuality", "color": Color(0.8, 0.6, 1.0), "desc": "Each Reaction → restore 2 HP",                "index": 85,  "weight": 5,  "rarity": "uncommon", "chars": ["leila"], "min_level": 0},
 	# Lv1: İlk özel core'lar + reaksiyon temeli
 	{"name": "Plasma Core",        "category": "Identity",      "color": Color(0.4, 0.6, 1.0), "desc": "Bounces to Electrified enemies",             "index": 61, "weight": 8,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 1},
 	{"name": "Arc Core",           "category": "Identity",      "color": Color(0.3, 0.5, 1.0), "desc": "Applies Electrified.\nSpreads it to 2 nearby enemies",               "index": 63, "weight": 8,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 1},
 	{"name": "Arcane Mind",        "category": "Utility",       "color": Color(0.7, 0.5, 1.0), "desc": "First applied element lasts 100% longer",     "index": 80, "weight": 5,  "rarity": "rare",      "chars": ["leila"], "min_level": 1},
-	{"name": "Frozen Time",        "category": "Utility",       "color": Color(0.6, 0.85, 1.0),"desc": "Freeze duration +30%",                       "index": 82, "weight": 5,  "rarity": "rare",      "chars": ["leila"], "min_level": 1},
-	{"name": "Overheat",           "category": "Utility",       "color": Color(1.0, 0.4, 0.0), "desc": "33 Burn tick sonra\n150px'e 15 hasar patlaması",                "index": 83, "weight": 4,  "rarity": "rare",      "chars": ["leila"], "min_level": 1},
+	{"name": "Frozen Time",        "category": "Utility",       "color": Color(0.6, 0.85, 1.0),"desc": "[b]Frozen[/b] duration +30%",                       "index": 82, "weight": 5,  "rarity": "rare",      "chars": ["leila"], "min_level": 1},
+	{"name": "Overheat",           "category": "Utility",       "color": Color(1.0, 0.4, 0.0), "desc": "After 33 [b]Burning[/b] ticks:\nexplodes for 15 damage within 150px",                "index": 83, "weight": 4,  "rarity": "rare",      "chars": ["leila"], "min_level": 1, "requires_any": [18, 65]},
 	# Lv2: Orta seviye core'lar + sinerjiler
 	{"name": "Steam Core",         "category": "Identity",      "color": Color(0.7, 0.9, 1.0), "desc": "Leaves a steam cloud on hit\nApplies Wet to nearby enemies",         "index": 62, "weight": 8,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 2},
 	{"name": "Echo Core",          "category": "Identity",      "color": Color(0.6, 0.8, 1.0), "desc": "Copies element from Debuffed enemy on hit.\nApplies it on return.", "index": 64, "weight": 6, "rarity": "uncommon", "chars": ["leila"], "min_level": 2},
 	{"name": "Elemental Harmony",  "category": "Utility",       "color": Color(0.8, 0.8, 1.0), "desc": "Per unique active element:\n+5% Core Speed",      "index": 84, "weight": 4, "rarity": "rare",   "chars": ["leila"], "min_level": 2},
-	{"name": "Resonance Engine",   "category": "Utility",       "color": Color(0.6, 0.4, 1.0), "desc": "Reaksiyon → +1 Momentum\n+%2 Core Speed (kalıcı, birikir)", "index": 81, "weight": 5, "rarity": "rare", "chars": ["leila"], "min_level": 2},
-	{"name": "Pyroblast",          "category": "Utility",       "color": Color(1.0, 0.4, 0.0), "desc": "Burn explosions gain Area\nbased on Burn Stacks",       "index": 102, "weight": 3, "rarity": "rare",  "chars": ["leila"], "min_level": 2},
+	{"name": "Resonance Engine",   "category": "Utility",       "color": Color(0.6, 0.4, 1.0), "desc": "Reaction → +1 [b]Momentum[/b] stack\n(max 5, 3s each). Each stack: +2% Core Speed", "index": 81, "weight": 5, "rarity": "rare", "chars": ["leila"], "min_level": 2},
+	{"name": "Pyroblast",          "category": "Utility",       "color": Color(1.0, 0.4, 0.0), "desc": "Overheat's explosion radius grows\nwith the accumulated tick count",       "index": 102, "weight": 3, "rarity": "rare",  "chars": ["leila"], "min_level": 2, "requires": [83]},
 	# Lv3: Rare core'lar + Calamity giriş
 	{"name": "Prism Core",         "category": "Identity",      "color": Color(0.5, 0.7, 1.0), "desc": "Stays in orbit. Every 2s: applies a random\nelement to enemies in range",           "index": 65, "weight": 5, "rarity": "rare",     "chars": ["leila"], "min_level": 2},
 	{"name": "Scatter Core",       "category": "Identity",      "color": Color(0.5, 0.8, 0.7), "desc": "On hit → splits into 3 small\nrandom Elemental Cores", "index": 77, "weight": 6, "rarity": "rare", "chars": ["leila"], "min_level": 3},
 	{"name": "Catalyst Core",      "category": "Identity",      "color": Color(0.8, 0.6, 1.0), "desc": "Extends duration of existing\nstatus effects on hit",   "index": 78, "weight": 6, "rarity": "rare", "chars": ["leila"], "min_level": 3},
-	{"name": "Monsoon",            "category": "Calamity",      "color": Color(0.1, 0.5, 1.0), "desc": "All enemies in the Yard\ngain Wet",           "index": 95, "weight": 3,  "rarity": "epic",      "chars": ["leila"], "min_level": 3},
-	{"name": "EMP Pulse",          "category": "Calamity",      "color": Color(0.2, 0.4, 1.0), "desc": "All Electrified enemies\nin the Yard take 15 dmg","index": 96, "weight": 3,  "rarity": "epic",      "chars": ["leila"], "min_level": 3},
+	{"name": "Monsoon",            "category": "Calamity",      "color": Color(0.1, 0.5, 1.0), "desc": "All enemies in the Yard\nbecome [b]Wet[/b]",           "index": 95, "weight": 3,  "rarity": "epic",      "chars": ["leila"], "min_level": 3},
+	{"name": "EMP Pulse",          "category": "Calamity",      "color": Color(0.2, 0.4, 1.0), "desc": "All [b]Electrified[/b] enemies\nin the Yard take 15 damage","index": 96, "weight": 3,  "rarity": "epic",      "chars": ["leila"], "min_level": 3, "requires_any": [1, 61, 63, 87]},
 	# Lv4: Epic tier
 	{"name": "Voltaic Core",       "category": "Identity",      "color": Color(0.2, 0.4, 1.0), "desc": "Applies Electrified.\nHitting an Electrified enemy chains damage (up to 3)", "index": 87, "weight": 4, "rarity": "epic", "chars": ["leila"], "min_level": 4},
-	{"name": "Thermal Expansion",  "category": "Utility",       "color": Color(0.7, 0.9, 1.0), "desc": "Steam explosion area grows",                        "index": 89,  "weight": 3, "rarity": "epic",  "chars": ["leila"], "min_level": 4},
-	{"name": "Mana Overflow",      "category": "Utility",       "color": Color(0.6, 0.4, 1.0), "desc": "Using Calamity empowers\nall Cores briefly",   "index": 90, "weight": 3,  "rarity": "epic",      "chars": ["leila"], "min_level": 4},
+	{"name": "Thermal Expansion",  "category": "Utility",       "color": Color(0.7, 0.9, 1.0), "desc": "Steam reaction radius +67%\nAlso applies [b]Wet[/b] to enemies in range",                        "index": 89,  "weight": 3, "rarity": "epic",  "chars": ["leila"], "min_level": 4},
+	{"name": "Mana Overflow",      "category": "Utility",       "color": Color(0.6, 0.4, 1.0), "desc": "Using a Calamity: +50% Core Speed\nfor 5s",   "index": 90, "weight": 3,  "rarity": "epic",      "chars": ["leila"], "min_level": 4},
 	# Lv5: Legendary endgame
-	{"name": "Perfect Catalyst",   "category": "Utility",       "color": Color(0.9, 0.7, 1.0), "desc": "Reaction → reapply last used element",        "index": 91, "weight": 3,  "rarity": "epic",      "chars": ["leila"], "min_level": 5},
+	{"name": "Perfect Catalyst",   "category": "Individuality",       "color": Color(0.9, 0.7, 1.0), "desc": "Reaction → reapply last used element",        "index": 91, "weight": 3,  "rarity": "epic",      "chars": ["leila"], "min_level": 5},
 	# ── Leila Calamity ────────────────────────────────────────────────────────
-	{"name": "Blizzard",           "category": "Calamity",      "color": Color(0.6, 0.9, 1.0), "desc": "Islak tüm düşmanları\nanında dondurur",        "index": 94, "weight": 2,  "rarity": "legendary", "chars": ["leila"], "min_level": 4},
-	{"name": "Volcanic Rift",      "category": "Calamity",      "color": Color(1.0, 0.3, 0.0), "desc": "Leaves lava trail on ground",                 "index": 97, "weight": 2,  "rarity": "legendary", "chars": ["leila"], "min_level": 4},
-	{"name": "Thunderstorm",       "category": "Calamity",      "color": Color(0.3, 0.5, 1.0), "desc": "Random lightning strikes for 5s",             "index": 98, "weight": 2,  "rarity": "legendary", "chars": ["leila"], "min_level": 5},
+	{"name": "Freezing Cold",           "category": "Calamity",      "color": Color(0.6, 0.9, 1.0), "desc": "A blizzard sweeps across the Yard.\n[b]Wet[/b] enemies in its path become [b]Frozen[/b],\nothers are [b]Slowed[/b]",        "index": 94, "weight": 2,  "rarity": "legendary", "chars": ["leila"], "min_level": 4, "requires_any": [17, 62, 65, 185]},
+	{"name": "Volcanic Rift",      "category": "Calamity",      "color": Color(1.0, 0.3, 0.0), "desc": "Deals 2 damage every 0.5s for 4s to\nenemies in the area and applies [b]Burning[/b]",                 "index": 97, "weight": 2,  "rarity": "legendary", "chars": ["leila"], "min_level": 4},
+	{"name": "Thunderstorm",       "category": "Calamity",      "color": Color(0.3, 0.5, 1.0), "desc": "Every second for 5s, strikes 2 random enemies\nfor 5 damage and applies [b]Electrified[/b]",             "index": 98, "weight": 2,  "rarity": "legendary", "chars": ["leila"], "min_level": 5},
 	# ── Leila Connected Cores (iç yörünge) ───────────────────────────────────
 	{"name": "Mist Core",             "category": "Identity",      "color": Color(0.3, 0.6, 1.0),  "desc": "Every 4s: applies Wet to 1 enemy\nwithin range",                    "index": 185, "weight": 5, "rarity": "uncommon",  "chars": ["leila"], "min_level": 1},
 	{"name": "Frost Aura Core",       "category": "Identity",      "color": Color(0.5, 0.85, 1.0), "desc": "Enemies that enter range automatically\nget Slowed",                 "index": 186, "weight": 5, "rarity": "rare",      "chars": ["leila"], "min_level": 2},
@@ -2695,19 +2701,19 @@ func _build_all_upgrades() -> void:
 	# tutarsız + boss'lara element uygulanacak gelecekteki sistemle yeniden ele alınacak).
 	# Kod (ball.gd/game_scene.gd/ball_launcher.gd/lang.gd) kasıtlı olarak silinmedi.
 	# Individuality
-	{"name": "Wet Armor",       "category": "Individuality", "color": Color(0.1, 0.5, 0.9),  "desc": "Islak düşman varken\n%10 az hasar alırsın",                    "index": 200, "weight": 8,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 0},
-	{"name": "Burn Frenzy",     "category": "Individuality", "color": Color(1.0, 0.4, 0.1),  "desc": "Her yanan düşman için\nburn tick hasarı +1 (maks +7)",             "index": 201, "weight": 8,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 1},
-	{"name": "Steam Surge",     "category": "Individuality", "color": Color(0.7, 0.9, 1.0),  "desc": "Steam reaksiyonu:\n3s boyunca +15% hareket hızı",              "index": 202, "weight": 8,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 1},
-	{"name": "Shock Reflex",    "category": "Individuality", "color": Color(0.4, 0.6, 1.0),  "desc": "Electrocute reaksiyonu:\n3s için +8% hasar kaçınma",            "index": 203, "weight": 7,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 2},
-	{"name": "Frost Barrier",   "category": "Individuality", "color": Color(0.6, 0.9, 1.0),  "desc": "Freeze reaksiyonu: +5 HP kalkan\n(birikir, maks 20, 4s)",                    "index": 204, "weight": 6,  "rarity": "rare",      "chars": ["leila"], "min_level": 2},
-	{"name": "Primal Instinct", "category": "Individuality", "color": Color(0.9, 0.7, 1.0),  "desc": "Bir dalgada 3 farklı reaksiyon:\n5s için +10% hasar",           "index": 205, "weight": 5,  "rarity": "rare",      "chars": ["leila"], "min_level": 3},
-	{"name": "Melt Spiral",     "category": "Individuality", "color": Color(1.0, 0.5, 0.2),  "desc": "Melt reaksiyonu:\ndüşmanın konumunda 2s alev bırakır (1/s)",  "index": 206, "weight": 5,  "rarity": "rare",      "chars": ["leila"], "min_level": 3},
-	{"name": "Void Resonance",  "category": "Individuality", "color": Color(0.7, 0.3, 1.0),  "desc": "Dalgada 4 farklı reaksiyon:\nsonraki Calamity slot tüketmez",  "index": 207, "weight": 2,  "rarity": "epic",      "chars": ["leila"], "min_level": 5},
+	{"name": "Wet Armor",       "category": "Individuality", "color": Color(0.1, 0.5, 0.9),  "desc": "While a [b]Wet[/b] enemy exists:\ntake 10% less damage",                    "index": 200, "weight": 8,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 0, "requires_any": [17, 62, 65, 185]},
+	{"name": "Burn Frenzy",     "category": "Individuality", "color": Color(1.0, 0.4, 0.1),  "desc": "For each [b]Burning[/b] enemy:\n+1 Burn tick damage (max +7)",             "index": 201, "weight": 8,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 1, "requires_any": [18, 65]},
+	{"name": "Steam Surge",     "category": "Individuality", "color": Color(0.7, 0.9, 1.0),  "desc": "Steam reaction: +15% Move Speed\nfor 3s",              "index": 202, "weight": 8,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 1},
+	{"name": "Shock Reflex",    "category": "Individuality", "color": Color(0.4, 0.6, 1.0),  "desc": "Electrocute reaction: 8% chance\nto avoid damage for 3s",            "index": 203, "weight": 7,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 2},
+	{"name": "Frost Barrier",   "category": "Individuality", "color": Color(0.6, 0.9, 1.0),  "desc": "Shatter reaction: +5 HP shield\n(stacks, max 20, 4s)",                    "index": 204, "weight": 6,  "rarity": "rare",      "chars": ["leila"], "min_level": 2},
+	{"name": "Primal Instinct", "category": "Individuality", "color": Color(0.9, 0.7, 1.0),  "desc": "3 different reactions before your\nnext level-up: +10% damage for 5s",           "index": 205, "weight": 5,  "rarity": "rare",      "chars": ["leila"], "min_level": 3},
+	{"name": "Melt Spiral",     "category": "Individuality", "color": Color(1.0, 0.5, 0.2),  "desc": "Melt reaction: leaves flames at the\nenemy's position for 2s (1 dmg/s)",  "index": 206, "weight": 5,  "rarity": "rare",      "chars": ["leila"], "min_level": 3},
+	{"name": "Void Resonance",  "category": "Individuality", "color": Color(0.7, 0.3, 1.0),  "desc": "4 different reactions before your\nnext level-up: next Calamity won't\nconsume a slot",  "index": 207, "weight": 2,  "rarity": "epic",      "chars": ["leila"], "min_level": 5},
 	# Calamity
 	{"name": "Wildfire",        "category": "Calamity",      "color": Color(1.0, 0.3, 0.0),  "desc": "Tüm Yanan düşmanlar patlar\n(10 hasar, 2 yakına yayılır)",     "index": 209, "weight": 3,  "rarity": "epic",      "chars": ["leila"], "min_level": 4},
 	# Utility
-	{"name": "Cryo Burst",      "category": "Utility",       "color": Color(0.6, 0.85, 1.0), "desc": "Yavaşlatılmış düşmana\nsonraki vuruş +8 bonus hasar",          "index": 210, "weight": 5,  "rarity": "rare",      "chars": ["leila"], "min_level": 2},
-	{"name": "Arc Overload",    "category": "Utility",       "color": Color(0.3, 0.5, 1.0),  "desc": "Electrocute: 180px içinde\n1 ek düşmana 5 hasar zinciri",                "index": 211, "weight": 4,  "rarity": "rare",      "chars": ["leila"], "min_level": 3},
+	{"name": "Cryo Burst",      "category": "Utility",       "color": Color(0.6, 0.85, 1.0), "desc": "Hits on a [b]Slowed[/b] enemy deal\n+8 bonus damage",          "index": 210, "weight": 5,  "rarity": "rare",      "chars": ["leila"], "min_level": 2, "requires_any": [15, 186]},
+	{"name": "Arc Overload",    "category": "Utility",       "color": Color(0.3, 0.5, 1.0),  "desc": "Electrocute chains to 1 nearby\nenemy for 5 damage",                "index": 211, "weight": 4,  "rarity": "rare",      "chars": ["leila"], "min_level": 3},
 	# ── Cyclone (Manipülasyon) ────────────────────────────────────────────────
 	# Identity — Core kartları
 	{"name": "Glitch Core",          "category": "Identity",      "color": Color(0.8, 0.0, 0.8),  "desc": "Disorients subject for 3s",                                "index": 16,  "weight": 10, "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
@@ -2750,8 +2756,8 @@ func _build_all_upgrades() -> void:
 	{"name": "Zero Day",             "category": "Individuality", "color": Color(0.0, 0.85, 0.4),  "desc": "Glitch'li düşmana Virus uygulanınca\nmevcut stack ×2 olur",   "index": 154, "weight": 3,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3, "requires": [160]},
 	{"name": "Kernel Panic",         "category": "Individuality", "color": Color(0.05, 0.9, 0.35), "desc": "Each Antivirus tick:\n5% chance to Glitch target",         "index": 155, "weight": 3,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3, "requires": [160]},
 	# Calamity
-	{"name": "Data Storm",           "category": "Calamity",      "color": Color(0.7, 0.0, 0.8),  "desc": "All Glitched enemies\nin the Yard take 10 dmg",             "index": 129, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 3},
-	{"name": "Backdoor",             "category": "Calamity",      "color": Color(0.6, 0.0, 0.7),  "desc": "All enemies in the Yard\nGlitched for 3s",                  "index": 130, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
+	{"name": "Data Storm",           "category": "Calamity",      "color": Color(0.7, 0.0, 0.8),  "desc": "All [b]Glitched[/b] enemies in the Yard are hit\nby a corruption burst for 10 dmg, clearing Glitch",             "index": 129, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 3, "requires_any": [16, 192, 197, 214]},
+	{"name": "Backdoor",             "category": "Calamity",      "color": Color(0.6, 0.0, 0.7),  "desc": "All enemies in the Yard\nbecome [b]Glitched[/b] for 3s",                  "index": 130, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
 	{"name": "Bounce Barrage",       "category": "Calamity",      "color": Color(0.35, 0.0, 0.9),  "desc": "Core Speed ×3 for 5s",                                   "index": 138, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
 	{"name": "Mirror Image",         "category": "Calamity",      "color": Color(0.2, 0.65, 0.9),  "desc": "Spawn 2 phantom cores\nfor 25s",                          "index": 144, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
 	{"name": "Systemic Failure",     "category": "Calamity",      "color": Color(0.0, 0.7, 0.35),  "desc": "All enemies in the Yard\nget 2× Antivirus stacks",        "index": 156, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
@@ -2780,8 +2786,8 @@ func _build_all_upgrades() -> void:
 	{"name": "Chain Extension", "category": "Utility", "color": Color(0.7, 0.6, 0.3), "desc": "Zincir 5 halka uzar\n(hareket alanı genişler)",                         "index": 224, "weight": 6,  "rarity": "uncommon",  "chars": [],           "min_level": 0},
 	# ── Herkese açık ─────────────────────────────────────────────────────────
 	{"name": "Core Mastery",        "category": "Utility",       "color": Color(0.2, 0.8, 0.2), "desc": "+1 damage to all cores",                    "index": 11, "weight": 10, "rarity": "common", "chars": [], "min_level": 0},
-	{"name": "Lightning",           "category": "Calamity",      "color": Color(1.0, 1.0, 0.0), "desc": "Lightning strikes selected point",          "index": 7,  "weight": 3,  "rarity": "epic",   "chars": ["leila"], "min_level": 2},
-	{"name": "Flame Zone",          "category": "Calamity",      "color": Color(1.0, 0.3, 0.0), "desc": "Continuous damage in selected area",        "index": 8,  "weight": 3,  "rarity": "epic",   "chars": ["leila"], "min_level": 2},
+	{"name": "Lightning",           "category": "Calamity",      "color": Color(1.0, 1.0, 0.0), "desc": "Strikes the target point for 13 damage\nand applies [b]Electrified[/b] to nearby enemies",          "index": 7,  "weight": 3,  "rarity": "epic",   "chars": ["leila"], "min_level": 2},
+	{"name": "Flame Zone",          "category": "Calamity",      "color": Color(1.0, 0.3, 0.0), "desc": "Deals 4 damage every 0.5s for 3s in the\ntargeted area and applies [b]Burning[/b]",        "index": 8,  "weight": 3,  "rarity": "epic",   "chars": ["leila"], "min_level": 2},
 ]
 	# ── TEST MODE — false yapınca normal ağırlıklara döner ──────────────────
 	const TEST_ELEMENTAL: bool = false
@@ -3128,12 +3134,114 @@ func _activate_gravity(pos: Vector2) -> void:
 		elapsed += get_process_delta_time()
 		await get_tree().process_frame
 		
-func _activate_blizzard() -> void:
+func _activate_freezing_cold() -> void:
+	_react_flash_screen(Color(0.7, 0.95, 1.0, 0.3))
+	_vfx_freezing_cold()
+
+# Hortumun o anki konumuna yakın (140px) düşmanlara etki uygular:
+# Wet ise anında Frozen, değilse (zaten Slowed değilse) Slowed.
+func _freezing_cold_tick(pos: Vector2) -> void:
 	for subject in get_tree().get_nodes_in_group("subjects"):
-		if is_instance_valid(subject) and subject.global_position.x >= 385.0:
-			if subject.get("is_wet") and subject.is_wet and subject.has_method("apply_frozen"):
-				subject.apply_frozen()
-	_react_flash_screen(Color(0.7, 0.95, 1.0, 0.5))
+		if not is_instance_valid(subject): continue
+		if subject.global_position.distance_to(pos) > 140.0: continue
+		if subject.get("is_wet") and subject.is_wet and subject.has_method("apply_frozen"):
+			subject.apply_frozen()
+		elif subject.has_method("apply_slow") and not subject.get("is_slowed"):
+			subject.apply_slow(0.4, 3.0)
+
+# ── VFX: Freezing Cold ────────────────────────────────────────────────────────
+# BallLauncher'ın konumunda (sağ üst) küçükten büyüğe doğru beliriyor, sonra
+# Yard'ın içinde zigzag bir rota izleyip dışarı çıkan bir kar fırtınası + rüzgar
+# parçacıkları — geçtiği yoldaki düşmanlara etki uyguluyor (bkz. _freezing_cold_tick).
+func _vfx_freezing_cold() -> void:
+	if not ResourceLoader.exists("res://assets/VFX/calamitys/freezingCold/frame_000.png"):
+		return
+	var _launcher := get_node_or_null("BallLauncher")
+	var spawn_pos: Vector2 = _launcher.global_position if _launcher else Vector2(1539, 317)
+	# Her seferinde rastgele bir zigzag rota — ama sadece tek bir bölgede takılıp
+	# kalmasın diye Yard'ın genişliği 3 dilime bölünüp her dilimden bir nokta
+	# alınıyor (sırası karışık), gerçekten sahanın her yerinde gezinmesi garanti.
+	var _x_bands: Array = [Vector2(450.0, 900.0), Vector2(900.0, 1400.0), Vector2(1400.0, 1850.0)]
+	_x_bands.shuffle()
+	var waypoints: Array[Vector2] = [spawn_pos]
+	for _band in _x_bands:
+		waypoints.append(Vector2(randf_range(_band.x, _band.y), randf_range(300.0, 1050.0)))
+	waypoints.append(Vector2(randf_range(450.0, 1850.0), -300.0))  # North'tan çıkış
+	var travel_speed := 450.0  # px/s — kullanıcı isteğiyle hızlandırıldı
+
+	var storm := AnimatedSprite2D.new()
+	storm.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	storm.top_level = true
+	storm.z_index = 9
+	storm.global_position = spawn_pos
+	storm.scale = Vector2.ZERO
+	var sf := SpriteFrames.new()
+	if sf.has_animation("default"): sf.remove_animation("default")
+	sf.add_animation("sweep")
+	sf.set_animation_speed("sweep", 12.0)
+	sf.set_animation_loop("sweep", true)
+	var i := 0
+	while ResourceLoader.exists("res://assets/VFX/calamitys/freezingCold/frame_%03d.png" % i):
+		sf.add_frame("sweep", load("res://assets/VFX/calamitys/freezingCold/frame_%03d.png" % i))
+		i += 1
+	storm.sprite_frames = sf
+	add_child(storm)
+	storm.play("sweep")
+
+	# Rüzgar parçacıkları — storm'la birlikte hareket ediyor
+	var wind := CPUParticles2D.new()
+	wind.top_level = true
+	wind.z_index = 8
+	wind.amount = 90
+	wind.lifetime = 0.5
+	wind.explosiveness = 0.0
+	wind.emission_shape = CPUParticles2D.EMISSION_SHAPE_SPHERE
+	wind.emission_sphere_radius = 70.0
+	wind.spread = 20.0
+	wind.initial_velocity_min = 250.0
+	wind.initial_velocity_max = 450.0
+	wind.scale_amount_min = 1.5
+	wind.scale_amount_max = 3.0
+	wind.color = Color(0.85, 0.95, 1.0, 0.7)
+	wind.global_position = spawn_pos
+	add_child(wind)
+	wind.emitting = true
+
+	# Büyüme: BallLauncher konumunda küçükten büyüğe
+	var grow_tw := create_tween()
+	grow_tw.tween_property(storm, "scale", Vector2(1.4, 1.4), 0.5)\
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	await grow_tw.finished
+	if not is_instance_valid(storm): return
+
+	# Zigzag rota boyunca ilerliyor, her segmentte geçtiği düşmanlara etki uyguluyor
+	for wi in range(1, waypoints.size()):
+		if not is_instance_valid(storm): return
+		var from_p: Vector2 = waypoints[wi - 1]
+		var to_p: Vector2 = waypoints[wi]
+		var seg_dir: Vector2 = (to_p - from_p).normalized()
+		var seg_dur: float = max(from_p.distance_to(to_p) / travel_speed, 0.1)
+		var move_tw := create_tween()
+		move_tw.tween_method(
+			func(t: float):
+				if not is_instance_valid(storm) or not is_instance_valid(wind): return
+				var p := from_p.lerp(to_p, t)
+				storm.global_position = p
+				wind.global_position = p
+				wind.direction = -seg_dir
+				_freezing_cold_tick(p),
+			0.0, 1.0, seg_dur
+		)
+		await move_tw.finished
+
+	# Küçülerek kayboluyor
+	wind.emitting = false
+	var shrink_tw := create_tween()
+	shrink_tw.tween_property(storm, "scale", Vector2.ZERO, 0.4)\
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+	shrink_tw.parallel().tween_property(storm, "modulate:a", 0.0, 0.4)
+	shrink_tw.tween_callback(storm.queue_free)
+	shrink_tw.tween_callback(func(): if is_instance_valid(wind): wind.queue_free())
 
 func _activate_monsoon() -> void:
 	for subject in get_tree().get_nodes_in_group("subjects"):
@@ -3164,52 +3272,214 @@ func _play_monsoon_vfx() -> void:
 	vfx.animation_finished.connect(vfx.queue_free)
 
 func _activate_volcanic_rift(pos: Vector2) -> void:
-	_react_flash_screen(Color(1.0, 0.3, 0.0, 0.35))
+	_vfx_volcanic_rift(pos)
 	var elapsed := 0.0
 	while elapsed < 4.0:
 		var subjects = get_tree().get_nodes_in_group("subjects")
 		for subject in subjects:
-			if is_instance_valid(subject) and subject.global_position.distance_to(pos) < 180:
+			if is_instance_valid(subject) and subject.global_position.distance_to(pos) < 84:
 				subject.take_damage(2)
+				if subject.has_method("_react_flash"):
+					subject._react_flash(Color(1.0, 0.4, 0.1, 1.0))
 				if subject.has_method("apply_burn"):
 					subject.apply_burn()
 		elapsed += 0.5
-		await get_tree().create_timer(0.5).timeout
+		await get_tree().create_timer(0.5, false).timeout
+
+# Volcanic Rift'in gerçek sprite VFX'i — 4sn'lik tek seferlik animasyon (44 frame ×
+# 11fps = 4sn, hasar süresiyle birebir eşleşiyor). Scale animasyonu yok (kullanıcı
+# büyüme/küçülme efektini komple kaldırdı) — animasyon kendi büyüme/küçülme hissini
+# zaten frame'lerin içinde taşıyor, bitince kalıntı bırakmadan direkt siliniyor.
+# Sprite yoksa hiçbir şey çizilmiyor (crash yok — sadece ekran flaşı kalır).
+func _vfx_volcanic_rift(pos: Vector2) -> void:
+	if not ResourceLoader.exists("res://assets/VFX/calamitys/volcanicRift/frame_000.png"):
+		return
+	var rift := AnimatedSprite2D.new()
+	rift.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	rift.z_index = -1  # canlı düşmanların (2-3) VE cesetlerin (0) altında kalsın
+	rift.global_position = pos
+	var sf := SpriteFrames.new()
+	if sf.has_animation("default"): sf.remove_animation("default")
+	sf.add_animation("erupt")
+	sf.set_animation_speed("erupt", 11.0)
+	sf.set_animation_loop("erupt", false)
+	var i := 0
+	while ResourceLoader.exists("res://assets/VFX/calamitys/volcanicRift/frame_%03d.png" % i):
+		sf.add_frame("erupt", load("res://assets/VFX/calamitys/volcanicRift/frame_%03d.png" % i))
+		i += 1
+	rift.sprite_frames = sf
+	add_child(rift)
+	rift.play("erupt")
+
+	await rift.animation_finished
+	if is_instance_valid(rift): rift.queue_free()
 
 func _activate_thunderstorm() -> void:
 	_react_flash_screen(Color(0.5, 0.5, 1.0, 0.3))
 	var elapsed := 0.0
 	while elapsed < 5.0:
-		var subjects = get_tree().get_nodes_in_group("subjects")
+		var subjects: Array = get_tree().get_nodes_in_group("subjects").filter(
+			func(s): return is_instance_valid(s) and s.global_position.x >= 385.0
+		)
 		subjects.shuffle()
-		var count := mini(3, subjects.size())
+		var count := mini(2, subjects.size())
 		for i in range(count):
 			var s = subjects[i]
 			if is_instance_valid(s):
 				s.take_damage(5)
 				if s.has_method("apply_electrified"):
 					s.apply_electrified()
+				if s.has_method("_react_flash"):
+					s._react_flash(Color(1.0, 1.0, 0.6, 1.0))
 				_vfx_lightning(s.global_position)
 		elapsed += 1.0
-		await get_tree().create_timer(1.0).timeout
+		await get_tree().create_timer(1.0, false).timeout
 
 func _activate_emp() -> void:
 	for subject in get_tree().get_nodes_in_group("subjects"):
 		if is_instance_valid(subject) and subject.global_position.x >= 385.0 and subject.get("is_electrified") and subject.is_electrified:
 			subject.take_damage(15)
+			if subject.has_method("_react_flash"):
+				subject._react_flash(Color(0.4, 0.7, 1.0, 1.0))
+			_vfx_lightning_bolt(subject.global_position)
 	_react_flash_screen(Color(0.3, 0.6, 1.0, 0.5))
+	_screen_shake_small()
 
 func _activate_data_storm() -> void:
 	for subject in get_tree().get_nodes_in_group("subjects"):
 		if is_instance_valid(subject) and subject.global_position.x >= 385.0 and subject.get("is_glitched") and subject.is_glitched:
-			subject.take_damage(10)
-	_react_flash_screen(Color(0.1, 0.8, 0.3, 0.45))
+			_vfx_data_storm_burst(subject)
+
+# Data Storm'un hedef seçici olmayan, "her Glitched düşmanda ayrı ayrı" VFX'i — glitch
+# element göstergesinin yerine 16 frame'lik bir "bozulma patlaması" oynuyor, animasyon
+# bitince hasar uygulanıyor (görsel olarak hasarın o anda gerçekleştiği belli olsun diye)
+# ve düşmanın Glitch durumu tüketiliyor (kullanıcı isteği: "sonra glitch efekti silinmiş
+# olsun"). Sprite yoksa animasyon beklemeden direkt hasar veriliyor (crash yok).
+func _vfx_data_storm_burst(subject: Node) -> void:
+	if not ResourceLoader.exists("res://assets/VFX/calamitys/dataStorm/frame_000.png"):
+		subject.take_damage(10)
+		if subject.has_method("_hide_debuff"): subject._hide_debuff("glitch")
+		subject.set("is_glitched", false)
+		return
+
+	if subject.has_method("_hide_debuff"): subject._hide_debuff("glitch")
+
+	var burst := AnimatedSprite2D.new()
+	burst.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	burst.z_index = 5
+	burst.z_as_relative = false
+	var y_off: float = subject._elem_indicator_y_offset() if subject.has_method("_elem_indicator_y_offset") else -68.0
+	burst.position = Vector2(0, y_off)
+	var sf := SpriteFrames.new()
+	if sf.has_animation("default"): sf.remove_animation("default")
+	sf.add_animation("corrupt")
+	sf.set_animation_speed("corrupt", 16.0)
+	sf.set_animation_loop("corrupt", false)
+	var i := 0
+	while ResourceLoader.exists("res://assets/VFX/calamitys/dataStorm/frame_%03d.png" % i):
+		sf.add_frame("corrupt", load("res://assets/VFX/calamitys/dataStorm/frame_%03d.png" % i))
+		i += 1
+	burst.sprite_frames = sf
+	subject.add_child(burst)
+	burst.play("corrupt")
+
+	# Her frame'de düşman öldü mü diye kontrol ediliyor — ölürse animasyon anında
+	# kesiliyor, ceset üzerinde oynamaya devam etmiyor (kullanıcı bulgusu).
+	while is_instance_valid(burst) and burst.is_playing():
+		if not is_instance_valid(subject) or (subject.get("is_dead") and subject.is_dead):
+			break
+		await get_tree().process_frame
+	if is_instance_valid(burst): burst.queue_free()
+	if not is_instance_valid(subject) or (subject.get("is_dead") and subject.is_dead): return
+	subject.take_damage(10)
+	if subject.has_method("_react_flash"):
+		subject._react_flash(Color(0.7, 0.0, 0.85, 1.0))
+	subject.set("is_glitched", false)
 
 func _activate_backdoor() -> void:
-	for subject in get_tree().get_nodes_in_group("subjects"):
-		if is_instance_valid(subject) and subject.global_position.x >= 385.0 and subject.has_method("apply_glitch"):
-			subject.apply_glitch(3.0)
-	_react_flash_screen(Color(0.6, 0.0, 0.7, 0.4))
+	_vfx_backdoor_engine()
+
+# Backdoor'un "The Yard Engine" VFX'i — sahanın merkezinde bir cihaz belirip (starting
+# klasörü), son 2 frame'de sahadaki düşmanlara elektrik çizgileri göndererek gerçek
+# Glitch debuff'ını uyguluyor, ardından cihaz kaybolup gidiyor (ending klasörü). Sprite
+# yoksa eski davranışa (anında Glitch + ekran flaşı) düşüyor, crash yok.
+func _vfx_backdoor_engine() -> void:
+	var yard_center := Vector2(1152, 667)
+	if not ResourceLoader.exists("res://assets/VFX/theYardEngine/starting/frame_000.png"):
+		for subject in get_tree().get_nodes_in_group("subjects"):
+			if is_instance_valid(subject) and subject.global_position.x >= 385.0 and subject.has_method("apply_glitch"):
+				subject.apply_glitch(3.0)
+		_react_flash_screen(Color(0.6, 0.0, 0.7, 0.4))
+		return
+
+	var engine := AnimatedSprite2D.new()
+	engine.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	engine.z_index = 6
+	engine.global_position = yard_center
+	var sf := SpriteFrames.new()
+	if sf.has_animation("default"): sf.remove_animation("default")
+	sf.add_animation("start")
+	sf.set_animation_speed("start", 12.0)
+	sf.set_animation_loop("start", false)
+	var i := 0
+	while ResourceLoader.exists("res://assets/VFX/theYardEngine/starting/frame_%03d.png" % i):
+		sf.add_frame("start", load("res://assets/VFX/theYardEngine/starting/frame_%03d.png" % i))
+		i += 1
+	var start_frame_count := i
+	sf.add_animation("end")
+	sf.set_animation_speed("end", 12.0)
+	sf.set_animation_loop("end", false)
+	var j := 0
+	while ResourceLoader.exists("res://assets/VFX/theYardEngine/ending/frame_%03d.png" % j):
+		sf.add_frame("end", load("res://assets/VFX/theYardEngine/ending/frame_%03d.png" % j))
+		j += 1
+	engine.sprite_frames = sf
+	add_child(engine)
+	engine.play("start")
+
+	var _bolts_fired := false
+	var _fire_bolts := func():
+		for subject in get_tree().get_nodes_in_group("subjects"):
+			if not is_instance_valid(subject): continue
+			var _p: Vector2 = subject.global_position
+			if _p.x < 385.0 or _p.x > 1920.0 or _p.y < 255.0 or _p.y > 1080.0: continue
+			if subject.has_method("apply_glitch"):
+				_vfx_backdoor_bolt(yard_center, subject.global_position)
+				subject.apply_glitch(3.0)
+	engine.frame_changed.connect(func():
+		if not _bolts_fired and is_instance_valid(engine) and engine.animation == "start" and engine.frame >= max(start_frame_count - 2, 0):
+			_bolts_fired = true
+			_fire_bolts.call()
+	)
+
+	await engine.animation_finished
+	if not is_instance_valid(engine): return
+	engine.play("end")
+	await engine.animation_finished
+	if is_instance_valid(engine): engine.queue_free()
+
+# Backdoor'un cihazından hedeflenen düşmana giden zigzag elektrik çizgisi.
+func _vfx_backdoor_bolt(from_pos: Vector2, to_pos: Vector2) -> void:
+	var bolt := Line2D.new()
+	bolt.width = randf_range(2.0, 4.0)
+	bolt.default_color = Color(0.75, 0.1, 0.9, 1.0)
+	bolt.z_index = 9
+	var dir := to_pos - from_pos
+	var perp_dir := Vector2(-dir.y, dir.x).normalized()
+	var steps: int = max(int(dir.length() / 35.0), 3)
+	var pts: Array[Vector2] = [from_pos]
+	for s in range(1, steps):
+		var t := float(s) / float(steps)
+		var base := from_pos.lerp(to_pos, t)
+		pts.append(base + perp_dir * randf_range(-16.0, 16.0))
+	pts.append(to_pos)
+	for p in pts:
+		bolt.add_point(p)
+	add_child(bolt)
+	var btw := create_tween()
+	btw.tween_interval(randf_range(0.0, 0.05))
+	btw.tween_property(bolt, "modulate:a", 0.0, 0.25)
+	btw.tween_callback(bolt.queue_free)
 
 func _activate_systemic_failure() -> void:
 	var p := get_node_or_null("Player")
@@ -3243,7 +3513,7 @@ func _activate_mirror_image() -> void:
 		ball.scale = Vector2(1.0, 1.0)
 		_mirror_image_balls.append(ball)
 	_react_flash_screen(Color(0.2, 0.65, 0.9, 0.4))
-	get_tree().create_timer(25.0).timeout.connect(_clear_mirror_image)
+	get_tree().create_timer(25.0, false).timeout.connect(_clear_mirror_image)
 
 func _clear_mirror_image() -> void:
 	var p := get_node_or_null("Player")
@@ -3655,7 +3925,7 @@ func _activate_glitch_bomb(pos: Vector2) -> void:
 	for e in get_tree().get_nodes_in_group("enemies"):
 		if not is_instance_valid(e): continue
 		if e.global_position.distance_to(pos) <= 120.0:
-			if e.get("apply_glitch"): e.apply_glitch(4.0)
+			if e.has_method("apply_glitch"): e.apply_glitch(4.0)
 	_react_flash_screen(Color(0.75, 0.0, 0.85, 0.2))
 
 func _activate_system_crash() -> void:
@@ -3672,10 +3942,10 @@ func _activate_antivirus_rain() -> void:
 	var _do_tick := func():
 		for e in get_tree().get_nodes_in_group("enemies"):
 			if not is_instance_valid(e): continue
-			if e.get("apply_antivirus"): e.apply_antivirus()
+			if e.has_method("apply_antivirus"): e.apply_antivirus()
 	_do_tick.call()
 	for i in range(1, ticks):
-		await get_tree().create_timer(0.5).timeout
+		await get_tree().create_timer(0.5, false).timeout
 		_do_tick.call()
 	_react_flash_screen(Color(0.1, 0.85, 0.4, 0.2))
 
@@ -3690,13 +3960,13 @@ func _activate_decay_field(pos: Vector2) -> void:
 	add_child(zone)
 	var elapsed := 0.0
 	while elapsed < field_duration:
-		await get_tree().create_timer(1.0).timeout
+		await get_tree().create_timer(1.0, false).timeout
 		elapsed += 1.0
 		if not is_instance_valid(zone): break
 		for e in get_tree().get_nodes_in_group("enemies"):
 			if not is_instance_valid(e): continue
 			if e.global_position.distance_to(pos) <= field_radius:
-				if e.get("apply_decay"): e.apply_decay()
+				if e.has_method("apply_decay"): e.apply_decay()
 	if is_instance_valid(zone): zone.queue_free()
 
 
@@ -3961,25 +4231,29 @@ func _activate_lightning(pos: Vector2) -> void:
 	var subjects = get_tree().get_nodes_in_group("subjects")
 	for subject in subjects:
 		if subject.global_position.distance_to(pos) < 100:
-			subject.take_damage(3)
+			subject.take_damage(13)
+			if subject.has_method("_react_flash"):
+				subject._react_flash(Color(1.0, 1.0, 0.6, 1.0))
 			if subject.has_method("apply_electrified"):
 				subject.apply_electrified()
 	_vfx_lightning(pos)
 
 func _activate_flame(pos: Vector2) -> void:
 	_vfx_flame(pos)
-	var flame_timer = get_tree().create_timer(0.5)
+	var flame_timer = get_tree().create_timer(0.5, false)
 	var hits = 0
 	while hits < 6:
 		var subjects = get_tree().get_nodes_in_group("subjects")
 		for subject in subjects:
-			if subject.global_position.distance_to(pos) < 120:
-				subject.take_damage(1)
+			if subject.global_position.distance_to(pos) < 84:
+				subject.take_damage(4)
+				if subject.has_method("_react_flash"):
+					subject._react_flash(Color(1.0, 0.5, 0.1, 1.0))
 				if subject.has_method("apply_burn") and subject.get("is_burning") == false:
 					subject.apply_burn()
 		hits += 1
 		await flame_timer.timeout
-		flame_timer = get_tree().create_timer(0.5)
+		flame_timer = get_tree().create_timer(0.5, false)
 
 # ── VFX: Lightning ────────────────────────────────────────────────────────────
 func _vfx_lightning(pos: Vector2) -> void:
@@ -3994,7 +4268,36 @@ func _vfx_lightning(pos: Vector2) -> void:
 	ftw.tween_property(flash, "modulate:a", 0.0, 0.12)
 	ftw.tween_callback(flash.queue_free)
 
-	# Gökten gelen zigzag şimşek çizgisi
+	if not ResourceLoader.exists("res://assets/VFX/calamitys/lightning/frame_000.png"):
+		_vfx_lightning_fallback(pos)
+		return
+	_vfx_lightning_bolt(pos)
+
+# Sadece şimşek sprite'ının kendisi (ekran flaşı olmadan) — EMP Pulse gibi çok
+# hedefli Calamity'lerin her hedefte tekrar tekrar oynatabilmesi için ayrıldı.
+func _vfx_lightning_bolt(pos: Vector2) -> void:
+	if not ResourceLoader.exists("res://assets/VFX/calamitys/lightning/frame_000.png"):
+		return
+	var bolt := AnimatedSprite2D.new()
+	bolt.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	bolt.z_index = 9
+	bolt.global_position = pos
+	var sf := SpriteFrames.new()
+	if sf.has_animation("default"): sf.remove_animation("default")
+	sf.add_animation("strike")
+	sf.set_animation_speed("strike", 16.0)
+	sf.set_animation_loop("strike", false)
+	var i := 0
+	while ResourceLoader.exists("res://assets/VFX/calamitys/lightning/frame_%03d.png" % i):
+		sf.add_frame("strike", load("res://assets/VFX/calamitys/lightning/frame_%03d.png" % i))
+		i += 1
+	bolt.sprite_frames = sf
+	add_child(bolt)
+	bolt.play("strike")
+	bolt.animation_finished.connect(bolt.queue_free)
+
+# Eski elle çizilmiş zigzag/halka VFX — sprite eksikse fallback olarak kullanılıyor
+func _vfx_lightning_fallback(pos: Vector2) -> void:
 	for _bolt in range(3):
 		var bolt := Line2D.new()
 		bolt.width           = randf_range(2.0, 4.0)
@@ -4018,7 +4321,6 @@ func _vfx_lightning(pos: Vector2) -> void:
 		btw.tween_property(bolt, "modulate:a", 0.0, randf_range(0.10, 0.20))
 		btw.tween_callback(bolt.queue_free)
 
-	# Çarpma noktasında halka
 	for ring_i in range(3):
 		var ring := Node2D.new()
 		ring.global_position = pos
@@ -4046,12 +4348,43 @@ func _vfx_lightning(pos: Vector2) -> void:
 # ── VFX: Flame Zone ───────────────────────────────────────────────────────────
 func _vfx_flame(pos: Vector2) -> void:
 	var duration := 3.0   # görsel süresi
-	var radius   := 120.0
+	var radius   := 84.0  # sprite'ın gerçek boyutuna eşitlendi (168px sprite / 2)
 
+	if not ResourceLoader.exists("res://assets/VFX/calamitys/flameZone/frame_000.png"):
+		_vfx_flame_fallback(pos, duration, radius)
+		return
+
+	var fire := AnimatedSprite2D.new()
+	fire.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	fire.z_index = -1  # canlı düşmanların (2-3) VE cesetlerin (0) altında kalsın
+	fire.global_position = pos
+	var sf := SpriteFrames.new()
+	if sf.has_animation("default"): sf.remove_animation("default")
+	sf.add_animation("burn")
+	sf.set_animation_speed("burn", 12.0)
+	sf.set_animation_loop("burn", false)  # 36 frame × 12fps = 3sn, hiç tekrarsız tek seferde oynuyor
+	var i := 0
+	while ResourceLoader.exists("res://assets/VFX/calamitys/flameZone/frame_%03d.png" % i):
+		sf.add_frame("burn", load("res://assets/VFX/calamitys/flameZone/frame_%03d.png" % i))
+		i += 1
+	fire.sprite_frames = sf
+	add_child(fire)
+	fire.play("burn")
+
+	await fire.animation_finished
+	if not is_instance_valid(fire): return
+	await get_tree().create_timer(2.0, false).timeout
+	if not is_instance_valid(fire): return
+	var ftw := create_tween()
+	ftw.tween_property(fire, "modulate:a", 0.0, 1.0)
+	ftw.tween_callback(fire.queue_free)
+
+# Eski elle çizilmiş halka + parçacık VFX — sprite eksikse fallback olarak kullanılıyor
+func _vfx_flame_fallback(pos: Vector2, duration: float, radius: float) -> void:
 	# Zemin halkası
 	var ground := Node2D.new()
 	ground.global_position = pos
-	ground.z_index = 3
+	ground.z_index = -1  # canlı düşmanların (2-3) VE cesetlerin (0) altında kalsın
 	add_child(ground)
 	ground.draw.connect(func():
 		ground.draw_arc(Vector2.ZERO, radius, 0, TAU, 48, Color(1.0, 0.25, 0.0, 0.55), 3.0)
@@ -4066,7 +4399,7 @@ func _vfx_flame(pos: Vector2) -> void:
 	# Ateş parçacıkları
 	var particles := CPUParticles2D.new()
 	particles.global_position  = pos
-	particles.z_index           = 4
+	particles.z_index           = -1  # canlı düşmanların (2-3) VE cesetlerin (0) altında kalsın
 	particles.amount            = 60
 	particles.lifetime          = 0.9
 	particles.explosiveness     = 0.0
@@ -4082,10 +4415,10 @@ func _vfx_flame(pos: Vector2) -> void:
 	particles.color             = Color(1.0, 0.45, 0.0, 0.9)
 	particles.color_ramp        = _make_flame_gradient()
 	add_child(particles)
-	await get_tree().create_timer(duration).timeout
+	await get_tree().create_timer(duration, false).timeout
 	if is_instance_valid(particles):
 		particles.emitting = false
-		await get_tree().create_timer(1.0).timeout
+		await get_tree().create_timer(1.0, false).timeout
 		if is_instance_valid(particles):
 			particles.queue_free()
 
@@ -4301,7 +4634,7 @@ func _process(delta: float) -> void:
 			if _body.get("is_slowed") and _body.is_slowed: _eh_elems["cryo"] = true
 			if _body.get("is_electrified") and _body.is_electrified: _eh_elems["elec"] = true
 			if _body.get("is_frozen") and _body.is_frozen: _eh_elems["frozen"] = true
-		p.elemental_harmony_bonus = _eh_elems.size() * 0.05
+		p.elemental_harmony_bonus = _eh_elems.size() * p.elemental_harmony_util_bonus
 
 	# ── Last Stand Lv2-3: eksik HP → pasif armor kazanımı ─────────────────────
 	if p and p.has_last_stand and p.last_stand_armor_mult > 0.0:
@@ -4383,19 +4716,26 @@ func _process(delta: float) -> void:
 		$UI/CalamityCircle.visible = true
 		$UI/CalamityCircle.position = mouse_pos
 		var calamity = calamity_slots[calamity_index]
-		if calamity == "⚡":
-			$UI/CalamityCircle.color = Color(1, 1, 0, 0.2)
-			$UI/CalamityCircle.radius = 67
-		elif calamity == "🔥":
-			$UI/CalamityCircle.color = Color(1, 0.3, 0, 0.2)
-			$UI/CalamityCircle.radius = 80
-		elif calamity == "🌀":
-			$UI/CalamityCircle.color = Color(0.5, 0.0, 1.0, 0.2)
-			$UI/CalamityCircle.radius = 100
-		elif calamity == "🌧️":  # Siege Rain — gerçek sapma alanı (±120px köşegeni) kadar
-			$UI/CalamityCircle.color = Color(0.4, 0.4, 0.5, 0.2)
-			$UI/CalamityCircle.radius = 170
-		elif calamity == "🔥💥":  # Wildfire — hedef yok, tüm Yanan düşmanlar
+		# Nişan sprite'ı gerçek etki alanı çapına (radius×2) göre ölçekleniyor —
+		# sprite'ın ham piksel boyutu küçük olabilir (örn. 16×16), o yüzden hedef
+		# çap / gerçek texture genişliği oranı kullanılıyor, sabit bir taban değil.
+		var _aim_radius: float = 100.0
+		if calamity == "⚡":         _aim_radius = 100.0   # Lightning
+		elif calamity == "🔥":       _aim_radius = 84.0    # Flame Zone
+		elif calamity == "🌀":       _aim_radius = 150.0   # Gravitational Force
+		elif calamity == "🌋":       _aim_radius = 84.0    # Volcanic Rift (sprite boyutuna eşitlendi)
+		elif calamity == "🌧️":      _aim_radius = 170.0   # Siege Rain (sapma alanı)
+		elif calamity == "💣":       _aim_radius = 120.0   # Glitch Bomb
+		elif calamity == "☠️":      _aim_radius = 100.0   # Decay Field
+		elif calamity == "🏚️":      _aim_radius = 130.0   # Rampart Collapse
+		elif calamity == "🕳️":      _aim_radius = 70.0    # WormHole
+		var _aim_tex: Texture2D = $UI/CalamityCircle.aim_texture
+		if _aim_tex and _aim_tex.get_size().x > 0:
+			$UI/CalamityCircle.scale = Vector2.ONE * (_aim_radius * 2.0 / _aim_tex.get_size().x) * 0.75
+		else:
+			$UI/CalamityCircle.scale = Vector2.ONE
+
+		if calamity == "🔥💥":  # Wildfire — hedef yok, tüm Yanan düşmanlar
 			$UI/CalamityCircle.visible = false
 		elif calamity == "🕳️":  # WormHole — mouse'a değil, karakterin tam önüne sabit açılır
 			var _wp := _player_node
@@ -4403,21 +4743,10 @@ func _process(delta: float) -> void:
 				var _fd: Vector2 = _wp.aim_direction if _wp.get("aim_direction") else Vector2(1, 0)
 				if _fd == Vector2.ZERO: _fd = Vector2(1, 0)
 				$UI/CalamityCircle.position = _wp.global_position + _fd.normalized() * 120.0
-			$UI/CalamityCircle.color = Color(0.5, 0.0, 1.0, 0.2)
-			$UI/CalamityCircle.radius = 70
-		elif calamity == "💣":  # Glitch Bomb
-			$UI/CalamityCircle.color = Color(0.75, 0.0, 0.85, 0.2)
-			$UI/CalamityCircle.radius = 120
 		elif calamity == "💻💥":  # System Crash — hedef yok
 			$UI/CalamityCircle.visible = false
 		elif calamity == "🦠":  # Virus Rain — hedef yok
 			$UI/CalamityCircle.visible = false
-		elif calamity == "☠️":  # Decay Field
-			$UI/CalamityCircle.color = Color(0.45, 0.2, 0.0, 0.2)
-			$UI/CalamityCircle.radius = 100
-		elif calamity == "🏚️":  # Rampart Collapse
-			$UI/CalamityCircle.color = Color(0.2, 0.85, 1.0, 0.2)
-			$UI/CalamityCircle.radius = 130
 		$UI/CalamityCircle.queue_redraw()
 	else:
 		$UI/CalamityCircle.visible = false
@@ -4732,26 +5061,26 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 		$BallLauncher.queue_upgrade_ball("voltaic")
 
 	# ── Leila — Utility ─────────────────────────────────────────────────────
-	elif index == 66:  # Conduction
-		get_node("Player").electric_reaction_range_mult *= 1.3
+	elif index == 66:  # Conduction — level bazlı bonus _apply_utility_level'da uygulanıyor
+		pass
 	elif index == 67:  # Hydro Pressure
 		get_node("Player").has_hydro_pressure = true
-	elif index == 68:  # Arc Amplifier
-		get_node("Player").arc_chain_targets += 1
+	elif index == 68:  # Arc Amplifier — level bazlı bonus _apply_utility_level'da uygulanıyor
+		pass
 	elif index == 69:  # Static Charge
 		get_node("Player").has_static_charge = true
 	elif index == 70:  # Cryostasis
 		get_node("Player").freeze_duration_mult *= 1.1
-	elif index == 71:  # Supercooling
-		get_node("Player").cryo_slow_mult *= 1.15
-	elif index == 73:  # Thermal Vision
-		get_node("Player").burn_damage_mult *= 1.2
-	elif index == 80:  # Arcane Mind
-		get_node("Player").first_debuff_duration_mult *= 2.0
+	elif index == 71:  # Supercooling — level bazlı bonus _apply_utility_level'da uygulanıyor
+		pass
+	elif index == 73:  # Thermal Vision — level bazlı bonus _apply_utility_level'da uygulanıyor
+		pass
+	elif index == 80:  # Arcane Mind — level bazlı bonus _apply_utility_level'da uygulanıyor
+		pass
 	elif index == 81:  # Resonance Engine
-		get_node("Player").reaction_core_speed_bonus += 0.02
-	elif index == 82:  # Frozen Time
-		get_node("Player").freeze_duration_mult *= 1.3
+		get_node("Player").has_resonance_engine = true
+	elif index == 82:  # Frozen Time — level bazlı bonus _apply_utility_level'da uygulanıyor
+		pass
 	elif index == 83:  # Overheat
 		get_node("Player").has_overheat = true
 	elif index == 84:  # Elemental Harmony (Utility)
@@ -4762,6 +5091,7 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 		get_node("Player").has_mana_overflow = true
 	elif index == 91:  # Perfect Catalyst
 		get_node("Player").has_perfect_catalyst = true
+		_seen_individualities.append("Perfect Catalyst")
 	elif index == 102:  # Pyroblast
 		get_node("Player").has_pyroblast = true
 
@@ -4770,8 +5100,7 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 		get_node("Player").first_debuff_duration_mult *= 1.5
 		_seen_individualities.append("Arcane Focus")
 	elif index == 76:  # Mystic Flow
-		get_node("Player").mystic_flow_stacks = 0
-		get_node("Player").move_speed_bonus_pct = 0.0
+		get_node("Player").has_mystic_flow = true
 		_seen_individualities.append("Mystic Flow")
 	elif index == 85:  # Resonant Soul
 		get_node("Player").reaction_heal_amount += 2
@@ -4877,7 +5206,7 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 			163: $BallLauncher.queue_upgrade_ball("ricochet_core")
 
 	# ── Leila — Calamity ─────────────────────────────────────────────────────
-	elif index == 94:  # Blizzard
+	elif index == 94:  # Freezing Cold
 		if calamity_slots.size() < max_calamity_slots:
 			calamity_slots.append("❄️")
 			update_ui()
@@ -5063,6 +5392,87 @@ func _apply_utility_level(index: int, level: int) -> void:
 			p.corruption_protocol_level = level
 		222:  # Decay Amp
 			p.decay_amp_level = level
+		# ── Leila — Utility level scaling (2026-09-14) ──────────────────────────
+		66:  # Conduction
+			match level:
+				1: p.electric_reaction_range_mult = 1.20
+				2: p.electric_reaction_range_mult = 1.30
+				3: p.electric_reaction_range_mult = 1.45
+		68:  # Arc Amplifier
+			match level:
+				1: p.arc_chain_targets = 2
+				2: p.arc_chain_targets = 3
+				3: p.arc_chain_targets = 4
+		69:  # Static Charge
+			match level:
+				1: p.static_charge_mult = 0.25
+				2: p.static_charge_mult = 0.35
+				3: p.static_charge_mult = 0.45
+		71:  # Supercooling
+			match level:
+				1: p.cryo_slow_mult = 1.15
+				2: p.cryo_slow_mult = 1.25
+				3: p.cryo_slow_mult = 1.40
+		73:  # Thermal Vision
+			match level:
+				1: p.burn_damage_mult = 1.20
+				2: p.burn_damage_mult = 1.30
+				3: p.burn_damage_mult = 1.45
+		67:  # Hydro Pressure
+			match level:
+				1: p.hydro_pressure_mult = 1.20
+				2: p.hydro_pressure_mult = 1.25
+				3: p.hydro_pressure_mult = 1.35
+		80:  # Arcane Mind
+			match level:
+				1: p.first_debuff_duration_mult = 1.5
+				2: p.first_debuff_duration_mult = 2.0
+				3: p.first_debuff_duration_mult = 3.0
+		81:  # Resonance Engine
+			match level:
+				1: p.resonance_max_stacks = 3
+				2: p.resonance_max_stacks = 4
+				3: p.resonance_max_stacks = 5
+		82:  # Frozen Time
+			match level:
+				1: p.freeze_duration_mult = 1.25
+				2: p.freeze_duration_mult = 1.35
+				3: p.freeze_duration_mult = 1.50
+		83:  # Overheat
+			match level:
+				1: p.overheat_threshold = 45
+				2: p.overheat_threshold = 35
+				3: p.overheat_threshold = 25
+		84:  # Elemental Harmony (Utility)
+			match level:
+				1: p.elemental_harmony_util_bonus = 0.03
+				2: p.elemental_harmony_util_bonus = 0.045
+				3: p.elemental_harmony_util_bonus = 0.06
+		89:  # Thermal Expansion
+			match level:
+				1: p.thermal_expansion_radius = 100.0
+				2: p.thermal_expansion_radius = 150.0
+				3: p.thermal_expansion_radius = 200.0
+		90:  # Mana Overflow
+			match level:
+				1: p.mana_overflow_duration = 4.0; p.mana_overflow_mult = 1.30
+				2: p.mana_overflow_duration = 5.0; p.mana_overflow_mult = 1.40
+				3: p.mana_overflow_duration = 6.0; p.mana_overflow_mult = 1.60
+		102:  # Pyroblast
+			match level:
+				1: p.pyroblast_mult = 4.0
+				2: p.pyroblast_mult = 6.0
+				3: p.pyroblast_mult = 9.0
+		210:  # Cryo Burst
+			match level:
+				1: p.cryo_burst_bonus = 4
+				2: p.cryo_burst_bonus = 6
+				3: p.cryo_burst_bonus = 9
+		211:  # Arc Overload
+			match level:
+				1: p.arc_overload_targets = 1; p.arc_overload_dmg = 4
+				2: p.arc_overload_targets = 1; p.arc_overload_dmg = 5
+				3: p.arc_overload_targets = 2; p.arc_overload_dmg = 5
 
 func show_dialog(text: String, pos: Vector2) -> void:
 	var label = Label.new()

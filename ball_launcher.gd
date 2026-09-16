@@ -429,7 +429,7 @@ func _launch_typed_ball(ball_type: String) -> void:
 	if player_node.get("has_shadow_dance") and player_node.has_shadow_dance and player_node._shadow_dance_acc > 0.0:
 		_launch_spd_mult += player_node._shadow_dance_acc
 	if ball_type in ["water", "steam"] and player_node.get("has_hydro_pressure") and player_node.has_hydro_pressure:
-		_launch_spd_mult *= 1.25
+		_launch_spd_mult *= player_node.hydro_pressure_mult
 	if _launch_spd_mult != 1.0:
 		ball.launch(direction, 600.0 * _launch_spd_mult)
 	else:

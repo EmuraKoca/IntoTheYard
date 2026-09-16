@@ -6,7 +6,7 @@ var locale: String = "en"   # "en" veya "tr"
 # ── Durum efekti sözlüğü (kart açıklamalarında bold geçen keyword'ler için) ───
 # Gwent tarzı: kart üzerine gelince, açıklamada geçen keyword'lerin anlamı yan
 # panelde gösterilir. Yeni bir keyword açıklamaya eklenince buraya da eklenmeli.
-const STATUS_KEYWORDS := ["Electrified", "Wet", "Burning", "Slowed", "Frozen"]
+const STATUS_KEYWORDS := ["Electrified", "Wet", "Burning", "Slowed", "Frozen", "Momentum", "Glitched", "Antivirus", "Decay"]
 
 # "Connected Core" keyword açıklamada geçmez, rozet üzerinden ayrıca ekleniyor
 # (bkz. game_scene.gd::_show_card_glossary çağrısı, _CONNECTED_CORE_INDICES kontrolü).
@@ -17,6 +17,10 @@ const _STATUS_GLOSSARY_EN := {
 	"Slowed":      "Enemy's movement speed is reduced for a duration.",
 	"Frozen":      "Enemy is completely immobilized for a duration.",
 	"Connected Core": "Cannot be launched — orbits the player permanently. Dart-strikes any enemy that comes within range for [b]3[/b] damage.",
+	"Momentum": "Represents [b]Core Speed[/b] — each stack makes your cores move faster.",
+	"Glitched": "Enemy is disoriented for a duration — deals reduced damage while attacking. Triggers glitch-based synergies from other cards.",
+	"Antivirus": "Enemy accumulates stacks that deal damage over time. Stacks and duration can grow with other cards.",
+	"Decay": "Enemy accumulates stacks (max 3) that permanently slow it, even after the effect ends.",
 }
 const _STATUS_GLOSSARY_TR := {
 	"Electrified": "Düşman 5sn işaretlenir. Diğer kartların elektrik tabanlı combo/reaksiyonlarını (zincir hasarı, yayılma efekti vb.) tetikler.",
@@ -25,6 +29,10 @@ const _STATUS_GLOSSARY_TR := {
 	"Slowed":      "Düşmanın hareket hızı belirli bir süre boyunca düşer.",
 	"Frozen":      "Düşman belirli bir süre boyunca tamamen hareketsiz kalır.",
 	"Connected Core": "Fırlatılamaz — sürekli oyuncunun etrafında döner. Menziline giren düşmanlara [b]3[/b] hasarlık dart saldırısı yapar.",
+	"Momentum": "[b]Core Speed[/b]'i temsil eder — her stack core'ların hareket hızını artırır.",
+	"Glitched": "Düşman belirli bir süre boyunca sersemler — saldırırken daha az hasar verir. Diğer kartların glitch tabanlı sinerjilerini tetikler.",
+	"Antivirus": "Düşman zamana yayılı hasar veren stack biriktirir. Diğer kartlarla stack/süre artabilir.",
+	"Decay": "Düşman kalıcı olarak yavaşlatan stack biriktirir (maks 3), etki bitse bile yavaşlama kalıcıdır.",
 }
 
 func status_glossary(keyword: String) -> String:
@@ -322,15 +330,37 @@ const _DESC_TR: Dictionary = {
 	18: "Düşmana yanma etkisi uygular",
 	77: "İsabette 3 küçük rastgele\nElemental Core'a ayrılır",
 	# ── Leila — Utility ──────────────────────────────────────────────────────
-	13: "Elektrik core +2 hasar",
+	13: "Electric Core +2 hasar",
+	99: "Cryo Core +2 hasar",
+	100: "Hydro Core +2 hasar",
+	101: "Pyro Core +2 hasar",
+	91: "Reaksiyon → son kullanılan elementi\ntekrar uygular",
+	94: "Yard'ı bir kar fırtınası kaplar. Yolundaki\n[b]Wet[/b] düşmanlar [b]Frozen[/b] olur,\ndiğerleri [b]Slowed[/b] olur",
+	95: "Yard'daki tüm düşmanlar\n[b]Wet[/b] olur",
+	96: "Yard'daki tüm [b]Electrified[/b] düşmanlar\n15 hasar alır",
+	97: "Alandaki düşmanlara 4sn boyunca her\n0.5sn'de 2 hasar verir ve [b]Burning[/b] uygular",
+	98: "5sn boyunca her saniye rastgele 2 düşmana\n5 hasar verir ve [b]Electrified[/b] uygular",
+	129: "Avlu'daki tüm [b]Glitched[/b] düşmanlar bozulma\npatlamasıyla 10 hasar alır, Glitch'leri temizlenir",
+	130: "Avlu'daki tüm düşmanlar 3sn boyunca\n[b]Glitched[/b] olur",
+	76: "Uyguladığın her benzersiz element\n→ +%1 Hareket Hızı (maks %4)",
+	85: "Her Reaksiyon → 2 HP geri kazandırır",
+	86: "Reaksiyon sonrası: düşmanın bir sonraki\ndebuff'ı 2× uzun sürer",
+	200: "Sahada [b]Wet[/b] bir düşman varken:\n%10 az hasar alırsın",
+	201: "Her [b]Burning[/b] düşman için:\n+1 Burn tick hasarı (maks +7)",
+	202: "Steam reaksiyonu: 3sn boyunca\n+%15 hareket hızı",
+	203: "Electrocute reaksiyonu: 3sn boyunca\n%8 ihtimalle hasardan kaçınırsın",
+	204: "Shatter reaksiyonu: +5 HP kalkan\n(birikir, maks 20, 4sn)",
+	205: "Bir sonraki level up'a kadar 3 farklı\nreaksiyon: 5sn için +%10 hasar",
+	206: "Melt reaksiyonu: düşmanın konumunda\n2sn boyunca alev bırakır (1 hasar/sn)",
+	207: "Bir sonraki level up'a kadar 4 farklı\nreaksiyon: sonraki Calamity slot tüketmez",
 	# ── Cyclone — Identity ───────────────────────────────────────────────────
 	16: "Düşmanı 3sn şaşırtır",
 	19: "Yakındaki güçlü core'u kopyalar",
 	22: "İsabette +2 Can",
 	# ── Herkese açık — Utility & Calamity ────────────────────────────────────
 	11: "Tüm core'lara +1 hasar",
-	7:  "Seçilen noktaya yıldırım çarpar",
-	8:  "Seçilen alanda sürekli hasar",
+	7:  "Hedeflenen noktaya 13 hasar verir\nve yakındaki düşmanlara [b]Electrified[/b] uygular",
+	8:  "Hedeflenen alanda 3sn boyunca her 0.5sn'de\n4 hasar verir ve [b]Burning[/b] uygular",
 	9:  "Düşmanları 5 sn boyunca merkeze doğru çeker.",
 }
 
@@ -341,8 +371,90 @@ const _DESC_TR: Dictionary = {
 func _dynamic_desc(index: int, player: Node) -> String:
 	var _bm: int = player.get("ball_mastery") if player.get("ball_mastery") != null else 0
 	match index:
+		66:  # Conduction
+			var _crm: float = (player.electric_reaction_range_mult - 1.0) * 100.0 if player.get("electric_reaction_range_mult") != null else 20.0
+			if locale == "en":
+				return "Electric spread range +[b]%d[/b]%%\n(Plasma / Arc / Voltaic Core)" % int(round(_crm))
+			return "Elektrik yayılma menzili +%[b]%d[/b]\n(Plasma / Arc / Voltaic Core)" % int(round(_crm))
+		67:  # Hydro Pressure
+			var _hpm: float = (player.hydro_pressure_mult - 1.0) * 100.0 if player.get("hydro_pressure_mult") != null else 20.0
+			if locale == "en":
+				return "Wet-applying cores are [b]%d[/b]%% faster\nLaunched: speed / Connected: orbit speed" % int(round(_hpm))
+			return "Wet uygulayan core'lar %[b]%d[/b] hızlı\nFırlatılan: hız / Connected: orbit hızı" % int(round(_hpm))
+		68:  # Arc Amplifier
+			var _aat: int = player.arc_chain_targets if player.get("arc_chain_targets") != null else 2
+			if locale == "en":
+				return "Arc Core spreads to [b]%d[/b] more enemies" % (_aat - 1)
+			return "Arc Core [b]%d[/b] düşmana daha yayar" % (_aat - 1)
+		69:  # Static Charge
+			var _scm: float = player.static_charge_mult * 100.0 if player.get("static_charge_mult") != null else 25.0
+			if locale == "en":
+				return "Electrified enemies transfer [b]%d[/b]%%\ndamage to each other" % int(round(_scm))
+			return "Electrified düşmanlar birbirine\nhasarın %[b]%d[/b]'ini aktarır" % int(round(_scm))
+		71:  # Supercooling
+			var _csm: float = (player.cryo_slow_mult - 1.0) * 100.0 if player.get("cryo_slow_mult") != null else 15.0
+			if locale == "en":
+				return "Cryo Slow amount +[b]%d[/b]%%" % int(round(_csm))
+			return "Cryo yavaşlatma miktarı +%[b]%d[/b]" % int(round(_csm))
+		73:  # Thermal Vision
+			var _bdm: float = (player.burn_damage_mult - 1.0) * 100.0 if player.get("burn_damage_mult") != null else 20.0
+			if locale == "en":
+				return "Burn tick damage +[b]%d[/b]%%" % int(round(_bdm))
+			return "Burn tick hasarı +%[b]%d[/b]" % int(round(_bdm))
+		80:  # Arcane Mind
+			var _fdm: float = player.first_debuff_duration_mult if player.get("first_debuff_duration_mult") != null else 1.5
+			if locale == "en":
+				return "First applied element lasts\n[b]%d[/b]%% longer" % int(round((_fdm - 1.0) * 100.0))
+			return "İlk uygulanan element %[b]%d[/b]\ndaha uzun sürer" % int(round((_fdm - 1.0) * 100.0))
+		81:  # Resonance Engine
+			var _rms: int = player.resonance_max_stacks if player.get("resonance_max_stacks") != null else 3
+			if locale == "en":
+				return "Reaction → +1 [b]Momentum[/b] stack\n(max [b]%d[/b], 3s each). Each stack: +2%% Core Speed" % _rms
+			return "Reaksiyon → +1 [b]Momentum[/b] stack\n(maks [b]%d[/b], her biri 3sn). Her stack: +%%2 Core Speed" % _rms
+		82:  # Frozen Time
+			var _fzm: float = (player.freeze_duration_mult - 1.0) * 100.0 if player.get("freeze_duration_mult") != null else 25.0
+			if locale == "en":
+				return "[b]Frozen[/b] duration +[b]%d[/b]%%" % int(round(_fzm))
+			return "[b]Frozen[/b] süresi +%[b]%d[/b]" % int(round(_fzm))
+		83:  # Overheat
+			var _oht: int = player.overheat_threshold if player.get("overheat_threshold") != null else 45
+			if locale == "en":
+				return "After [b]%d[/b] [b]Burning[/b] ticks:\nexplodes for 15 damage within 150px" % _oht
+			return "[b]%d[/b] [b]Burning[/b] tick'i sonra:\n150px içine 15 hasarlık patlama" % _oht
+		84:  # Elemental Harmony (Utility)
+			var _ehb: float = player.elemental_harmony_util_bonus * 100.0 if player.get("elemental_harmony_util_bonus") != null else 3.0
+			if locale == "en":
+				return "Per unique active element:\n+[b]%.1f[/b]%% Core Speed" % _ehb
+			return "Sahadaki her benzersiz aktif element için:\n+%[b]%.1f[/b] Core Speed" % _ehb
+		89:  # Thermal Expansion
+			var _ter: int = int(player.thermal_expansion_radius) if player.get("thermal_expansion_radius") != null else 100
+			if locale == "en":
+				return "Steam reaction radius: [b]%d[/b]px\nAlso applies [b]Wet[/b] to enemies in range" % _ter
+			return "Buhar reaksiyonu menzili: [b]%d[/b]px\nAyrıca menzildeki düşmanlara [b]Wet[/b] uygular" % _ter
+		90:  # Mana Overflow
+			var _mod: float = player.mana_overflow_duration if player.get("mana_overflow_duration") != null else 4.0
+			var _mom: float = (player.mana_overflow_mult - 1.0) * 100.0 if player.get("mana_overflow_mult") != null else 30.0
+			if locale == "en":
+				return "Using a Calamity: +[b]%d[/b]%% Core Speed\nfor [b]%d[/b]s" % [int(round(_mom)), int(_mod)]
+			return "Calamity kullanınca: [b]%d[/b]sn boyunca\n+%[b]%d[/b] Core Speed" % [int(_mod), int(round(_mom))]
+		102:  # Pyroblast
+			var _pbm: int = int(player.pyroblast_mult) if player.get("pyroblast_mult") != null else 4
+			if locale == "en":
+				return "Overheat's explosion radius grows by\n[b]%d[/b]px per accumulated tick" % _pbm
+			return "Overheat'in patlama yarıçapı, biriken\ntick başına [b]%d[/b]px büyür" % _pbm
+		210:  # Cryo Burst
+			var _cbb: int = player.cryo_burst_bonus if player.get("cryo_burst_bonus") != null else 4
+			if locale == "en":
+				return "Hits on a [b]Slowed[/b] enemy deal\n+[b]%d[/b] bonus damage" % _cbb
+			return "[b]Slowed[/b] düşmana yapılan vuruşlar\n+[b]%d[/b] bonus hasar verir" % _cbb
+		211:  # Arc Overload
+			var _aot: int = player.arc_overload_targets if player.get("arc_overload_targets") != null else 1
+			var _aod: int = player.arc_overload_dmg if player.get("arc_overload_dmg") != null else 4
+			if locale == "en":
+				return "Electrocute chains to [b]%d[/b] nearby\nenem%s for [b]%d[/b] damage" % [_aot, ("y" if _aot == 1 else "ies"), _aod]
+			return "Electrocute yakındaki [b]%d[/b] düşmana\n[b]%d[/b] hasarlık zincir yapar" % [_aot, _aod]
 		1:  # Electric Core
-			var _dmg1: int = 9 + _bm
+			var _dmg1: int = 9 + _bm + (player.get("electric_bonus") if player.get("electric_bonus") != null else 0)
 			if locale == "en":
 				return "[b]%d[/b] damage.\nApplies [b]Electrified[/b] to enemy" % _dmg1
 			return "[b]%d[/b] hasar.\nDüşmana [b]Electrified[/b] uygular" % _dmg1
@@ -402,17 +514,17 @@ func _dynamic_desc(index: int, player: Node) -> String:
 				return "[b]%d[/b] damage. Applies [b]Electrified[/b].\nDeals half damage to nearby [b]Electrified[/b] enemies" % _dmg61
 			return "[b]%d[/b] hasar. [b]Electrified[/b] uygular.\nYakındaki [b]Electrified[/b] düşmanlara yarım hasar sıçratır" % _dmg61
 		18:  # Pyro Core
-			var _dmg18: int = 6 + _bm
+			var _dmg18: int = 6 + _bm + (player.get("pyro_bonus") if player.get("pyro_bonus") != null else 0)
 			if locale == "en":
 				return "[b]%d[/b] damage.\nApplies [b]Burning[/b] to enemy" % _dmg18
 			return "[b]%d[/b] hasar.\nDüşmana [b]Burning[/b] uygular" % _dmg18
 		17:  # Hydro Core
-			var _dmg17: int = 3 + _bm
+			var _dmg17: int = 3 + _bm + (player.get("hydro_bonus") if player.get("hydro_bonus") != null else 0)
 			if locale == "en":
 				return "[b]%d[/b] damage.\nApplies [b]Wet[/b] to enemy" % _dmg17
 			return "[b]%d[/b] hasar.\nDüşmana [b]Wet[/b] uygular" % _dmg17
 		15:  # Cryo Core
-			var _dmg15: int = 4 + _bm
+			var _dmg15: int = 4 + _bm + (player.get("cryo_bonus") if player.get("cryo_bonus") != null else 0)
 			if locale == "en":
 				return "[b]%d[/b] damage.\nSlows enemy by 25%%. Freezes instead if\nenemy is already [b]Wet[/b]" % _dmg15
 			return "[b]%d[/b] hasar.\nDüşmanı %%25 yavaşlatır. Düşman zaten\n[b]Wet[/b]se onun yerine dondurur" % _dmg15

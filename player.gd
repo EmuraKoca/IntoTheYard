@@ -148,8 +148,11 @@ var has_melt_spiral: bool         = false # Melt → 2s alev bırakır
 var has_void_resonance: bool      = false # 4 farklı reaksiyon → sonraki Calamity ücretsiz
 var _void_resonance_ready: bool   = false
 # ── Leila — Utility (yeni) ────────────────────────────────────────────────────
-var has_cryo_burst: bool          = false # Yavaşlatılmış düşmana +8 bonus hasar (1 kez/düşman)
-var has_arc_overload: bool        = false # Electrocute zinciri +2 düşmana sıçrar
+var has_cryo_burst: bool          = false # Slowed düşmana her vuruşta bonus hasar
+var cryo_burst_bonus: int         = 4     # Lv1:4 Lv2:6 Lv3:9
+var has_arc_overload: bool        = false # Electrocute zinciri ek düşmana sıçrar
+var arc_overload_targets: int     = 1     # Lv1:1 Lv2:1 Lv3:2
+var arc_overload_dmg: int         = 4     # Lv1:4 Lv2:5 Lv3:5
 
 # ── Cyclone — Rogue ──────────────────────────────────────────────────────────
 var has_ricochet_strike: bool     = false
@@ -228,35 +231,52 @@ var decay_amp_level: int          = 0     # Decay patlaması hasar/stack: taban 
 # ── Leila — Elemental ────────────────────────────────────────────────────────
 var debuff_duration_mult: float   = 1.0   # Elemental Mastery, Arcane Mind, Arcane Focus
 var first_debuff_duration_mult: float = 1.0  # Arcane Focus / Arcane Mind (ilk debuff)
-var reaction_core_speed_bonus: float  = 0.0  # Resonance Engine: reaksiyon başına hız
+var has_resonance_engine: bool        = false # Resonance Engine
+var resonance_stacks: Array[float]    = []    # Her reaksiyon +1 stack (maks resonance_max_stacks), stack başına 3s ayrı süre
+var resonance_max_stacks: int          = 3    # Lv1:3 Lv2:4 Lv3:5
+const RESONANCE_STACK_DURATION := 3.0
+const RESONANCE_SPEED_PER_STACK := 0.02       # stack başına +%2 Core Speed (geçici)
+
+func add_resonance_stack() -> void:
+	if resonance_stacks.size() < resonance_max_stacks:
+		resonance_stacks.append(RESONANCE_STACK_DURATION)
+	else:
+		resonance_stacks[0] = RESONANCE_STACK_DURATION
 var reaction_heal_amount: int         = 0    # Resonant Soul: reaksiyon başına HP
 var electric_reaction_range_mult: float = 1.0 # Conduction
 var arc_chain_targets: int            = 1    # Arc Amplifier
 var freeze_duration_mult: float       = 1.0  # Cryostasis, Frozen Time
 var cryo_slow_mult: float             = 1.0  # Supercooling
 var burn_damage_mult: float           = 1.0  # Thermal Vision
+var has_mystic_flow: bool             = false # Mystic Flow
 var mystic_flow_stacks: int           = 0    # Mystic Flow: unique element sayısı
 var mystic_flow_elements: Array       = []   # Mystic Flow: hangi elementler uygulandı
 var move_speed_bonus_pct: float       = 0.0  # Mystic Flow hız bonusu
 var has_static_charge: bool           = false  # Electrified → hasar aktarır
+var static_charge_mult: float         = 0.25   # Lv1:0.25 Lv2:0.35 Lv3:0.45
 var has_hydro_pressure: bool          = false  # Wet core'lar hızlı döner
-var has_overheat: bool                = false  # Burn 7 stackte patlar
+var hydro_pressure_mult: float        = 1.20   # Lv1:1.20 Lv2:1.25 Lv3:1.35
+var has_overheat: bool                = false  # Burn N stackte patlar
+var overheat_threshold: int           = 45     # Lv1:45 Lv2:35 Lv3:25
 var _overheat_counter: int            = 0
 var special_core_count: int = 0      # Identity ile eklenen özellikli core sayısı
 var connected_core_count: int = 0   # Connected Core sayısı
 const special_core_count_max: int = 5
 const connected_core_count_max: int = 3
-var has_elemental_harmony_util: bool  = false  # 3 element aktifse hız bonusu
+var has_elemental_harmony_util: bool  = false  # Aktif unique element sayısına göre hız bonusu
+var elemental_harmony_util_bonus: float = 0.03 # unique element başına, Lv1:0.03 Lv2:0.045 Lv3:0.06
 var has_mana_overflow: bool           = false  # Calamity → core'lar güçlenir
 var mana_overflow_timer: float        = 0.0   # Mana Overflow süreci
+var mana_overflow_duration: float     = 4.0   # Lv1:4 Lv2:5 Lv3:6
+var mana_overflow_mult: float         = 1.30  # Lv1:1.30 Lv2:1.40 Lv3:1.60
 var bounce_barrage_timer: float       = 0.0   # Bounce Barrage (Calamity) süreci
 var has_pyroblast: bool               = false
+var pyroblast_mult: float             = 4.0   # Lv1:4 Lv2:6 Lv3:9
 var has_thermal_expansion: bool       = false
+var thermal_expansion_radius: float   = 100.0 # Lv1:100 Lv2:150 Lv3:200
 var elemental_harmony_bonus: float    = 0.0   # Elemental Harmony: unique element başına +5% hız
 var has_perfect_catalyst: bool        = false  # Reaksiyon → son element tekrar
 var last_applied_element: String      = ""    # Perfect Catalyst için
-var has_elemental_harmony_ind: bool   = false  # Individuality: per-element hız
-var has_resonant_soul_ind: bool       = false  # Individuality: reaksiyon → +1 HP
 var has_elemental_memory: bool        = false  # Reaksiyon sonrası debuff 50% uzar
 var damage_mult_leila: float          = 1.0   # Thermal Vision vb. hasar çarpanı
 
@@ -714,10 +734,10 @@ func _physics_process(delta: float) -> void:
 		var _armor_ratio: float = float(game_node.player_armor) / float(max(game_node.player_armor_cap, 1))
 		if _armor_ratio >= bulwark_surge_threshold:
 			core_speed_mult *= bulwark_surge_mult
-	# Mana Overflow: Calamity sonrası 5s boyunca Core Speed +%50
+	# Mana Overflow: Calamity sonrası birkaç saniye Core Speed bonusu
 	if mana_overflow_timer > 0.0:
 		mana_overflow_timer -= delta
-		core_speed_mult *= 1.5
+		core_speed_mult *= mana_overflow_mult
 	# Bounce Barrage (Calamity): 5s boyunca Core Speed ×3
 	if bounce_barrage_timer > 0.0:
 		bounce_barrage_timer -= delta
@@ -725,6 +745,13 @@ func _physics_process(delta: float) -> void:
 	# Elemental Harmony: aktif unique element başına +%5 Core Speed
 	if has_elemental_harmony_util and elemental_harmony_bonus > 0.0:
 		core_speed_mult *= (1.0 + elemental_harmony_bonus)
+	# Resonance Engine: reaksiyon başına geçici Momentum stack'i (maks 5, stack başına 3s)
+	if resonance_stacks.size() > 0:
+		for _ri in range(resonance_stacks.size() - 1, -1, -1):
+			resonance_stacks[_ri] -= delta
+			if resonance_stacks[_ri] <= 0.0:
+				resonance_stacks.remove_at(_ri)
+		core_speed_mult *= 1.0 + resonance_stacks.size() * RESONANCE_SPEED_PER_STACK
 	# Orbit topları silah sprite'ının üstünde durur
 	var _weapon_offset := Vector2(20, -24)
 	var n := orbit_balls.size()
@@ -740,7 +767,7 @@ func _physics_process(delta: float) -> void:
 	if has_hydro_pressure:
 		for _ib in inner_orbit_balls:
 			if is_instance_valid(_ib) and (_ib.get("inner_core_type") == "mist_core" or _ib.get("can_orbit") == true):
-				_inner_speed_mult = 1.25
+				_inner_speed_mult = hydro_pressure_mult
 				break
 	inner_orbit_angle += INNER_ORBIT_SPEED * _inner_speed_mult * delta
 	var ni := inner_orbit_balls.size()

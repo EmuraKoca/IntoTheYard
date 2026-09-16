@@ -188,10 +188,10 @@ func take_damage(amount, from_ally: bool = false, kill_cause: String = "normal")
 	var _pi_player := _get_player()
 	if _pi_player and _pi_player.get("has_primal_instinct") and _pi_player.has_primal_instinct and _pi_player._primal_instinct_timer > 0.0:
 		amount = int(amount * 1.1)
-	# Cryo Burst: Yavaşlatılmış düşmana +8 bonus hasar (1 kez / vuruş)
+	# Cryo Burst: Slowed düşmana her vuruşta bonus hasar
 	if not from_ally and _pi_player and _pi_player.get("has_cryo_burst") and _pi_player.has_cryo_burst:
 		if get("is_slowed") and is_slowed:
-			amount += 8
+			amount += _pi_player.cryo_burst_bonus
 	if enemy_armor > 0:
 		if enemy_armor >= amount:
 			enemy_armor -= amount
@@ -208,7 +208,7 @@ func take_damage(amount, from_ally: bool = false, kill_cause: String = "normal")
 			for body in get_tree().get_nodes_in_group("subjects"):
 				if body != self and is_instance_valid(body) and not body.get("is_dead") and body.get("is_electrified") and body.is_electrified:
 					if global_position.distance_to(body.global_position) < 150.0:
-						body.health -= int(amount * 0.4)
+						body.health -= int(amount * p.static_charge_mult)
 						if body.health <= 0: body.die()
 	if health <= 0:
 		_on_lethal_damage(from_ally)
@@ -241,7 +241,7 @@ func die(cause: String = "normal") -> void:
 		for s in get_tree().get_nodes_in_group("subjects"):
 			if not is_instance_valid(s): continue
 			if global_position.distance_to(s.global_position) <= 80.0:
-				if s.get("apply_glitch"): s.apply_glitch()
+				if s.has_method("apply_glitch"): s.apply_glitch()
 	is_dead = true
 	z_index = 0
 	set_physics_process(false)
@@ -286,8 +286,9 @@ func die(cause: String = "normal") -> void:
 
 func _notify_mystic_flow(_element: String) -> void:
 	var p := _get_player()
-	if not p or not p.get("mystic_flow_stacks") is int: return
-	if p.mystic_flow_stacks >= 20: return
+	if not p or not p.get("has_mystic_flow") or not p.has_mystic_flow: return
+	if _element in p.mystic_flow_elements: return
+	p.mystic_flow_elements.append(_element)
 	p.mystic_flow_stacks += 1
 	p.move_speed_bonus_pct = float(p.mystic_flow_stacks) * 0.01
 
@@ -297,6 +298,7 @@ func apply_burn() -> void:
 		return
 	_check_reaction("fire")
 	if not is_instance_valid(self): return
+	var _was_first := not _had_any_element()
 	is_burning = true
 	_notify_mystic_flow("fire")
 	_show_debuff("burn")
@@ -314,6 +316,8 @@ func apply_burn() -> void:
 	if p and p.get("has_elemental_memory") and p.has_elemental_memory and _had_reaction:
 		burn_ticks = 6
 		_had_reaction = false
+	if p and p.get("first_debuff_duration_mult") and _was_first:
+		burn_ticks = int(round(burn_ticks * p.first_debuff_duration_mult))
 	for i in range(burn_ticks):
 		await get_tree().create_timer(1.0).timeout
 		if is_instance_valid(self) and health > 0:
@@ -322,7 +326,7 @@ func apply_burn() -> void:
 				if not p.get("_overheat_counter"):
 					p.set("_overheat_counter", 0)
 				p._overheat_counter += 1
-				if p._overheat_counter >= 33:
+				if p._overheat_counter >= p.overheat_threshold:
 					var _saved_count: int = p._overheat_counter
 					p._overheat_counter = 0
 					_react_overheat(_saved_count)
@@ -339,7 +343,7 @@ func _react_overheat(saved_count: int = 0) -> void:
 	var p := _get_player()
 	var _oh_radius := 150.0
 	if p and p.get("has_pyroblast") and p.has_pyroblast:
-		_oh_radius = 150.0 + float(saved_count) * 8.0
+		_oh_radius = 150.0 + float(saved_count) * p.pyroblast_mult
 	for body in get_tree().get_nodes_in_group("subjects"):
 		if is_instance_valid(body) and global_position.distance_to(body.global_position) < _oh_radius:
 			body.health -= 15
@@ -382,6 +386,7 @@ func apply_wet() -> void:
 	if is_dead: return
 	_check_reaction("wet")
 	if not is_instance_valid(self): return
+	var _was_first := not _had_any_element()
 	is_wet = true
 	_notify_mystic_flow("wet")
 	_show_debuff("wet")
@@ -390,7 +395,7 @@ func apply_wet() -> void:
 	if p and p.get("has_elemental_memory") and p.has_elemental_memory and _had_reaction:
 		dur *= 2.0
 		_had_reaction = false
-	if p and p.get("first_debuff_duration_mult") and not _had_any_element():
+	if p and p.get("first_debuff_duration_mult") and _was_first:
 		dur *= p.first_debuff_duration_mult
 	await get_tree().create_timer(dur).timeout
 	if not is_instance_valid(self):
@@ -445,7 +450,7 @@ func apply_glitch(duration: float = 3.0) -> void:
 	if _gp and _gp.get("signal_jam_level") and _gp.signal_jam_level > 0:
 		_sj_mult = 1.0 + (0.10 + 0.05 * float(_gp.signal_jam_level))
 		speed *= _sj_mult
-	await get_tree().create_timer(_dur).timeout
+	await get_tree().create_timer(_dur, false).timeout
 	if not is_instance_valid(self):
 		return
 	is_glitched = false
@@ -459,6 +464,7 @@ func apply_electrified() -> void:
 		return
 	_check_reaction("electric")
 	if not is_instance_valid(self): return
+	var _was_first := not _had_any_element()
 	is_electrified = true
 	_notify_mystic_flow("electric")
 	_show_debuff("electrified")
@@ -467,7 +473,7 @@ func apply_electrified() -> void:
 	if p and p.get("has_elemental_memory") and p.has_elemental_memory and _had_reaction:
 		dur *= 2.0
 		_had_reaction = false
-	if p and p.get("first_debuff_duration_mult") and not _had_any_element():
+	if p and p.get("first_debuff_duration_mult") and _was_first:
 		dur *= p.first_debuff_duration_mult
 	var _ls_p := _get_player()
 
@@ -483,6 +489,7 @@ func apply_slow(amount, duration: float = 3.0, source: String = "cryo", anchor_p
 		return
 	_check_reaction("cryo")
 	if not is_instance_valid(self): return
+	var _was_first := not _had_any_element()
 	is_slowed = true
 	_notify_mystic_flow("cryo")
 	original_speed = speed
@@ -498,7 +505,7 @@ func apply_slow(amount, duration: float = 3.0, source: String = "cryo", anchor_p
 	if p and p.get("has_elemental_memory") and p.has_elemental_memory and _had_reaction:
 		dur *= 2.0
 		_had_reaction = false
-	if p and p.get("first_debuff_duration_mult") and not _had_any_element():
+	if p and p.get("first_debuff_duration_mult") and _was_first:
 		dur *= p.first_debuff_duration_mult
 	await get_tree().create_timer(dur).timeout
 	if not is_instance_valid(self):
@@ -631,15 +638,15 @@ func _react_electrocute(mult: float, game: Node, player: Node) -> void:
 	var dmg := int(12 * mult)
 	health -= dmg
 	_react_flash(Color(0.2, 0.5, 4.0))
-	var _ao_limit: int = 1 if (player and player.get("has_arc_overload") and player.has_arc_overload) else 0
+	var _ao_limit: int = (player.arc_overload_targets if (player and player.get("has_arc_overload") and player.has_arc_overload) else 0)
 	var _ao_spread: int = 0
 	for body in get_tree().get_nodes_in_group("subjects"):
 		if body == self: continue
 		if is_instance_valid(body) and global_position.distance_to(body.global_position) < 100.0:
-			if body.get("apply_electrified"): body.apply_electrified()
-		# Arc Overload: +2 ek düşmana 5 hasar zinciri
+			if body.has_method("apply_electrified"): body.apply_electrified()
+		# Arc Overload: ek düşman(lar)a hasar zinciri
 		if _ao_spread < _ao_limit and is_instance_valid(body) and global_position.distance_to(body.global_position) < 180.0:
-			body.health -= 5
+			body.health -= player.arc_overload_dmg
 			if body.health <= 0: body.die("electric")
 			_ao_spread += 1
 	var prev_speed: float = float(speed)
@@ -662,12 +669,12 @@ func _react_steam(mult: float, game: Node, player: Node) -> void:
 	var _steam_radius := 120.0
 	var _thermal: bool = player and player.get("has_thermal_expansion") and player.has_thermal_expansion
 	if _thermal:
-		_steam_radius = 200.0
+		_steam_radius = player.thermal_expansion_radius
 	for body in get_tree().get_nodes_in_group("subjects"):
 		if body == self: continue
 		if is_instance_valid(body) and global_position.distance_to(body.global_position) < _steam_radius:
 			body.health -= dmg
-			if _thermal and body.get("apply_wet"): body.apply_wet(0.3, 2.0)
+			if _thermal and body.has_method("apply_wet"): body.apply_wet(0.3, 2.0)
 			if body.health <= 0: body.die("steam")
 	health -= dmg
 	_react_flash(Color(0.9, 0.9, 1.0))
@@ -686,7 +693,7 @@ func _react_cryostatic(mult: float, game: Node, player: Node) -> void:
 		if body == self: continue
 		if is_instance_valid(body) and global_position.distance_to(body.global_position) < aoe_radius:
 			body.take_damage(dmg)
-			if body.get("apply_slow"): body.apply_slow(0.4, 2.0)
+			if body.has_method("apply_slow"): body.apply_slow(0.4, 2.0)
 			if body.health <= 0: body.die("freeze")
 	health -= dmg
 	_react_flash(Color(0.5, 0.8, 1.0))
@@ -759,11 +766,8 @@ func _notify_reaction(game: Node, player: Node) -> void:
 	if player.get("reaction_heal_amount") and player.reaction_heal_amount > 0:
 		if game and game.has_method("heal_player"):
 			game.heal_player(player.reaction_heal_amount)
-	if player.get("reaction_core_speed_bonus") and player.reaction_core_speed_bonus > 0:
-		if player.get("momentum_stacks") and player.get("momentum_max"):
-			player.gain_momentum(1)
-		if player.get("orbit_speed_mult"):
-			player.orbit_speed_mult += player.reaction_core_speed_bonus
+	if player.get("has_resonance_engine") and player.has_resonance_engine:
+		player.add_resonance_stack()
 	if player.get("has_perfect_catalyst") and player.has_perfect_catalyst:
 		var last_elem: String = player.get("last_applied_element") if player.get("last_applied_element") else ""
 		if last_elem == "fire" and not is_burning:
@@ -801,35 +805,21 @@ func _notify_reaction(game: Node, player: Node) -> void:
 		vfx.scale = Vector2(0.6, 0.6)
 		if game: game.add_child(vfx)
 		vfx.play("burn")
-		game.get_tree().create_timer(2.0).timeout.connect(func():
+		game.get_tree().create_timer(2.0, false).timeout.connect(func():
 			if is_instance_valid(vfx):
 				vfx.queue_free()
 		)
 		var _sp := spiral_pos
 		var _v := vfx
 		var _g := game
-		game.get_tree().create_timer(0.5).timeout.connect(func():
+		game.get_tree().create_timer(1.0, false).timeout.connect(func():
 			if not is_instance_valid(_v):
 				return
 			for s in _g.get_tree().get_nodes_in_group("subjects"):
 				if s.global_position.distance_to(_sp) <= 20.0:
 					s.take_damage(1, false)
 		)
-		game.get_tree().create_timer(1.0).timeout.connect(func():
-			if not is_instance_valid(_v):
-				return
-			for s in _g.get_tree().get_nodes_in_group("subjects"):
-				if s.global_position.distance_to(_sp) <= 20.0:
-					s.take_damage(1, false)
-		)
-		game.get_tree().create_timer(1.5).timeout.connect(func():
-			if not is_instance_valid(_v):
-				return
-			for s in _g.get_tree().get_nodes_in_group("subjects"):
-				if s.global_position.distance_to(_sp) <= 20.0:
-					s.take_damage(1, false)
-		)
-		game.get_tree().create_timer(2.0).timeout.connect(func():
+		game.get_tree().create_timer(2.0, false).timeout.connect(func():
 			if not is_instance_valid(_v):
 				return
 			for s in _g.get_tree().get_nodes_in_group("subjects"):
