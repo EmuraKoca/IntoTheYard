@@ -1149,7 +1149,7 @@ func _ready() -> void:
 
 	# ── DEBUG: Cyclone Calamity sprite test override (test bitince kaldır) ──
 	calamity_slots.clear()
-	for _dbg_cal in ["👾", "👾", "👾"]:
+	for _dbg_cal in ["🪞", "🪞", "🪞"]:
 		if calamity_slots.size() < max_calamity_slots:
 			calamity_slots.append(_dbg_cal)
 	update_ui()
@@ -2759,7 +2759,7 @@ func _build_all_upgrades() -> void:
 	{"name": "Data Storm",           "category": "Calamity",      "color": Color(0.7, 0.0, 0.8),  "desc": "All [b]Glitched[/b] enemies in the Yard are hit\nby a corruption burst for 10 dmg, clearing Glitch",             "index": 129, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 3, "requires_any": [16, 192, 197, 214]},
 	{"name": "Backdoor",             "category": "Calamity",      "color": Color(0.6, 0.0, 0.7),  "desc": "All enemies in the Yard\nbecome [b]Glitched[/b] for 3s",                  "index": 130, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
 	{"name": "Bounce Barrage",       "category": "Calamity",      "color": Color(0.35, 0.0, 0.9),  "desc": "Core Speed ×3 for 5s",                                   "index": 138, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
-	{"name": "Mirror Image",         "category": "Calamity",      "color": Color(0.2, 0.65, 0.9),  "desc": "Spawn 2 phantom cores\nfor 25s",                          "index": 144, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
+	{"name": "Mirror Image",         "category": "Calamity",      "color": Color(0.2, 0.65, 0.9),  "desc": "Grants 2 bonus cores.\nUnused ones vanish after 25s",                          "index": 144, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
 	{"name": "Systemic Failure",     "category": "Calamity",      "color": Color(0.0, 0.7, 0.35),  "desc": "All enemies in the Yard\nget 2× Antivirus stacks",        "index": 156, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
 	# ── Cyclone Connected Cores (iç yörünge) ─────────────────────────────────
 	{"name": "Glitch Pulse Core",    "category": "Identity",      "color": Color(0.8, 0.0, 0.8),   "desc": "Her 4s: 80px içinde 1 düşmana\nGlitch uygular",                 "index": 192, "weight": 5, "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
@@ -3493,7 +3493,10 @@ func _activate_bounce_barrage() -> void:
 	var p := get_node_or_null("Player")
 	if p == null: return
 	p.bounce_barrage_timer = 5.0
-	_react_flash_screen(Color(0.35, 0.0, 0.9, 0.4))
+	if $BallLauncher.has_method("electrify_weapon"):
+		$BallLauncher.electrify_weapon(5.0)
+	if $BallLauncher.has_method("play_weapon_burst"):
+		$BallLauncher.play_weapon_burst()
 
 var _mirror_image_balls: Array = []
 
@@ -3512,8 +3515,38 @@ func _activate_mirror_image() -> void:
 		p.add_to_orbit(ball)
 		ball.scale = Vector2(1.0, 1.0)
 		_mirror_image_balls.append(ball)
+		_vfx_mirror_image_travel(launcher.global_position, i * 0.12)
 	_react_flash_screen(Color(0.2, 0.65, 0.9, 0.4))
 	get_tree().create_timer(25.0, false).timeout.connect(_clear_mirror_image)
+
+# Mirror Image'ın gerçek core'ları her frame oyuncunun silah pozisyonuna sabitleniyor
+# (player.gd::_physics_process, orbit_balls[i].global_position), yani spawn pozisyonu
+# launcher'a verilse bile hemen ezilip görünmüyor. Bu yüzden sadece görsel/kozmetik bir
+# "core, launcher'dan oyuncuya uçuyor" efekti ayrı bir node ile oynatılıyor.
+func _vfx_mirror_image_travel(from_pos: Vector2, delay: float) -> void:
+	var orb := Node2D.new()
+	orb.top_level = true
+	orb.global_position = from_pos
+	orb.z_index = 9
+	add_child(orb)
+	orb.draw.connect(func():
+		orb.draw_circle(Vector2.ZERO, 7.0, Color(0.35, 0.75, 1.0, 0.95))
+		orb.draw_arc(Vector2.ZERO, 9.0, 0, TAU, 24, Color(0.7, 0.95, 1.0, 1.0), 2.0)
+	)
+	orb.queue_redraw()
+	var p := get_node_or_null("Player")
+	var tw := create_tween()
+	tw.tween_interval(delay)
+	tw.tween_method(
+		func(t: float):
+			if not is_instance_valid(orb): return
+			var target: Vector2 = p.global_position if is_instance_valid(p) else from_pos
+			orb.global_position = from_pos.lerp(target, t)
+			orb.queue_redraw(),
+		0.0, 1.0, 0.4
+	).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tw.tween_property(orb, "modulate:a", 0.0, 0.15)
+	tw.tween_callback(orb.queue_free)
 
 func _clear_mirror_image() -> void:
 	var p := get_node_or_null("Player")

@@ -724,6 +724,85 @@ func trigger_weapon_fire_fx(fire_dir: Vector2 = Vector2.ZERO) -> void:
 		var _ct: Tween = create_tween()
 		_ct.tween_property(_cyclone_weapon_anim, "modulate", Color(1.0, 1.0, 1.0), 0.18)
 
+var _electrify_particles: CPUParticles2D = null
+var _electrify_tween: Tween = null
+
+# Bounce Barrage (Calamity) aktivasyon anı: Cyclone'un silahında tek seferlik enerji
+# patlaması (8 frame, non-loop).
+func play_weapon_burst() -> void:
+	if not (_cyclone_weapon_anim and is_instance_valid(_cyclone_weapon_anim)):
+		return
+	if not ResourceLoader.exists("res://assets/VFX/calamitys/bounceBarrage/frame_000.png"):
+		return
+	var burst := AnimatedSprite2D.new()
+	burst.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	burst.z_index = 9
+	burst.z_as_relative = false
+	var sf := SpriteFrames.new()
+	if sf.has_animation("default"): sf.remove_animation("default")
+	sf.add_animation("burst")
+	sf.set_animation_speed("burst", 14.0)
+	sf.set_animation_loop("burst", false)
+	var i := 0
+	while ResourceLoader.exists("res://assets/VFX/calamitys/bounceBarrage/frame_%03d.png" % i):
+		sf.add_frame("burst", load("res://assets/VFX/calamitys/bounceBarrage/frame_%03d.png" % i))
+		i += 1
+	burst.sprite_frames = sf
+	burst.scale = Vector2(0.6, 0.6)
+	_cyclone_weapon_anim.add_child(burst)
+	burst.play("burst")
+	burst.animation_finished.connect(burst.queue_free)
+
+# Bounce Barrage (Calamity): Cyclone'un silahına süre boyunca elektriklenme efekti —
+# sürekli mavi-cyan kıvılcım parçacıkları + pulse eden modulate.
+func electrify_weapon(duration: float) -> void:
+	if not (_cyclone_weapon_anim and is_instance_valid(_cyclone_weapon_anim)):
+		return
+	if is_instance_valid(_electrify_particles):
+		_electrify_particles.queue_free()
+	if _electrify_tween:
+		_electrify_tween.kill()
+
+	var particles := CPUParticles2D.new()
+	particles.amount = 14
+	particles.lifetime = 0.35
+	particles.explosiveness = 0.0
+	particles.emission_shape = CPUParticles2D.EMISSION_SHAPE_SPHERE
+	particles.emission_sphere_radius = 14.0
+	particles.direction = Vector2(0, -1)
+	particles.spread = 180.0
+	particles.initial_velocity_min = 20.0
+	particles.initial_velocity_max = 60.0
+	particles.scale_amount_min = 1.0
+	particles.scale_amount_max = 2.0
+	particles.color = Color(0.5, 0.85, 1.0, 0.9)
+	particles.z_index = 8
+	particles.z_as_relative = false
+	_cyclone_weapon_anim.add_child(particles)
+	particles.emitting = true
+	_electrify_particles = particles
+
+	_cyclone_weapon_anim.speed_scale = 3.0
+
+	_electrify_tween = create_tween()
+	_electrify_tween.set_loops()
+	_electrify_tween.tween_property(_cyclone_weapon_anim, "modulate", Color(0.6, 0.9, 1.0), 0.15)
+	_electrify_tween.tween_property(_cyclone_weapon_anim, "modulate", Color(1.0, 1.0, 1.0), 0.15)
+
+	get_tree().create_timer(duration, false).timeout.connect(_stop_electrify_weapon)
+
+func _stop_electrify_weapon() -> void:
+	if _electrify_tween:
+		_electrify_tween.kill()
+		_electrify_tween = null
+	if is_instance_valid(_electrify_particles):
+		_electrify_particles.emitting = false
+		_electrify_particles.queue_free()
+		_electrify_particles = null
+	if _cyclone_weapon_anim and is_instance_valid(_cyclone_weapon_anim):
+		_cyclone_weapon_anim.modulate = Color(1.0, 1.0, 1.0)
+		_cyclone_weapon_anim.speed_scale = 1.0
+
 func _weapon_recoil() -> void:
 	if not _weapon_sprite: return
 	var aim: Vector2 = Vector2.ZERO

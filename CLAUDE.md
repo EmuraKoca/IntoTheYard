@@ -1406,6 +1406,50 @@ session'da tam review edilmişti).
       dikdörtgen kontrolü var: `x:385-1920, y:255-1080` dışındaki hiçbir düşman bolt/
       Glitch almıyor.
 
+- [x] **Bounce Barrage (138)**: implementasyon doğru — `player.gd`'nin `core_speed_mult`
+      zincirine bağlı (2026-08-29'daki Core Speed mimarisi düzeltmesi üzerinden gerçekten
+      top hızını ×3 yapıyor), 5sn. Requires gerekmiyor (Core Speed her build'de anlamlı).
+      Dil: EN zaten temizdi, TR hiç yoktu → eklendi. Sprite kontrolü: kart art'ı mevcut
+      (`bounce_barrage_art.png`), özel VFX yoktu.
+      **VFX eklendi (kullanıcı isteği, aynı gün)**: ekran flaşı kaldırıldı, yerine
+      `ball_launcher.gd`'ye `electrify_weapon(duration)` eklendi — Cyclone'un silah
+      sprite'ına (`_cyclone_weapon_anim`) süre boyunca sürekli mavi-cyan kıvılcım
+      parçacıkları (`CPUParticles2D`, silaha child olarak bağlı — silahın pozisyon
+      takibiyle otomatik hareket ediyor) + pulse eden modulate (beyaz↔cyan, loop tween)
+      uygulanıyor, süre bitince `_stop_electrify_weapon()` ile temizleniyor.
+      **Ek VFX (kullanıcı isteği, aynı gün)**: aktivasyon anında bir kez çalışan enerji
+      patlaması eklendi — `assets/VFX/calamitys/bounceBarrage/` (8 frame, 168×168),
+      `ball_launcher.gd::play_weapon_burst()` silahın üzerinde tek seferlik oynatıp
+      (14fps, non-loop) bitince kendini siliyor. Süre boyunca sürekli çalışan elektrik
+      efektinden (kıvılcım parçacıkları + speed_scale×3) ayrı, sadece aktivasyon anına
+      özel bir "patlama" hissi.
+
+- [x] **Mirror Image (144) — AÇIKLAMA DÜZELTMESİ (kullanıcı kararı, 2026-09-17)**: kod
+      incelemesinde bir tasarım/açıklama uyuşmazlığı bulundu — `add_to_orbit(ball)`,
+      `is_normal_core=true` olan topları GERÇEK yörüngeye (`inner_orbit_balls`) değil,
+      oyuncunun normal top rezervine (`orbit_balls`, magazine) ekliyor. Yani kart aslında
+      "sürekli oyuncunun etrafında dönen 2 kalıcı hayalet top" değil, **+2 bonus mermi**
+      veriyor (auto-mode'da hemen ateşleniyor, manuel modda sıradaki atışlarda kullanılıyor,
+      25sn içinde kullanılmazsa zorla kaldırılıyor). Kullanıcı kararı: **mekanik doğru
+      kabul edildi, sadece açıklama gerçeğe göre düzeltildi** — "Spawn 2 phantom cores
+      for 25s" → "Grants 2 bonus cores. Unused ones vanish after 25s" / TR: "2 bonus core
+      kazandırır. Kullanılmayanlar 25sn sonra kaybolur". Requires gerekmiyor (kendi
+      kendine yeten). Sprite kontrolü: kart art'ı mevcut (`mirror_image_art.png`), özel
+      VFX yok.
+      **Spawn görseli düzeltmesi (kullanıcı isteği, 2026-09-18)**: kullanıcı bonus
+      core'ların sağ üst köşedeki `$BallLauncher`'dan (`Vector2(1539, 317)`) çıkmasını
+      istedi. İlk denemede sadece spawn pozisyonu launcher'a çekildi ama hiçbir görsel
+      fark olmadı — sebebi `player.gd::_physics_process`'in HER FRAME `orbit_balls`
+      (reserve/magazine kuyruğu) içindeki tüm topları oyuncunun silah pozisyonuna
+      sabitlemesi (`orbit_balls[i].global_position = global_position + _weapon_offset`),
+      yani launcher'a verilen spawn konumu bir sonraki fizik frame'inde anında eziliyordu.
+      **Fix**: gerçek core'lar (reserve mekaniği, önceki gibi oyuncu pozisyonunda
+      görünmez şekilde kuyruğa giriyor) hiç değiştirilmedi — bunun yerine
+      `_vfx_mirror_image_travel()` adında SADECE görsel/kozmetik bir efekt eklendi: küçük
+      camgöbeği bir "core" launcher'dan oyuncuya doğru uçup (0.4sn, `tween_method` ile
+      canlı takip — oyuncu hareket etse bile hedefi güncelliyor) sonda hızla soluyor. 2
+      core için hafif gecikmeli (0.12sn arayla) iki kez tetikleniyor.
+
 ### İlerleme — Leila Calamity (8 kart, index sırasına göre) — sprite kontrolü de dahil
 - [x] Lightning (7) — implementasyon doğru: tıklanan noktaya 100px yarıçapta 3 hasar +
       Electrified uyguluyor (`_activate_lightning()`), VFX elle çizilmiş zigzag `Line2D`

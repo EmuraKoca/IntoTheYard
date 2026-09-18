@@ -342,6 +342,8 @@ const _DESC_TR: Dictionary = {
 	98: "5sn boyunca her saniye rastgele 2 düşmana\n5 hasar verir ve [b]Electrified[/b] uygular",
 	129: "Avlu'daki tüm [b]Glitched[/b] düşmanlar bozulma\npatlamasıyla 10 hasar alır, Glitch'leri temizlenir",
 	130: "Avlu'daki tüm düşmanlar 3sn boyunca\n[b]Glitched[/b] olur",
+	138: "5sn boyunca Core Hızı ×3 olur",
+	144: "2 bonus core kazandırır.\nKullanılmayanlar 25sn sonra kaybolur",
 	76: "Uyguladığın her benzersiz element\n→ +%1 Hareket Hızı (maks %4)",
 	85: "Her Reaksiyon → 2 HP geri kazandırır",
 	86: "Reaksiyon sonrası: düşmanın bir sonraki\ndebuff'ı 2× uzun sürer",
