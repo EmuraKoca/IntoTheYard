@@ -20,7 +20,7 @@ const _STATUS_GLOSSARY_EN := {
 	"Momentum": "Represents [b]Core Speed[/b] — each stack makes your cores move faster.",
 	"Glitched": "Enemy is disoriented for a duration — deals reduced damage while attacking. Triggers glitch-based synergies from other cards.",
 	"Virus": "Enemy accumulates stacks that deal damage over time. Stacks and duration can grow with other cards.",
-	"Decay": "Enemy accumulates stacks (max 3) that permanently slow it, even after the effect ends.",
+	"Decay": "Enemy accumulates stacks (max 3) that slow it. Each stack lasts [b]3s[/b]. If it dies with stacks, it explodes and damages nearby enemies.",
 }
 const _STATUS_GLOSSARY_TR := {
 	"Electrified": "Düşman 5sn işaretlenir. Diğer kartların elektrik tabanlı combo/reaksiyonlarını (zincir hasarı, yayılma efekti vb.) tetikler.",
@@ -32,7 +32,7 @@ const _STATUS_GLOSSARY_TR := {
 	"Momentum": "[b]Core Speed[/b]'i temsil eder — her stack core'ların hareket hızını artırır.",
 	"Glitched": "Düşman belirli bir süre boyunca sersemler — saldırırken daha az hasar verir. Diğer kartların glitch tabanlı sinerjilerini tetikler.",
 	"Virus": "Düşman zamana yayılı hasar veren stack biriktirir. Diğer kartlarla stack/süre artabilir.",
-	"Decay": "Düşman kalıcı olarak yavaşlatan stack biriktirir (maks 3), etki bitse bile yavaşlama kalıcıdır.",
+	"Decay": "Düşman yavaşlatan stack biriktirir (maks 3). Her stack [b]3sn[/b] sürer. Stack'liyken ölürse patlar ve yakındaki düşmanlara hasar verir.",
 }
 
 func status_glossary(keyword: String) -> String:

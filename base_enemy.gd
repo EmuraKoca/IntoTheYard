@@ -1,8 +1,6 @@
 extends CharacterBody2D
 
 static var _freeze_sf: SpriteFrames = null
-static var _corpse_queue: Array = []
-const _MAX_CORPSES: int = 10
 
 const SURGERY_EXIT := Vector2(850, 1000)
 
@@ -26,7 +24,12 @@ var is_burning: bool = false
 var is_electrified: bool = false
 var is_stunned: bool = false
 var _stun_timer: float = 0.0
+const DECAY_MAX_STACKS: int = 3
+const DECAY_STACK_DURATION: float = 3.0   # her stack'in ömrü (sn) — hem yavaşlatma hem patlama stack'i
+const DECAY_SLOW_PER_STACK: float = 0.05
+const DECAY_BLAST_RADIUS: float = 80.0    # ölüm patlaması yarıçapı (hasar + VFX aynı değeri kullanır)
 var decay_stacks: int = 0
+var _decay_timers: Array[float] = []      # stack başına kalan süre
 var _decay_slow_applied: float = 0.0
 var _chip_t: float = 0.0
 var _chip_node: Node2D = null
@@ -136,6 +139,7 @@ func _physics_process(delta: float) -> void:
 	if not is_dead:
 		_chip_t += delta
 		_chip_node.queue_redraw()
+		_process_decay(delta)
 	if is_frozen or is_stunned:
 		if is_stunned:
 			_stun_timer -= delta
@@ -216,6 +220,20 @@ func take_damage(amount, from_ally: bool = false, kill_cause: String = "normal",
 		_on_lethal_damage(from_ally)
 		die(kill_cause)
 
+# Virus Beacon Core: 3s boyunca (0s/1s/2s) core'un 100px'indeki düşmanlara 1 Virus stack yayar.
+# Ayrı coroutine — eskiden die() içinde await ile bekleniyordu, bu yüzden düşman canı bitmesine
+# rağmen ~3sn "ölmemiş" gibi ayakta kalıp ölüm animasyonu geç başlıyordu.
+func _virus_beacon_spread(ball: Node) -> void:
+	for _vb_tick in range(3):
+		if not is_instance_valid(ball): return
+		await ball.get_tree().create_timer(_vb_tick * 1.0, false).timeout
+		if not is_instance_valid(ball): return
+		for s in ball.get_tree().get_nodes_in_group("subjects"):
+			if not is_instance_valid(s): continue
+			if ball.global_position.distance_to(s.global_position) <= 100.0:
+				if s.has_method("apply_antivirus"):
+					s.apply_antivirus(1)
+
 func die(cause: String = "normal") -> void:
 	if is_dead: return
 	# Virus Beacon Core: Antivirus'lü düşman ölürse 3s boyunca yakına stack yay
@@ -224,16 +242,10 @@ func die(cause: String = "normal") -> void:
 			if not is_instance_valid(ball): continue
 			if ball.get("is_inner_core") and ball.is_inner_core and ball.get("inner_core_type") and ball.inner_core_type == "virus_beacon_core":
 				if ball.global_position.distance_to(global_position) <= 80.0:
-					var _vb_ref := ball
-					for _vb_tick in range(3):
-						await get_tree().create_timer(_vb_tick * 1.0).timeout
-						if not is_instance_valid(_vb_ref): break
-						for s in _vb_ref.get_tree().get_nodes_in_group("subjects"):
-							if not is_instance_valid(s): continue
-							if _vb_ref.global_position.distance_to(s.global_position) <= 100.0:
-								if s.has_method("apply_antivirus"):
-									s.apply_antivirus(1)
+					_virus_beacon_spread(ball)   # await'siz çağrı: die() yayılmayı beklemeden devam eder
 				break
+	# Decay'li ölüm brutal animasyon alır — _on_decay_death() stack'leri sildiği için ÖNCE yakala
+	var _died_decayed: bool = decay_stacks > 0
 	_on_decay_death()
 	# Leech Nova Core: öldürünce +2 HP + 80px Glitch
 	var _lnc_player := _get_player()
@@ -263,9 +275,9 @@ func die(cause: String = "normal") -> void:
 	var spr := get_sprite()
 	if spr:
 		var died_dir := "south-west" if _anim_dir in ["W", "NW", "SW"] else "south-east"
-		# Element/cause öncelik sırası: brutal > burn > frozen > electric > normal
+		# Element/cause öncelik sırası: brutal (Decay'li ölüm dahil) > burn > frozen > electric > normal
 		var anim_type: String
-		if cause == "brutal":
+		if cause == "brutal" or _died_decayed:
 			anim_type = "brutal_"
 		elif is_burning or cause == "burn":
 			anim_type = "burn_"
@@ -495,7 +507,7 @@ func apply_slow(amount, duration: float = 3.0, source: String = "cryo", anchor_p
 	var _was_first := not _had_any_element()
 	is_slowed = true
 	_notify_mystic_flow("cryo")
-	original_speed = speed
+	original_speed = speed / maxf(1.0 - _decay_slow_applied, 0.01)  # Decay'siz taban hız
 	var p := _get_player()
 	var slow_amount: float = float(amount)
 	if p and p.get("cryo_slow_mult"):
@@ -516,9 +528,10 @@ func apply_slow(amount, duration: float = 3.0, source: String = "cryo", anchor_p
 	if is_instance_valid(_cryo_sprite):
 		_cryo_sprite.queue_free()
 		_cryo_sprite = null
-	speed = original_speed
+	_restore_base_speed()
 	is_slowed = false
-	_hide_debuff("slow")
+	if decay_stacks <= 0:
+		_hide_debuff("slow")
 
 # ── Reaksiyon sistemi ────────────────────────────────────────────────────────
 
@@ -533,22 +546,117 @@ func apply_stun(duration: float = 1.0) -> void:
 
 func apply_decay() -> void:
 	if is_dead: return
-	var _max_stacks: int = 3
-	if decay_stacks >= _max_stacks: return
-	decay_stacks += 1
-	_show_debuff("decay")
-	var _slow_per_stack: float = 0.05
-	var _new_slow: float = decay_stacks * _slow_per_stack
-	var _delta_slow: float = _new_slow - _decay_slow_applied
-	_decay_slow_applied = _new_slow
-	if original_speed == 0.0:
-		original_speed = speed
-	speed = maxf(speed * (1.0 - _delta_slow), original_speed * 0.1)
+	if _decay_timers.size() < DECAY_MAX_STACKS:
+		_decay_timers.append(DECAY_STACK_DURATION)
+	else:
+		# Stack dolu: en eski stack'in süresini tazele (alan içindeyken 3 stack korunur)
+		var _oldest := 0
+		for i in range(1, _decay_timers.size()):
+			if _decay_timers[i] < _decay_timers[_oldest]:
+				_oldest = i
+		_decay_timers[_oldest] = DECAY_STACK_DURATION
+	_sync_decay_stacks()
+
+func _process_decay(delta: float) -> void:
+	if _decay_timers.is_empty(): return
+	var _changed := false
+	for i in range(_decay_timers.size() - 1, -1, -1):
+		_decay_timers[i] -= delta
+		if _decay_timers[i] <= 0.0:
+			_decay_timers.remove_at(i)
+			_changed = true
+	if _changed:
+		_sync_decay_stacks()
+
+# Stack sayısı değişince yavaşlatmayı oran olarak günceller (geri alınabilir) + ikonları eşler
+func _sync_decay_stacks() -> void:
+	var _n := _decay_timers.size()
+	decay_stacks = _n
+	var _old_factor := 1.0 - _decay_slow_applied
+	_decay_slow_applied = _n * DECAY_SLOW_PER_STACK
+	if _old_factor > 0.0:
+		speed *= (1.0 - _decay_slow_applied) / _old_factor
+	if _n > 0:
+		_show_debuff("decay")
+		_show_debuff("slow")
+	else:
+		_hide_debuff("decay")
+		if not is_slowed:
+			_hide_debuff("slow")
+
+# Slow bitince / reaksiyon slow'u silince hızı Decay'in mevcut yavaşlatmasını koruyarak geri yükler
+func _restore_base_speed() -> void:
+	speed = original_speed * (1.0 - _decay_slow_applied)
+
+# Decay ölüm patlaması görseli: hasar alanıyla birebir genişleyen kehribar halka + kıvılcımlar
+func _vfx_decay_burst(stacks: int) -> void:
+	var host := get_parent()
+	if not is_instance_valid(host): return
+	var col := Color(0.8, 0.45, 0.08)
+
+	# Düzensiz zikzaklı halka: tepe/çukur değişimi + rastgele yarıçap (her patlama farklı).
+	# En dış uç hasar yarıçapını (DECAY_BLAST_RADIUS) aşmaz — görsel alanı olduğundan büyük göstermesin.
+	var pts := PackedVector2Array()
+	var _vcount: int = randi_range(11, 14) * 2
+	var _phase := randf() * TAU
+	for k in range(_vcount):
+		var a := _phase + TAU * float(k) / float(_vcount) + randf_range(-0.08, 0.08)
+		var r: float
+		if k % 2 == 0:
+			r = DECAY_BLAST_RADIUS * randf_range(0.88, 1.0)   # dışa çıkıntı
+		else:
+			r = DECAY_BLAST_RADIUS * randf_range(0.5, 0.78)   # içe çöken çukur
+		pts.append(Vector2(cos(a), sin(a)) * r)
+	var root := Node2D.new()
+	root.global_position = global_position
+	root.z_index = 5
+	root.scale = Vector2.ONE * 0.2
+	host.add_child(root)
+	var fill := Polygon2D.new()
+	fill.polygon = pts
+	fill.color = Color(col.r, col.g, col.b, 0.22)
+	root.add_child(fill)
+	var ring := Line2D.new()
+	ring.points = pts
+	ring.closed = true
+	ring.width = 4.0
+	ring.joint_mode = Line2D.LINE_JOINT_SHARP
+	ring.default_color = Color(col.r, col.g, col.b, 0.95)
+	root.add_child(ring)
+	var tw := root.create_tween().set_parallel(true)
+	tw.tween_property(root, "scale", Vector2.ONE, 0.32).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(root, "rotation", randf_range(-0.5, 0.5), 0.42)
+	tw.tween_property(root, "modulate:a", 0.0, 0.42).set_delay(0.08)
+	tw.chain().tween_callback(root.queue_free)
+
+	# Kıvılcımlar ayrı node (root ölçeklendiği için hız/mesafe bozulmasın), stack arttıkça yoğunlaşır
+	var sparks := CPUParticles2D.new()
+	sparks.global_position = global_position
+	sparks.z_index = 5
+	sparks.emitting = false
+	sparks.one_shot = true
+	sparks.explosiveness = 1.0
+	sparks.amount = 8 + stacks * 5
+	sparks.lifetime = 0.5
+	sparks.direction = Vector2.ZERO
+	sparks.spread = 180.0
+	sparks.gravity = Vector2.ZERO
+	sparks.initial_velocity_min = 60.0
+	sparks.initial_velocity_max = 150.0
+	sparks.scale_amount_min = 2.0
+	sparks.scale_amount_max = 4.0
+	sparks.color = col
+	host.add_child(sparks)
+	sparks.emitting = true
+	var stw := sparks.create_tween()
+	stw.tween_interval(1.0)
+	stw.tween_callback(sparks.queue_free)
 
 func _on_decay_death() -> void:
 	if decay_stacks <= 0: return
 	var _stacks_at_death: int = decay_stacks
 	decay_stacks = 0
+	_decay_timers.clear()
 	_decay_slow_applied = 0.0
 	_hide_debuff("decay")
 	var _p := _get_player()
@@ -559,10 +667,13 @@ func _on_decay_death() -> void:
 			2: _dmg_per_stack = 5
 			3: _dmg_per_stack = 7
 	var _dmg: int = _stacks_at_death * _dmg_per_stack
+	_vfx_decay_burst(_stacks_at_death)
 	for body in get_tree().get_nodes_in_group("subjects"):
 		if body == self or not is_instance_valid(body): continue
-		if global_position.distance_to(body.global_position) < 80.0:
+		if global_position.distance_to(body.global_position) < DECAY_BLAST_RADIUS:
 			body.take_damage(_dmg)
+			if is_instance_valid(body) and body.has_method("_react_flash"):
+				body._react_flash(Color(0.8, 0.45, 0.08))
 	# Decay Harvest: patlama → +2 HP
 	if _p and _p.get("has_decay_harvest") and _p.has_decay_harvest:
 		var _g := get_node_or_null("/root/GameScene")
@@ -588,7 +699,7 @@ func _check_reaction(incoming: String) -> void:
 		_notify_reaction(game, player); return
 	if incoming == "wet" and is_slowed:
 		is_wet = false; is_slowed = false
-		speed = original_speed if original_speed > 0 else speed
+		if original_speed > 0: _restore_base_speed()
 		apply_frozen(); _react_flash(Color(0.5, 0.9, 1.0))
 		_notify_reaction(game, player); return
 
@@ -604,11 +715,11 @@ func _check_reaction(incoming: String) -> void:
 
 	if incoming == "electric" and is_slowed and not is_frozen:
 		is_slowed = false; is_electrified = false
-		speed = original_speed if original_speed > 0 else speed
+		if original_speed > 0: _restore_base_speed()
 		_react_cryostatic(dmg_mult, game, player); return
 	if incoming == "cryo" and is_electrified and not is_frozen:
 		is_slowed = false; is_electrified = false
-		speed = original_speed if original_speed > 0 else speed
+		if original_speed > 0: _restore_base_speed()
 		_react_cryostatic(dmg_mult, game, player); return
 
 	if incoming == "wet" and is_burning:
@@ -620,11 +731,11 @@ func _check_reaction(incoming: String) -> void:
 
 	if incoming == "fire" and is_slowed:
 		is_burning = false; is_slowed = false
-		speed = original_speed if original_speed > 0 else speed
+		if original_speed > 0: _restore_base_speed()
 		_react_melt(dmg_mult, game, player); return
 	if incoming == "cryo" and is_burning:
 		is_burning = false; is_slowed = false
-		speed = original_speed if original_speed > 0 else speed
+		if original_speed > 0: _restore_base_speed()
 		_react_melt(dmg_mult, game, player); return
 
 	if incoming == "fire" and is_electrified:
@@ -700,7 +811,8 @@ func _react_cryostatic(mult: float, game: Node, player: Node) -> void:
 			if body.health <= 0: body.die("freeze")
 	health -= dmg
 	_react_flash(Color(0.5, 0.8, 1.0))
-	_hide_debuff("slow"); _hide_debuff("electrified")
+	if decay_stacks <= 0: _hide_debuff("slow")
+	_hide_debuff("electrified")
 	if player and player.get("has_frost_barrier") and player.has_frost_barrier:
 		player.frost_barrier_hp = mini(player.frost_barrier_hp + 5, 20)
 		player._frost_barrier_timer = 4.0
@@ -753,7 +865,8 @@ func _react_melt(mult: float, game: Node, player: Node) -> void:
 	var dmg := int(18 * mult)
 	health -= dmg
 	_react_flash(Color(1.0, 0.6, 0.1))
-	_hide_debuff("burn"); _hide_debuff("slow")
+	_hide_debuff("burn")
+	if decay_stacks <= 0: _hide_debuff("slow")
 	_notify_reaction(game, player)
 	if health <= 0: die("burn")
 

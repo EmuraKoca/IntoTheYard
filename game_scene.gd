@@ -1158,7 +1158,7 @@ func _ready() -> void:
 
 	# ── DEBUG: Cyclone Calamity sprite test override (test bitince kaldır) ──
 	calamity_slots.clear()
-	for _dbg_cal in ["💣", "💣", "💻💥"]:
+	for _dbg_cal in ["☠️", "☠️", "☠️"]:
 		if calamity_slots.size() < max_calamity_slots:
 			calamity_slots.append(_dbg_cal)
 	update_ui()
@@ -4026,18 +4026,41 @@ func _activate_system_crash() -> void:
 
 func _activate_decay_field(pos: Vector2) -> void:
 	var field_duration := 5.0
-	var field_radius := 100.0
-	# Geçici görsel: daire (gerçek sprite gelince değiştirilecek). Cesetlerin ve düşmanların altında.
-	var zone := Polygon2D.new()
-	var pts := PackedVector2Array()
-	for k in range(48):
-		var ang := TAU * float(k) / 48.0
-		pts.append(Vector2(cos(ang), sin(ang)) * field_radius)
-	zone.polygon = pts
-	zone.color = Color(0.45, 0.2, 0.0, 0.3)
-	zone.global_position = pos
-	zone.z_index = -1
-	add_child(zone)
+	var field_radius := 84.0  # sprite'ın gerçek boyutuna eşitlendi (168px sprite / 2)
+	# Canlı düşmanların (2-3) VE cesetlerin (0) altında kalsın (z_index=-1)
+	var zone: Node2D
+	if ResourceLoader.exists("res://assets/VFX/calamitys/decayField/frame_000.png"):
+		var spr := AnimatedSprite2D.new()
+		spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		var sf := SpriteFrames.new()
+		if sf.has_animation("default"): sf.remove_animation("default")
+		sf.add_animation("decay")
+		sf.set_animation_loop("decay", false)
+		var i := 0
+		while ResourceLoader.exists("res://assets/VFX/calamitys/decayField/frame_%03d.png" % i):
+			sf.add_frame("decay", load("res://assets/VFX/calamitys/decayField/frame_%03d.png" % i))
+			i += 1
+		# Animasyon tam alan süresine yayılsın (frame sayısı ÷ süre)
+		sf.set_animation_speed("decay", float(i) / field_duration)
+		spr.sprite_frames = sf
+		zone = spr
+		zone.global_position = pos
+		zone.z_index = -1
+		add_child(zone)
+		spr.play("decay")
+	else:
+		# Sprite eksikse fallback: alanla birebir daire
+		var poly := Polygon2D.new()
+		var pts := PackedVector2Array()
+		for k in range(48):
+			var ang := TAU * float(k) / 48.0
+			pts.append(Vector2(cos(ang), sin(ang)) * field_radius)
+		poly.polygon = pts
+		poly.color = Color(0.45, 0.2, 0.0, 0.3)
+		zone = poly
+		zone.global_position = pos
+		zone.z_index = -1
+		add_child(zone)
 	var elapsed := 0.0
 	while elapsed < field_duration:
 		# İlk tick hemen (açıldığı anda üstündekiler beklemesin), sonra her 1s
@@ -4807,7 +4830,7 @@ func _process(delta: float) -> void:
 		elif calamity == "🌋":       _aim_radius = 84.0    # Volcanic Rift (sprite boyutuna eşitlendi)
 		elif calamity == "🌧️":      _aim_radius = 170.0   # Siege Rain (sapma alanı)
 		elif calamity == "💣":       _aim_radius = 84.0   # Glitch Bomb
-		elif calamity == "☠️":      _aim_radius = 100.0   # Decay Field
+		elif calamity == "☠️":      _aim_radius = 84.0    # Decay Field (sprite boyutuna eşitlendi)
 		elif calamity == "🏚️":      _aim_radius = 130.0   # Rampart Collapse
 		elif calamity == "🕳️":      _aim_radius = 70.0    # WormHole
 		var _aim_tex: Texture2D = $UI/CalamityCircle.aim_texture

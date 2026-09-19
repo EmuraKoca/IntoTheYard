@@ -1526,8 +1526,8 @@ Fix: `_process_antivirus(delta)` sonrası `if is_dead: return`.
 
 ### BUG FIX: Glitch'li düşmanlar cesetlere saldırıyordu (kullanıcı fark etti, 2026-09-19)
 Glitch'li düşmanlar (`is_glitched`) oyuncu yerine `subjects` grubundaki EN YAKIN düşmana
-saldırıyor — ama hedef döngüsünde `is_dead` kontrolü yoktu, cesetler (kalıcı, grupta
-kalıyor) da aday olduğu için ölü düşmanlara gidip vuruyorlardı. 7 dosyada (`subject`,
+saldırıyor — ama hedef döngüsünde `is_dead` kontrolü yoktu, cesetler (15sn yerde kalıp
+soluyor, o süre boyunca grupta kalıyor) da aday olduğu için ölü düşmanlara gidip vuruyorlardı. 7 dosyada (`subject`,
 `armored_subject`, `heavy_subject`, `frantic_subject`, `cyber_shooter`, `cyber_rifle`,
 `cyber_shotgun`) aynı döngü `if z == self or not is_instance_valid(z) or z.get("is_dead"):
 continue` olarak düzeltildi. Boss'lar (`nyx_09`, `s_miler_79`) bu döngüyü kullanmıyor.
@@ -1577,18 +1577,83 @@ continue` olarak düzeltildi. Boss'lar (`nyx_09`, `s_miler_79`) bu döngüyü ku
       silinebilir. Playtester notundaki "Antivirus Rain (217)" ve yukarıdaki eski satırlar
       artık geçersiz. **Cyclone Calamity'de kalan kart: Decay Field (218).**
 
-- [~] **Decay Field (218) — KISMEN TAMAM, VFX BEKLİYOR (2026-09-19)**: mekanik doğru (5sn,
-      100px yarıçap, alandaki canlı düşmanlara `apply_decay()`; Decay: stack başına %5 kalıcı
-      yavaşlama, maks 3 stack, ölünce stack×2 hasarlı 80px patlama, Decay Amp ile 3/5/7).
-      Düzeltmeler: ilk tick artık alan açılır açılmaz (eskiden 1sn sonra), görsel kare
-      `ColorRect` yerine daire `Polygon2D` (hasar alanıyla birebir), z_index 1 → -1 (cesetlerin
-      altında), EN/TR açıklama yenilendi (`lang.gd` 218 eklendi, "Decay" bold → sözlük
-      paneli). Requires gerekmiyor (Decay'in kendi kaynağı). **Açık**: kullanıcı gerçek VFX
-      sprite'ı hazırlıyor (gelince `_activate_decay_field()` içindeki geçici `Polygon2D`
-      yerine `AnimatedSprite2D`, yarıçap görsel boyutuna eşitlenecek, `_aim_radius` ☠️ de
-      senkron). **Karar bekliyor**: Decay yavaşlaması süresiz (ölene kadar) — süreli yapılsın mı?
-      (kullanıcı düşünüyor). Bu kart bitince **Cyclone Calamity review'i tamamlanır**; sonra
-      Leila'nın Wildfire'ı (🔥💥, hiç review edilmedi) kalır.
+- [x] **Decay Field (218) — TAMAMLANDI (2026-09-19/20)**: mekanik doğru (5sn, alandaki
+      canlı düşmanlara `apply_decay()`). Düzeltmeler: ilk tick artık alan açılır açılmaz
+      (eskiden 1sn sonra), z_index 1 → -1 (cesetlerin altında), EN/TR açıklama yenilendi
+      (`lang.gd` 218 eklendi, "Decay" bold → sözlük paneli). Requires gerekmiyor (Decay'in
+      kendi kaynağı).
+      **VFX bağlandı**: `assets/VFX/calamitys/decayField/frame_000..035` (36 frame, 168×168)
+      → `_activate_decay_field()` artık `AnimatedSprite2D` (tek seferlik, hız = frame sayısı
+      ÷ 5sn ≈ 7.2 fps, alan süresiyle birebir), yarıçap **100 → 84px** (sprite'ın görsel
+      yarıçapı, Flame Zone/Volcanic Rift ile aynı uyum), `_aim_radius` ☠️ 84'e senkronlandı.
+      Sprite yoksa eski `Polygon2D` daire fallback'i çalışıyor.
+
+      **DECAY MEKANİĞİ YENİDEN TASARLANDI — artık SÜRELİ (kullanıcı kararı, 2026-09-20)**:
+      eskiden stack'ler ve %5/stack yavaşlatma **kalıcıydı** (ölene kadar). "Decay'li
+      düşmanı öldürmek için acele etsin — zaten başlı başına güçlü bir mekanik" gerekçesiyle:
+      - **Her stack bağımsız 3sn ömürlü** (`_decay_timers`, `DECAY_STACK_DURATION`); süre
+        bitince stack düşer, yavaşlatma orantılı geri alınır. Maks 3 stack, stack başına %5
+        yavaşlatma (değişmedi). Stack doluyken tekrar Decay gelirse **en eski stack'in süresi
+        tazelenir** (alan içindeyken 3 stack korunur; eskiden `return` ile yok sayılıyordu).
+      - Zamanlayıcı `_physics_process`'te (`_process_decay(delta)`) — `create_timer` DEĞİL,
+        yani pause'da durur, donma/sersemlemede de akmaya devam eder.
+      - **Ölüm patlaması aynı** (stack × 2/3/5/7 hasar, 80px) — ama artık düşman 3sn içinde
+        öldürülmezse stack'ler düşüp patlama zayıflar/kaybolur → "zaman bombası" hissi.
+      - **Slow ikonu**: Decay stack ≥ 1 iken düşmanda hem "decay" hem "slow" ikonu görünür
+        (Decay yavaşlatmayı `apply_slow()` yerine doğrudan `speed` üzerinden yapıyor, bu
+        yüzden ikon hiç çıkmıyordu). Normal Slowed bitince/reaksiyon slow'u silince ikon
+        Decay aktifse KALIYOR (frozen'da gizlenir, doğru).
+      - **HIZ YÖNETİMİ DÜZELTMESİ (yan bulgu)**: yavaşlatmayı geri yükleyen 6 yer
+        (`speed = original_speed`) Decay'in hız düşüşünü sessizce siliyordu, `apply_slow()`
+        de `original_speed`'i Decay'li hızdan alıyordu. Artık `original_speed` = Decay'siz
+        taban hız, geri yükleme `_restore_base_speed()` (= taban × mevcut Decay çarpanı).
+        Decay çarpanı oran olarak uygulanıyor (`_sync_decay_stacks()`), tamamen geri alınabilir.
+      - Sözlük (glossary) girdisi güncellendi: "kalıcı yavaşlatır" → "her stack 3sn sürer,
+        stack'liyken ölürse patlar" (EN/TR).
+      - **Ölüm patlamasına görsel eklendi** (kullanıcı isteği — eskiden hasar işleniyor ama
+        hiçbir görsel yoktu, "çalışmıyor" gibi hissettiriyordu): `_vfx_decay_burst(stacks)` —
+        hasar alanıyla birebir (`DECAY_BLAST_RADIUS=80`, hem hasar hem VFX bu sabiti kullanır)
+        genişleyen kehribar halka + dolgu (`Line2D`+`Polygon2D`, 0.2→1.0 ölçek, 0.4sn fade) +
+        stack sayısıyla artan `CPUParticles2D` kıvılcım (8 + stack×5) + patlamadan hasar alan
+        her düşmanda kehribar `_react_flash`. Spike Core'un manuel tetiklediği patlamada da
+        aynı görsel çıkar. **Bilinen istisna**: WormHole `die()` çağırmadan `queue_free()`
+        yaptığı için WormHole ile yutulan Decay'li düşman patlamaz.
+      - **Halka düzensiz/zikzaklı yapıldı (kullanıcı isteği)**: mükemmel daire yerine her
+        patlamada rastgele 22-28 köşeli, tepe/çukur değişen (dışa %88-100, içe %50-78 yarıçap)
+        çokgen (`LINE_JOINT_SHARP`, hafif rastgele dönüş). En dış uç hasar yarıçapını (80px)
+        aşmaz → görsel alanı olduğundan büyük göstermez.
+      - **Decay'li ölüm → `brutalDeath` animasyonu (kullanıcı isteği)**: `die()`'da
+        `_on_decay_death()` stack'leri silmeden ÖNCE `_died_decayed = decay_stacks > 0`
+        yakalanıyor; `anim_type` seçiminde `cause == "brutal" or _died_decayed` en üst
+        öncelik (burn/frozen/electric'in önünde). 7 temel düşman tipinin HEPSİNDE dört ölüm
+        animasyonu da mevcut (`assets/effectiveDeathAnimations/`, doğrulandı — eski "cyberShotgun'ın
+        brutal'ı yok" notu geçersiz); kodda animasyon bulunamazsa normal `died_`'e düşen
+        güvenlik yedeği zararsızca duruyor. **Not**: Spike Core
+        patlamayı ölümden ÖNCE tetikleyip stack'leri sildiği için, o düşman sonradan ölürse
+        brutal almaz (o an stack'i kalmamıştır). **Kullanıcı kararı (2026-09-20): bu istisna
+        bilinçli olarak KALSIN** — Spike Core sadece pasif tetikleyici, öldürücü olmayan
+        vuruşta düşmanı öldürmemeli/brutal yapmamalı. Öldürücü vuruşta ise zaten çalışıyor:
+        `_hit_subject()`'te hasar (`take_damage`) Decay/Spike satırlarından ÖNCE işlendiği için
+        düşman o vuruşta ölürse `die()` stack'leri görüp brutal + ölüm patlaması verir, ardından
+        Spike kontrolü boşa düşer (stack'ler temizlenmiş, çift patlama yok). Patlama
+        `_on_decay_death()` içinde kendine hasar vermez.
+      - **BUG FIX (kullanıcı fark etti: "öldüğü halde ayakta öylece durdu", 2026-09-20)**:
+        `base_enemy.gd::die()` içindeki **Virus Beacon Core** bloğu, `is_dead=true` ve ölüm
+        animasyonundan ÖNCE `await create_timer(...)` ile toplam ~3sn (0s+1s+2s) bekliyordu —
+        Virus'lu düşman Virus Beacon Core'un 80px'inde ölürse canı bitmesine rağmen ~3sn ayakta
+        kalıyor, skor/animasyon o kadar geç işleniyordu (ve `create_timer` pause'da da akıyordu).
+        Yayılma artık ayrı bir coroutine'e (`_virus_beacon_spread(ball)`, `await`'siz çağrı,
+        `process_always=false`) çıkarıldı, `die()` beklemeden devam eder. **Belirsiz kalan**:
+        aynı belirti upgrade ekranı (`get_tree().paused=true`) ölüm animasyonunun ortasına
+        denk gelirse de görülebilir (AnimatedSprite2D pause'da donar, menü kapanınca devam
+        eder) — debug `× 8.0` XP çarpanı level-up'ı çok sıklaştırdığı için bu tesadüf kolay.
+        Kullanıcı hangisi olduğunu netleştirirse (kalıcı mı kaldı, kart seçince düştü mü)
+        buradan devam edilir. Taranan ve TEMİZ çıkan: `health -=` ile direkt hasar veren
+        tüm yollarda (`base_enemy.gd`) `die()` kontrolü mevcut.
+      **Cyclone Calamity review'i TAMAMLANDI** (Data Storm, Backdoor, Bounce Barrage, Mirror
+      Image, Systemic Failure, Glitch Bomb, System Crash, Decay Field; Virus Rain kaldırıldı).
+      Sonraki: Leila'nın Wildfire'ı (🔥💥, hiç review edilmedi — `_yard_subjects()` ve yayılma
+      döngüsü bug'ları zaten düzeltildi, açıklama/requires/VFX kaldı).
 
 ### İlerleme — Leila Calamity (8 kart, index sırasına göre) — sprite kontrolü de dahil
 - [x] Lightning (7) — implementasyon doğru: tıklanan noktaya 100px yarıçapta 3 hasar +
@@ -2070,7 +2135,11 @@ biri unutulursa sayılar tutarsız görünür.
 - [x] Core fire milestone'ları (tüm tipler, 3 eşik)
 - [x] Run sonu ekranına Chip göstergesi eklendi
 - [x] Chip Mağazası eklendi — 6 kalıcı upgrade (karakter seçim ekranı)
-- [x] Cesetler kalıcı yapıldı (fade out kaldırıldı)
+- [x] ~~Cesetler kalıcı yapıldı (fade out kaldırıldı)~~ — **GEÇERSİZ (2026-09-20 düzeltildi)**:
+      sonradan süreli sisteme dönülmüş (`1f33c94`); güncel davranış: ceset **15sn** yerde
+      kalır, 1.5sn'de solup `queue_free()` olur (`base_enemy.gd::_register_corpse()`). Eski
+      "10+ ceset olunca kan efektiyle yok ol" sisteminin kalıntıları (`_corpse_queue`,
+      `_MAX_CORPSES`) kullanılmadığı için silindi.
 - [x] Başlangıç core sayısı 5 → 3'e indirildi
 
 **Sıradaki adımlar (2026-07-29):**
