@@ -1,6 +1,8 @@
 extends "res://base_enemy.gd"
 
-func take_damage(amount, from_ally: bool = false, kill_cause: String = "normal") -> void:
+func take_damage(amount, from_ally: bool = false, kill_cause: String = "normal", physical: bool = false) -> void:
+	if is_dead: return
+	if physical: _react_flash(Color(2.0, 2.0, 2.0, 1.0), 0.08)
 	health -= amount
 	if is_electrified and not from_ally:
 		var p := _get_player()

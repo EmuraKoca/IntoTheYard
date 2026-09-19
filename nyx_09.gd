@@ -622,8 +622,9 @@ func _draw() -> void:
 	if _bolt_flash > 0.0:
 		draw_circle(Vector2.ZERO, 45.0 * _bolt_flash, Color(0.0, 0.55, 1.0, _bolt_flash * 0.45))
 
-func take_damage(amount: int, _from_ally: bool = false, _kill_cause: String = "normal") -> void:
+func take_damage(amount: int, _from_ally: bool = false, _kill_cause: String = "normal", physical: bool = false) -> void:
 	if is_dead: return
+	if physical: _physical_flash()
 	health -= amount
 	var game := get_parent()
 	if game.has_method("update_boss_bar"):
@@ -707,3 +708,9 @@ func _boss_clear_element() -> void:
 	var game := get_parent()
 	if game.has_method("clear_boss_element"):
 		game.clear_boss_element()
+
+func _physical_flash() -> void:
+	modulate = Color(2.0, 2.0, 2.0, 1.0)
+	await get_tree().create_timer(0.08, false).timeout
+	if is_instance_valid(self):
+		modulate = Color(1, 1, 1, 1)

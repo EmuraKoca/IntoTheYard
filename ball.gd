@@ -856,7 +856,7 @@ func _has_active_armor(collider: Node) -> bool:
 # ── Defense helpers ───────────────────────────────────────────────────────────
 func _defense_hit(subject: Node2D) -> void:
 	if not is_instance_valid(subject): return
-	subject.take_damage(defense_damage)
+	subject.take_damage(defense_damage, false, "normal", true)
 	if can_fire    and is_instance_valid(subject): subject.apply_burn()
 	if can_water   and is_instance_valid(subject): subject.apply_wet()
 	if can_electric and is_instance_valid(subject): subject.apply_electrified()
@@ -1631,7 +1631,7 @@ func _hit_subject(subject: Node2D) -> void:
 			subject.get_sprite().modulate = Color(1, 1, 1, 1)
 
 	var _kill_cause := "brutal" if (can_siege or can_crusher) else "normal"
-	subject.take_damage(total_damage, false, _kill_cause)
+	subject.take_damage(total_damage, false, _kill_cause, true)
 
 	# Ricochet Core: düşmana çarpınca hızı sıfırla
 	if can_ricochet_core:

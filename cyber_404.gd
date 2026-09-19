@@ -183,7 +183,8 @@ func _random_weapon(player: Node2D) -> void:
 				bullet.launch(dir)
 				await get_tree().create_timer(0.15).timeout
 
-func take_damage(amount, from_ally: bool = false, kill_cause: String = "normal") -> void:
+func take_damage(amount, from_ally: bool = false, kill_cause: String = "normal", physical: bool = false) -> void:
+	if physical: _physical_flash()
 	if armor > 0:
 		armor -= amount
 		if armor <= 0:
@@ -273,3 +274,9 @@ func apply_burn() -> void:
 				die()
 				return
 	is_burning = false
+
+func _physical_flash() -> void:
+	modulate = Color(2.0, 2.0, 2.0, 1.0)
+	await get_tree().create_timer(0.08, false).timeout
+	if is_instance_valid(self):
+		modulate = Color(1, 1, 1, 1)

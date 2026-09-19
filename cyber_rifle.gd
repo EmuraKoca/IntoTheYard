@@ -71,6 +71,9 @@ func _shoot(target: Node2D) -> void:
 		await get_tree().create_timer(0.18).timeout
 
 func _enemy_process(delta: float) -> void:
+	if is_glitched:
+		_glitch_melee(delta)
+		return
 	var player = get_tree().get_first_node_in_group("player")
 	if player == null: return
 	var dist = global_position.distance_to(player.global_position)
@@ -87,18 +90,6 @@ func _enemy_process(delta: float) -> void:
 	shoot_timer += delta
 	if shoot_timer >= shoot_interval:
 		shoot_timer = 0.0
-		if is_glitched:
-			var subjects = get_tree().get_nodes_in_group("subjects")
-			var closest = null
-			var closest_dist = 999999.0
-			for z in subjects:
-				if z == self: continue
-				var d = global_position.distance_to(z.global_position)
-				if d < closest_dist:
-					closest_dist = d
-					closest = z
-			if closest: _shoot(closest)
-		else:
-			_shoot(player)
+		_shoot(player)
 	if dist < 35:
 		player.take_damage(1)

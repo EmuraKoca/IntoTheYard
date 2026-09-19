@@ -148,6 +148,7 @@ func _physics_process(delta: float) -> void:
 						_stun_spr2.play(get_walk_anim_prefix() + _anim_dir)
 		return
 	_process_antivirus(delta)
+	if is_dead: return
 	_enemy_process(delta)
 
 func _ally_behavior() -> void:
@@ -180,8 +181,9 @@ func _update_anim_dir_from_velocity() -> void:
 
 # ── Hasar & Ölüm ─────────────────────────────────────────────────────────────
 
-func take_damage(amount, from_ally: bool = false, kill_cause: String = "normal") -> void:
+func take_damage(amount, from_ally: bool = false, kill_cause: String = "normal", physical: bool = false) -> void:
 	if is_dead: return
+	if physical: _react_flash(Color(2.0, 2.0, 2.0, 1.0), 0.08)
 	if get("is_marked") and is_marked:
 		amount = int(amount * 1.1)
 	# Primal Instinct: 3 farklı reaksiyon tetiklendiyse +10% hasar (5s)
@@ -421,6 +423,7 @@ func _process_antivirus(delta: float) -> void:
 	if _antivirus_tick <= 0.0:
 		_antivirus_tick = 0.5
 		health -= antivirus_stacks
+		_react_flash(Color(0.2, 1.0, 0.45))
 		var _ap2 := get_tree().get_first_node_in_group("player")
 		if _ap2 and _ap2.get("has_root_access") and _ap2.has_root_access:
 			var _cap2: int = 3 + (_ap2.stack_overflow_level if (_ap2.get("stack_overflow_level")) else 0)
@@ -754,10 +757,15 @@ func _react_melt(mult: float, game: Node, player: Node) -> void:
 	_notify_reaction(game, player)
 	if health <= 0: die("burn")
 
-func _react_flash(color: Color) -> void:
+var _flash_id: int = 0
+
+func _react_flash(color: Color, dur: float = 0.15) -> void:
 	modulate = color
-	await get_tree().create_timer(0.15).timeout
-	if is_instance_valid(self):
+	_flash_id += 1
+	var my_id := _flash_id
+	await get_tree().create_timer(dur, false).timeout
+	# çakışan flaşlarda sadece son flaş rengi sıfırlar
+	if is_instance_valid(self) and my_id == _flash_id:
 		modulate = Color(1, 1, 1, 1)
 
 func _notify_reaction(game: Node, player: Node) -> void:

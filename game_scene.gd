@@ -90,7 +90,6 @@ const _CALAMITY_DISPLAY_NAMES: Dictionary = {
 	"🔥💥": "Wildfire",
 	"💣":   "Glitch Bomb",
 	"💻💥": "System Crash",
-	"🦠":   "Virus Rain",
 	"☠️":  "Decay Field",
 }
 
@@ -356,6 +355,16 @@ func screen_shake_heavy() -> void:
 	var tween = create_tween()
 	for i in range(4):
 		tween.tween_property(camera, "offset", Vector2(randf_range(-3, 3), randf_range(-3, 3)), 0.05)
+	tween.tween_property(camera, "offset", original_pos, 0.05)
+
+# heavy'den de güçlü: ±8px, 8 adım azalan genlikli sarsıntı (Yard Engine çizgi anı).
+func _screen_shake_strong() -> void:
+	var camera = get_node("Camera2D")
+	var original_pos = camera.offset
+	var tween = create_tween()
+	for i in range(8):
+		var amp := 8.0 * (1.0 - float(i) / 10.0)
+		tween.tween_property(camera, "offset", original_pos + Vector2(randf_range(-amp, amp), randf_range(-amp, amp)), 0.04)
 	tween.tween_property(camera, "offset", original_pos, 0.05)
 
 func _screen_shake_small() -> void:
@@ -1149,7 +1158,7 @@ func _ready() -> void:
 
 	# ── DEBUG: Cyclone Calamity sprite test override (test bitince kaldır) ──
 	calamity_slots.clear()
-	for _dbg_cal in ["🪞", "🪞", "🪞"]:
+	for _dbg_cal in ["💣", "💣", "💻💥"]:
 		if calamity_slots.size() < max_calamity_slots:
 			calamity_slots.append(_dbg_cal)
 	update_ui()
@@ -1990,8 +1999,6 @@ func _dispatch_calamity_effect(calamity: String, mouse_pos: Vector2) -> void:
 		_activate_glitch_bomb(mouse_pos)
 	elif calamity == "💻💥":  # System Crash
 		_activate_system_crash()
-	elif calamity == "🦠":  # Virus Rain
-		_activate_antivirus_rain()
 	elif calamity == "☠️":  # Decay Field
 		_activate_decay_field(mouse_pos)
 
@@ -2719,7 +2726,7 @@ func _build_all_upgrades() -> void:
 	{"name": "Glitch Core",          "category": "Identity",      "color": Color(0.8, 0.0, 0.8),  "desc": "Disorients subject for 3s",                                "index": 16,  "weight": 10, "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
 	{"name": "Echo Core",            "category": "Identity",      "color": Color(0.5, 0.5, 1.0),  "desc": "Copies the nearest powered-up core",                       "index": 19,  "weight": 1,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3},
 	{"name": "Data Leech Core",      "category": "Identity",      "color": Color(0.6, 0.0, 0.2),  "desc": "+2 Integrity on hit",                                      "index": 22,  "weight": 10, "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
-	{"name": "Virus Core",       "category": "Identity",      "color": Color(0.1, 0.75, 0.3),  "desc": "Hit → 1 Antivirus stack\n(1 dmg/s, 3s, stackable)",       "index": 160, "weight": 9,  "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
+	{"name": "Virus Core",       "category": "Identity",      "color": Color(0.1, 0.75, 0.3),  "desc": "Hit → 1 Virus stack\n(1 dmg/s, 3s, stackable)",       "index": 160, "weight": 9,  "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
 	{"name": "Decay Core",           "category": "Identity",      "color": Color(0.5, 0.3, 0.0),  "desc": "Hit → 1 Decay stack (max 3)\n5% slow/stack; death: 2 dmg/stack","index": 161, "weight": 8,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
 	{"name": "Static Core",          "category": "Identity",      "color": Color(0.8, 0.8, 0.2),  "desc": "Hit → slow 40% for 0.5s\nGlitched target: 1s instead",     "index": 162, "weight": 8,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
 	{"name": "Ricochet Core",        "category": "Identity",      "color": Color(0.45, 0.1, 0.9),  "desc": "Duvar sekmesi → +%5 hız (maks +%30)\nHer 10 hız = +1 hasar; düşmana çarpınca sıfır", "index": 163, "weight": 8,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
@@ -2732,8 +2739,8 @@ func _build_all_upgrades() -> void:
 	# Utility — Lv1
 	{"name": "Bounce Mastery",       "category": "Utility",       "color": Color(0.45, 0.1, 0.9), "desc": "Ricochet Strike bonusu: +1\n(taban 4 → 6)",                "index": 133, "weight": 6,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [114]},
 	{"name": "Backstab Protocol",    "category": "Utility",       "color": Color(0.15, 0.55, 0.35),"desc": "Kuzey duvar sekmesi: sonraki vuruş\n+%25 daha fazla (taban ×1.5)",  "index": 158, "weight": 6,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
-	{"name": "Stack Overflow",       "category": "Utility",       "color": Color(0.1, 0.8, 0.35),  "desc": "Antivirus stack cap +1\n(taban 3 → 4)",                    "index": 148, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [160]},
-	{"name": "Memory Leak",          "category": "Utility",       "color": Color(0.05, 0.65, 0.3), "desc": "Antivirus süresi +1 saniye\n(taban 5s → 6s)",              "index": 150, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [160]},
+	{"name": "Stack Overflow",       "category": "Utility",       "color": Color(0.1, 0.8, 0.35),  "desc": "Virus stack cap +1\n(taban 3 → 4)",                    "index": 148, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [160]},
+	{"name": "Memory Leak",          "category": "Utility",       "color": Color(0.05, 0.65, 0.3), "desc": "Virus süresi +1 saniye\n(taban 5s → 6s)",              "index": 150, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [160]},
 	{"name": "Cascade Delete",       "category": "Utility",       "color": Color(0.1, 0.7, 0.45),  "desc": "Virus isabeti en yakın düşmana yayılır\nLv1: 75px/1, Lv2: 100px/1, Lv3: 125px/2 düşman", "index": 152, "weight": 6,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [160]},
 	# Utility — Lv2
 	{"name": "Pinball Protocol",     "category": "Utility",       "color": Color(0.4, 0.1, 0.95), "desc": "Gereken sekme -1 (pierce kazanmak için)\nLv1: 5, Lv2: 4, Lv3: 3 sekme", "index": 134, "weight": 5,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2, "requires": [163]},
@@ -2744,7 +2751,7 @@ func _build_all_upgrades() -> void:
 	{"name": "Ricochet Strike",      "category": "Individuality", "color": Color(0.5, 0.2, 0.9),  "desc": "Each wall bounce in flight:\nnext hit +4 dmg",             "index": 114, "weight": 8,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [163]},
 	{"name": "Rogue's Instinct",     "category": "Individuality", "color": Color(0.6, 0.15, 0.4), "desc": "Enemy purified:\n+1 Integrity",                            "index": 145, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
 	{"name": "Data Siphon",          "category": "Individuality", "color": Color(0.6, 0.0, 0.35), "desc": "Data Leech heals +1 extra\nwhen target has Decay stacks",        "index": 121, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [22, 161]},
-	{"name": "Viral Load",           "category": "Individuality", "color": Color(0.15, 0.7, 0.4),  "desc": "Glitched target receives\n2× Antivirus stacks",            "index": 149, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [160]},
+	{"name": "Viral Load",           "category": "Individuality", "color": Color(0.15, 0.7, 0.4),  "desc": "Glitched target receives\n2× Virus stacks",            "index": 149, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [160]},
 	# Individuality — Lv2
 	{"name": "Shadow Strike",        "category": "Individuality", "color": Color(0.3, 0.0, 0.5),  "desc": "Sağ/sol duvar sekmesi sonrası\nilk vuruş: ×1.5 hasar",                "index": 116, "weight": 5,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
 	{"name": "System Overload",      "category": "Individuality", "color": Color(0.85, 0.1, 0.7), "desc": "5+ Glitched enemies alive:\nall your dmg +20%",             "index": 126, "weight": 5,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
@@ -2754,18 +2761,18 @@ func _build_all_upgrades() -> void:
 	# Individuality — Lv3
 	{"name": "Circuit Breaker",      "category": "Individuality", "color": Color(0.25, 0.75, 0.95),"desc": "Every 25th hit: all enemies\nin the Yard Glitched for 3s", "index": 143, "weight": 3,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3},
 	{"name": "Zero Day",             "category": "Individuality", "color": Color(0.0, 0.85, 0.4),  "desc": "Glitch'li düşmana Virus uygulanınca\nmevcut stack ×2 olur",   "index": 154, "weight": 3,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3, "requires": [160]},
-	{"name": "Kernel Panic",         "category": "Individuality", "color": Color(0.05, 0.9, 0.35), "desc": "Each Antivirus tick:\n5% chance to Glitch target",         "index": 155, "weight": 3,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3, "requires": [160]},
+	{"name": "Kernel Panic",         "category": "Individuality", "color": Color(0.05, 0.9, 0.35), "desc": "Each Virus tick:\n5% chance to Glitch target",         "index": 155, "weight": 3,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3, "requires": [160]},
 	# Calamity
 	{"name": "Data Storm",           "category": "Calamity",      "color": Color(0.7, 0.0, 0.8),  "desc": "All [b]Glitched[/b] enemies in the Yard are hit\nby a corruption burst for 10 dmg, clearing Glitch",             "index": 129, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 3, "requires_any": [16, 192, 197, 214]},
 	{"name": "Backdoor",             "category": "Calamity",      "color": Color(0.6, 0.0, 0.7),  "desc": "All enemies in the Yard\nbecome [b]Glitched[/b] for 3s",                  "index": 130, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
 	{"name": "Bounce Barrage",       "category": "Calamity",      "color": Color(0.35, 0.0, 0.9),  "desc": "Core Speed ×3 for 5s",                                   "index": 138, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
 	{"name": "Mirror Image",         "category": "Calamity",      "color": Color(0.2, 0.65, 0.9),  "desc": "Grants 2 bonus cores.\nUnused ones vanish after 25s",                          "index": 144, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
-	{"name": "Systemic Failure",     "category": "Calamity",      "color": Color(0.0, 0.7, 0.35),  "desc": "All enemies in the Yard\nget 2× Antivirus stacks",        "index": 156, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
+	{"name": "Systemic Failure",     "category": "Calamity",      "color": Color(0.0, 0.7, 0.35),  "desc": "All enemies in the Yard\nget max [b]Virus[/b] stacks",        "index": 156, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
 	# ── Cyclone Connected Cores (iç yörünge) ─────────────────────────────────
 	{"name": "Glitch Pulse Core",    "category": "Identity",      "color": Color(0.8, 0.0, 0.8),   "desc": "Her 4s: 80px içinde 1 düşmana\nGlitch uygular",                 "index": 192, "weight": 5, "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
 	{"name": "Shadow Core",          "category": "Identity",      "color": Color(0.2, 0.05, 0.4),  "desc": "Dash sonrası 3s:\n50px çevresine 1 hasar/s",      "index": 193, "weight": 4, "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
 	{"name": "Data Drain Core",      "category": "Identity",      "color": Color(0.6, 0.0, 0.25),  "desc": "Glitch'li düşman 60px içindeyse\nher 1s: +1 HP",                 "index": 194, "weight": 5, "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
-	{"name": "Virus Beacon Core",    "category": "Identity",      "color": Color(0.1, 0.75, 0.3),  "desc": "Antivirus'lü düşman 80px'te ölürse\n3s: 100px'e 1 stack yayar", "index": 195, "weight": 4, "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
+	{"name": "Virus Beacon Core",    "category": "Identity",      "color": Color(0.1, 0.75, 0.3),  "desc": "Virus'lü düşman 80px'te ölürse\n3s: 100px'e 1 stack yayar", "index": 195, "weight": 4, "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
 	{"name": "Rogue's Eye Core",     "category": "Identity",      "color": Color(0.9, 0.6, 0.1),   "desc": "Her 7s: en yakın düşmanı işaretle\n(3s, %10 fazla hasar alır)",  "index": 196, "weight": 4, "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
 	{"name": "Circuit Overload Core","category": "Identity",      "color": Color(0.25, 0.75, 0.95),"desc": "Circuit Breaker tetiklenince\n3s: 90px çevresine sürekli Glitch",  "index": 197, "weight": 3, "rarity": "epic",      "chars": ["cyclone"], "min_level": 3},
 	# Identity — yeni Core'lar
@@ -2773,10 +2780,9 @@ func _build_all_upgrades() -> void:
 	{"name": "Spike Core",     "category": "Identity",      "color": Color(0.5, 0.15, 0.0), "desc": "İsabet: hedefte 3 Decay stack varsa\nanında Decay patlaması tetikler", "index": 213, "weight": 6,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
 	{"name": "Leech Nova Core","category": "Identity",      "color": Color(0.6, 0.0, 0.3),  "desc": "Öldürünce: +2 HP\n80px çevresine 1s Glitch",                        "index": 214, "weight": 4,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3},
 	# Calamity — Rare/Epic
-	{"name": "Glitch Bomb",    "category": "Calamity",      "color": Color(0.75, 0.0, 0.85),"desc": "Seçilen 120px alana 4s Glitch uygular",                              "index": 215, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 3},
-	{"name": "System Crash",   "category": "Calamity",      "color": Color(0.8, 0.1, 0.6),  "desc": "Tüm Glitch'li düşmanlar\nmevcut HP'nin %%30'unu kaybeder",          "index": 216, "weight": 4,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3},
-	{"name": "Virus Rain", "category": "Calamity",      "color": Color(0.1, 0.85, 0.4),  "desc": "3s boyunca her 0.5s:\ntüm düşmanlara 1 Antivirus stack",           "index": 217, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 3},
-	{"name": "Decay Field",    "category": "Calamity",      "color": Color(0.45, 0.2, 0.0),  "desc": "5s: seçilen 100px alana aura\ngiren düşmanlar her 1s'de 1 Decay alır","index": 218, "weight": 4,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3},
+	{"name": "Glitch Bomb",    "category": "Calamity",      "color": Color(0.75, 0.0, 0.85),"desc": "Leaves a zone on the ground.\nEnemies passing through become [b]Glitched[/b]",                              "index": 215, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 3},
+	{"name": "System Crash",   "category": "Calamity",      "color": Color(0.8, 0.1, 0.6),  "desc": "All [b]Glitched[/b] enemies in the Yard\nlose 30% of their current HP",          "index": 216, "weight": 4,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3, "requires_any": [16, 192, 197, 214]},
+	{"name": "Decay Field",    "category": "Calamity",      "color": Color(0.45, 0.2, 0.0),  "desc": "Creates a decay zone for 5s.\nEnemies inside gain 1 [b]Decay[/b] stack every second","index": 218, "weight": 4,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3},
 	# Individuality
 	{"name": "Decay Harvest",       "category": "Individuality", "color": Color(0.5, 0.25, 0.0), "desc": "Decay patlaması tetiklenince:\n+2 HP kazan",                    "index": 219, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [161]},
 	{"name": "Ghost Step",          "category": "Individuality", "color": Color(0.3, 0.8, 0.9),  "desc": "Dash sonrası 1.5s hasar bağışıklığı\n(5s bekleme süresi)",     "index": 220, "weight": 5,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
@@ -3397,19 +3403,25 @@ func _vfx_data_storm_burst(subject: Node) -> void:
 	subject.set("is_glitched", false)
 
 func _activate_backdoor() -> void:
-	_vfx_backdoor_engine()
+	var _apply := func(subject):
+		if subject.has_method("apply_glitch"):
+			subject.apply_glitch(3.0)
+	_vfx_yard_engine(_apply, Color(0.75, 0.1, 0.9, 1.0), Color(0.6, 0.0, 0.7, 0.4))
 
-# Backdoor'un "The Yard Engine" VFX'i — sahanın merkezinde bir cihaz belirip (starting
-# klasörü), son 2 frame'de sahadaki düşmanlara elektrik çizgileri göndererek gerçek
-# Glitch debuff'ını uyguluyor, ardından cihaz kaybolup gidiyor (ending klasörü). Sprite
-# yoksa eski davranışa (anında Glitch + ekran flaşı) düşüyor, crash yok.
-func _vfx_backdoor_engine() -> void:
+# "The Yard Engine" ortak VFX'i (Backdoor + Systemic Failure) — sahanın merkezinde bir
+# cihaz belirip (starting klasörü), son 2 frame'de sahadaki (canlı, tam Avlu) düşmanlara
+# elektrik çizgileri göndererek `apply_fn`'i (kartın gerçek etkisi) uyguluyor, ardından
+# cihaz kaybolup gidiyor (ending klasörü). Sprite yoksa eski davranışa (etkiyi anında
+# uygula + ekran flaşı) düşüyor, crash yok.
+# filter_fn geçerliyse sadece true dönen düşmanlar etkilenir; to_engine=true ise çizgiler
+# düşmandan cihaza doğru gider (System Crash).
+func _vfx_yard_engine(apply_fn: Callable, bolt_color: Color, fallback_flash: Color, filter_fn: Callable = Callable(), to_engine: bool = false) -> void:
 	var yard_center := Vector2(1152, 667)
 	if not ResourceLoader.exists("res://assets/VFX/theYardEngine/starting/frame_000.png"):
-		for subject in get_tree().get_nodes_in_group("subjects"):
-			if is_instance_valid(subject) and subject.global_position.x >= 385.0 and subject.has_method("apply_glitch"):
-				subject.apply_glitch(3.0)
-		_react_flash_screen(Color(0.6, 0.0, 0.7, 0.4))
+		for subject in _yard_subjects():
+			if filter_fn.is_valid() and not filter_fn.call(subject): continue
+			apply_fn.call(subject)
+		_react_flash_screen(fallback_flash)
 		return
 
 	var engine := AnimatedSprite2D.new()
@@ -3439,13 +3451,14 @@ func _vfx_backdoor_engine() -> void:
 
 	var _bolts_fired := false
 	var _fire_bolts := func():
-		for subject in get_tree().get_nodes_in_group("subjects"):
-			if not is_instance_valid(subject): continue
-			var _p: Vector2 = subject.global_position
-			if _p.x < 385.0 or _p.x > 1920.0 or _p.y < 255.0 or _p.y > 1080.0: continue
-			if subject.has_method("apply_glitch"):
-				_vfx_backdoor_bolt(yard_center, subject.global_position)
-				subject.apply_glitch(3.0)
+		_screen_shake_strong()
+		for subject in _yard_subjects():
+			if filter_fn.is_valid() and not filter_fn.call(subject): continue
+			if to_engine:
+				_vfx_engine_bolt(subject.global_position, yard_center, bolt_color)
+			else:
+				_vfx_engine_bolt(yard_center, subject.global_position, bolt_color)
+			apply_fn.call(subject)
 	engine.frame_changed.connect(func():
 		if not _bolts_fired and is_instance_valid(engine) and engine.animation == "start" and engine.frame >= max(start_frame_count - 2, 0):
 			_bolts_fired = true
@@ -3458,11 +3471,11 @@ func _vfx_backdoor_engine() -> void:
 	await engine.animation_finished
 	if is_instance_valid(engine): engine.queue_free()
 
-# Backdoor'un cihazından hedeflenen düşmana giden zigzag elektrik çizgisi.
-func _vfx_backdoor_bolt(from_pos: Vector2, to_pos: Vector2) -> void:
+# Cihazdan hedeflenen düşmana giden zigzag elektrik çizgisi.
+func _vfx_engine_bolt(from_pos: Vector2, to_pos: Vector2, color: Color) -> void:
 	var bolt := Line2D.new()
 	bolt.width = randf_range(2.0, 4.0)
-	bolt.default_color = Color(0.75, 0.1, 0.9, 1.0)
+	bolt.default_color = color
 	bolt.z_index = 9
 	var dir := to_pos - from_pos
 	var perp_dir := Vector2(-dir.y, dir.x).normalized()
@@ -3473,8 +3486,8 @@ func _vfx_backdoor_bolt(from_pos: Vector2, to_pos: Vector2) -> void:
 		var base := from_pos.lerp(to_pos, t)
 		pts.append(base + perp_dir * randf_range(-16.0, 16.0))
 	pts.append(to_pos)
-	for p in pts:
-		bolt.add_point(p)
+	for pt in pts:
+		bolt.add_point(pt)
 	add_child(bolt)
 	var btw := create_tween()
 	btw.tween_interval(randf_range(0.0, 0.05))
@@ -3484,10 +3497,10 @@ func _vfx_backdoor_bolt(from_pos: Vector2, to_pos: Vector2) -> void:
 func _activate_systemic_failure() -> void:
 	var p := get_node_or_null("Player")
 	var _cap: int = 3 + (p.stack_overflow_level if (p and p.get("stack_overflow_level")) else 0)
-	for subject in get_tree().get_nodes_in_group("subjects"):
-		if is_instance_valid(subject) and subject.global_position.x >= 385.0 and subject.has_method("apply_antivirus"):
-			subject.apply_antivirus(subject.antivirus_stacks if subject.get("antivirus_stacks") and subject.antivirus_stacks > 0 else _cap)
-	_react_flash_screen(Color(0.05, 0.9, 0.35, 0.45))
+	var _apply := func(subject):
+		if subject.has_method("apply_antivirus"):
+			subject.apply_antivirus(_cap)
+	_vfx_yard_engine(_apply, Color(0.1, 0.9, 0.4, 1.0), Color(0.05, 0.9, 0.35, 0.45))
 
 func _activate_bounce_barrage() -> void:
 	var p := get_node_or_null("Player")
@@ -3954,65 +3967,100 @@ func _spawn_siege_rain_impact(pos: Vector2, dmg: int, radius: float) -> void:
 		if pos.distance_to(s.global_position) <= radius:
 			s.take_damage(dmg, false)
 
+# Sahadaki düşmanlar "subjects" grubunda ("enemies" diye bir grup hiç yok). Sadece canlı
+# ve tam Avlu dikdörtgeni (x:385-1920, y:255-1080) içindekileri döndürür.
+func _yard_subjects() -> Array:
+	return get_tree().get_nodes_in_group("subjects").filter(func(s):
+		if not is_instance_valid(s) or s.get("is_dead"): return false
+		var sp: Vector2 = s.global_position
+		return sp.x >= 385.0 and sp.x <= 1920.0 and sp.y >= 255.0 and sp.y <= 1080.0
+	)
+
 func _activate_glitch_bomb(pos: Vector2) -> void:
-	for e in get_tree().get_nodes_in_group("enemies"):
-		if not is_instance_valid(e): continue
-		if e.global_position.distance_to(pos) <= 120.0:
-			if e.has_method("apply_glitch"): e.apply_glitch(4.0)
-	_react_flash_screen(Color(0.75, 0.0, 0.85, 0.2))
+	# Flame Zone deseni: yerde kaldığı sürece (~3sn) üstünden geçen düşmana Glitch uygular
+	_vfx_glitch_bomb(pos)
+	var ticks := 6
+	for _t in range(ticks):
+		for e in _yard_subjects():
+			if e.global_position.distance_to(pos) <= 84.0:
+				if e.has_method("apply_glitch"): e.apply_glitch(1.5)
+		await get_tree().create_timer(0.5, false).timeout
+
+func _vfx_glitch_bomb(pos: Vector2) -> void:
+	if not ResourceLoader.exists("res://assets/VFX/calamitys/glitchBomb/frame_000.png"):
+		_react_flash_screen(Color(0.75, 0.0, 0.85, 0.2))
+		return
+	var z := AnimatedSprite2D.new()
+	z.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	z.z_index = -1
+	z.global_position = pos
+	var sf := SpriteFrames.new()
+	if sf.has_animation("default"): sf.remove_animation("default")
+	sf.add_animation("zone")
+	sf.set_animation_speed("zone", 12.0)
+	sf.set_animation_loop("zone", false)
+	var i := 0
+	while ResourceLoader.exists("res://assets/VFX/calamitys/glitchBomb/frame_%03d.png" % i):
+		sf.add_frame("zone", load("res://assets/VFX/calamitys/glitchBomb/frame_%03d.png" % i))
+		i += 1
+	# ilk yarı ileri, ardından aynı kareler geriye doğru (ping-pong)
+	for j in range(i - 1, -1, -1):
+		sf.add_frame("zone", sf.get_frame_texture("zone", j))
+	z.sprite_frames = sf
+	add_child(z)
+	z.play("zone")
+	await z.animation_finished
+	if is_instance_valid(z): z.queue_free()
 
 func _activate_system_crash() -> void:
-	for e in get_tree().get_nodes_in_group("enemies"):
-		if not is_instance_valid(e): continue
-		if e.get("is_glitched") and e.is_glitched:
-			var loss := int(e.health * 0.3)
-			e.take_damage(maxi(loss, 1), false)
-	_react_flash_screen(Color(0.8, 0.1, 0.6, 0.25))
-
-func _activate_antivirus_rain() -> void:
-	var ticks := 6  # 3s × her 0.5s = 6 tick
-	var tick_index := 0
-	var _do_tick := func():
-		for e in get_tree().get_nodes_in_group("enemies"):
-			if not is_instance_valid(e): continue
-			if e.has_method("apply_antivirus"): e.apply_antivirus()
-	_do_tick.call()
-	for i in range(1, ticks):
-		await get_tree().create_timer(0.5, false).timeout
-		_do_tick.call()
-	_react_flash_screen(Color(0.1, 0.85, 0.4, 0.2))
+	# Boss'lar Glitch'e bağışık (is_glitched hiç true olmaz) → otomatik etkilenmez
+	var _is_glitched := func(e) -> bool:
+		return e.get("is_glitched") == true
+	var _apply := func(e):
+		var loss := int(e.health * 0.3)
+		e.take_damage(maxi(loss, 1), false)
+		if e.has_method("_react_flash"):
+			e._react_flash(Color(0.85, 0.1, 0.65, 1.0))
+	# Çizgiler Glitchli düşmanlardan makineye doğru akar
+	_vfx_yard_engine(_apply, Color(0.85, 0.1, 0.65, 1.0), Color(0.8, 0.1, 0.6, 0.25), _is_glitched, true)
 
 func _activate_decay_field(pos: Vector2) -> void:
 	var field_duration := 5.0
 	var field_radius := 100.0
-	var zone := ColorRect.new()
+	# Geçici görsel: daire (gerçek sprite gelince değiştirilecek). Cesetlerin ve düşmanların altında.
+	var zone := Polygon2D.new()
+	var pts := PackedVector2Array()
+	for k in range(48):
+		var ang := TAU * float(k) / 48.0
+		pts.append(Vector2(cos(ang), sin(ang)) * field_radius)
+	zone.polygon = pts
 	zone.color = Color(0.45, 0.2, 0.0, 0.3)
-	zone.size = Vector2(field_radius * 2, field_radius * 2)
-	zone.position = pos - Vector2(field_radius, field_radius)
-	zone.z_index = 1
+	zone.global_position = pos
+	zone.z_index = -1
 	add_child(zone)
 	var elapsed := 0.0
 	while elapsed < field_duration:
+		# İlk tick hemen (açıldığı anda üstündekiler beklemesin), sonra her 1s
+		for e in _yard_subjects():
+			if e.global_position.distance_to(pos) <= field_radius:
+				if e.has_method("apply_decay"): e.apply_decay()
 		await get_tree().create_timer(1.0, false).timeout
 		elapsed += 1.0
 		if not is_instance_valid(zone): break
-		for e in get_tree().get_nodes_in_group("enemies"):
-			if not is_instance_valid(e): continue
-			if e.global_position.distance_to(pos) <= field_radius:
-				if e.has_method("apply_decay"): e.apply_decay()
 	if is_instance_valid(zone): zone.queue_free()
 
 
 func _activate_wildfire() -> void:
 	# Tüm Yanan düşmanlar patlar: 10 hasar + 2 yakın düşmana yangın yayar
-	var enemies := get_tree().get_nodes_in_group("enemies")
+	var enemies := _yard_subjects()
 	for e in enemies:
 		if e.get("is_burning") and e.is_burning:
 			e.take_damage(10, false)
 			var spread_count := 0
 			for other in enemies:
-				if other == e or spread_count >= 2:
+				if spread_count >= 2:
 					break
+				if other == e: continue
 				if other.global_position.distance_to(e.global_position) <= 120.0:
 					other.apply_burn()
 					spread_count += 1
@@ -4758,7 +4806,7 @@ func _process(delta: float) -> void:
 		elif calamity == "🌀":       _aim_radius = 150.0   # Gravitational Force
 		elif calamity == "🌋":       _aim_radius = 84.0    # Volcanic Rift (sprite boyutuna eşitlendi)
 		elif calamity == "🌧️":      _aim_radius = 170.0   # Siege Rain (sapma alanı)
-		elif calamity == "💣":       _aim_radius = 120.0   # Glitch Bomb
+		elif calamity == "💣":       _aim_radius = 84.0   # Glitch Bomb
 		elif calamity == "☠️":      _aim_radius = 100.0   # Decay Field
 		elif calamity == "🏚️":      _aim_radius = 130.0   # Rampart Collapse
 		elif calamity == "🕳️":      _aim_radius = 70.0    # WormHole
@@ -4777,8 +4825,6 @@ func _process(delta: float) -> void:
 				if _fd == Vector2.ZERO: _fd = Vector2(1, 0)
 				$UI/CalamityCircle.position = _wp.global_position + _fd.normalized() * 120.0
 		elif calamity == "💻💥":  # System Crash — hedef yok
-			$UI/CalamityCircle.visible = false
-		elif calamity == "🦠":  # Virus Rain — hedef yok
 			$UI/CalamityCircle.visible = false
 		$UI/CalamityCircle.queue_redraw()
 	else:
@@ -5177,10 +5223,6 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 	elif index == 216:  # System Crash
 		if calamity_slots.size() < max_calamity_slots:
 			calamity_slots.append("💻💥")
-			update_ui()
-	elif index == 217:  # Virus Rain
-		if calamity_slots.size() < max_calamity_slots:
-			calamity_slots.append("🦠")
 			update_ui()
 	elif index == 218:  # Decay Field
 		if calamity_slots.size() < max_calamity_slots:

@@ -1450,6 +1450,146 @@ session'da tam review edilmişti).
       canlı takip — oyuncu hareket etse bile hedefi güncelliyor) sonda hızla soluyor. 2
       core için hafif gecikmeli (0.12sn arayla) iki kez tetikleniyor.
 
+- [x] **Systemic Failure (156) — MEKANİK/AÇIKLAMA DÜZELTMESİ (kullanıcı kararı, 2026-09-19)**:
+      açıklama "2× Antivirus stack" diyordu ama kod stack'i olmayan düşmana direkt cap
+      (3 + `stack_overflow_level`) veriyor, stack'liye mevcut miktarı ekleyip cap'e kırpıyordu —
+      "2×" sadece kısmen doğruydu. Kullanıcı kararı: **herkese maksimum stack** — kod
+      `apply_antivirus(_cap)` olarak sadeleşti, açıklama "All enemies in the Yard get max
+      Antivirus stacks" / TR "...maksimum Antivirus stack'i alır" (Antivirus bold, glossary'e
+      bağlı). Ek bug'lar: `is_dead` filtresi yoktu (cesetlere de Antivirus ikonu takılıyordu)
+      ve Y sınırı eksikti (Backdoor'daki aynı eksik) → ikisi de eklendi (tam Avlu dikdörtgeni
+      x:385-1920, y:255-1080, canlı düşmanlar). Requires gerekmiyor (Antivirus'un kendi
+      kaynağı). Sprite: kart art'ı mevcut (`systemic_failure_art.png`), oyun içi VFX sadece
+      genel ekran flaşı — özel sprite yok.
+
+      **İsimlendirme düzeltmesi (kullanıcı, aynı gün)**: "Antivirus" ismi eski sistemden
+      (düşmanları kurtarma mekaniği — artık yok) kalmaydı. Kart açıklamalarındaki ve
+      glossary'deki tüm "Antivirus" ifadeleri **"Virus"** yapıldı (`game_scene.gd` 8 desc:
+      Virus Core, Stack Overflow, Memory Leak, Viral Load, Kernel Panic, Systemic Failure,
+      Virus Beacon Core TR, Virus Rain; `lang.gd`: `STATUS_KEYWORDS` + EN/TR glossary +
+      Systemic Failure TR). Kod tarafı (`apply_antivirus`, `antivirus_stacks`,
+      `is_antivirused` vb.) dokunulmadı — sadece oyuncuya görünen metinler. Debuff ikonu
+      zaten "virus"tu. **Yeni metin yazarken bu statüye "Virus" de.**
+
+- [x] **Glitch Bomb (215) — KRİTİK BUG FIX (2026-09-19)**: `_activate_glitch_bomb()`
+      düşmanları `get_nodes_in_group("enemies")` ile arıyordu ama **oyunda hiçbir düşman
+      "enemies" grubunda değil** (hepsi `"subjects"` — `.tscn`/`add_to_group` taraması ile
+      doğrulandı). Yani `has_method` düzeltmesinden SONRA bile kart hiçbir zaman çalışmıyordu
+      (boş liste). Aynı yanlış grup adı **5 Calamity'de** vardı: **Glitch Bomb, System Crash,
+      Virus Rain, Decay Field ve Wildfire (Leila)** — hepsi tamamen ölüydü. Yeni
+      `_yard_subjects()` helper'ı eklendi (`subjects` grubu, canlı, tam Avlu dikdörtgeni
+      x:385-1920 y:255-1080) ve 5 fonksiyon bunu kullanıyor. **Wildfire'da ek bug**:
+      yayılma döngüsünde `if other == e or spread_count >= 2: break` — ilk eleman kendisiyse
+      döngü hemen kırılıp hiç yayılma olmuyordu → `other == e: continue`, `spread_count >= 2:
+      break` olarak ayrıldı. Açıklama: EN alanı Türkçe + "120px" yazıyordu → "Enemies in the
+      targeted area become Glitched for 4s" / TR "Hedeflenen alandaki düşmanlar 4sn boyunca
+      Glitched olur" (px kaldırıldı). Requires gerekmiyor (Glitch'in kaynağı). Sprite: kart
+      art'ı mevcut (`glitch_bomb_art.png`), VFX sadece ekran flaşı. **NOT**: System Crash /
+      Virus Rain / Decay Field / Wildfire'ın implementasyonu artık çalışıyor ama kart
+      review'leri (açıklama/requires/VFX) sırası geldiğinde yapılacak — Wildfire Leila'nın
+      Calamity listesinde hiç incelenmemişti, sıra bittikten sonra ele alınmalı.
+
+      **VFX: "The Yard Engine" ortaklaştırıldı (kullanıcı isteği, 2026-09-19)**: Backdoor'un
+      makine VFX'i Systemic Failure'a da bağlandı. `_vfx_backdoor_engine()` /
+      `_vfx_backdoor_bolt()` genelleştirilip `_vfx_yard_engine(apply_fn, bolt_color,
+      fallback_flash)` / `_vfx_engine_bolt(from, to, color)` oldu — cihaz beliriyor, son 2
+      frame'de canlı+Avlu içi düşmanlara çizgi gidip `apply_fn` (kartın gerçek etkisi) o an
+      uygulanıyor, sonra "ending" oynuyor. Backdoor: mor çizgiler + Glitch 3sn; Systemic
+      Failure: **yeşil** çizgiler + max Virus stack. Sprite yoksa etkiyi anında uygulayıp
+      ekran flaşına düşüyor. İleride benzer "alan geneli" kartlar (Virus Rain vb.) aynı
+      helper'ı kullanabilir. Debug slotu: "🧪".
+      **Shake (kullanıcı isteği, aynı gün)**: çizgilerin çıktığı anda (`_fire_bolts`)
+      `_screen_shake_small()` çağrılıyor — ortak helper'da olduğu için hem Backdoor hem
+      Systemic Failure'da çalışıyor. Yoğun bulunursa `screen_shake_heavy()`/daha hafif ayar
+      denenebilir.
+      **Güçlendirme + hasar geri bildirimi (kullanıcı isteği, aynı gün)**: `_screen_shake_
+      small` (±1px) ve `screen_shake_heavy` (±3px) yetersiz kaldı → yeni `_screen_shake_
+      strong()` eklendi (±8px, 8 adım azalan genlik, ~0.4sn) ve çizgi anında o kullanılıyor.
+      Ayrıca `base_enemy.gd::_process_antivirus` her Virus tick'inde (0.5sn'de bir hasar)
+      `_react_flash(Color(0.2, 1.0, 0.45))` (yeşil) çağırıyor — yanma gibi düşman hasar
+      aldığını gösteren görsel geri bildirim. Bu, TÜM Virus kaynaklarında (Virus Core,
+      Virus Rain vb.) geçerli, sadece Systemic Failure'da değil.
+
+      **MEKANİK DEĞİŞİKLİĞİ — Glitch Bomb artık kalıcı yer alanı (kullanıcı kararı, 2026-09-19)**:
+      Flame Zone deseni: `_activate_glitch_bomb(pos)` ~3sn (6 tick x 0.5s, `create_timer(0.5,false)`)
+      boyunca 84px içindeki canlı Avlu düşmanlarına `apply_glitch(1.5)` uyguluyor (üstünden geçen
+      glitch'lenir). VFX: `_vfx_glitch_bomb(pos)` — `assets/VFX/calamitys/glitchBomb/` (37 frame,
+      168x168, 12fps, non-loop, z_index=-1, bitince queue_free; sprite yoksa eski ekran flaşı).
+      `_aim_radius` 120->84, EN/TR açıklamalar güncellendi.
+
+### BUG FIX: Virus'tan ölen düşmanlar yürüme animasyonunda takılı kalıyordu (2026-09-19)
+`base_enemy.gd::_physics_process` sırası `_process_antivirus(delta)` → `_enemy_process(delta)`
+idi. Virus DOT'u düşmanı öldürünce (`die()` → ölüm animasyonu) AYNI frame'de hemen
+ardından `_enemy_process()` çalışıp `_update_walk_anim()` ile yürüme animasyonunu tekrar
+oynatıyor, ölüm animasyonunu eziyordu (düşman düşüp ölmüyor, yürür pozda kalıyordu).
+Fix: `_process_antivirus(delta)` sonrası `if is_dead: return`.
+
+### BUG FIX: Glitch'li düşmanlar cesetlere saldırıyordu (kullanıcı fark etti, 2026-09-19)
+Glitch'li düşmanlar (`is_glitched`) oyuncu yerine `subjects` grubundaki EN YAKIN düşmana
+saldırıyor — ama hedef döngüsünde `is_dead` kontrolü yoktu, cesetler (kalıcı, grupta
+kalıyor) da aday olduğu için ölü düşmanlara gidip vuruyorlardı. 7 dosyada (`subject`,
+`armored_subject`, `heavy_subject`, `frantic_subject`, `cyber_shooter`, `cyber_rifle`,
+`cyber_shotgun`) aynı döngü `if z == self or not is_instance_valid(z) or z.get("is_dead"):
+continue` olarak düzeltildi. Boss'lar (`nyx_09`, `s_miler_79`) bu döngüyü kullanmıyor.
+
+### Fiziksel Vuruş Geri Bildirimi + Glitchli Silahlı Düşman Davranışı (2026-09-19)
+- **Fiziksel vuruş flaşı**: `take_damage(amount, from_ally, kill_cause, physical: bool = false)` —
+  4. parametre eklendi (`base_enemy.gd`, `melee_enemy.gd`, `cyber_404.gd`, `nyx_09.gd`,
+  `s_miler_79.gd`; **player.gd'nin `take_damage`'i hâlâ tek argüman alır — oyuncuya
+  `physical` gönderme, crash eder**). `physical=true` iken düşman 0.08sn beyaz
+  (`Color(2,2,2)`) parlar. Top isabeti (`ball.gd` ana vuruş + Connected Core dart-strike) ve
+  glitchli düşmanın düşmana vuruşu `physical=true` gönderir; element/Calamity hasarları
+  göndermez (kendi renkleri kalır, Virus yeşili aynen). Boss'lar `_react_flash`'a sahip
+  olmadığı için kendi `_physical_flash()` yardımcılarını kullanır.
+- `_react_flash(color, dur=0.15)` artık `_flash_id` sayacıyla çakışan flaşlarda sadece SON
+  flaşın rengi sıfırlamasına izin verir; timer `process_always=false`.
+- **Glitchli silahlı düşmanlar (cyber_shooter/rifle/shotgun)**: mermi atmaz. Nedeni: mermi
+  (`bullet.gd`) sadece `player`/`allies` grubuna vuruyor, `subjects`'e hasar vermiyordu ve
+  Glitch süresi (Glitch Bomb tick'i 1.5sn) atış aralığından (3sn) kısaydı. Yeni davranış
+  `ranged_enemy.gd::_glitch_melee(delta)`: en yakın canlı düşmana yürür, 40px'te saniyede bir
+  3 fiziksel hasar (sprite'ı hedefe 8px atılıp geri döner — saldırı animasyonu yok). Üç
+  `_enemy_process` başında `if is_glitched: _glitch_melee(delta); return`.
+- **AÇIK İŞ (kullanıcı, 2026-09-19)**: silahlı düşmanlarla ilgili Glitch'ten bağımsız bazı
+  sorunlar var, kullanıcı henüz detay vermedi — sonraki turda sorulacak/bakılacak.
+- Test havuzu override'ı (`pool = [cyber...]`) kaldırıldı; gerekirse `game_scene.gd`'de
+  düşman havuzunun (`match pool[randi() % pool.size()]` öncesi) yeniden eklenebilir.
+
+- [x] **System Crash (216) — 2026-09-19**: mekanik doğru (Avlu'daki Glitchli her düşman mevcut
+      HP'sinin %30'unu kaybeder, en az 1). Boss'lar zaten etkilenmez: `nyx_09`/`s_miler_79`'da
+      `apply_glitch` yok, `cyber_404.apply_glitch()` bilerek `return` ediyor, yani `is_glitched`
+      hiç true olmaz. Dil: EN alanı Türkçe + `%%30` idi → "All Glitched enemies in the Yard
+      lose 30% of their current HP" ("in the Yard" korundu, "into" hareket anlamı taşıdığı için
+      kullanılmıyor), `lang.gd`'ye TR (216) eklendi. `requires_any: [16, 192, 197, 214]` eklendi
+      (Data Storm ile aynı Glitch kaynakları). **VFX**: "The Yard Engine" yeniden kullanıldı,
+      `_vfx_yard_engine()`'e `filter_fn` (sadece Glitchli düşmanlar) ve `to_engine` (çizgiler
+      düşmandan makineye akar) parametreleri eklendi; hasar çizgilerle aynı anda uygulanır,
+      isabet alan düşman macenta flaş alır. **İKON**: `💻💥` iki glyph (WormHole'daki sorun),
+      kullanıcı ileride özel ikon çizdirecek, şimdilik dokunulmadı. Debug slotları:
+      `["💣", "💻💥", "💻💥"]`.
+
+- [x] **Virus Rain (217) — KALDIRILDI (kullanıcı kararı, 2026-09-19)**: "3s boyunca her 0.5s
+      tüm düşmanlara 1 Virus stack" — stack üst sınırı (varsayılan 3) 1.5s'de doluyor, kalan
+      3 tick boşa gidiyordu ve etkisi Systemic Failure'ın (herkese anında max stack) yavaş
+      versiyonundan ibaretti; kullanıcı "gereksiz olmuş" dedi. Tüm referanslar silindi (kart
+      satırı, `_CALAMITY_DISPLAY_NAMES`, dispatch, nişan-önizleme dalı, pickup handler,
+      `_activate_antivirus_rain()`). `virus_rain_art.png` (+ `.import`) dosyası
+      `assets/upgradeCardsArt/Cyclone/calamityCards/` altında ORPHAN olarak duruyor, istenirse
+      silinebilir. Playtester notundaki "Antivirus Rain (217)" ve yukarıdaki eski satırlar
+      artık geçersiz. **Cyclone Calamity'de kalan kart: Decay Field (218).**
+
+- [~] **Decay Field (218) — KISMEN TAMAM, VFX BEKLİYOR (2026-09-19)**: mekanik doğru (5sn,
+      100px yarıçap, alandaki canlı düşmanlara `apply_decay()`; Decay: stack başına %5 kalıcı
+      yavaşlama, maks 3 stack, ölünce stack×2 hasarlı 80px patlama, Decay Amp ile 3/5/7).
+      Düzeltmeler: ilk tick artık alan açılır açılmaz (eskiden 1sn sonra), görsel kare
+      `ColorRect` yerine daire `Polygon2D` (hasar alanıyla birebir), z_index 1 → -1 (cesetlerin
+      altında), EN/TR açıklama yenilendi (`lang.gd` 218 eklendi, "Decay" bold → sözlük
+      paneli). Requires gerekmiyor (Decay'in kendi kaynağı). **Açık**: kullanıcı gerçek VFX
+      sprite'ı hazırlıyor (gelince `_activate_decay_field()` içindeki geçici `Polygon2D`
+      yerine `AnimatedSprite2D`, yarıçap görsel boyutuna eşitlenecek, `_aim_radius` ☠️ de
+      senkron). **Karar bekliyor**: Decay yavaşlaması süresiz (ölene kadar) — süreli yapılsın mı?
+      (kullanıcı düşünüyor). Bu kart bitince **Cyclone Calamity review'i tamamlanır**; sonra
+      Leila'nın Wildfire'ı (🔥💥, hiç review edilmedi) kalır.
+
 ### İlerleme — Leila Calamity (8 kart, index sırasına göre) — sprite kontrolü de dahil
 - [x] Lightning (7) — implementasyon doğru: tıklanan noktaya 100px yarıçapta 3 hasar +
       Electrified uyguluyor (`_activate_lightning()`), VFX elle çizilmiş zigzag `Line2D`

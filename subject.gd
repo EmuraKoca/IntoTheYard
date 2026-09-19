@@ -75,7 +75,7 @@ func _enemy_process(delta: float) -> void:
 		var closest = null
 		var closest_dist = 999999.0
 		for z in subjects:
-			if z == self: continue
+			if z == self or not is_instance_valid(z) or z.get("is_dead"): continue
 			var d = global_position.distance_to(z.global_position)
 			if d < closest_dist:
 				closest_dist = d
@@ -95,6 +95,9 @@ func _enemy_process(delta: float) -> void:
 	if dist < 60:
 		attack_cooldown -= delta
 		if attack_cooldown <= 0:
-			target.take_damage(3 if is_glitched else 5)
+			if is_glitched:
+				target.take_damage(3, false, "normal", true)
+			else:
+				target.take_damage(5)
 			attack_cooldown = attack_rate
 			play_punch()

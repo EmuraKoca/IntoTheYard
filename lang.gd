@@ -6,7 +6,7 @@ var locale: String = "en"   # "en" veya "tr"
 # ── Durum efekti sözlüğü (kart açıklamalarında bold geçen keyword'ler için) ───
 # Gwent tarzı: kart üzerine gelince, açıklamada geçen keyword'lerin anlamı yan
 # panelde gösterilir. Yeni bir keyword açıklamaya eklenince buraya da eklenmeli.
-const STATUS_KEYWORDS := ["Electrified", "Wet", "Burning", "Slowed", "Frozen", "Momentum", "Glitched", "Antivirus", "Decay"]
+const STATUS_KEYWORDS := ["Electrified", "Wet", "Burning", "Slowed", "Frozen", "Momentum", "Glitched", "Virus", "Decay"]
 
 # "Connected Core" keyword açıklamada geçmez, rozet üzerinden ayrıca ekleniyor
 # (bkz. game_scene.gd::_show_card_glossary çağrısı, _CONNECTED_CORE_INDICES kontrolü).
@@ -19,7 +19,7 @@ const _STATUS_GLOSSARY_EN := {
 	"Connected Core": "Cannot be launched — orbits the player permanently. Dart-strikes any enemy that comes within range for [b]3[/b] damage.",
 	"Momentum": "Represents [b]Core Speed[/b] — each stack makes your cores move faster.",
 	"Glitched": "Enemy is disoriented for a duration — deals reduced damage while attacking. Triggers glitch-based synergies from other cards.",
-	"Antivirus": "Enemy accumulates stacks that deal damage over time. Stacks and duration can grow with other cards.",
+	"Virus": "Enemy accumulates stacks that deal damage over time. Stacks and duration can grow with other cards.",
 	"Decay": "Enemy accumulates stacks (max 3) that permanently slow it, even after the effect ends.",
 }
 const _STATUS_GLOSSARY_TR := {
@@ -31,7 +31,7 @@ const _STATUS_GLOSSARY_TR := {
 	"Connected Core": "Fırlatılamaz — sürekli oyuncunun etrafında döner. Menziline giren düşmanlara [b]3[/b] hasarlık dart saldırısı yapar.",
 	"Momentum": "[b]Core Speed[/b]'i temsil eder — her stack core'ların hareket hızını artırır.",
 	"Glitched": "Düşman belirli bir süre boyunca sersemler — saldırırken daha az hasar verir. Diğer kartların glitch tabanlı sinerjilerini tetikler.",
-	"Antivirus": "Düşman zamana yayılı hasar veren stack biriktirir. Diğer kartlarla stack/süre artabilir.",
+	"Virus": "Düşman zamana yayılı hasar veren stack biriktirir. Diğer kartlarla stack/süre artabilir.",
 	"Decay": "Düşman kalıcı olarak yavaşlatan stack biriktirir (maks 3), etki bitse bile yavaşlama kalıcıdır.",
 }
 
@@ -344,6 +344,10 @@ const _DESC_TR: Dictionary = {
 	130: "Avlu'daki tüm düşmanlar 3sn boyunca\n[b]Glitched[/b] olur",
 	138: "5sn boyunca Core Hızı ×3 olur",
 	144: "2 bonus core kazandırır.\nKullanılmayanlar 25sn sonra kaybolur",
+	156: "Avlu'daki tüm düşmanlar maksimum\n[b]Virus[/b] stack'i alır",
+	215: "Yerde bir alan bırakır.\nÜstünden geçen düşmanlar\n[b]Glitched[/b] olur",
+	216: "Avlu'daki tüm [b]Glitched[/b] düşmanlar\nmevcut HP'sinin %30'unu kaybeder",
+	218: "5sn boyunca bir çürüme alanı bırakır.\nİçindeki düşmanlar her saniye 1 [b]Decay[/b] stack alır",
 	76: "Uyguladığın her benzersiz element\n→ +%1 Hareket Hızı (maks %4)",
 	85: "Her Reaksiyon → 2 HP geri kazandırır",
 	86: "Reaksiyon sonrası: düşmanın bir sonraki\ndebuff'ı 2× uzun sürer",

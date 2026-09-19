@@ -4292,3 +4292,27 @@ CYCLONE CALAMITY — kart-kart review başladı:
   (Bounce Barrage, Mirror Image, Systemic Failure, Glitch Bomb, System
   Crash, Virus Rain, Decay Field) ve bazı diğer kartlar sıradaki
   session'da ele alınacak.
+
+CYCLONE CALAMITY — devam (19.09.2026):
+
+  ✅  Bounce Barrage: ekran flaşı kaldırıldı, silah elektriklenip
+      titriyor, aktivasyonda enerji patlaması VFX'i oynuyor
+  ✅  Mirror Image: açıklama gerçeğe göre düzeltildi (2 bonus core),
+      core'lar sağ üstteki launcher'dan oyuncuya uçuyormuş gibi görünüyor
+  ✅  Systemic Failure: artık Avlu'daki herkese maksimum Virus stack'i
+      veriyor, "The Yard Engine" VFX'i + güçlü ekran sarsıntısı
+  ✅  Glitch Bomb: yerde kalan bir alana dönüştü — üstünden geçen
+      düşman Glitch olur, yeni VFX eklendi (ileri-geri oynuyor)
+  ✅  System Crash: makineye doğru akan çizgilerle VFX'e bağlandı,
+      Glitchli düşmanlar canının %30'unu kaybeder
+  ✅  Virus Rain: gereksiz bulunduğu için kaldırıldı
+  ✅  Decay Field: alan artık gerçek daire, ilk etki hemen geliyor
+      (VFX hazırlanıyor)
+  ✅  "Antivirus" ismi oyunun her yerinde "Virus" oldu
+  ✅  5 Calamity kartı yanlış düşman grubunu arıyordu, hiç
+      çalışmıyordu — düzeltildi
+  ✅  Virus'tan ölen düşmanlar yürüme animasyonunda takılı kalıyordu
+  ✅  Yeni: düşmana her fiziksel vuruşta (top, glitchli düşman) kısa
+      beyaz parlama — element hasarları kendi rengini koruyor
+  ✅  Glitchli silahlı düşmanlar artık mermi atmıyor, en yakın
+      düşmana yürüyüp yakın dövüşle vuruyor
