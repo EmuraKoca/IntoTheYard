@@ -4316,3 +4316,14 @@ CYCLONE CALAMITY — devam (19.09.2026):
       beyaz parlama — element hasarları kendi rengini koruyor
   ✅  Glitchli silahlı düşmanlar artık mermi atmıyor, en yakın
       düşmana yürüyüp yakın dövüşle vuruyor
+
+LEILA CALAMITY — tamamlandı (21.09.2026):
+
+  ✅  Wildfire eklendi: yanan düşmanlar artık patlayıp yakınlarına
+      ateşi yayıyor, "The Yard Engine" VFX'i
+  ✅  Yanma, Islanma ve Elektriklenme süreleri uzatıldı — reaksiyonlar
+      artık top dönmeden bitmiyor
+  ✅  Thermal Vision ve Overheat kartları yeniden dengelendi
+  ✅  Cesetlerde bazen kalan hasar göstergeleri düzeltildi
+  ✅  Calamity slot isimlerinden gereksiz "Calamity" ön eki kaldırıldı
+  ✅  Calamity slot hücreleri 40x40 kare oldu (yeni ikonlara hazırlık)

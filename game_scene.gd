@@ -68,14 +68,14 @@ const _CORE_DISPLAY_NAMES: Dictionary = {
 }
 
 const _CALAMITY_DISPLAY_NAMES: Dictionary = {
-	"⚡":  "Calamity Lightning",
-	"🔥":  "Calamity Flame",
+	"⚡":  "Lightning",
+	"🔥":  "Flame Zone",
 	"🌀":  "Gravitational Force",
-	"❄️": "Calamity Freezing Cold",
-	"🌊":  "Calamity Monsoon",
-	"🔋":  "Calamity EMP Pulse",
-	"🌋":  "Calamity Volcanic Rift",
-	"⛈️": "Calamity Thunderstorm",
+	"❄️": "Freezing Cold",
+	"🌊":  "Monsoon",
+	"🔋":  "EMP Pulse",
+	"🌋":  "Volcanic Rift",
+	"⛈️": "Thunderstorm",
 	"💾":  "Data Storm",
 	"👾":  "Backdoor",
 	"🎱":  "Bounce Barrage",
@@ -1158,11 +1158,11 @@ func _ready() -> void:
 
 	# ── DEBUG: Cyclone Calamity sprite test override (test bitince kaldır) ──
 	calamity_slots.clear()
-	for _dbg_cal in ["☠️", "☠️", "☠️"]:
+	for _dbg_cal in ["🔥", "🔥💥", "🔥💥"]:
 		if calamity_slots.size() < max_calamity_slots:
 			calamity_slots.append(_dbg_cal)
 	update_ui()
-	$BallLauncher.queue_upgrade_ball("glitch")
+	$BallLauncher.queue_upgrade_ball("fire")
 	$UI/CalamityCircle.visible = false
 
 	await get_tree().process_frame
@@ -1855,7 +1855,7 @@ func _setup_calamity_cells() -> void:
 	const CAL_PX := 1640.0
 	const CAL_PY := 636.0
 	const CELL_W := 40.0
-	const CELL_H := 34.0
+	const CELL_H := 40.0
 	const GAP    := 6.0
 	_calamity_cells = []
 	for i in range(5):  # 3 + max shop bonus (cal_slot max_stack:2)
@@ -2666,16 +2666,16 @@ func _build_all_upgrades() -> void:
 	{"name": "Arc Amplifier",      "category": "Utility",       "color": Color(0.2, 0.4, 1.0), "desc": "Arc Core spreads to +1 more enemy",              "index": 68,  "weight": 8,  "rarity": "uncommon", "chars": ["leila"], "min_level": 0, "requires": [63]},
 	{"name": "Static Charge",      "category": "Utility",       "color": Color(0.4, 0.6, 1.0), "desc": "Electrified enemies transfer damage\nto each other", "index": 69, "weight": 6, "rarity": "uncommon", "chars": ["leila"], "min_level": 0, "requires_any": [1, 61, 63, 87]},
 	{"name": "Supercooling",       "category": "Utility",       "color": Color(0.5, 0.8, 1.0), "desc": "Cryo Slow amount +15%",                 "index": 71,  "weight": 8,  "rarity": "uncommon", "chars": ["leila"], "min_level": 0, "requires_any": [15, 186]},
-	{"name": "Thermal Vision",     "category": "Utility",       "color": Color(1.0, 0.5, 0.1), "desc": "Burn tick damage +20%",            "index": 73,  "weight": 6,  "rarity": "uncommon", "chars": ["leila"], "min_level": 1, "requires_any": [18, 65]},
+	{"name": "Thermal Vision",     "category": "Utility",       "color": Color(1.0, 0.5, 0.1), "desc": "Burn tick damage +1",            "index": 73,  "weight": 6,  "rarity": "uncommon", "chars": ["leila"], "min_level": 1, "requires_any": [18, 65]},
 	{"name": "Mystic Flow",        "category": "Individuality", "color": Color(0.5, 0.7, 1.0), "desc": "Each unique element applied\n→ +1% Move Speed (max 4%)", "index": 76, "weight": 6, "rarity": "uncommon", "chars": ["leila"], "min_level": 1},
 	{"name": "Elemental Memory",   "category": "Individuality", "color": Color(0.7, 0.7, 1.0), "desc": "After a reaction: the enemy's next\ndebuff lasts 2x longer", "index": 86, "weight": 4, "rarity": "uncommon", "chars": ["leila"], "min_level": 0},
 	{"name": "Resonant Soul",      "category": "Individuality", "color": Color(0.8, 0.6, 1.0), "desc": "Each Reaction → restore 2 HP",                "index": 85,  "weight": 5,  "rarity": "uncommon", "chars": ["leila"], "min_level": 0},
 	# Lv1: İlk özel core'lar + reaksiyon temeli
 	{"name": "Plasma Core",        "category": "Identity",      "color": Color(0.4, 0.6, 1.0), "desc": "Bounces to Electrified enemies",             "index": 61, "weight": 8,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 1},
 	{"name": "Arc Core",           "category": "Identity",      "color": Color(0.3, 0.5, 1.0), "desc": "Applies Electrified.\nSpreads it to 2 nearby enemies",               "index": 63, "weight": 8,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 1},
-	{"name": "Arcane Mind",        "category": "Utility",       "color": Color(0.7, 0.5, 1.0), "desc": "First applied element lasts 100% longer",     "index": 80, "weight": 5,  "rarity": "rare",      "chars": ["leila"], "min_level": 1},
+	{"name": "Arcane Mind",        "category": "Utility",       "color": Color(0.7, 0.5, 1.0), "desc": "First applied element lasts\n[b]7[/b]s instead of 6s",     "index": 80, "weight": 5,  "rarity": "rare",      "chars": ["leila"], "min_level": 1},
 	{"name": "Frozen Time",        "category": "Utility",       "color": Color(0.6, 0.85, 1.0),"desc": "[b]Frozen[/b] duration +30%",                       "index": 82, "weight": 5,  "rarity": "rare",      "chars": ["leila"], "min_level": 1},
-	{"name": "Overheat",           "category": "Utility",       "color": Color(1.0, 0.4, 0.0), "desc": "After 33 [b]Burning[/b] ticks:\nexplodes for 15 damage within 150px",                "index": 83, "weight": 4,  "rarity": "rare",      "chars": ["leila"], "min_level": 1, "requires_any": [18, 65]},
+	{"name": "Overheat",           "category": "Utility",       "color": Color(1.0, 0.4, 0.0), "desc": "After 30 [b]Burning[/b] ticks:\nexplodes for 15 damage within 150px",                "index": 83, "weight": 4,  "rarity": "rare",      "chars": ["leila"], "min_level": 1, "requires_any": [18, 65]},
 	# Lv2: Orta seviye core'lar + sinerjiler
 	{"name": "Steam Core",         "category": "Identity",      "color": Color(0.7, 0.9, 1.0), "desc": "Leaves a steam cloud on hit\nApplies Wet to nearby enemies",         "index": 62, "weight": 8,  "rarity": "uncommon",  "chars": ["leila"], "min_level": 2},
 	{"name": "Echo Core",          "category": "Identity",      "color": Color(0.6, 0.8, 1.0), "desc": "Copies element from Debuffed enemy on hit.\nApplies it on return.", "index": 64, "weight": 6, "rarity": "uncommon", "chars": ["leila"], "min_level": 2},
@@ -2717,7 +2717,7 @@ func _build_all_upgrades() -> void:
 	{"name": "Melt Spiral",     "category": "Individuality", "color": Color(1.0, 0.5, 0.2),  "desc": "Melt reaction: leaves flames at the\nenemy's position for 2s (1 dmg/s)",  "index": 206, "weight": 5,  "rarity": "rare",      "chars": ["leila"], "min_level": 3},
 	{"name": "Void Resonance",  "category": "Individuality", "color": Color(0.7, 0.3, 1.0),  "desc": "4 different reactions before your\nnext level-up: next Calamity won't\nconsume a slot",  "index": 207, "weight": 2,  "rarity": "epic",      "chars": ["leila"], "min_level": 5},
 	# Calamity
-	{"name": "Wildfire",        "category": "Calamity",      "color": Color(1.0, 0.3, 0.0),  "desc": "Tüm Yanan düşmanlar patlar\n(10 hasar, 2 yakına yayılır)",     "index": 209, "weight": 3,  "rarity": "epic",      "chars": ["leila"], "min_level": 4},
+	{"name": "Wildfire",        "category": "Calamity",      "color": Color(1.0, 0.3, 0.0),  "desc": "All [b]Burning[/b] enemies in the Yard explode\nfor 10 dmg, spreading [b]Burning[/b] to 2 nearby",     "index": 209, "weight": 3,  "rarity": "epic",      "chars": ["leila"], "min_level": 4, "requires_any": [18, 65]},
 	# Utility
 	{"name": "Cryo Burst",      "category": "Utility",       "color": Color(0.6, 0.85, 1.0), "desc": "Hits on a [b]Slowed[/b] enemy deal\n+8 bonus damage",          "index": 210, "weight": 5,  "rarity": "rare",      "chars": ["leila"], "min_level": 2, "requires_any": [15, 186]},
 	{"name": "Arc Overload",    "category": "Utility",       "color": Color(0.3, 0.5, 1.0),  "desc": "Electrocute chains to 1 nearby\nenemy for 5 damage",                "index": 211, "weight": 4,  "rarity": "rare",      "chars": ["leila"], "min_level": 3},
@@ -4074,20 +4074,31 @@ func _activate_decay_field(pos: Vector2) -> void:
 
 
 func _activate_wildfire() -> void:
-	# Tüm Yanan düşmanlar patlar: 10 hasar + 2 yakın düşmana yangın yayar
-	var enemies := _yard_subjects()
-	for e in enemies:
-		if e.get("is_burning") and e.is_burning:
-			e.take_damage(10, false)
-			var spread_count := 0
-			for other in enemies:
-				if spread_count >= 2:
-					break
-				if other == e: continue
-				if other.global_position.distance_to(e.global_position) <= 120.0:
-					other.apply_burn()
-					spread_count += 1
-	_react_flash_screen(Color(1.0, 0.3, 0.0, 0.3))
+	# Yard Engine: makineden SADECE o an yanan düşmanlara çizgi gider, her biri patlar
+	# (10 hasar) ve yakınındaki, yanmayan en fazla 2 düşmana Burning yayar.
+	# Yanan düşmanların listesi ilk kontrolde donduruluyor → yeni tutuşanlar aynı kullanımda
+	# patlamaz (zincirleme yok, sonuç sıraya bağlı değil).
+	var _ids := {}
+	var _snap_done := [false]
+	var _is_burning := func(e) -> bool:
+		if not _snap_done[0]:
+			_snap_done[0] = true
+			for s in _yard_subjects():
+				if s.get("is_burning") == true:
+					_ids[s.get_instance_id()] = true
+		return _ids.has(e.get_instance_id())
+	var _apply := func(e):
+		e.take_damage(10, false)
+		if is_instance_valid(e) and e.has_method("_react_flash"):
+			e._react_flash(Color(1.0, 0.45, 0.05, 1.0))
+		var spread_count := 0
+		for other in _yard_subjects():
+			if spread_count >= 2: break
+			if other == e or _ids.has(other.get_instance_id()): continue
+			if other.global_position.distance_to(e.global_position) <= 120.0 and other.has_method("apply_burn"):
+				other.apply_burn()
+				spread_count += 1
+	_vfx_yard_engine(_apply, Color(1.0, 0.45, 0.05, 1.0), Color(1.0, 0.3, 0.0, 0.3), _is_burning)
 
 func _react_flash_screen(color: Color) -> void:
 	var flash := ColorRect.new()
@@ -5513,9 +5524,15 @@ func _apply_utility_level(index: int, level: int) -> void:
 				3: p.cryo_slow_mult = 1.40
 		73:  # Thermal Vision
 			match level:
-				1: p.burn_damage_mult = 1.20
-				2: p.burn_damage_mult = 1.30
-				3: p.burn_damage_mult = 1.45
+				1:
+					p.burn_bonus_dmg = 1
+					p.burn_fast_ticks = false
+				2:
+					p.burn_bonus_dmg = 2
+					p.burn_fast_ticks = false
+				3:
+					p.burn_bonus_dmg = 2
+					p.burn_fast_ticks = true
 		67:  # Hydro Pressure
 			match level:
 				1: p.hydro_pressure_mult = 1.20
@@ -5523,9 +5540,9 @@ func _apply_utility_level(index: int, level: int) -> void:
 				3: p.hydro_pressure_mult = 1.35
 		80:  # Arcane Mind
 			match level:
-				1: p.first_debuff_duration_mult = 1.5
-				2: p.first_debuff_duration_mult = 2.0
-				3: p.first_debuff_duration_mult = 3.0
+				1: p.first_debuff_duration_mult = 7.0 / 6.0   # 6sn'lik debuff → 7sn
+				2: p.first_debuff_duration_mult = 8.0 / 6.0   # → 8sn
+				3: p.first_debuff_duration_mult = 9.0 / 6.0   # → 9sn
 		81:  # Resonance Engine
 			match level:
 				1: p.resonance_max_stacks = 3
@@ -5538,9 +5555,9 @@ func _apply_utility_level(index: int, level: int) -> void:
 				3: p.freeze_duration_mult = 1.50
 		83:  # Overheat
 			match level:
-				1: p.overheat_threshold = 45
-				2: p.overheat_threshold = 35
-				3: p.overheat_threshold = 25
+				1: p.overheat_threshold = 30
+				2: p.overheat_threshold = 25
+				3: p.overheat_threshold = 15
 		84:  # Elemental Harmony (Utility)
 			match level:
 				1: p.elemental_harmony_util_bonus = 0.03

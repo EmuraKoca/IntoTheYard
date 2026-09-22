@@ -1655,6 +1655,54 @@ continue` olarak düzeltildi. Boss'lar (`nyx_09`, `s_miler_79`) bu döngüyü ku
       Sonraki: Leila'nın Wildfire'ı (🔥💥, hiç review edilmedi — `_yard_subjects()` ve yayılma
       döngüsü bug'ları zaten düzeltildi, açıklama/requires/VFX kaldı).
 
+- [x] **Wildfire (209, 🔥💥) — 2026-09-21**: Leila'nın epic Calamity'si (min_level 4). Avlu'daki
+      Burning düşmanlar patlar (10 hasar) + yakındaki (120px) yanmayan en fazla 2 düşmana Burning
+      yayar. Bu kart Leila Calamity review'inde atlanmış kalmıştı (8. kart). **BUG**: döngü canlı
+      listeyi gezerken `apply_burn()` ile yeni tutuşanlar da aynı kullanımda patlıyordu
+      (zincirleme, sıraya bağlı) + yayılma hedefi zaten yanansa sayaç boşa gidiyordu → yanan
+      düşmanların listesi ilk filtre çağrısında DONDURULUYOR (`_ids`), yayılma sadece
+      yanmayanlara, zincir yok. Requires: `requires_any: [18, 65]` (Pyro/Prism Core). Dil: EN
+      Türkçe idi → düzeltildi, `lang.gd`'ye TR (209) eklendi, "Burning" bold. **VFX**: "The Yard
+      Engine" (`_vfx_yard_engine`, turuncu çizgiler, sadece yanan düşmanlara filtreli), patlayan
+      düşmanda turuncu `_react_flash`. İKON `🔥💥` iki glyph — kullanıcı sonra çizdirecek.
+      Debug slotları: `["🔥", "🔥💥", "🔥💥"]` + `queue_upgrade_ball("fire")` (test bitince kaldır).
+
+### Debuff Süreleri Yeniden Ayarlandı + Thermal Vision/Overheat (2026-09-21, kullanıcı kararı)
+Amaç: Calamity/element reaksiyonlarında top dönmeden debuff bitmesin. `base_enemy.gd` başında
+tek yerden ayar sabitleri: `BURN_DURATION=6`, `BURN_TICK_INTERVAL=2`, `WET_DURATION=6`,
+`ELECTRIFIED_DURATION=6`, `SLOW_DEFAULT_DURATION=6`, `FROZEN_DURATION=3` (Frozen bilerek kısa —
+tam donma). Slowed'ın SADECE varsayılan süresi (süre vermeyen çağrılar: Cryo Core vb.) 6sn oldu;
+açık süre veren çağrılar (Anchor 0.5s, Tracer 0.5s, bazı 2s/3s) dokunulmadı.
+- **Burn**: 3 tick x 2sn aralık, 2 hasar/tick (toplam 6, eskiden 3 tick x 1sn). Tick sayısı artık
+  süre bazlı: `round(burn_dur / tick_interval)`; Elemental Memory (86) süreyi x2, Arcane Mind (80)
+  ilk-element çarpanı süreyi çarpar (eskiden tick sayısını çarpıyordu). Timer `process_always=false`
+  (pause'da durur). **Diğer debuff timer'ları (`apply_frozen/wet/electrified/slow`,
+  `_react_electrocute`, `_register_corpse`) hâlâ pause korumasız — açık iş.**
+- **Thermal Vision (73)** yüzde bazlı `burn_damage_mult` KALDIRILDI (`int(2.0*1.2)=2` yüzünden
+  üç seviyesi de hiçbir şey yapmıyordu, kart fiilen ölüydü). Yeni: `player.burn_bonus_dmg`
+  Lv1:+1 Lv2:+2 Lv3:+2 tick hasarı, Lv3'te ayrıca `burn_fast_ticks` (1.5sn aralık → 4 tick).
+  Toplam Burn hasarı 9 / 12 / 16. Dynamic desc (`lang.gd` 73) + EN kart açıklaması güncellendi.
+- **Overheat (83)** eşikleri 45/35/25 → **30/25/15** (tick aralığı yarıya indiği için sayaç yavaş
+  dolar, bu telafi). Kart EN açıklaması 33→30, `lang.gd` fallback 30.
+- **Arcane Mind (80)** çarpanları 1.5/2/3 → **7/6, 8/6, 9/6** (6sn'lik debuff 7/8/9sn olur; 18sn'ye
+  çıkması aşırıydı). Açıklama artık "6 yerine N sn" gösterir (`lang.gd` 80 + EN kart açıklaması).
+- **Pause koruması tamamlandı**: `apply_frozen/wet/electrified/slow`, `_react_electrocute` (0.8sn),
+  `_register_corpse` (15sn) timer'ları `create_timer(..., false)` — level-up menüsünde debuff
+  süreleri artık akmaz. (`base_enemy.gd`'de korumasız `.timeout` kalmadı.)
+- Burn Frenzy (201) tick başına bonus verir (tick azaldığı için toplamı düşer, dokunulmadı).
+
+### BUG FIX: Cesetlerde elem-indicator görünmeye devam ediyordu (2026-09-21)
+`die()` sadece ÖNCEDEN açık göstergeleri gizliyordu (`visible=false`), sonradan çağrılan
+`_show_debuff()` ölü düşmanda yeni gösterge yaratabiliyordu. Kaynak: `apply_antivirus()`'te
+`is_dead` kontrolü yoktu (Virus Beacon Core'un yayılma döngüsü cesetleri de tarıyor) →
+ceset üzerinde "virus" ikonu açılıyordu. Fix: `_show_debuff()` başına `if is_dead: return`
+(hepsine genel koruma) + `apply_antivirus()` başına `if is_dead: return`.
+**Asıl sebep (Burn/Wet için, kullanıcı gözlemi)**: `apply_burn/wet/electrified/slow` önce
+`_check_reaction()` çağırıyor; reaksiyon hasarı (Melt/Steam/Cryostatic vb.) düşmanı ÖLDÜRÜRSE
+fonksiyon `is_instance_valid(self)` kontrolünden geçip (ceset silinmediği için hâlâ geçerli)
+devam ediyor, cesede `is_burning`/`is_wet` set edip gösterge açıyor ve tick timer'ı
+çalıştırıyordu. 4 yerde kontrol `if not is_instance_valid(self) or is_dead: return` yapıldı.
+
 ### İlerleme — Leila Calamity (8 kart, index sırasına göre) — sprite kontrolü de dahil
 - [x] Lightning (7) — implementasyon doğru: tıklanan noktaya 100px yarıçapta 3 hasar +
       Electrified uyguluyor (`_activate_lightning()`), VFX elle çizilmiş zigzag `Line2D`

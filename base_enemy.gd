@@ -2,6 +2,14 @@ extends CharacterBody2D
 
 static var _freeze_sf: SpriteFrames = null
 
+# ── Debuff süreleri (tek yerden ayar) — reaksiyon/Calamity'ler top dönmeden bitmesin diye uzun ──
+const BURN_DURATION: float = 6.0          # toplam yanma süresi (3 tick x 2sn)
+const BURN_TICK_INTERVAL: float = 2.0     # Thermal Vision Lv3'te 1.5
+const WET_DURATION: float = 6.0
+const ELECTRIFIED_DURATION: float = 6.0
+const SLOW_DEFAULT_DURATION: float = 6.0  # süre vermeyen yavaşlatmalar (Cryo Core vb.)
+const FROZEN_DURATION: float = 3.0        # tam donma — bilerek kısa
+
 const SURGERY_EXIT := Vector2(850, 1000)
 
 var speed: float = 28.0
@@ -311,29 +319,34 @@ func apply_burn() -> void:
 	if is_burning:
 		return
 	_check_reaction("fire")
-	if not is_instance_valid(self): return
+	if not is_instance_valid(self) or is_dead: return   # reaksiyon düşmanı öldürdüyse devam etme (cesede gösterge/timer bırakma)
 	var _was_first := not _had_any_element()
 	is_burning = true
 	_notify_mystic_flow("fire")
 	_show_debuff("burn")
 	var p := _get_player()
 	var tick_dmg: int = 2
-	if p and p.get("burn_damage_mult"):
-		tick_dmg = max(1, int(2.0 * p.burn_damage_mult))
+	var tick_interval: float = BURN_TICK_INTERVAL
+	if p and p.get("burn_bonus_dmg"):
+		tick_dmg += p.burn_bonus_dmg          # Thermal Vision (+1 / +2 / +2)
+	if p and p.get("burn_fast_ticks") and p.burn_fast_ticks:
+		tick_interval = 1.5                   # Thermal Vision Lv3: 1.5sn'de bir vurur
 	if p and p.get("has_burn_frenzy") and p.has_burn_frenzy:
 		var _burning_count: int = 0
 		for _bfe in get_tree().get_nodes_in_group("subjects"):
 			if _bfe.get("is_burning") and _bfe.is_burning:
 				_burning_count += 1
 		tick_dmg += mini(_burning_count, 7)
-	var burn_ticks := 3
+	# Süre bazlı: tick sayısı = toplam süre / tick aralığı (Elemental Memory / Arcane Mind süreyi çarpar)
+	var burn_dur: float = BURN_DURATION
 	if p and p.get("has_elemental_memory") and p.has_elemental_memory and _had_reaction:
-		burn_ticks = 6
+		burn_dur *= 2.0
 		_had_reaction = false
 	if p and p.get("first_debuff_duration_mult") and _was_first:
-		burn_ticks = int(round(burn_ticks * p.first_debuff_duration_mult))
+		burn_dur *= p.first_debuff_duration_mult
+	var burn_ticks: int = maxi(1, int(round(burn_dur / tick_interval)))
 	for i in range(burn_ticks):
-		await get_tree().create_timer(1.0).timeout
+		await get_tree().create_timer(tick_interval, false).timeout
 		if is_instance_valid(self) and health > 0:
 			health -= tick_dmg
 			if p and p.get("has_overheat") and p.has_overheat:
@@ -378,10 +391,10 @@ func apply_frozen() -> void:
 	if spr: spr.stop()
 	_spawn_freeze_vfx()
 	var p := _get_player()
-	var dur := 3.0
+	var dur := FROZEN_DURATION
 	if p and p.get("freeze_duration_mult"):
 		dur *= p.freeze_duration_mult
-	await get_tree().create_timer(dur).timeout
+	await get_tree().create_timer(dur, false).timeout
 	if not is_instance_valid(self):
 		return
 	if is_instance_valid(_freeze_sprite):
@@ -399,25 +412,26 @@ func apply_frozen() -> void:
 func apply_wet() -> void:
 	if is_dead: return
 	_check_reaction("wet")
-	if not is_instance_valid(self): return
+	if not is_instance_valid(self) or is_dead: return   # reaksiyon düşmanı öldürdüyse devam etme (cesede gösterge/timer bırakma)
 	var _was_first := not _had_any_element()
 	is_wet = true
 	_notify_mystic_flow("wet")
 	_show_debuff("wet")
 	var p := _get_player()
-	var dur := 5.0
+	var dur := WET_DURATION
 	if p and p.get("has_elemental_memory") and p.has_elemental_memory and _had_reaction:
 		dur *= 2.0
 		_had_reaction = false
 	if p and p.get("first_debuff_duration_mult") and _was_first:
 		dur *= p.first_debuff_duration_mult
-	await get_tree().create_timer(dur).timeout
+	await get_tree().create_timer(dur, false).timeout
 	if not is_instance_valid(self):
 		return
 	is_wet = false
 	_hide_debuff("wet")
 
 func apply_antivirus(stacks: int = 1) -> void:
+	if is_dead: return
 	var _ap := get_tree().get_first_node_in_group("player")
 	var _cap: int = 3 + (_ap.stack_overflow_level if (_ap and _ap.get("stack_overflow_level")) else 0)
 	antivirus_stacks = min(antivirus_stacks + stacks, _cap)
@@ -478,13 +492,13 @@ func apply_electrified() -> void:
 	if is_electrified:
 		return
 	_check_reaction("electric")
-	if not is_instance_valid(self): return
+	if not is_instance_valid(self) or is_dead: return   # reaksiyon düşmanı öldürdüyse devam etme (cesede gösterge/timer bırakma)
 	var _was_first := not _had_any_element()
 	is_electrified = true
 	_notify_mystic_flow("electric")
 	_show_debuff("electrified")
 	var p := _get_player()
-	var dur := 5.0
+	var dur := ELECTRIFIED_DURATION
 	if p and p.get("has_elemental_memory") and p.has_elemental_memory and _had_reaction:
 		dur *= 2.0
 		_had_reaction = false
@@ -492,18 +506,18 @@ func apply_electrified() -> void:
 		dur *= p.first_debuff_duration_mult
 	var _ls_p := _get_player()
 
-	await get_tree().create_timer(dur).timeout
+	await get_tree().create_timer(dur, false).timeout
 	if is_instance_valid(self):
 		is_electrified = false
 		_hide_debuff("electrified")
 
 
-func apply_slow(amount, duration: float = 3.0, source: String = "cryo", anchor_pos: Vector2 = Vector2.ZERO) -> void:
+func apply_slow(amount, duration: float = SLOW_DEFAULT_DURATION, source: String = "cryo", anchor_pos: Vector2 = Vector2.ZERO) -> void:
 	if is_dead: return
 	if is_slowed:
 		return
 	_check_reaction("cryo")
-	if not is_instance_valid(self): return
+	if not is_instance_valid(self) or is_dead: return   # reaksiyon düşmanı öldürdüyse devam etme (cesede gösterge/timer bırakma)
 	var _was_first := not _had_any_element()
 	is_slowed = true
 	_notify_mystic_flow("cryo")
@@ -522,7 +536,7 @@ func apply_slow(amount, duration: float = 3.0, source: String = "cryo", anchor_p
 		_had_reaction = false
 	if p and p.get("first_debuff_duration_mult") and _was_first:
 		dur *= p.first_debuff_duration_mult
-	await get_tree().create_timer(dur).timeout
+	await get_tree().create_timer(dur, false).timeout
 	if not is_instance_valid(self):
 		return
 	if is_instance_valid(_cryo_sprite):
@@ -765,7 +779,7 @@ func _react_electrocute(mult: float, game: Node, player: Node) -> void:
 			_ao_spread += 1
 	var prev_speed: float = float(speed)
 	speed = 0.0
-	await get_tree().create_timer(0.8).timeout
+	await get_tree().create_timer(0.8, false).timeout
 	if not is_instance_valid(self): return
 	if _reactions_cancelled: _reactions_cancelled = false; return
 	speed = prev_speed
@@ -962,7 +976,7 @@ func _notify_reaction(game: Node, player: Node) -> void:
 # ── Ceset yönetimi ───────────────────────────────────────────────────────────
 
 func _register_corpse() -> void:
-	await get_tree().create_timer(15.0).timeout
+	await get_tree().create_timer(15.0, false).timeout
 	if not is_instance_valid(self): return
 	var tween := create_tween()
 	tween.tween_property(self, "modulate:a", 0.0, 1.5)
@@ -1166,7 +1180,8 @@ func _spawn_overcharge_vfx() -> void:
 # ── Element göstergesi ───────────────────────────────────────────────────────
 
 func _show_debuff(elem: String) -> void:
-	if _debuff_nodes.has(elem):
+	# Ölü düşmanda (ceset) yeni gösterge açılmasın — die() sadece mevcut olanları gizliyor
+	if is_dead or _debuff_nodes.has(elem):
 		return
 	var ind = load("res://elem_indicator.gd").new()
 	add_child(ind)

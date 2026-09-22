@@ -359,6 +359,7 @@ const _DESC_TR: Dictionary = {
 	205: "Bir sonraki level up'a kadar 3 farklı\nreaksiyon: 5sn için +%10 hasar",
 	206: "Melt reaksiyonu: düşmanın konumunda\n2sn boyunca alev bırakır (1 hasar/sn)",
 	207: "Bir sonraki level up'a kadar 4 farklı\nreaksiyon: sonraki Calamity slot tüketmez",
+	209: "Avlu'daki tüm [b]Burning[/b] düşmanlar patlar:\n10 hasar, yakındaki 2 düşmana [b]Burning[/b] yayar",
 	# ── Cyclone — Identity ───────────────────────────────────────────────────
 	16: "Düşmanı 3sn şaşırtır",
 	19: "Yakındaki güçlü core'u kopyalar",
@@ -403,15 +404,17 @@ func _dynamic_desc(index: int, player: Node) -> String:
 				return "Cryo Slow amount +[b]%d[/b]%%" % int(round(_csm))
 			return "Cryo yavaşlatma miktarı +%[b]%d[/b]" % int(round(_csm))
 		73:  # Thermal Vision
-			var _bdm: float = (player.burn_damage_mult - 1.0) * 100.0 if player.get("burn_damage_mult") != null else 20.0
+			var _bbd: int = player.burn_bonus_dmg if player.get("burn_bonus_dmg") != null else 1
+			var _bft: bool = player.burn_fast_ticks if player.get("burn_fast_ticks") != null else false
 			if locale == "en":
-				return "Burn tick damage +[b]%d[/b]%%" % int(round(_bdm))
-			return "Burn tick hasarı +%[b]%d[/b]" % int(round(_bdm))
+				return "[b]Burning[/b] tick damage +[b]%d[/b]" % _bbd + ("\nBurns every [b]1.5s[/b] (4 ticks)" if _bft else "")
+			return "[b]Burning[/b] tick hasarı +[b]%d[/b]" % _bbd + ("\nHer [b]1.5sn[/b]'de vurur (4 tick)" if _bft else "")
 		80:  # Arcane Mind
-			var _fdm: float = player.first_debuff_duration_mult if player.get("first_debuff_duration_mult") != null else 1.5
+			var _fdm: float = player.first_debuff_duration_mult if player.get("first_debuff_duration_mult") != null else 7.0 / 6.0
+			var _fds: int = int(round(6.0 * _fdm))
 			if locale == "en":
-				return "First applied element lasts\n[b]%d[/b]%% longer" % int(round((_fdm - 1.0) * 100.0))
-			return "İlk uygulanan element %[b]%d[/b]\ndaha uzun sürer" % int(round((_fdm - 1.0) * 100.0))
+				return "First applied element lasts\n[b]%d[/b]s instead of 6s" % _fds
+			return "İlk uygulanan element 6 yerine\n[b]%d[/b] sn sürer" % _fds
 		81:  # Resonance Engine
 			var _rms: int = player.resonance_max_stacks if player.get("resonance_max_stacks") != null else 3
 			if locale == "en":
@@ -423,7 +426,7 @@ func _dynamic_desc(index: int, player: Node) -> String:
 				return "[b]Frozen[/b] duration +[b]%d[/b]%%" % int(round(_fzm))
 			return "[b]Frozen[/b] süresi +%[b]%d[/b]" % int(round(_fzm))
 		83:  # Overheat
-			var _oht: int = player.overheat_threshold if player.get("overheat_threshold") != null else 45
+			var _oht: int = player.overheat_threshold if player.get("overheat_threshold") != null else 30
 			if locale == "en":
 				return "After [b]%d[/b] [b]Burning[/b] ticks:\nexplodes for 15 damage within 150px" % _oht
 			return "[b]%d[/b] [b]Burning[/b] tick'i sonra:\n150px içine 15 hasarlık patlama" % _oht
