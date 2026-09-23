@@ -2844,7 +2844,7 @@ func _build_all_upgrades() -> void:
 	{"name": "Overclock Protocol",  "category": "Individuality", "color": Color(0.25, 0.9, 0.95),"desc": "Circuit Breaker counter fills\n2× faster",                       "index": 221, "weight": 3,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 4, "requires": [143]},
 	# Utility
 	{"name": "Decay Amp",   "category": "Utility", "color": Color(0.55, 0.25, 0.0), "desc": "[b]Decay[/b] explosion damage (per stack)\nLv1: 3, Lv2: 5, Lv3: 7 (base 2)",  "index": 222, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [161]},
-	{"name": "Chain Extension", "category": "Utility", "color": Color(0.7, 0.6, 0.3), "desc": "Zincir 5 halka uzar\n(hareket alanı genişler)",                         "index": 224, "weight": 6,  "rarity": "uncommon",  "chars": [],           "min_level": 0},
+	{"name": "Chain Extension", "category": "Utility", "color": Color(0.7, 0.6, 0.3), "desc": "Chain extends by 5 links\n(movement radius grows)",                         "index": 224, "weight": 6,  "rarity": "uncommon",  "chars": [],           "min_level": 0},
 	# ── Herkese açık ─────────────────────────────────────────────────────────
 	{"name": "Core Mastery",        "category": "Utility",       "color": Color(0.2, 0.8, 0.2), "desc": "+1 damage to all cores",                    "index": 11, "weight": 10, "rarity": "common", "chars": [], "min_level": 0},
 	{"name": "Lightning",           "category": "Calamity",      "color": Color(1.0, 1.0, 0.0), "desc": "Strikes the target point for 13 damage\nand applies [b]Electrified[/b] to nearby enemies",          "index": 7,  "weight": 3,  "rarity": "epic",   "chars": ["leila"], "min_level": 2},

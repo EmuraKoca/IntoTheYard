@@ -412,6 +412,7 @@ const _DESC_TR: Dictionary = {
 	221: "Circuit Breaker sayacı\n2× hızlı dolar",
 	# ── Herkese açık — Utility & Calamity ────────────────────────────────────
 	11: "Tüm core'lara +1 hasar",
+	224: "Zincir 5 halka uzar\n(hareket alanı genişler)",
 	7:  "Hedeflenen noktaya 13 hasar verir\nve yakındaki düşmanlara [b]Electrified[/b] uygular",
 	8:  "Hedeflenen alanda 3sn boyunca her 0.5sn'de\n4 hasar verir ve [b]Burning[/b] uygular",
 	9:  "Düşmanları 5 sn boyunca merkeze doğru çeker.",
