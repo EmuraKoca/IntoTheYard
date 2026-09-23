@@ -2465,6 +2465,39 @@ Her karakter hedef: **65 kart**
 - Leila: Utility'yi kırp veya doldur, Identity/Individuality dengele
 - Cyclone: Identity'yi artır (3 → en az 8-10), Ricochet/Static/Decay/Mirror eklenecek
 
+## Playtester Tam Tarama — Ölü Kod + Asset Temizliği (2026-09-23)
+
+Kullanıcı isteğiyle `/playtester` genişletilmiş kapsamda çalıştırıldı: kart review'i
+zaten tamamlanmıştı (bkz. yukarıdaki tüm "TAMAMLANDI" bölümleri), bu turda odak ölü
+kod ve kullanılmayan asset'lere kaydı.
+
+**Ölü kod bulundu**: `ball.gd`'de `_reload_to_launcher()` → `_get_ball_type_str()` →
+`ball_launcher.gd::queue_reload_ball()` zinciri — hiçbir yerden çağrılmıyor (yaklaşık
+20+ satır erişilemez kod). **Henüz silinmedi**, sadece tespit edildi.
+`launch_with_speed()` (ball.gd:467) de hâlâ çağrılmıyor, önceki not doğrulandı.
+`fusion_zone.gd` ile ilgili eski "kaldırıldı" notu **yanlış alarmmış** — hâlâ aktif
+kullanılıyor (`game_scene.gd`'de "fusion_zone" grubu üzerinden), not geçersiz sayıldı.
+
+**Asset temizliği yapıldı (669 dosya silindi, commit `7fa09a6`)**: arka plan agent'ı
+`assets/` altındaki tüm görselleri kod referanslarıyla (literal path + dinamik
+`"res://.../%s/frame_%03d.png"` desenleri + `ResourceLoader.exists` guard'ları)
+karşılaştırdı. Kullanıcı onayıyla silinenler:
+- `assets/projectiles/` (mermiler `bullet.gd`'de `_draw()` ile procedural çiziliyor)
+- `assets/selectCharacters/` (hiç referans yok)
+- Kaldırılmış kartların yetim art dosyaları: `virus_rain_art.png`,
+  `catalyst_pulse_core_art.png`, `elemental_shield_core_art.png`, `iron_fortress_art.png`
+- Silinmiş kartların top sprite'ları: `assets/balls/prismaticCore/`,
+  `assets/balls/tempestCore/`, `assets/balls/catalystPulseCore/`
+- `assets/VFX/disappearanceOfBlood/`
+- 3 tekil eski render: `Cyclone729x1281.png`, `LeilaNew.png`, `Vector721x1351.png`
+- Frantic Subject'in kullanılmayan ham sprite klasörleri (`rotations/`,
+  `animations/High_Kick-.../`, `animations/Running-.../` — gerçek yürüme/ölüm
+  animasyonları ayrı `sheets/` klasöründen ve `animations/died/`den geliyor)
+
+**DOKUNULMADI (belirsiz, kullanıcı kararıyla)**: `assets/placeHolder/` altındaki ~40
+dosya (çoğu "Gaming/" alt klasöründe) — büyük "sheet" görselleri, `AtlasTexture` ile
+alt bölge olarak `.tscn`'de kullanılıyor olabilirler, agent tam emin olamadı. Silinmedi.
+
 ## Bilinen sorunlar / takip edilmesi gerekenler
 
 ### Kritik Bug Riskleri (Playtester Raporu 2026-07-05)
