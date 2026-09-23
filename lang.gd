@@ -287,7 +287,7 @@ const _DESC_TR: Dictionary = {
 	37: "Uçuşta yeni düşmana çarparsan:\nhasar artar, dönünce sıfırlanır",
 	38: "Düşük HP → Core Hız bonusu\n& Zırh Kazanım verimliliği",
 	# ── Vector — Individuality ────────────────────────────────────────────────
-	4:  "Hareket hızı artar",
+	4:  "Kalıcı: Hareket hızı +50",
 	20: "+10 HP iyileştirilir",
 	21: "Maksimum HP +5",
 	30: "-10 HP  |  +10 Maks Zırh",

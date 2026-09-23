@@ -3,6 +3,26 @@
 Bu dosya, farklı bilgisayarlardaki (ev / işyeri) Claude Code oturumları arasında bağlam
 köprüsü olarak kullanılır. Her oturum başında oku, her oturum sonunda güncelle.
 
+## Herkese Açık (Ortak) Kartlar — Review TAMAMLANDI (2026-09-23)
+
+Kullanıcı xlsx üretimi sonrası "bu genel kartlara baktık mı?" diye sordu — `"chars": []`
+ile işaretli, hiçbir karaktere özel olmayıp tüm karakterlerin havuzunda görünen 5 kart:
+**Speed Upgrade (4)**, **Max Health Up (21)**, **Medkit (20)**, **Core Mastery (11)**,
+**Chain Extension (224)**. Hepsi kontrol edildi:
+- **Core Mastery (11)**: zaten bu session'da kapsamlı incelenmişti (bkz. "KRİTİK PROJE
+  ÇAPINDA BUG FIX" ve "Core Mastery hiç çalışmıyordu" bölümleri) — tekrar dokunulmadı.
+- **Max Health Up (21)**, **Medkit (20)**: implementasyon doğru (+5 Max HP/+5 heal,
+  +10 heal), EN/TR ikisi de zaten doğruydu.
+- **Speed Upgrade (4) — BUG FIX**: `player.SPEED += 50` (implementasyon doğru) ama EN
+  `desc` alanı Türkçe yazılmıştı ("Kalıcı: Hareket hızı +50"), TR girdisi de belirsiz/
+  sayısız bir ifadeydi ("Hareket hızı artar" — +50 sayısı hiç geçmiyordu). İkisi de
+  düzeltildi: EN "Permanent: Movement Speed +50", TR "Kalıcı: Hareket hızı +50".
+- **Chain Extension (224)**: bir önceki turda (xlsx üretimi sırasında) zaten bulunup
+  düzeltilmişti (bkz. yukarıdaki commit notu).
+
+Hiçbiri karaktere özel bir core'a bağlı olmadığı için `requires` gerekmiyor (zaten yoktu,
+doğru). xlsx dosyaları Speed Upgrade düzeltmesini yansıtacak şekilde yeniden üretildi.
+
 ## SIRADAKİ: Font seçimi (2026-09-23, kullanıcı evde karar verecek)
 
 Kullanıcı pixel-art'a yakışan, hem Türkçe (ğ/ş/ı/İ/ö/ü/ç) hem gelecekte başka diller
