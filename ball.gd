@@ -464,30 +464,6 @@ func launch(direction: Vector2, spd: float = 600.0) -> void:
 	_lt.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	_lt.tween_property(self, "scale", Vector2(1.0, 1.0), 0.18)
 
-func launch_with_speed(direction: Vector2, spd: float) -> void:
-	hit_subjects.clear()
-	_reset_echo_element()
-	_pb_bounce_streak = 0
-	_pb_piercing = false
-	_phantom_hit_enemies.clear()
-	_phantom_triggered = false
-	_kinetic_rogue_acc = 0
-	_shadow_dance_bounce_acc = 0
-	_impact_hit_acc = 0
-	_combat_rhythm_acc = 0
-	move_direction = direction.normalized()
-	speed = spd
-	moving = true
-	state = "flying"
-	catch_cooldown = 1.2
-	$CollisionShape2D.disabled = false
-	z_index = 5
-	scale = Vector2(0.3, 0.3)
-	var _ltws := create_tween()
-	_ltws.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	_ltws.tween_property(self, "scale", Vector2(1.0, 1.0), 0.18)
-	_wall_bounce_count = 0
-
 func caught() -> void:
 	# Legacy uyumluluk — orbit join artık player.add_to_orbit() ile yapılıyor
 	moving = false
