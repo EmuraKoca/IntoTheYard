@@ -133,11 +133,6 @@ func queue_upgrade_ball(ball_type: String) -> void:
 	if _pending_upgrades.size() == 1:
 		_upgrade_timer = 2.0   # ilk upgrade bekleme
 
-func queue_reload_ball(ball_type: String) -> void:
-	_pending_upgrades.append(ball_type)
-	if _pending_upgrades.size() == 1:
-		_upgrade_timer = 1.2   # yeniden yükleme daha hızlı
-
 func _update_preview_sprite() -> void:
 	var next_type: String = game.next_ball_upgrade if game else ""
 	if next_type == _preview_shown_type:

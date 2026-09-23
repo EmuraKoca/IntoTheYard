@@ -2471,10 +2471,12 @@ Kullanıcı isteğiyle `/playtester` genişletilmiş kapsamda çalıştırıldı
 zaten tamamlanmıştı (bkz. yukarıdaki tüm "TAMAMLANDI" bölümleri), bu turda odak ölü
 kod ve kullanılmayan asset'lere kaydı.
 
-**Ölü kod bulundu**: `ball.gd`'de `_reload_to_launcher()` → `_get_ball_type_str()` →
-`ball_launcher.gd::queue_reload_ball()` zinciri — hiçbir yerden çağrılmıyor (yaklaşık
-20+ satır erişilemez kod). **Henüz silinmedi**, sadece tespit edildi.
-`launch_with_speed()` (ball.gd:467) de hâlâ çağrılmıyor, önceki not doğrulandı.
+**Ölü kod bulundu ve SİLİNDİ (kullanıcı onayı, 2026-09-23)**: `ball.gd`'de
+`_reload_to_launcher()` → `_get_ball_type_str()` → `ball_launcher.gd::
+queue_reload_ball()` zinciri — hiçbir yerden çağrılmıyordu, üçü de silindi.
+`launch_with_speed()` (ball.gd:467) hâlâ çağrılmıyor ama **bilerek dokunulmadı**
+(önceki oturumlarda not düşülmüş, tekil bir fonksiyon — zincir gibi büyük bir
+temizlik fırsatı değil, ayrıca gelecekte kullanılması planlanmış olabilir).
 `fusion_zone.gd` ile ilgili eski "kaldırıldı" notu **yanlış alarmmış** — hâlâ aktif
 kullanılıyor (`game_scene.gd`'de "fusion_zone" grubu üzerinden), not geçersiz sayıldı.
 

@@ -1240,52 +1240,6 @@ func _start_returning() -> void:
 			"cryo":     can_cryo     = true
 		queue_redraw()
 
-func _reload_to_launcher() -> void:
-	var game := get_node_or_null("/root/GameScene")
-	if not game:
-		queue_free()
-		return
-	var launcher := game.get_node_or_null("BallLauncher")
-	if is_instance_valid(launcher):
-		var btype := _get_ball_type_str()
-		if btype != "":
-			launcher.queue_reload_ball(btype)
-	queue_free()
-
-func _get_ball_type_str() -> String:
-	if can_split:            return "split"
-	if can_electric:         return "electric"
-	if can_pierce:           return "pierce"
-	if can_cryo:             return "cryo"
-	if can_glitch:           return "glitch"
-	if can_water:            return "water"
-	if can_fire:             return "fire"
-	if can_leech:            return "leech"
-	if can_armor:            return "armor"
-	if can_anchor:           return "anchor"
-	if can_crusher:          return "crusher"
-	if can_kinetic:          return "kinetic"
-	if can_bulwark:          return "bulwark"
-	if can_siege:            return "siege"
-	if can_bloodbound:       return "bloodbound"
-	if can_tempered:         return "tempered"
-	if can_voltaic:          return "voltaic"
-	if can_plasma:           return "plasma"
-	if can_arc:              return "arc"
-	if can_steam:            return "steam"
-	if can_echo:             return "echo"
-	if can_scatter:          return "scatter"
-	if can_catalyst:         return "catalyst"
-	if can_antivirus_core:   return "antivirus_core"
-	if can_decay:            return "decay"
-	if can_static_core:      return "static_core"
-	if can_ricochet_core:    return "ricochet_core"
-	if can_phantom_circuit:  return "phantom_circuit"
-	if can_tracer_core:      return "tracer_core"
-	if can_spike_core:       return "spike_core"
-	if can_leech_nova_core:  return "leech_nova_core"
-	return ""
-
 func _try_fusion(other: Node2D) -> void:
 	var self_type = _get_type()
 	var other_type = other._get_type()
