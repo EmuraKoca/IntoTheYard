@@ -41,6 +41,7 @@ const _CORE_DISPLAY_NAMES: Dictionary = {
 	"arc":        "Arc Core",       "plasma":     "Plasma Core",
 	"steam":      "Steam Core",     "echo":       "Echo Core",
 	"orbit":      "Prism Core",     "scatter":    "Scatter Core",
+	"prism_core": "Prism Core",
 	"catalyst":   "Catalyst Core",  "voltaic":    "Voltaic Core",
 	"pierce":     "Pierce Core",     "split":      "Split Core",
 	"cryo":       "Cryo Core",      "glitch":     "Glitch Core",
@@ -88,9 +89,37 @@ const _CALAMITY_DISPLAY_NAMES: Dictionary = {
 	"🕳️": "WormHole",
 	"🌧️": "Siege Rain",
 	"🔥💥": "Wildfire",
-	"💣":   "Glitch Bomb",
+	"💣":   "Glitch Field",
 	"💻💥": "System Crash",
 	"☠️":  "Decay Field",
+}
+
+# Calamity slot ikonları — assets/calamityIcons/<dosya>.png (23 kart, kullanıcı tarafından
+# hazırlandı). Dosya bulunamazsa slot eski emoji metnine düşer (crash yok).
+const _CALAMITY_ICON_FILES: Dictionary = {
+	"🌀": "gravitationalForce.png",
+	"💥": "shockwave.png",
+	"🔓": "fullBreach.png",
+	"💨": "momentumBurst.png",
+	"🏚️": "rampartCollapse.png",
+	"🕳️": "wormHole.png",
+	"🌧️": "siegeRain.png",
+	"⚡": "lightning.png",
+	"🔥": "flameZone.png",
+	"❄️": "freezingCold.png",
+	"🌊": "monsoon.png",
+	"🔋": "empPulse.png",
+	"🌋": "volcanicRift.png",
+	"⛈️": "thunderStorm.png",
+	"🔥💥": "wildfire.png",
+	"💾": "dataStorm.png",
+	"👾": "backdoor.png",
+	"🎱": "bounceBarrage.png",
+	"🪞": "mirrorImage.png",
+	"🧪": "systemicFailure.png",
+	"💣": "glitchField.png",
+	"💻💥": "systemChrash.png",
+	"☠️": "decayField.png",
 }
 
 # ── Upgrade kart takip sistemi ─────────────────────────────────────────────────
@@ -117,6 +146,7 @@ const _CORE_FOLDER_MAP: Dictionary = {
 	"arc":        "arcCore",       "plasma":   "plasmaCore",
 	"steam":      "steamCore",     "echo":     "echoCore",
 	"orbit":      "orbitCore",     "scatter":  "scatterCore",
+	"prism_core": "orbitCore",
 	"catalyst":   "catalystCore",  "voltaic":  "voltaicCore",
 	"pierce":     "pierceBall",    "split":    "splitBall",
 	"cryo":       "cryoBall",      "glitch":   "glitchBall",
@@ -1560,7 +1590,6 @@ func _get_ball_core_type(ball) -> String:
 	if ball.get("can_plasma"):     return "plasma"
 	if ball.get("can_steam"):      return "steam"
 	if ball.get("can_echo"):       return "echo"
-	if ball.get("can_orbit"):      return "orbit"
 	if ball.get("can_scatter"):    return "scatter"
 	if ball.get("can_catalyst"):   return "catalyst"
 	if ball.get("can_voltaic"):         return "voltaic"
@@ -1884,6 +1913,16 @@ func _setup_calamity_cells() -> void:
 		icon.add_theme_font_size_override("font_size", 18)
 		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		cell.add_child(icon)
+		var icon_tex := TextureRect.new()
+		icon_tex.name = "IconTex"
+		icon_tex.size = Vector2(CELL_W, CELL_H)
+		icon_tex.position = Vector2.ZERO
+		icon_tex.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		icon_tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon_tex.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		icon_tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		icon_tex.visible = false
+		cell.add_child(icon_tex)
 		_calamity_cells.append(cell)
 		var ci := i
 		cell.mouse_entered.connect(func(): _on_calamity_cell_hover(ci))
@@ -1912,18 +1951,17 @@ func _update_calamity_cells() -> void:
 	for i in range(_calamity_cells.size()):
 		var cell: Panel = _calamity_cells[i]
 		var icon: Label = cell.get_node_or_null("Icon")
+		var icon_tex: TextureRect = cell.get_node_or_null("IconTex")
 		var sb := cell.get_theme_stylebox("panel") as StyleBoxFlat
 		if i >= max_calamity_slots:
 			cell.visible = false
 			continue
 		cell.visible = true
 		if i < calamity_slots.size():
-			if icon: icon.text = calamity_slots[i]
-			if icon: icon.modulate = Color(1, 1, 1, 1)
+			_set_calamity_cell_icon(icon, icon_tex, calamity_slots[i], 1.0)
 			cell.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		else:
-			if icon: icon.text = "◻"
-			if icon: icon.modulate = Color(1, 1, 1, 0.35)
+			_set_calamity_cell_icon(icon, icon_tex, "◻", 0.35)
 			cell.mouse_default_cursor_shape = Control.CURSOR_ARROW
 		if sb:
 			if calamity_aiming and calamity_index == i:
@@ -1932,6 +1970,23 @@ func _update_calamity_cells() -> void:
 			else:
 				sb.border_color = Color(0.3, 0.6, 0.9, 0.55)
 				sb.bg_color = Color(0.07, 0.07, 0.15, 0.9)
+
+# Calamity slotuna sprite'ı varsa resim, yoksa emoji metni koyar (crash yok).
+func _set_calamity_cell_icon(icon: Label, icon_tex: TextureRect, calamity: String, alpha: float) -> void:
+	var file: String = _CALAMITY_ICON_FILES.get(calamity, "")
+	var path := "res://assets/calamityIcons/" + file
+	if file != "" and ResourceLoader.exists(path):
+		if icon_tex:
+			icon_tex.texture = load(path)
+			icon_tex.visible = true
+			icon_tex.modulate = Color(1, 1, 1, alpha)
+		if icon: icon.visible = false
+	else:
+		if icon_tex: icon_tex.visible = false
+		if icon:
+			icon.visible = true
+			icon.text = calamity
+			icon.modulate = Color(1, 1, 1, alpha)
 
 # Bir Calamity hedefleme gerektiriyor mu (mouse_pos parametresi kullanan tipler)?
 const _CALAMITY_TARGETED := ["⚡", "🔥", "🌀", "🌋", "🌧️", "💣", "☠️", "🏚️", "🕳️"]
@@ -1995,7 +2050,7 @@ func _dispatch_calamity_effect(calamity: String, mouse_pos: Vector2) -> void:
 		_activate_siege_rain(mouse_pos)
 	elif calamity == "🔥💥":  # Wildfire
 		_activate_wildfire()
-	elif calamity == "💣":  # Glitch Bomb
+	elif calamity == "💣":  # Glitch Field
 		_activate_glitch_bomb(mouse_pos)
 	elif calamity == "💻💥":  # System Crash
 		_activate_system_crash()
@@ -2723,72 +2778,72 @@ func _build_all_upgrades() -> void:
 	{"name": "Arc Overload",    "category": "Utility",       "color": Color(0.3, 0.5, 1.0),  "desc": "Electrocute chains to 1 nearby\nenemy for 5 damage",                "index": 211, "weight": 4,  "rarity": "rare",      "chars": ["leila"], "min_level": 3},
 	# ── Cyclone (Manipülasyon) ────────────────────────────────────────────────
 	# Identity — Core kartları
-	{"name": "Glitch Core",          "category": "Identity",      "color": Color(0.8, 0.0, 0.8),  "desc": "Disorients subject for 3s",                                "index": 16,  "weight": 10, "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
+	{"name": "Glitch Core",          "category": "Identity",      "color": Color(0.8, 0.0, 0.8),  "desc": "[b]4[/b] damage.\nApplies [b]Glitched[/b] to enemy for 2s",                                "index": 16,  "weight": 10, "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
 	{"name": "Echo Core",            "category": "Identity",      "color": Color(0.5, 0.5, 1.0),  "desc": "Copies the nearest powered-up core",                       "index": 19,  "weight": 1,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3},
 	{"name": "Data Leech Core",      "category": "Identity",      "color": Color(0.6, 0.0, 0.2),  "desc": "+2 Integrity on hit",                                      "index": 22,  "weight": 10, "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
-	{"name": "Virus Core",       "category": "Identity",      "color": Color(0.1, 0.75, 0.3),  "desc": "Hit → 1 Virus stack\n(1 dmg/s, 3s, stackable)",       "index": 160, "weight": 9,  "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
-	{"name": "Decay Core",           "category": "Identity",      "color": Color(0.5, 0.3, 0.0),  "desc": "Hit → 1 Decay stack (max 3)\n5% slow/stack; death: 2 dmg/stack","index": 161, "weight": 8,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
-	{"name": "Static Core",          "category": "Identity",      "color": Color(0.8, 0.8, 0.2),  "desc": "Hit → slow 40% for 0.5s\nGlitched target: 1s instead",     "index": 162, "weight": 8,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
-	{"name": "Ricochet Core",        "category": "Identity",      "color": Color(0.45, 0.1, 0.9),  "desc": "Duvar sekmesi → +%5 hız (maks +%30)\nHer 10 hız = +1 hasar; düşmana çarpınca sıfır", "index": 163, "weight": 8,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
-	{"name": "Phantom Circuit Core", "category": "Identity",      "color": Color(0.3, 0.8, 0.9),  "desc": "Bu fırlatışta ilk isabet: 0.5s sersemletir\nPlayer'a dönene kadar tekrar tetiklenmez", "index": 159, "weight": 6,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
+	{"name": "Virus Core",       "category": "Identity",      "color": Color(0.1, 0.75, 0.3),  "desc": "Hit → 1 [b]Virus[/b] stack",       "index": 160, "weight": 9,  "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
+	{"name": "Decay Core",           "category": "Identity",      "color": Color(0.5, 0.3, 0.0),  "desc": "Hit → 1 [b]Decay[/b] stack","index": 161, "weight": 8,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
+	{"name": "Static Core",          "category": "Identity",      "color": Color(0.8, 0.8, 0.2),  "desc": "Hit → applies [b]Slowed[/b] to enemy (40%, 0.5s)\n[b]Glitched[/b] target: 1s instead",     "index": 162, "weight": 8,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
+	{"name": "Ricochet Core",        "category": "Identity",      "color": Color(0.45, 0.1, 0.9),  "desc": "Wall bounce → +5% speed (max +30%)\nEvery 10 speed = +1 dmg. Resets on hit", "index": 163, "weight": 8,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
+	{"name": "Phantom Circuit Core", "category": "Identity",      "color": Color(0.3, 0.8, 0.9),  "desc": "Every flight, first hit: stuns for 0.5s\nWon't trigger again until it returns", "index": 159, "weight": 6,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
 	# Utility — Lv0
-	{"name": "Data Exploit",         "category": "Utility",       "color": Color(0.7, 0.1, 0.5),  "desc": "Glitch'li hedef +1 bonus hasar\n(taban +3)",                "index": 115, "weight": 10, "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
-	{"name": "Extended Glitch",      "category": "Utility",       "color": Color(0.75, 0.0, 0.7), "desc": "Glitch süresi +1 Saniye\n(3s taban)",                       "index": 119, "weight": 9,  "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
-	{"name": "Angular Precision",    "category": "Utility",       "color": Color(0.45, 0.2, 0.8), "desc": "Her uçuşun ilk vuruşu: +%5 hasar\n(taban +%15)",           "index": 131, "weight": 8,  "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
-	{"name": "Signal Jam",           "category": "Utility",       "color": Color(0.6, 0.0, 0.6),  "desc": "Glitch'li düşman hızı: +%5\n(taban +%15)",                 "index": 120, "weight": 9,  "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
+	{"name": "Data Exploit",         "category": "Utility",       "color": Color(0.7, 0.1, 0.5),  "desc": "+1 bonus damage to [b]Glitched[/b] targets\n(base +3)",                "index": 115, "weight": 10, "rarity": "common",    "chars": ["cyclone"], "min_level": 0, "requires_any": [16, 192, 197, 214]},
+	{"name": "Extended Glitch",      "category": "Utility",       "color": Color(0.75, 0.0, 0.7), "desc": "[b]Glitched[/b] duration +1s\n(2s base)",                       "index": 119, "weight": 9,  "rarity": "common",    "chars": ["cyclone"], "min_level": 0, "requires_any": [16, 192, 197, 214]},
+	{"name": "Angular Precision",    "category": "Utility",       "color": Color(0.45, 0.2, 0.8), "desc": "First hit of each flight: +5% dmg\n(base +15%)",           "index": 131, "weight": 8,  "rarity": "common",    "chars": ["cyclone"], "min_level": 0},
+	{"name": "Signal Jam",           "category": "Utility",       "color": Color(0.6, 0.0, 0.6),  "desc": "[b]Glitched[/b] enemy speed +5%\n(base +15%)",                 "index": 120, "weight": 9,  "rarity": "common",    "chars": ["cyclone"], "min_level": 0, "requires_any": [16, 192, 197, 214]},
 	# Utility — Lv1
-	{"name": "Bounce Mastery",       "category": "Utility",       "color": Color(0.45, 0.1, 0.9), "desc": "Ricochet Strike bonusu: +1\n(taban 4 → 6)",                "index": 133, "weight": 6,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [114]},
-	{"name": "Backstab Protocol",    "category": "Utility",       "color": Color(0.15, 0.55, 0.35),"desc": "Kuzey duvar sekmesi: sonraki vuruş\n+%25 daha fazla (taban ×1.5)",  "index": 158, "weight": 6,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
-	{"name": "Stack Overflow",       "category": "Utility",       "color": Color(0.1, 0.8, 0.35),  "desc": "Virus stack cap +1\n(taban 3 → 4)",                    "index": 148, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [160]},
-	{"name": "Memory Leak",          "category": "Utility",       "color": Color(0.05, 0.65, 0.3), "desc": "Virus süresi +1 saniye\n(taban 5s → 6s)",              "index": 150, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [160]},
-	{"name": "Cascade Delete",       "category": "Utility",       "color": Color(0.1, 0.7, 0.45),  "desc": "Virus isabeti en yakın düşmana yayılır\nLv1: 75px/1, Lv2: 100px/1, Lv3: 125px/2 düşman", "index": 152, "weight": 6,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [160]},
+	{"name": "Bounce Mastery",       "category": "Utility",       "color": Color(0.45, 0.1, 0.9), "desc": "Ricochet Strike bonus +1\n(base 4 → 6)",                "index": 133, "weight": 6,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [114]},
+	{"name": "Backstab Protocol",    "category": "Utility",       "color": Color(0.15, 0.55, 0.35),"desc": "North wall bounce: next hit\n+25% more (base ×1.5)",  "index": 158, "weight": 6,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
+	{"name": "Stack Overflow",       "category": "Utility",       "color": Color(0.1, 0.8, 0.35),  "desc": "[b]Virus[/b] stack cap +1\n(base 3 → 4)",                    "index": 148, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [160]},
+	{"name": "Memory Leak",          "category": "Utility",       "color": Color(0.05, 0.65, 0.3), "desc": "[b]Virus[/b] duration +1 second\n(base 3s → 4s)",              "index": 150, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [160]},
+	{"name": "Cascade Delete",       "category": "Utility",       "color": Color(0.1, 0.7, 0.45),  "desc": "[b]Virus[/b] hit spreads to nearest enemy\nLv1: 75px/1, Lv2: 100px/1, Lv3: 125px/2 enemies", "index": 152, "weight": 6,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [160]},
 	# Utility — Lv2
-	{"name": "Pinball Protocol",     "category": "Utility",       "color": Color(0.4, 0.1, 0.95), "desc": "Gereken sekme -1 (pierce kazanmak için)\nLv1: 5, Lv2: 4, Lv3: 3 sekme", "index": 134, "weight": 5,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2, "requires": [163]},
-	{"name": "Stealth Pass",         "category": "Utility",       "color": Color(0.25, 0.7, 0.85),"desc": "Phantom Circuit Core: sersemlenen\ndüşman sayısı +1 (taban 1)",  "index": 139, "weight": 5,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 2, "requires": [159]},
-	{"name": "Ghost Protocol",       "category": "Utility",       "color": Color(0.2, 0.75, 0.9), "desc": "Phantom Circuit Core sersemletme süresi\nLv1: 0.75s, Lv2: 1.0s, Lv3: 1.5s (taban 0.5s)", "index": 140, "weight": 4,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2, "requires": [159]},
-	{"name": "Corruption Protocol",  "category": "Utility",       "color": Color(0.0, 0.6, 0.3),  "desc": "Virus'lü hedef +%5 fazla hasar\nLv1: %15, Lv2: %20, Lv3: %25",  "index": 151, "weight": 5,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2, "requires": [160]},
+	{"name": "Pinball Protocol",     "category": "Utility",       "color": Color(0.4, 0.1, 0.95), "desc": "Bounces needed -1 (to gain pierce)\nLv1: 5, Lv2: 4, Lv3: 3 bounces", "index": 134, "weight": 5,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2, "requires": [163]},
+	{"name": "Stealth Pass",         "category": "Utility",       "color": Color(0.25, 0.7, 0.85),"desc": "Phantom Circuit Core: stunned\nenemy count +1 (base 1)",  "index": 139, "weight": 5,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 2, "requires": [159]},
+	{"name": "Ghost Protocol",       "category": "Utility",       "color": Color(0.2, 0.75, 0.9), "desc": "Phantom Circuit Core stun duration\nLv1: 0.75s, Lv2: 1.0s, Lv3: 1.5s (base 0.5s)", "index": 140, "weight": 4,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2, "requires": [159]},
+	{"name": "Corruption Protocol",  "category": "Utility",       "color": Color(0.0, 0.6, 0.3),  "desc": "[b]Virus[/b]'d target takes +5% more dmg\nLv1: 15%, Lv2: 20%, Lv3: 25%",  "index": 151, "weight": 5,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2, "requires": [160]},
 	# Individuality — Lv1
-	{"name": "Ricochet Strike",      "category": "Individuality", "color": Color(0.5, 0.2, 0.9),  "desc": "Each wall bounce in flight:\nnext hit +4 dmg",             "index": 114, "weight": 8,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [163]},
-	{"name": "Rogue's Instinct",     "category": "Individuality", "color": Color(0.6, 0.15, 0.4), "desc": "Enemy purified:\n+1 Integrity",                            "index": 145, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
+	{"name": "Ricochet Strike",      "category": "Individuality", "color": Color(0.5, 0.2, 0.9),  "desc": "Wall bounces in flight add +4 dmg\nto every hit until it returns",             "index": 114, "weight": 8,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [163]},
+	{"name": "Rogue's Instinct",     "category": "Individuality", "color": Color(0.6, 0.15, 0.4), "desc": "On kill:\n+1 Integrity",                            "index": 145, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
 	{"name": "Data Siphon",          "category": "Individuality", "color": Color(0.6, 0.0, 0.35), "desc": "Data Leech heals +1 extra\nwhen target has Decay stacks",        "index": 121, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [22, 161]},
 	{"name": "Viral Load",           "category": "Individuality", "color": Color(0.15, 0.7, 0.4),  "desc": "Glitched target receives\n2× Virus stacks",            "index": 149, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [160]},
 	# Individuality — Lv2
-	{"name": "Shadow Strike",        "category": "Individuality", "color": Color(0.3, 0.0, 0.5),  "desc": "Sağ/sol duvar sekmesi sonrası\nilk vuruş: ×1.5 hasar",                "index": 116, "weight": 5,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
-	{"name": "System Overload",      "category": "Individuality", "color": Color(0.85, 0.1, 0.7), "desc": "5+ Glitched enemies alive:\nall your dmg +20%",             "index": 126, "weight": 5,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
-	{"name": "Kinetic Rogue",        "category": "Individuality", "color": Color(0.45, 0.15, 0.9),"desc": "Tek fırlatışta 5 sekme: tüm Ricochet\nCore'lara +1 kalıcı hasar (dönünce sıfırlanır)", "index": 136, "weight": 4,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2, "requires": [163]},
+	{"name": "Shadow Strike",        "category": "Individuality", "color": Color(0.3, 0.0, 0.5),  "desc": "Right/left wall bounce: next hit\n×1.5 damage",                "index": 116, "weight": 5,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
+	{"name": "System Overload",      "category": "Individuality", "color": Color(0.85, 0.1, 0.7), "desc": "5+ [b]Glitched[/b] enemies alive:\nall your dmg +20%",             "index": 126, "weight": 5,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2, "requires_any": [16, 192, 197, 214]},
+	{"name": "Kinetic Rogue",        "category": "Individuality", "color": Color(0.45, 0.15, 0.9),"desc": "5 wall bounces in one flight: all Ricochet\nCores gain permanent +1 dmg (bounce count resets on return)", "index": 136, "weight": 4,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2, "requires": [163]},
 	{"name": "Phase Shift",          "category": "Individuality", "color": Color(0.3, 0.8, 0.9),  "desc": "Stunned enemy hit:\n×1.5 damage",                          "index": 141, "weight": 4,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2, "requires": [159]},
 	{"name": "Shadow Dance",         "category": "Individuality", "color": Color(0.35, 0.05, 0.6),"desc": "7 wall bounces in same flight:\nCore Speed +3% permanently", "index": 146, "weight": 4,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
 	# Individuality — Lv3
-	{"name": "Circuit Breaker",      "category": "Individuality", "color": Color(0.25, 0.75, 0.95),"desc": "Every 25th hit: all enemies\nin the Yard Glitched for 3s", "index": 143, "weight": 3,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3},
-	{"name": "Zero Day",             "category": "Individuality", "color": Color(0.0, 0.85, 0.4),  "desc": "Glitch'li düşmana Virus uygulanınca\nmevcut stack ×2 olur",   "index": 154, "weight": 3,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3, "requires": [160]},
-	{"name": "Kernel Panic",         "category": "Individuality", "color": Color(0.05, 0.9, 0.35), "desc": "Each Virus tick:\n5% chance to Glitch target",         "index": 155, "weight": 3,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3, "requires": [160]},
+	{"name": "Circuit Breaker",      "category": "Individuality", "color": Color(0.25, 0.75, 0.95),"desc": "Every 25th hit: all enemies\nin the Yard [b]Glitched[/b] for 2s", "index": 143, "weight": 3,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3},
+	{"name": "Zero Day",             "category": "Individuality", "color": Color(0.0, 0.85, 0.4),  "desc": "Applying [b]Virus[/b] to a [b]Glitched[/b] enemy\ndoubles its current stack",   "index": 154, "weight": 3,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3, "requires": [160]},
+	{"name": "Kernel Panic",         "category": "Individuality", "color": Color(0.05, 0.9, 0.35), "desc": "Each [b]Virus[/b] tick:\n5% chance the target becomes [b]Glitched[/b]",         "index": 155, "weight": 3,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3, "requires": [160]},
 	# Calamity
 	{"name": "Data Storm",           "category": "Calamity",      "color": Color(0.7, 0.0, 0.8),  "desc": "All [b]Glitched[/b] enemies in the Yard are hit\nby a corruption burst for 10 dmg, clearing Glitch",             "index": 129, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 3, "requires_any": [16, 192, 197, 214]},
 	{"name": "Backdoor",             "category": "Calamity",      "color": Color(0.6, 0.0, 0.7),  "desc": "All enemies in the Yard\nbecome [b]Glitched[/b] for 3s",                  "index": 130, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
 	{"name": "Bounce Barrage",       "category": "Calamity",      "color": Color(0.35, 0.0, 0.9),  "desc": "Core Speed ×3 for 5s",                                   "index": 138, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
-	{"name": "Mirror Image",         "category": "Calamity",      "color": Color(0.2, 0.65, 0.9),  "desc": "Grants 2 bonus cores.\nUnused ones vanish after 25s",                          "index": 144, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
+	{"name": "Mirror Image",         "category": "Calamity",      "color": Color(0.2, 0.65, 0.9),  "desc": "Grants 2 bonus cores.\nVanish after 25s if not fired",                          "index": 144, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
 	{"name": "Systemic Failure",     "category": "Calamity",      "color": Color(0.0, 0.7, 0.35),  "desc": "All enemies in the Yard\nget max [b]Virus[/b] stacks",        "index": 156, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
 	# ── Cyclone Connected Cores (iç yörünge) ─────────────────────────────────
-	{"name": "Glitch Pulse Core",    "category": "Identity",      "color": Color(0.8, 0.0, 0.8),   "desc": "Her 4s: 80px içinde 1 düşmana\nGlitch uygular",                 "index": 192, "weight": 5, "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
-	{"name": "Shadow Core",          "category": "Identity",      "color": Color(0.2, 0.05, 0.4),  "desc": "Dash sonrası 3s:\n50px çevresine 1 hasar/s",      "index": 193, "weight": 4, "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
-	{"name": "Data Drain Core",      "category": "Identity",      "color": Color(0.6, 0.0, 0.25),  "desc": "Glitch'li düşman 60px içindeyse\nher 1s: +1 HP",                 "index": 194, "weight": 5, "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
-	{"name": "Virus Beacon Core",    "category": "Identity",      "color": Color(0.1, 0.75, 0.3),  "desc": "Virus'lü düşman 80px'te ölürse\n3s: 100px'e 1 stack yayar", "index": 195, "weight": 4, "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
-	{"name": "Rogue's Eye Core",     "category": "Identity",      "color": Color(0.9, 0.6, 0.1),   "desc": "Her 7s: en yakın düşmanı işaretle\n(3s, %10 fazla hasar alır)",  "index": 196, "weight": 4, "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
-	{"name": "Circuit Overload Core","category": "Identity",      "color": Color(0.25, 0.75, 0.95),"desc": "Circuit Breaker tetiklenince\n3s: 90px çevresine sürekli Glitch",  "index": 197, "weight": 3, "rarity": "epic",      "chars": ["cyclone"], "min_level": 3},
+	{"name": "Glitch Pulse Core",    "category": "Identity",      "color": Color(0.8, 0.0, 0.8),   "desc": "Every 4s: applies [b]Glitched[/b]\nto a nearby enemy",                 "index": 192, "weight": 5, "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
+	{"name": "Shadow Core",          "category": "Identity",      "color": Color(0.2, 0.05, 0.4),  "desc": "After a dash, 3s: deals 1 dmg/s\nto nearby enemies",      "index": 193, "weight": 4, "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
+	{"name": "Data Drain Core",      "category": "Identity",      "color": Color(0.6, 0.0, 0.25),  "desc": "If a [b]Glitched[/b] enemy is nearby,\nheals +1 HP every 1s",                 "index": 194, "weight": 5, "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
+	{"name": "Virus Beacon Core",    "category": "Identity",      "color": Color(0.1, 0.75, 0.3),  "desc": "If a nearby [b]Virus[/b]'d enemy dies,\nspreads 1 stack per enemy nearby for 3s", "index": 195, "weight": 4, "rarity": "rare",      "chars": ["cyclone"], "min_level": 2, "requires": [160]},
+	{"name": "Rogue's Eye Core",     "category": "Identity",      "color": Color(0.9, 0.6, 0.1),   "desc": "[b]Marks[/b] the nearest enemy",  "index": 196, "weight": 4, "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
+	{"name": "Circuit Overload Core","category": "Identity",      "color": Color(0.25, 0.75, 0.95),"desc": "When Circuit Breaker triggers,\n3s: constantly applies [b]Glitched[/b] nearby",  "index": 197, "weight": 3, "rarity": "epic",      "chars": ["cyclone"], "min_level": 3, "requires": [143]},
 	# Identity — yeni Core'lar
-	{"name": "Tracer Core",    "category": "Identity",      "color": Color(0.7, 0.2, 1.0),  "desc": "Vuruşta 1s takip izi bırakır\nİzden geçen düşman 0.5s yavaşlar",  "index": 212, "weight": 8,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
-	{"name": "Spike Core",     "category": "Identity",      "color": Color(0.5, 0.15, 0.0), "desc": "İsabet: hedefte 3 Decay stack varsa\nanında Decay patlaması tetikler", "index": 213, "weight": 6,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
-	{"name": "Leech Nova Core","category": "Identity",      "color": Color(0.6, 0.0, 0.3),  "desc": "Öldürünce: +2 HP\n80px çevresine 1s Glitch",                        "index": 214, "weight": 4,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3},
+	{"name": "Tracer Core",    "category": "Identity",      "color": Color(0.7, 0.2, 1.0),  "desc": "Hit leaves a 1s tracer trail\nEnemies crossing it are slowed 40% for 0.5s",  "index": 212, "weight": 8,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
+	{"name": "Spike Core",     "category": "Identity",      "color": Color(0.5, 0.15, 0.0), "desc": "Hit: if target has 3 [b]Decay[/b] stacks,\ninstantly triggers the Decay explosion", "index": 213, "weight": 6,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2, "requires": [161]},
+	{"name": "Leech Nova Core","category": "Identity",      "color": Color(0.6, 0.0, 0.3),  "desc": "On kill: heals +2 HP",                        "index": 214, "weight": 4,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3},
 	# Calamity — Rare/Epic
-	{"name": "Glitch Bomb",    "category": "Calamity",      "color": Color(0.75, 0.0, 0.85),"desc": "Leaves a zone on the ground.\nEnemies passing through become [b]Glitched[/b]",                              "index": 215, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 3},
+	{"name": "Glitch Field",   "category": "Calamity",      "color": Color(0.75, 0.0, 0.85),"desc": "Leaves a zone on the ground.\nEnemies passing through become [b]Glitched[/b]",                              "index": 215, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 3},
 	{"name": "System Crash",   "category": "Calamity",      "color": Color(0.8, 0.1, 0.6),  "desc": "All [b]Glitched[/b] enemies in the Yard\nlose 30% of their current HP",          "index": 216, "weight": 4,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3, "requires_any": [16, 192, 197, 214]},
 	{"name": "Decay Field",    "category": "Calamity",      "color": Color(0.45, 0.2, 0.0),  "desc": "Creates a decay zone for 5s.\nEnemies inside gain 1 [b]Decay[/b] stack every second","index": 218, "weight": 4,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 3},
 	# Individuality
-	{"name": "Decay Harvest",       "category": "Individuality", "color": Color(0.5, 0.25, 0.0), "desc": "Decay patlaması tetiklenince:\n+2 HP kazan",                    "index": 219, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [161]},
-	{"name": "Ghost Step",          "category": "Individuality", "color": Color(0.3, 0.8, 0.9),  "desc": "Dash sonrası 1.5s hasar bağışıklığı\n(5s bekleme süresi)",     "index": 220, "weight": 5,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
-	{"name": "Overclock Protocol",  "category": "Individuality", "color": Color(0.25, 0.9, 0.95),"desc": "Circuit Breaker sayacı\n2× hızlı dolar",                       "index": 221, "weight": 3,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 4, "requires": [143]},
+	{"name": "Decay Harvest",       "category": "Individuality", "color": Color(0.5, 0.25, 0.0), "desc": "When a [b]Decay[/b] explosion triggers:\nheal +2 HP",                    "index": 219, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [161]},
+	{"name": "Ghost Step",          "category": "Individuality", "color": Color(0.3, 0.8, 0.9),  "desc": "After a dash: 1.5s damage immunity\n(5s cooldown)",     "index": 220, "weight": 5,  "rarity": "rare",      "chars": ["cyclone"], "min_level": 2},
+	{"name": "Overclock Protocol",  "category": "Individuality", "color": Color(0.25, 0.9, 0.95),"desc": "Circuit Breaker counter fills\n2× faster",                       "index": 221, "weight": 3,  "rarity": "epic",      "chars": ["cyclone"], "min_level": 4, "requires": [143]},
 	# Utility
-	{"name": "Decay Amp",   "category": "Utility", "color": Color(0.55, 0.25, 0.0), "desc": "Decay patlaması hasarı (stack başına)\nLv1: 3, Lv2: 5, Lv3: 7 (taban 2)",  "index": 222, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1},
+	{"name": "Decay Amp",   "category": "Utility", "color": Color(0.55, 0.25, 0.0), "desc": "[b]Decay[/b] explosion damage (per stack)\nLv1: 3, Lv2: 5, Lv3: 7 (base 2)",  "index": 222, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [161]},
 	{"name": "Chain Extension", "category": "Utility", "color": Color(0.7, 0.6, 0.3), "desc": "Zincir 5 halka uzar\n(hareket alanı genişler)",                         "index": 224, "weight": 6,  "rarity": "uncommon",  "chars": [],           "min_level": 0},
 	# ── Herkese açık ─────────────────────────────────────────────────────────
 	{"name": "Core Mastery",        "category": "Utility",       "color": Color(0.2, 0.8, 0.2), "desc": "+1 damage to all cores",                    "index": 11, "weight": 10, "rarity": "common", "chars": [], "min_level": 0},
@@ -4840,7 +4895,7 @@ func _process(delta: float) -> void:
 		elif calamity == "🌀":       _aim_radius = 150.0   # Gravitational Force
 		elif calamity == "🌋":       _aim_radius = 84.0    # Volcanic Rift (sprite boyutuna eşitlendi)
 		elif calamity == "🌧️":      _aim_radius = 170.0   # Siege Rain (sapma alanı)
-		elif calamity == "💣":       _aim_radius = 84.0   # Glitch Bomb
+		elif calamity == "💣":       _aim_radius = 84.0   # Glitch Field
 		elif calamity == "☠️":      _aim_radius = 84.0    # Decay Field (sprite boyutuna eşitlendi)
 		elif calamity == "🏚️":      _aim_radius = 130.0   # Rampart Collapse
 		elif calamity == "🕳️":      _aim_radius = 70.0    # WormHole
@@ -5250,7 +5305,7 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 	elif index == 214:  # Leech Nova Core
 		get_node("Player").has_leech_nova_core = true
 		$BallLauncher.queue_upgrade_ball("leech_nova_core")
-	elif index == 215:  # Glitch Bomb
+	elif index == 215:  # Glitch Field
 		if calamity_slots.size() < max_calamity_slots:
 			calamity_slots.append("💣")
 			update_ui()

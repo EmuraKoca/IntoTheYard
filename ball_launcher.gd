@@ -314,9 +314,9 @@ func _launch_typed_ball(ball_type: String) -> void:
 			ball.can_echo     = true
 			ball.max_damage   = 5 + player_node.ball_mastery
 		"orbit":
-			ball.can_orbit    = true
-			ball.is_inner_core = true
-			ball.max_damage   = 4 + player_node.ball_mastery
+			ball.is_inner_core   = true
+			ball.inner_core_type = "prism_core"
+			ball.max_damage      = 4 + player_node.ball_mastery
 		"scatter":
 			ball.can_scatter  = true
 			ball.max_damage   = 4 + player_node.ball_mastery

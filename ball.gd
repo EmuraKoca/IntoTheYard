@@ -27,6 +27,16 @@ var can_cryo = false
 var slow_amount = 0.25
 var can_glitch = false
 var can_water = false
+# Echo Core (mimic) için: fırlatılan/normal core'ların TÜMÜ (Connected Core'lar hariç —
+# Prism Core dahil hepsi is_inner_core=true olduğu için burada YOK, bilerek).
+const _MIMIC_POWER_FLAGS := [
+	"can_split", "can_electric", "can_pierce", "can_cryo", "can_glitch", "can_water",
+	"can_fire", "can_leech", "can_armor", "can_anchor", "can_crusher", "can_kinetic",
+	"can_bulwark", "can_siege", "can_bloodbound", "can_tempered", "can_plasma",
+	"can_steam", "can_arc", "can_echo", "can_scatter", "can_catalyst", "can_voltaic",
+	"can_antivirus_core", "can_decay", "can_static_core", "can_ricochet_core",
+	"can_phantom_circuit", "can_tracer_core", "can_spike_core", "can_leech_nova_core",
+]
 var is_mimic = false
 var mimic_done = false
 var mimic_color_time = 0.0
@@ -58,9 +68,7 @@ var can_steam: bool    = false  # Wet hedef → küçük AoE
 var can_arc: bool      = false  # Electrified düşmana çarptığında debuff 2 yakına yayılır
 var can_echo: bool     = false  # Düşmanın elementini kopyala, dönüşte uygula
 var _echo_element: String = ""  # Echo Core'un kopyaladığı element
-var can_orbit: bool    = false  # Orbit'te kalır, random element uygular
-var _orbit_element_timer: float = 0.0
-const ORBIT_ELEMENT_INTERVAL: float = 2.0
+const ORBIT_ELEMENT_INTERVAL: float = 2.0  # Prism Core (_inner_core_tick, "prism_core") kullanıyor
 const ORBIT_ELEMENT_RADIUS: float = 55.0
 var is_inner_core: bool = false  # İç yörüngede kalır, hiç fırlatılmaz
 var is_normal_core: bool = false  # Başlangıç normal topu — küçük scale
@@ -79,6 +87,11 @@ var _phantom_triggered: bool = false    # Bu fırlatışta stun zaten tetiklendi
 var can_tracer_core: bool      = false  # İsabette iz bırakır, izden geçen yavaşlar
 var can_spike_core: bool       = false  # 3. Decay stack'te anında patlama
 var can_leech_nova_core: bool  = false  # Öldürünce +2 HP + 80px Glitch
+var _re_marked_target: Node = null      # Rogue's Eye Core: şu an işaretli tutulan düşman
+
+func _exit_tree() -> void:
+	if is_instance_valid(_re_marked_target):
+		_re_marked_target.set("is_marked", false)
 var trail: Line2D = null
 var _wall_bounce_count: int = 0  # sonsuz sekme önlemi
 var _pb_bounce_streak: int = 0   # Pinball Protocol: vurmadan sekme sayacı
@@ -240,8 +253,6 @@ func _setup_ball_sprite() -> void:
 		folder = "temperedCore";    frame_count = 9
 	elif can_echo:
 		folder = "echoCore";        frame_count = 17
-	elif can_orbit:
-		folder = "orbitCore";       frame_count = 17
 	elif can_scatter:
 		folder = "scatterCore";     frame_count = 17
 	elif can_catalyst:
@@ -334,6 +345,7 @@ func _setup_ball_sprite() -> void:
 			"echo_resonance_core":   ["echoResonanceCore",   9],
 			"volatile_aura_core":    ["volatileAuraCore",    9],
 			"circuit_overload_core": ["circuitOverloadCore", 18],
+			"prism_core":            ["orbitCore",           17],
 		}
 		if inner_folders.has(inner_core_type):
 			var info = inner_folders[inner_core_type]
@@ -496,15 +508,11 @@ func absorb() -> void:
 		trail.visible = false
 	
 func _copy_ball(other: Node2D) -> void:
-	can_split = other.can_split
-	can_electric = other.can_electric
-	can_pierce = other.can_pierce
-	can_cryo = other.can_cryo
-	can_glitch = other.can_glitch
-	can_water = other.can_water
-	can_fire = other.can_fire
-	can_leech = other.can_leech
-	# max_damage is not copied!
+	# Sadece "hangi tip" (etkisi) kopyalanır — kendi max_damage'ımız (hasar sayımız)
+	# hiç değişmez, kullanıcı kararı: "topun hasarı hep aynı kalacak, sadece
+	# güçlendirilmiş topun etkisini kazanacak".
+	for _flag in _MIMIC_POWER_FLAGS:
+		set(_flag, other.get(_flag))
 	slow_amount = other.slow_amount
 	is_mimic = false
 	mimic_done = true
@@ -537,13 +545,6 @@ func _physics_process(delta: float) -> void:
 	# İç yörünge: yakın düşmanlara Antivirus uygula
 	if is_inner_core and state == "orbiting":
 		_inner_core_tick(delta)
-
-	# Prism Core: orbit'te beklerken yakındaki düşmanlara rastgele element uygula
-	if can_orbit and state == "orbiting":
-		_orbit_element_timer -= delta
-		if _orbit_element_timer <= 0.0:
-			_orbit_element_timer = ORBIT_ELEMENT_INTERVAL
-			_prism_apply_random_element()
 
 	match state:
 		"orbiting":  _process_orbiting(delta); return
@@ -673,7 +674,11 @@ func _physics_process(delta: float) -> void:
 		var balls = get_tree().get_nodes_in_group("balls")
 		for other_ball in balls:
 			if other_ball == self: continue
-			var has_power = other_ball.can_split or other_ball.can_electric or other_ball.can_pierce or other_ball.can_cryo or other_ball.can_glitch or other_ball.can_fire or other_ball.can_water
+			var has_power := false
+			for _flag in _MIMIC_POWER_FLAGS:
+				if other_ball.get(_flag):
+					has_power = true
+					break
 			if has_power and other_ball.moving and not other_ball.is_fused:
 				if global_position.distance_to(other_ball.global_position) < 200:
 					_copy_ball(other_ball)
@@ -879,7 +884,7 @@ func _defense_hit(subject: Node2D) -> void:
 		_auto_fire()
 
 func _auto_fire() -> void:
-	if can_orbit or is_inner_core: return  # Bu core'lar orbit'te kalır
+	if is_inner_core: return  # Bu core'lar orbit'te kalır
 	var player := _get_player()
 	if not is_instance_valid(player): return
 	player.remove_from_orbit(self)
@@ -967,6 +972,13 @@ func _inner_core_tick(delta: float) -> void:
 					gfx.gain_armor(1)
 			else:
 				_anchor_still_time = 0.0
+
+		"prism_core":
+			# Her 2s: 55px içindeki TÜM düşmanlara rastgele element uygula (mist_core'dan
+			# farklı — tek hedef değil, alandaki her düşman ayrı ayrı zar atar)
+			if _inner_tick_timer_b > 0.0: return
+			_inner_tick_timer_b = ORBIT_ELEMENT_INTERVAL
+			_prism_apply_random_element()
 
 		"mist_core":
 			# Her 4s: 70px içinde rastgele 1 düşmana Wet uygula
@@ -1069,9 +1081,7 @@ func _inner_core_tick(delta: float) -> void:
 			pass
 
 		"rogues_eye_core":
-			# Her 7s: en yakın düşmanı 3s işaretle (%10 fazla hasar)
-			if _inner_tick_timer_b > 0.0: return
-			_inner_tick_timer_b = 7.0
+			# Sürekli: en yakın düşmanı işaretli tutar (bekleme/süre yok, hedef değişince eski işaret kalkar)
 			var _nearest_dist := INF
 			var _nearest = null
 			for subject in get_tree().get_nodes_in_group("subjects"):
@@ -1080,12 +1090,12 @@ func _inner_core_tick(delta: float) -> void:
 				if _d < _nearest_dist:
 					_nearest_dist = _d
 					_nearest = subject
-			if is_instance_valid(_nearest):
-				_nearest.set("is_marked", true)
-				get_tree().create_timer(3.0).timeout.connect(func():
-					if is_instance_valid(_nearest):
-						_nearest.set("is_marked", false)
-				)
+			if _re_marked_target != _nearest:
+				if is_instance_valid(_re_marked_target):
+					_re_marked_target.set("is_marked", false)
+				_re_marked_target = _nearest
+				if is_instance_valid(_re_marked_target):
+					_re_marked_target.set("is_marked", true)
 
 		"circuit_overload_core":
 			# Animasyonu Circuit Breaker sayacına göre güncelle
@@ -1264,7 +1274,6 @@ func _get_ball_type_str() -> String:
 	if can_arc:              return "arc"
 	if can_steam:            return "steam"
 	if can_echo:             return "echo"
-	if can_orbit:            return "orbit"
 	if can_scatter:          return "scatter"
 	if can_catalyst:         return "catalyst"
 	if can_antivirus_core:   return "antivirus_core"
@@ -1503,13 +1512,8 @@ func _hit_subject(subject: Node2D) -> void:
 	if mimic_done and not is_mimic:
 		mimic_hits += 1
 		if mimic_hits >= max_mimic_hits:
-			can_split = false
-			can_electric = false
-			can_pierce = false
-			can_cryo = false
-			can_glitch = false
-			can_water = false
-			can_fire = false
+			for _flag in _MIMIC_POWER_FLAGS:
+				set(_flag, false)
 			mimic_done = false
 			mimic_hits = 0
 			queue_redraw()

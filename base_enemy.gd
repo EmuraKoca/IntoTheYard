@@ -197,7 +197,7 @@ func take_damage(amount, from_ally: bool = false, kill_cause: String = "normal",
 	if is_dead: return
 	if physical: _react_flash(Color(2.0, 2.0, 2.0, 1.0), 0.08)
 	if get("is_marked") and is_marked:
-		amount = int(amount * 1.1)
+		amount = int(amount * 1.5)
 	# Primal Instinct: 3 farklı reaksiyon tetiklendiyse +10% hasar (5s)
 	var _pi_player := _get_player()
 	if _pi_player and _pi_player.get("has_primal_instinct") and _pi_player.has_primal_instinct and _pi_player._primal_instinct_timer > 0.0:
@@ -260,10 +260,6 @@ func die(cause: String = "normal") -> void:
 	if _lnc_player and _lnc_player.get("has_leech_nova_core") and _lnc_player.has_leech_nova_core:
 		var _lnc_game := get_node_or_null("/root/GameScene")
 		if _lnc_game and _lnc_game.has_method("heal_player"): _lnc_game.heal_player(2)
-		for s in get_tree().get_nodes_in_group("subjects"):
-			if not is_instance_valid(s): continue
-			if global_position.distance_to(s.global_position) <= 80.0:
-				if s.has_method("apply_glitch"): s.apply_glitch()
 	is_dead = true
 	z_index = 0
 	set_physics_process(false)
@@ -435,7 +431,7 @@ func apply_antivirus(stacks: int = 1) -> void:
 	var _ap := get_tree().get_first_node_in_group("player")
 	var _cap: int = 3 + (_ap.stack_overflow_level if (_ap and _ap.get("stack_overflow_level")) else 0)
 	antivirus_stacks = min(antivirus_stacks + stacks, _cap)
-	var _dur: float = 5.0 + float(_ap.memory_leak_level if (_ap and _ap.get("memory_leak_level")) else 0)
+	var _dur: float = 3.0 + float(_ap.memory_leak_level if (_ap and _ap.get("memory_leak_level")) else 0)
 	_antivirus_duration = max(_antivirus_duration, _dur)
 	_antivirus_tick = min(_antivirus_tick if _antivirus_tick > 0 else 0.5, 0.5)
 	is_antivirused = true
@@ -464,14 +460,14 @@ func _process_antivirus(delta: float) -> void:
 		antivirus_stacks = 0
 		_hide_debuff("virus")
 
-func apply_glitch(duration: float = 3.0) -> void:
+func apply_glitch(duration: float = 2.0) -> void:
 	if is_dead: return
 	if is_glitched:
 		return
 	var _gp := get_tree().get_first_node_in_group("player")
 	var _dur := duration
 	if _gp and _gp.get("extended_glitch_bonus") and _gp.extended_glitch_bonus > 0:
-		_dur = max(_dur, 3.0 + float(_gp.extended_glitch_bonus))
+		_dur = max(_dur, 2.0 + float(_gp.extended_glitch_bonus))
 	is_glitched = true
 	_show_debuff("glitch")
 	# Signal Jam: Glitch'li düşman daha hızlı hareket eder (diğer düşmanlara daha çabuk ulaşır)

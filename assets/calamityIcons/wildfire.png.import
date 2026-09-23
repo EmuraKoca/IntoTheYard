@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cl4obj75egsml"
-path="res://.godot/imported/glitch_bomb_art.png-282cfceacc87b57f64a21f2c8a7f25d1.ctex"
+uid="uid://cbotyqyuf4lxb"
+path="res://.godot/imported/wildfire.png-8a727e050f585d54ab3d9e5d4186449b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/upgradeCardsArt/Cyclone/calamityCards/glitch_bomb_art.png"
-dest_files=["res://.godot/imported/glitch_bomb_art.png-282cfceacc87b57f64a21f2c8a7f25d1.ctex"]
+source_file="res://assets/calamityIcons/wildfire.png"
+dest_files=["res://.godot/imported/wildfire.png-8a727e050f585d54ab3d9e5d4186449b.ctex"]
 
 [params]
 

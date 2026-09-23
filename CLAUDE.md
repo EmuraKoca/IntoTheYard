@@ -3,6 +3,201 @@
 Bu dosya, farklı bilgisayarlardaki (ev / işyeri) Claude Code oturumları arasında bağlam
 köprüsü olarak kullanılır. Her oturum başında oku, her oturum sonunda güncelle.
 
+## Cyclone Identity — Kart-kart Full Review TAMAMLANDI (2026-09-23)
+
+Kullanıcı isteğiyle Cyclone'un 17 Identity core'u (Glitch/Echo Core önceki session'da,
+kalan 15'i bu turda) implementasyon + requires + TR + EN 4 aşamalı review'den geçirildi.
+Requires zaten Identity core'larda beklenmiyor (kartın kendisi kaynak) — sadece Spike
+Core'da gerçek bir bağımlılık bulunup eklendi (aşağı bak).
+
+**Bulunan ve düzeltilen buglar:**
+- **Virus Core (160) — açıklama/kod uyuşmazlığı**: açıklama "1 dmg/s, 3s" diyordu, gerçek
+  `apply_antivirus()`/`_process_antivirus()` (base_enemy.gd) 0.5sn tick aralığıyla stack
+  başına 1 hasar veriyor (= 2 dmg/s) ve taban süre 5sn (Memory Leak ile uzayabilir) —
+  açıklama koda göre "2 dmg/s, 5s" olarak düzeltildi (davranış değişmedi).
+- **Rogue's Eye Core (196) — pause bug (tekrarlayan desen)**: işaretlemeyi geri alan
+  `get_tree().create_timer(3.0)` çağrısı `process_always=false` içermiyordu — level-up
+  menüsünde (`paused=true`) süre donmuyordu. `, false` eklendi.
+  **Not**: işaretleme sayacı için ayrı bir `_inner_tick_timer_b` (7sn cooldown) zaten
+  doğru pause-safe çalışıyordu (`_inner_core_tick`'in genel `delta` akışı) — sadece bu
+  tekil `create_timer` unutulmuştu.
+- **Leech Nova Core (214) — açıklama/kod uyuşmazlığı**: açıklama "1s Glitch" diyordu,
+  kod `apply_glitch()`'i süre parametresi vermeden çağırıyor (varsayılan 3.0sn) —
+  açıklama "3s Glitch" olarak düzeltildi (diğer Glitch kaynaklarıyla tutarlı, davranış
+  değişmedi).
+- **Spike Core (213) — eksik requires**: Decay stack'ine bağımlı (`decay_stacks >= 3`
+  kontrolü) ama tek kaynağı Decay Core (161) olduğu halde `requires` yoktu, Decay Core
+  almadan tamamen faydasız kalabiliyordu → `requires: [161]` eklendi.
+
+**Dil düzeltmeleri (tekrarlayan proje-geneli desen — EN `desc` alanı Türkçe yazılmış,
+`lang.gd`'de TR girdisi hiç yoktu)**: Phantom Circuit Core (159), Ricochet Core (163),
+Glitch Pulse Core (192), Shadow Core (193), Data Drain Core (194), Virus Beacon Core (195),
+Rogue's Eye Core (196), Circuit Overload Core (197), Tracer Core (212), Spike Core (213),
+Leech Nova Core (214) — hepsinin EN `desc` alanı İngilizceye çevrildi, `lang.gd`'ye TR
+girdisi eklendi. "Glitched"/"Virus"/"Decay" keyword'leri bold yapılıp glossary'e bağlandı
+(zaten `Lang.STATUS_KEYWORDS`'te vardı, sadece kart metinlerinde kullanılmıyordu).
+
+**px kuralı uygulandı (Connected Core kararı)**: 192-197 hepsi `_CONNECTED_CORE_INDICES`'te
+zaten kayıtlı Connected Core'lar (is_inner_core=true) — Echo Resonance Core (189)
+incelemesindeki kural gereği açıklamalarından "80px"/"60px"/"90px"/"100px"/"50px" gibi
+piksel değerleri kaldırılıp "yakındaki düşmana(lar)" ifadesine çevrildi.
+
+**Doğrulanan, bug bulunmayan kartlar**: Data Leech Core (22, +2 Can/isabet, Data Siphon
+(121) sinerjisi doğru), Decay Core (161, açıklama zaten doğruydu), Static Core (162,
+açıklama zaten doğruydu), Glitch Pulse Core (192, 4sn/Glitch mantığı doğru), Shadow Core
+(193, dash sonrası 1 hasar/sn 3 tick — outer 1sn'lik tick gate'i sayesinde doğru çalışıyor,
+ilk bakışta "her frame 1 hasar" bug'ı gibi göründü ama değildi), Data Drain Core (194,
+aynı 1sn tick gate'i doğru), Virus Beacon Core (195, `die()` hook'u önceki turda zaten
+pause-safe yapılmıştı), Circuit Overload Core (197, Circuit Breaker senkronu doğru),
+Tracer Core (212, 1sn iz + 0.5sn yavaşlatma doğru, zaten pause-safe).
+
+**Core Mastery override bug'ı KONTROL EDİLDİ, YOK**: bu 15 core'un HİÇBİRİ `_hit_subject()`
+içindeki hasar-override `elif` zincirinde (Plasma/Steam/Arc/Voltaic/Electric/Cryo/Water/
+Fire/Pierce/Armor/Anchor/Crusher/Kinetic/Bulwark/Siege/Bloodbound/Tempered) yer almıyor —
+hepsi `base_damage = max_damage` (zaten ball_mastery içeriyor) varsayılanını koruyor,
+Core Mastery bonusu hepsinde doğru çalışıyor. Data Leech Core (22) istisna: `can_leech`
+elif'te `base_damage = 2` sabit ama `_typed_core` true kaldığı için ball_mastery yine de
+ekleniyor (launcher'daki `max_damage=2, no ball_mastery` ile birlikte doğru toplam veriyor).
+
+**CYCLONE IDENTITY TAMAMLANDI (17/17 core) — 2026-09-23**
+
+### Cyclone Identity — Kullanıcı Cila Turu (2026-09-23, aynı gün devamı)
+İlk review sonrası kullanıcı açıklamaları tekrar okuyup birkaç ek düzeltme istedi:
+- **Phantom Circuit Core (159)**: TR "Bu fırlatışta" → "Her fırlatışta" (her atışta
+  tekrarlandığını netleştirmek için), EN "First hit this flight" → "Every flight, first
+  hit" ile eşleştirildi.
+- **Virus Core (160) / Decay Core (161)**: açıklamalar sadeleştirildi — sadece "İsabet →
+  1 Virus/Decay stack" kaldı, sayısal detaylar (hasar/sn, süre, maks stack) kaldırıldı.
+  Kullanıcı haklı: bu detaylar zaten hover glossary panelinde (`Lang.STATUS_GLOSSARY`)
+  var, kart üzerinde tekrar etmeye gerek yok.
+- **Static Core (162)**: "%40 yavaşlatır" ifadesi "[b]Slowed[/b] uygular (%40, 0.5sn)"
+  olarak değiştirildi — "Slowed" artık bold ve glossary'e bağlı (daha önce keyword
+  kullanılmıyordu, sadece düz metindi).
+- **Virus Beacon Core (195)**: açıklama "Yakındaki bir Virus'lü düşman ölürse, 3sn
+  boyunca yakındaki düşmanlara 1'er stack yayar" olarak sadeleştirildi. **Eksik requires
+  bulundu ve eklendi**: `requires: [160]` (Virus Core — tek Virus stack kaynağı,
+  olmadan kart tamamen faydasız kalıyordu).
+- **Rogue's Eye Core (196) — mekanik yeniden tasarlandı**: kullanıcı "7sn beklemek
+  %10 bonus için mantıksız" dedi. Yeni tasarım: 7sn bekleme/3sn süre kaldırıldı, core
+  artık **sürekli** en yakın düşmanı işaretli tutuyor (`_inner_core_tick`'in 1sn'lik
+  genel tick'i içinde her seferinde en yakını yeniden hesaplayıp değişince eski hedefin
+  işaretini kaldırıyor, `_re_marked_target` yeni bir per-ball state var'ı — `ball.gd`).
+  Yeni `_exit_tree()` eklendi (top yok olunca işaretli düşmanın flag'i temizleniyor,
+  sızıntı önlendi). Bonus **%10 → %50**'ye çıkarıldı (`base_enemy.gd::take_damage()`,
+  `is_marked` çarpanı `1.1` → `1.5`). Yeni ortak keyword: **"Mark"** — `Lang.
+  STATUS_KEYWORDS`'e eklendi, EN/TR glossary girdisi yazıldı ("Marked enemies take 50%
+  more damage." / "İşaretli düşmanlar %50 daha fazla hasar alır."). Kart metni artık
+  "[b]Marks[/b] the nearest enemy" / "Yakındaki bir düşmanı [b]Mark[/b] eder" — bold
+  kelime glossary'nin substring taramasıyla eşleşiyor (kart tam "Marked" yazmasa da
+  "Marks"/"Mark" içinde "Mark" geçtiği için tetikleniyor).
+- **Circuit Overload Core (197)**: `requires: [143]` eklendi (Circuit Breaker,
+  Individuality — "Her 25. isabet: Avlu'daki tüm düşmanlar 3sn Glitched" kartı; Circuit
+  Overload Core'un `circuit_overload_active` bayrağı SADECE bu kart alınmışsa set
+  ediliyor, olmadan tamamen pasif kalıyordu).
+- **Leech Nova Core (214) — DENGELEME (kullanıcı kararı)**: "Öldürünce +2 HP + yakındaki
+  düşmanlara 3sn Glitched" kombosu fazla güçlü bulundu — Glitch yayma kısmı **komple
+  kaldırıldı** (`base_enemy.gd::die()`'daki ilgili for döngüsü silindi), kart artık
+  sadece "Öldürünce: +2 HP kazanır".
+
+## Cyclone Utility — Kart-kart Full Review TAMAMLANDI (2026-09-23)
+
+14 kart (`_apply_utility_level()`'da hepsi basit `p.X_level = level` deseni kullanıyor —
+Vector/Leila'daki gibi `match level: 1/2/3` blokları değil, formüller consumer kod
+tarafında `level` değişkenini doğrudan okuyor). Hepsinin implementasyonu doğrulandı,
+sayılar (Lv1/Lv2/Lv3, taban değerler) kod ile birebir eşleşiyordu — **hiçbir kartta
+sayısal/mantık bug'ı bulunmadı**. Tek sorun proje-geneli tekrarlayan desendi: **14
+kartın 14'ünde de** EN `desc` alanı aslında Türkçe yazılmıştı, `lang.gd`'de TR girdisi
+hiç yoktu — hepsi ayrıştırıldı (EN çevrildi, TR eklendi), "Glitched"/"Virus"/"Decay"
+geçen yerlerde bold+glossary bağlantısı kuruldu.
+
+**Eksik requires bulunup eklendi**:
+- **Data Exploit (115) / Extended Glitch (119) / Signal Jam (120)**: üçü de Glitch
+  uygulanmış bir düşmana bağımlı ama hiçbirinde `requires` yoktu → Data Storm/System
+  Crash'te kullanılan aynı liste (`requires_any: [16, 192, 197, 214]` — Glitch
+  Core/Glitch Pulse Core/Circuit Overload Core/Leech Nova Core) eklendi.
+- **Decay Amp (222)**: Decay patlaması hasarını büyütüyor ama tek Decay stack kaynağı
+  Decay Core (161) olduğu halde requires yoktu → `requires: [161]` eklendi.
+
+**Zaten doğru olan requires**: Bounce Mastery (133→114), Stack Overflow/Memory Leak/
+Cascade Delete/Corruption Protocol (148/150/152/151→160), Pinball Protocol (134→163),
+Stealth Pass/Ghost Protocol (139/140→159) — hepsi doğru kaynağa bağlıydı.
+
+**Requires gerekmeyen, doğrulanan kartlar**: Angular Precision (131, her top için
+genel — herhangi bir core'a bağlı değil), Backstab Protocol (158, kuzey duvar sekmesi
+her top için evrensel, core-agnostic).
+
+**Bounce Mastery (133) notu**: açıklama "+1 (taban 4 → 6)" biraz kafa karıştırıcı
+görünebilir — Ricochet Strike'ın kendi tabanı 4, Bounce Mastery Lv1 alınca 6'ya
+sıçrıyor (formül `5 + level`), sonraki seviyelerde gerçekten +1/level artıyor (6→7→8).
+İlk sıçramanın +2 olması bug değil, kartın kendi tasarımı — dokunulmadı.
+
+**CYCLONE UTILITY TAMAMLANDI (14/14 kart) — 2026-09-23**
+
+### Cyclone — Glitch/Virus taban süreleri düşürüldü (kullanıcı kararı, 2026-09-23)
+Kullanıcı Extended Glitch/Memory Leak review'i sırasında iki taban süreyi düşürmeye
+karar verdi:
+- **Glitch taban süresi 3sn → 2sn**: `base_enemy.gd::apply_glitch(duration: float =
+  2.0)` (varsayılan parametre) + Extended Glitch'in kendi formülü (`2.0 +
+  extended_glitch_bonus`). Bu, `apply_glitch()`'i parametresiz çağıran HER kaynağı
+  etkiliyor (Glitch Core, Glitch Pulse Core, Circuit Overload Core, Circuit Breaker,
+  Exploit Network, vb. — proje genelinde tek bir yer). **Explicit süre veren tek
+  istisna dokunulmadı**: Backdoor (130) kendi `apply_glitch(3.0)` çağrısını koruyor
+  (kasıtlı Calamity-özel tasarım). Extended Glitch artık 3sn/4sn/5sn üretiyor (eskiden
+  4/5/6). Glitch Core (16) ve Circuit Breaker (143) açıklamaları "3s" → "2s" güncellendi.
+- **Virus taban süresi 5sn → 3sn**: `base_enemy.gd::apply_antivirus()`'teki `_dur`
+  hesaplaması. Memory Leak artık 4sn/5sn/6sn üretiyor (eskiden 6/7/8).
+
+## Cyclone Individuality — Kart-kart Full Review TAMAMLANDI (2026-09-23)
+
+15 kart (114, 145, 121, 149, 116, 126, 136, 141, 146, 143, 154, 155, 219, 220, 221)
+incelendi. Aynı proje-geneli dil bug'ı burada da vardı: **15 kartın 15'inde de** EN
+`desc` Türkçe yazılmıştı, TR girdisi hiç yoktu — hepsi ayrıştırıldı, "Glitched"/
+"Virus"/"Decay" geçen yerlerde bold+glossary bağlantısı kuruldu.
+
+**KRİTİK BUG FIX — Shadow Dance (146) tamamen ölü karttı**: "7 duvar sekmesi → kalıcı
++%3 Core Speed" vaadi hiçbir zaman gerçekleşmiyordu. `ball.gd` doğru şekilde
+`_shadow_dance_acc` (player.gd) değişkenini her 7 sekmede +0.03 artırıyordu ama
+`player.gd::_physics_process`'teki `core_speed_mult` hesap zincirinde bu değişken
+**hiçbir yerde okunmuyordu** — Vector'ın eski "Core Speed Mimarisi" bug'ıyla
+(2026-08-29, `_effective_orbit_speed`) aynı kalıp, sadece Cyclone tarafında gözden
+kaçmış. `core_speed_mult *= 1.0 + _shadow_dance_acc` satırı eklendi (Resonance
+Engine'in hemen altına, doğru indent seviyesinde — ilk denemede yanlışlıkla
+Resonance Engine'in `if` bloğunun içine girmişti, PowerShell ile tab seviyesi
+düzeltilip doğrulandı).
+
+**Pause bug fix — Ghost Step (220)**: dash sonrası bağışıklık penceresini kapatan
+`get_tree().create_timer(1.5)` çağrısı `process_always=false` içermiyordu (aynı
+tekrarlayan desen) → `, false` eklendi.
+
+**Eksik requires bulunup eklendi**: System Overload (126) — "5+ Glitched düşman"
+şartı bir Glitch kaynağına bağımlı ama requires yoktu → `requires_any: [16, 192,
+197, 214]` eklendi (Data Storm/System Crash/Data Exploit ile aynı liste).
+
+**Ricochet Strike (114) — açıklama koda göre düzeltildi (kullanıcı kararı, 2026-09-23)**:
+bonus hasar (`_wall_bounce_count * _rc_bonus`) her isabette uygulanıyor,
+`_wall_bounce_count` sadece fırlatma anında (launch/launch_with_speed) sıfırlanıyor —
+top sekip birden fazla düşmana art arda çarparsa HER isabet aynı bonusu alıyor
+(tüketilmiyor/azalmıyor). Eski açıklama "next hit" (tekil) diyordu, kullanıcı
+**davranışı korumayı seçti** (nerf yok) — açıklama "Wall bounces in flight add +4 dmg
+to every hit until it returns" / "Fırlatıştaki duvar sekmeleri, top dönene kadar her
+vuruşa +4 hasar ekler" olarak koda göre güncellendi.
+
+**Diğer doğrulanan kartlar (bug yok)**: Data Siphon (121), Viral Load (149), Shadow
+Strike (116, "sağ/sol" = x-ekseni sekmesi doğru kontrol ediliyor), Phase Shift (141),
+Circuit Breaker (143), Zero Day (154), Kernel Panic (155), Decay Harvest (219),
+Overclock Protocol (221) — hepsi kodla birebir eşleşiyordu, requires zaten doğruydu.
+Rogue's Instinct (145) "Enemy purified" flavor ifadesi netlik için "On kill" olarak
+sadeleştirildi (mekanik zaten her düşman ölümünde tetikleniyordu, sadece "arındırılmış"
+belirli bir düşman tipi değil).
+
+**CYCLONE INDIVIDUALITY TAMAMLANDI (15/15 kart) — 2026-09-23**
+
+### Angular Precision (131) — terminoloji düzeltmesi
+TR açıklamadaki "uçuş" kelimesi "fırlatış" ile değiştirildi (kullanıcı: daha doğal/
+anlaşılır) — "Her fırlatışın ilk vuruşu: +%5 hasar". EN tarafı "flight" olarak
+bırakıldı, çünkü bu terim projede aynı kavram için tutarlı şekilde kullanılıyor
+(Phantom Circuit Core "Every flight" vb. ile eşleşiyor).
+
 ## Momentum Mekaniği — Baştan Tasarım (2026-08-22, TEST BEKLİYOR)
 
 Vector Utility review'i sırasında Momentum sisteminin dağınık/tutarsız olduğu fark edildi
@@ -1517,6 +1712,16 @@ session'da tam review edilmişti).
       168x168, 12fps, non-loop, z_index=-1, bitince queue_free; sprite yoksa eski ekran flaşı).
       `_aim_radius` 120->84, EN/TR açıklamalar güncellendi.
 
+### İsim değişikliği: Glitch Bomb → Glitch Field (kullanıcı kararı, 2026-09-23)
+Kart artık patlamıyor (Flame Zone deseni, yerde kalan alan), "Bomb" ismi eski patlayan
+tasarımdan kalmıştı, anlam kaymıştı. Tüm referanslar güncellendi (`_CALAMITY_DISPLAY_NAMES`,
+dispatch yorumları, kart tanımı, `_aim_radius` yorumu, index 215 pickup handler yorumu).
+Art dosyası da yeniden adlandırıldı: `glitch_bomb_art.png` → `glitch_field_art.png`
+(+ `.import`, `source_file`/`path` düzeltildi — art yolu kart adından otomatik türediği için
+zorunlu, Freezing Cold'daki aynı adım). Emoji (💣) ve iç fonksiyon adı (`_vfx_glitch_bomb`,
+kullanıcıya görünmüyor) değişmedi. Aşağıdaki eski notlardaki "Glitch Bomb" adı artık
+"Glitch Field" — tarih/mekanik bilgisi geçerliliğini koruyor, sadece isim eskimiş.
+
 ### BUG FIX: Virus'tan ölen düşmanlar yürüme animasyonunda takılı kalıyordu (2026-09-19)
 `base_enemy.gd::_physics_process` sırası `_process_antivirus(delta)` → `_enemy_process(delta)`
 idi. Virus DOT'u düşmanı öldürünce (`die()` → ölüm animasyonu) AYNI frame'de hemen
@@ -1702,6 +1907,43 @@ ceset üzerinde "virus" ikonu açılıyordu. Fix: `_show_debuff()` başına `if 
 fonksiyon `is_instance_valid(self)` kontrolünden geçip (ceset silinmediği için hâlâ geçerli)
 devam ediyor, cesede `is_burning`/`is_wet` set edip gösterge açıyor ve tick timer'ı
 çalıştırıyordu. 4 yerde kontrol `if not is_instance_valid(self) or is_dead: return` yapıldı.
+
+### Prism Core (65) → diğer Connected Core'larla aynı mimariye taşındı (2026-09-23)
+Echo Core (19) düzeltmesi sırasında kullanıcı, Prism Core'un TEK istisna olduğu izlenimini
+düzeltti ("epey bi connected core var, hep şaşırıyorsun") — Prism Core zaten çoktan beri
+Connected Core'du, sadece tarihsel olarak diğerlerinden (`is_inner_core`+`inner_core_type`
+string dispatch) FARKLI, kendi ayrı `can_orbit` boolean bayrağıyla çalışıyordu (Prism Core
+Connected Core sisteminin ilk örneğiydi, sonra gelen ~18 Connected Core'un hepsi
+`inner_core_type` desenine geçti ama Prism hiç taşınmadı). Kullanıcı "kafa karıştırmasın,
+diğerleriyle aynı yap" dedi, bozulma riski taşımadığı doğrulanınca uygulandı:
+- `ball_launcher.gd`'nin "orbit" spawn case'i (bu string ball_type komutu, isim değişmedi)
+  artık `can_orbit=true` yerine `inner_core_type="prism_core"` set ediyor (`is_inner_core`
+  zaten vardı).
+- `ball.gd`: `can_orbit` bayrağı komple silindi. Eski `_prism_apply_random_element()`
+  tetikleme mantığı (`_physics_process`'teki ayrı `if can_orbit and state=="orbiting"`
+  bloğu) kaldırıldı, aynı davranış (her 2s: 55px içindeki TÜM düşmanlara — mist_core'un
+  aksine tek hedef değil — bağımsız rastgele element) artık `_inner_core_tick()`'in
+  `"prism_core":` case'i içinde, diğer Connected Core'larla aynı `_inner_tick_timer_b`
+  deseniyle çalışıyor. Sprite seçimi de genel `inner_folders` dict'ine taşındı
+  (`"prism_core": ["orbitCore", 17]`), eski ayrı `elif can_orbit:` dalı silindi.
+  `_auto_fire()`'daki `can_orbit or is_inner_core` kontrolü sadece `is_inner_core`'a
+  sadeleşti (zaten hep birlikte true oluyorlardı).
+- `game_scene.gd`: `_get_ball_core_type()`'daki `ball.get("can_orbit")` satırı silindi —
+  artık fonksiyonun genel `is_inner_core` fallback'i (`return inner_core_type`) devreye
+  girip "prism_core" döndürüyor. UI ikon/isim sözlüklerine (`_CORE_DISPLAY_NAMES`,
+  `_CORE_FOLDER_MAP`) `"prism_core"` anahtarı eklendi (eski `"orbit"` anahtarları da
+  kaldı, başka bir yerde kullanılmıyor ama zararsız).
+- `player.gd`: Hydro Pressure'ın (67) iç yörünge hız bonusu kontrolü — eskiden
+  `inner_core_type == "mist_core" or can_orbit == true` — artık
+  `inner_core_type in ["mist_core", "prism_core"]` (tek liste, aynı iki core'u kapsıyor).
+- Kart havuzu index→ball_type string eşlemesi (`65: "orbit"`) ve pickup handler'daki
+  `queue_upgrade_ball("orbit")` çağrısı **değişmedi** — "orbit" burada sadece bir spawn
+  komutu adı, `can_orbit` bayrağıyla aynı isim olması tesadüf, karıştırılmamalı.
+- `player.gd`'deki `ball.get("can_orbit")` içeren 4 satır (`add_to_orbit`/`_fire_ball`,
+  `orbit_balls`/magazine kuyruğu için) bilerek dokunulmadı — Prism Core zaten
+  `is_inner_core=true` olduğu için `add_to_orbit()`'te erken `return` ile
+  `inner_orbit_balls`'a gidiyor, bu 4 satıra hiç ulaşmıyordu (zaten ölü kod o satırlar
+  için), `.get()` kullandıkları için var olmayan property'de de crash etmiyorlar.
 
 ### İlerleme — Leila Calamity (8 kart, index sırasına göre) — sprite kontrolü de dahil
 - [x] Lightning (7) — implementasyon doğru: tıklanan noktaya 100px yarıçapta 3 hasar +

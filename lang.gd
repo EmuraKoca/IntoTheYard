@@ -6,7 +6,7 @@ var locale: String = "en"   # "en" veya "tr"
 # ── Durum efekti sözlüğü (kart açıklamalarında bold geçen keyword'ler için) ───
 # Gwent tarzı: kart üzerine gelince, açıklamada geçen keyword'lerin anlamı yan
 # panelde gösterilir. Yeni bir keyword açıklamaya eklenince buraya da eklenmeli.
-const STATUS_KEYWORDS := ["Electrified", "Wet", "Burning", "Slowed", "Frozen", "Momentum", "Glitched", "Virus", "Decay"]
+const STATUS_KEYWORDS := ["Electrified", "Wet", "Burning", "Slowed", "Frozen", "Momentum", "Glitched", "Virus", "Decay", "Mark"]
 
 # "Connected Core" keyword açıklamada geçmez, rozet üzerinden ayrıca ekleniyor
 # (bkz. game_scene.gd::_show_card_glossary çağrısı, _CONNECTED_CORE_INDICES kontrolü).
@@ -21,6 +21,7 @@ const _STATUS_GLOSSARY_EN := {
 	"Glitched": "Enemy is disoriented for a duration — deals reduced damage while attacking. Triggers glitch-based synergies from other cards.",
 	"Virus": "Enemy accumulates stacks that deal damage over time. Stacks and duration can grow with other cards.",
 	"Decay": "Enemy accumulates stacks (max 3) that slow it. Each stack lasts [b]3s[/b]. If it dies with stacks, it explodes and damages nearby enemies.",
+	"Mark": "Marked enemies take 50% more damage.",
 }
 const _STATUS_GLOSSARY_TR := {
 	"Electrified": "Düşman 5sn işaretlenir. Diğer kartların elektrik tabanlı combo/reaksiyonlarını (zincir hasarı, yayılma efekti vb.) tetikler.",
@@ -33,6 +34,7 @@ const _STATUS_GLOSSARY_TR := {
 	"Glitched": "Düşman belirli bir süre boyunca sersemler — saldırırken daha az hasar verir. Diğer kartların glitch tabanlı sinerjilerini tetikler.",
 	"Virus": "Düşman zamana yayılı hasar veren stack biriktirir. Diğer kartlarla stack/süre artabilir.",
 	"Decay": "Düşman yavaşlatan stack biriktirir (maks 3). Her stack [b]3sn[/b] sürer. Stack'liyken ölürse patlar ve yakındaki düşmanlara hasar verir.",
+	"Mark": "İşaretli düşmanlar %50 daha fazla hasar alır.",
 }
 
 func status_glossary(keyword: String) -> String:
@@ -343,7 +345,7 @@ const _DESC_TR: Dictionary = {
 	129: "Avlu'daki tüm [b]Glitched[/b] düşmanlar bozulma\npatlamasıyla 10 hasar alır, Glitch'leri temizlenir",
 	130: "Avlu'daki tüm düşmanlar 3sn boyunca\n[b]Glitched[/b] olur",
 	138: "5sn boyunca Core Hızı ×3 olur",
-	144: "2 bonus core kazandırır.\nKullanılmayanlar 25sn sonra kaybolur",
+	144: "2 bonus core kazandırır.\nAteşlenmezse 25sn sonra kaybolur",
 	156: "Avlu'daki tüm düşmanlar maksimum\n[b]Virus[/b] stack'i alır",
 	215: "Yerde bir alan bırakır.\nÜstünden geçen düşmanlar\n[b]Glitched[/b] olur",
 	216: "Avlu'daki tüm [b]Glitched[/b] düşmanlar\nmevcut HP'sinin %30'unu kaybeder",
@@ -361,9 +363,53 @@ const _DESC_TR: Dictionary = {
 	207: "Bir sonraki level up'a kadar 4 farklı\nreaksiyon: sonraki Calamity slot tüketmez",
 	209: "Avlu'daki tüm [b]Burning[/b] düşmanlar patlar:\n10 hasar, yakındaki 2 düşmana [b]Burning[/b] yayar",
 	# ── Cyclone — Identity ───────────────────────────────────────────────────
-	16: "Düşmanı 3sn şaşırtır",
 	19: "Yakındaki güçlü core'u kopyalar",
 	22: "İsabette +2 Can",
+	159: "Her fırlatışta ilk isabet: 0.5sn sersemletir\nCore player'a dönene kadar tekrar tetiklenmez",
+	160: "İsabet → 1 [b]Virus[/b] stack",
+	161: "İsabet → 1 [b]Decay[/b] stack",
+	162: "İsabet → düşmana [b]Slowed[/b] uygular (%40, 0.5sn)\n[b]Glitched[/b] hedef: 1sn sürer",
+	163: "Duvar sekmesi → +%5 hız (maks +%30)\nHer 10 hız = +1 hasar. İsabette sıfırlanır",
+	192: "Her 4sn: yakındaki bir düşmana\n[b]Glitched[/b] uygular",
+	193: "Dash sonrası 3sn: yakındaki\ndüşmanlara 1 hasar/sn verir",
+	194: "Yakında [b]Glitched[/b] düşman varsa\nher 1sn: +1 HP kazanır",
+	195: "Yakındaki bir [b]Virus[/b]'lü düşman ölürse,\n3sn boyunca yakındaki düşmanlara 1'er stack yayar",
+	196: "Yakındaki bir düşmanı [b]Mark[/b] eder",
+	197: "Circuit Breaker tetiklenince\n3sn: yakındaki düşmanlara sürekli [b]Glitched[/b] uygular",
+	212: "İsabet 1sn'lik takip izi bırakır\nİzden geçen düşman %40 yavaşlar (0.5sn)",
+	213: "İsabet: hedefte 3 [b]Decay[/b] stack varsa\nanında Decay patlamasını tetikler",
+	214: "Öldürünce: +2 HP kazanır",
+	# ── Cyclone — Utility ─────────────────────────────────────────────────────
+	115: "[b]Glitched[/b] hedefe +1 bonus hasar\n(taban +3)",
+	119: "[b]Glitched[/b] süresi +1sn\n(taban 2sn)",
+	131: "Her fırlatışın ilk vuruşu: +%5 hasar\n(taban +%15)",
+	120: "[b]Glitched[/b] düşman hızı +%5\n(taban +%15)",
+	133: "Ricochet Strike bonusu +1\n(taban 4 → 6)",
+	158: "Kuzey duvar sekmesi: sonraki vuruş\n+%25 daha fazla (taban ×1.5)",
+	148: "[b]Virus[/b] stack cap'i +1\n(taban 3 → 4)",
+	150: "[b]Virus[/b] süresi +1 saniye\n(taban 3sn → 4sn)",
+	152: "[b]Virus[/b] isabeti en yakın düşmana yayılır\nLv1: 75px/1, Lv2: 100px/1, Lv3: 125px/2 düşman",
+	134: "Gereken sekme -1 (pierce kazanmak için)\nLv1: 5, Lv2: 4, Lv3: 3 sekme",
+	139: "Phantom Circuit Core: sersemlenen\ndüşman sayısı +1 (taban 1)",
+	140: "Phantom Circuit Core sersemletme süresi\nLv1: 0.75sn, Lv2: 1.0sn, Lv3: 1.5sn (taban 0.5sn)",
+	151: "[b]Virus[/b]'lü hedef +%5 fazla hasar alır\nLv1: %15, Lv2: %20, Lv3: %25",
+	222: "[b]Decay[/b] patlaması hasarı (stack başına)\nLv1: 3, Lv2: 5, Lv3: 7 (taban 2)",
+	# ── Cyclone — Individuality ───────────────────────────────────────────────
+	114: "Fırlatıştaki duvar sekmeleri, top dönene kadar\nher vuruşa +4 hasar ekler",
+	145: "Öldürünce:\n+1 Can",
+	121: "Data Leech +1 ekstra iyileştirir\nhedefte [b]Decay[/b] stack'i varsa",
+	149: "[b]Glitched[/b] hedef 2× [b]Virus[/b]\nstack'i alır",
+	116: "Sağ/sol duvar sekmesi sonrası\nilk vuruş: ×1.5 hasar",
+	126: "Sahada 5+ [b]Glitched[/b] düşman varken:\ntüm hasarın +%20",
+	136: "Tek fırlatışta 5 sekme: tüm Ricochet\nCore'lara kalıcı +1 hasar (sekme sayacı dönünce sıfırlanır)",
+	141: "Sersemlemiş düşmana vuruş:\n×1.5 hasar",
+	146: "Aynı fırlatışta 7 duvar sekmesi:\nkalıcı +%3 Core Speed",
+	143: "Her 25. isabette: Avlu'daki tüm\ndüşmanlar 2sn [b]Glitched[/b] olur",
+	154: "[b]Glitched[/b] düşmana [b]Virus[/b] uygulanınca\nmevcut stack ×2 olur",
+	155: "Her [b]Virus[/b] tick'i:\n%5 ihtimalle hedef [b]Glitched[/b] olur",
+	219: "[b]Decay[/b] patlaması tetiklenince:\n+2 HP kazan",
+	220: "Dash sonrası 1.5sn hasar bağışıklığı\n(5sn bekleme süresi)",
+	221: "Circuit Breaker sayacı\n2× hızlı dolar",
 	# ── Herkese açık — Utility & Calamity ────────────────────────────────────
 	11: "Tüm core'lara +1 hasar",
 	7:  "Hedeflenen noktaya 13 hasar verir\nve yakındaki düşmanlara [b]Electrified[/b] uygular",
@@ -542,6 +588,11 @@ func _dynamic_desc(index: int, player: Node) -> String:
 			if locale == "en":
 				return "[b]%d[/b] damage.\nPierces through unarmored enemies." % _dmg
 			return "[b]%d[/b] hasar.\nZırhı olmayan düşmanı deşip geçer" % _dmg
+		16:  # Glitch Core
+			var _dmg16: int = 4 + _bm
+			if locale == "en":
+				return "[b]%d[/b] damage.\nApplies [b]Glitched[/b] to enemy for 2s" % _dmg16
+			return "[b]%d[/b] hasar.\nDüşmana 2sn [b]Glitched[/b] uygular" % _dmg16
 		40:  # Armor Core
 			var amt: int = player.get("armor_gain_per_hit") if player.get("armor_gain_per_hit") != null else 1
 			var _dmg: int = 4 + _bm

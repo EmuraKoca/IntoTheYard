@@ -1,4 +1,4 @@
-﻿extends CharacterBody2D
+extends CharacterBody2D
 
 var SPEED = 150.0
 var aim_direction = Vector2(0, -1)
@@ -649,7 +649,7 @@ func _physics_process(delta: float) -> void:
 			if has_ghost_step and _ghost_step_cooldown <= 0.0:
 				_ghost_step_active = true
 				_ghost_step_cooldown = 5.0
-				get_tree().create_timer(1.5).timeout.connect(func():
+				get_tree().create_timer(1.5, false).timeout.connect(func():
 					if is_instance_valid(self): _ghost_step_active = false
 				)
 
@@ -753,6 +753,9 @@ func _physics_process(delta: float) -> void:
 			if resonance_stacks[_ri] <= 0.0:
 				resonance_stacks.remove_at(_ri)
 		core_speed_mult *= 1.0 + resonance_stacks.size() * RESONANCE_SPEED_PER_STACK
+	# Shadow Dance: 7 duvar sekmesi/firlatista kalici +3% Core Speed (biriken, ball.gd'de artiyor)
+	if _shadow_dance_acc > 0.0:
+		core_speed_mult *= 1.0 + _shadow_dance_acc
 	# Orbit topları silah sprite'ının üstünde durur
 	var _weapon_offset := Vector2(20, -24)
 	var n := orbit_balls.size()
@@ -767,7 +770,7 @@ func _physics_process(delta: float) -> void:
 	var _inner_speed_mult: float = 1.0
 	if has_hydro_pressure:
 		for _ib in inner_orbit_balls:
-			if is_instance_valid(_ib) and (_ib.get("inner_core_type") == "mist_core" or _ib.get("can_orbit") == true):
+			if is_instance_valid(_ib) and _ib.get("inner_core_type") in ["mist_core", "prism_core"]:
 				_inner_speed_mult = hydro_pressure_mult
 				break
 	inner_orbit_angle += INNER_ORBIT_SPEED * _inner_speed_mult * delta
