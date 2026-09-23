@@ -3,6 +3,24 @@
 Bu dosya, farklı bilgisayarlardaki (ev / işyeri) Claude Code oturumları arasında bağlam
 köprüsü olarak kullanılır. Her oturum başında oku, her oturum sonunda güncelle.
 
+## SIRADAKİ: Font seçimi (2026-09-23, kullanıcı evde karar verecek)
+
+Kullanıcı pixel-art'a yakışan, hem Türkçe (ğ/ş/ı/İ/ö/ü/ç) hem gelecekte başka diller
+için de kullanılabilecek bir font istedi. İki öneri sunuldu, kullanıcı evde ikisini de
+deneyip karar verecek:
+- **Pixel Operator** — ücretsiz/ticari kullanıma açık, gerçek pixel-art hissi, Latin
+  Extended-A (Türkçe karakterler dahil) düzgün destekleniyor, Bold varyantı var, küçük
+  boyutlarda net. Şu anki TR/EN ihtiyacı için önerilen.
+  Kaynak: https://www.dafont.com/pixel-operator.font
+- **Grand9K Pixel** — Latin + Kiril + Yunan + CJK (Çince/Japonca/Korece) kapsıyor,
+  ileride TR/EN dışında dil eklenirse daha geleceğe dönük ama Latin harflerde biraz
+  daha kalın/az net duruyor.
+  Kaynak: https://www.dafont.com/grand9k-pixel.font
+
+Karar verilince: font dosyasını (.ttf/.otf) projeye ekleyip Godot'ta `FontFile` olarak
+UI'daki mevcut font referanslarına (kart açıklamaları, HUD, menüler vb.) bağlamak
+gerekecek — henüz hiçbir entegrasyon yapılmadı, sadece öneri aşamasındayız.
+
 ## Cyclone Identity — Kart-kart Full Review TAMAMLANDI (2026-09-23)
 
 Kullanıcı isteğiyle Cyclone'un 17 Identity core'u (Glitch/Echo Core önceki session'da,
