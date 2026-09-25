@@ -5,3 +5,6 @@
 # Claude Code — ayar ve cache dosyaları gizli kalır, commands paylaşılır
 .claude/*
 !.claude/commands/
+
+# Obsidian (her bilgisayarda kendi olusturulur)
+.obsidian/
