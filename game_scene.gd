@@ -1198,12 +1198,6 @@ func _ready() -> void:
 		for _ci in range(min(_cal_start, max_calamity_slots)):
 			calamity_slots.append(_cal_pool[_ci])
 
-	# ── DEBUG: Cyclone Calamity tek tek test override (test bitince kaldır) ──
-	# İlk 3: Data Storm / Backdoor / Bounce Barrage
-	calamity_slots.clear()
-	for _dbg_cal in ["💾", "👾", "🎱"]:
-		if calamity_slots.size() < max_calamity_slots:
-			calamity_slots.append(_dbg_cal)
 	update_ui()
 
 	$UI/CalamityCircle.visible = false
