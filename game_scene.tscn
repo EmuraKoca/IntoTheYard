@@ -33,8 +33,8 @@
 [ext_resource type="Texture2D" uid="uid://befbveu3hlbg4" path="res://assets/placeHolder/15.png" id="24_kyyqo"]
 [ext_resource type="Texture2D" uid="uid://dwff12crq7rq" path="res://assets/placeHolder/Miscellaneous.png" id="30_1hpar"]
 [ext_resource type="Script" uid="uid://cfp0rdguocqnx" path="res://energy_barrier_vfx.gd" id="energy_barrier_vfx"]
-[ext_resource type="FontFile" uid="uid://bdbf1qeb2yg1s" path="res://assets/orbitronfont/Orbitron-Bold.ttf" id="font_bold"]
-[ext_resource type="FontFile" uid="uid://xo24eqnt6ct1" path="res://assets/orbitronfont/Orbitron-Regular.ttf" id="font_regular"]
+[ext_resource type="FontFile" path="res://assets/silverfont/Silver.ttf" id="font_bold"]
+[ext_resource type="FontFile" path="res://assets/silverfont/Silver.ttf" id="font_regular"]
 [ext_resource type="Texture2D" uid="uid://cilwr1ik6rcuo" path="res://assets/hudBars/vector/health_bar_frame.png" id="hp_bar_frame_vector"]
 [ext_resource type="Script" uid="uid://bid3xvdmvsmpj" path="res://iso_effect.gd" id="iso_script"]
 [ext_resource type="Texture2D" uid="uid://un0xq4awpqo8" path="res://assets/hudBars/vector/momentum_bar_frame.png" id="momentum_bar_frame_vector"]
@@ -3757,7 +3757,7 @@ offset_right = 1848.0
 offset_bottom = 56.0
 theme_override_colors/font_color = Color(0, 0.95, 1, 1)
 theme_override_fonts/font = ExtResource("font_bold")
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 19
 
 [node name="LabelUpgrades" type="Label" parent="UI" unique_id=343827120]
 offset_left = 1640.0
@@ -3766,7 +3766,7 @@ offset_right = 1912.0
 offset_bottom = 338.0
 theme_override_colors/font_color = Color(0.72, 0.8, 0.98, 0.88)
 theme_override_fonts/font = ExtResource("font_regular")
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 19
 autowrap_mode = 2
 
 [node name="LabelCatch" type="Label" parent="UI" unique_id=1681266815]
@@ -3776,16 +3776,16 @@ offset_right = 1912.0
 offset_bottom = 488.0
 theme_override_colors/font_color = Color(0, 0.9, 1, 0.9)
 theme_override_fonts/font = ExtResource("font_regular")
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 19
 
 [node name="LabelCalamity" type="Label" parent="UI" unique_id=844923665]
 offset_left = 1640.0
-offset_top = 612.0
+offset_top = 506.0
 offset_right = 1912.0
-offset_bottom = 842.0
+offset_bottom = 530.0
 theme_override_colors/font_color = Color(0.88, 0.82, 1, 0.92)
 theme_override_fonts/font = ExtResource("font_regular")
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 19
 autowrap_mode = 2
 
 [node name="CalamityCircle" type="Node2D" parent="UI" unique_id=94084691]
@@ -3798,7 +3798,7 @@ offset_right = 1912.0
 offset_bottom = 56.0
 theme_override_colors/font_color = Color(0, 0.95, 1, 0.85)
 theme_override_fonts/font = ExtResource("font_bold")
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 19
 text = "⏸"
 
 [node name="LabelBalls" type="Label" parent="UI" unique_id=30518129]
@@ -3808,7 +3808,7 @@ offset_right = 1912.0
 offset_bottom = 132.0
 theme_override_colors/font_color = Color(0, 0.9, 1, 0.9)
 theme_override_fonts/font = ExtResource("font_regular")
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 19
 
 [node name="LabelTime" type="Label" parent="UI" unique_id=1910538735]
 offset_left = 1640.0
@@ -3817,7 +3817,7 @@ offset_right = 1912.0
 offset_bottom = 162.0
 theme_override_colors/font_color = Color(0.4, 1, 0.2, 0.9)
 theme_override_fonts/font = ExtResource("font_regular")
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 19
 
 [node name="LabelFusionEnergy" type="Label" parent="UI" unique_id=1826011581]
 offset_left = 1640.0
@@ -3826,7 +3826,7 @@ offset_right = 1912.0
 offset_bottom = 530.0
 theme_override_colors/font_color = Color(1, 0.72, 0, 1)
 theme_override_fonts/font = ExtResource("font_bold")
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 19
 text = "⚡  FUSION ENERGY"
 
 [node name="FusionEnergyBar" type="ProgressBar" parent="UI" unique_id=1788074043]
@@ -3853,7 +3853,7 @@ offset_right = 272.0
 offset_bottom = 28.0
 theme_override_colors/font_color = Color(1, 1, 1, 0.92)
 theme_override_fonts/font = ExtResource("font_bold")
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 19
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -3894,7 +3894,7 @@ offset_right = 310.0
 offset_bottom = 44.0
 theme_override_colors/font_color = Color(1, 1, 1, 0.95)
 theme_override_fonts/font = ExtResource("font_bold")
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 19
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -3935,7 +3935,7 @@ offset_right = 286.0
 offset_bottom = 22.0
 theme_override_colors/font_color = Color(1, 1, 1, 0.95)
 theme_override_fonts/font = ExtResource("font_regular")
-theme_override_font_sizes/font_size = 9
+theme_override_font_sizes/font_size = 19
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -3954,7 +3954,7 @@ offset_right = 1912.0
 offset_bottom = 842.0
 theme_override_colors/font_color = Color(0, 0.85, 0.5, 0.7)
 theme_override_fonts/font = ExtResource("font_bold")
-theme_override_font_sizes/font_size = 9
+theme_override_font_sizes/font_size = 19
 text = "DATA HARVESTED"
 
 [node name="LabelData" type="Label" parent="UI" unique_id=701010710]
@@ -3964,7 +3964,7 @@ offset_right = 1912.0
 offset_bottom = 890.0
 theme_override_colors/font_color = Color(0, 1, 0.55, 1)
 theme_override_fonts/font = ExtResource("font_bold")
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 38
 text = "0 units"
 
 [node name="EnergyBarrier" type="StaticBody2D" parent="." unique_id=1861161730]

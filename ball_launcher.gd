@@ -1,5 +1,11 @@
 extends Node2D
 
+# Sıradaki topun önizleme sprite'ı — eskiden her tip değişiminde SpriteFrames'i sıfırdan
+# inşa edip diskten yeniden load() ediyordu (tam da "top fırlatılacağı sırada" hissedilen
+# kasmanın kaynağı). Tip başına bir kez inşa edilip önbelleğe alınıyor (ball.gd'deki
+# _ball_sprite_frames_cache ile aynı desen — SpriteFrames birden fazla yerde paylaşılabilir).
+static var _preview_sprite_frames_cache: Dictionary = {}
+
 var ball_scene = preload("res://ball.tscn")
 var player = null
 var game   = null
@@ -144,14 +150,18 @@ func _update_preview_sprite() -> void:
 	var info: Array = _PREVIEW_FOLDER_MAP[next_type]
 	var folder: String = info[0]
 	var frame_count: int = info[1]
-	var frames := SpriteFrames.new()
-	if frames.has_animation("default"):
-		frames.remove_animation("default")
-	frames.add_animation("spin")
-	frames.set_animation_speed("spin", 12.0)
-	frames.set_animation_loop("spin", true)
-	for i in range(frame_count):
-		frames.add_frame("spin", load("res://assets/balls/%s/frame_%03d.png" % [folder, i]))
+	var _cache_key: String = folder + "_" + str(frame_count)
+	var frames: SpriteFrames = _preview_sprite_frames_cache.get(_cache_key)
+	if frames == null:
+		frames = SpriteFrames.new()
+		if frames.has_animation("default"):
+			frames.remove_animation("default")
+		frames.add_animation("spin")
+		frames.set_animation_speed("spin", 12.0)
+		frames.set_animation_loop("spin", true)
+		for i in range(frame_count):
+			frames.add_frame("spin", load("res://assets/balls/%s/frame_%03d.png" % [folder, i]))
+		_preview_sprite_frames_cache[_cache_key] = frames
 	_preview_sprite.sprite_frames = frames
 	_preview_sprite.play("spin")
 	_preview_sprite.visible = true
@@ -721,11 +731,31 @@ func trigger_weapon_fire_fx(fire_dir: Vector2 = Vector2.ZERO) -> void:
 
 var _electrify_particles: CPUParticles2D = null
 var _electrify_tween: Tween = null
+var _electrify_target: Node2D = null
 
-# Bounce Barrage (Calamity) aktivasyon anı: Cyclone'un silahında tek seferlik enerji
-# patlaması (8 frame, non-loop).
+# Karaktere göre o an ekranda duran silah node'unu döndürür (Cyclone/Leila:
+# AnimatedSprite2D, Vector: Sprite2D) — hiçbiri yoksa null.
+func _get_active_weapon_node() -> Node2D:
+	if _cyclone_weapon_anim and is_instance_valid(_cyclone_weapon_anim):
+		return _cyclone_weapon_anim
+	if _weapon_sprite and is_instance_valid(_weapon_sprite):
+		return _weapon_sprite
+	if _leila_weapon_anim and is_instance_valid(_leila_weapon_anim):
+		return _leila_weapon_anim
+	return null
+
+# Silahın o anki dünya pozisyonu — Calamity VFX'lerinin (örn. Momentum Burst'ün
+# Yard Engine çizgisi) hedef alması için kullanılıyor.
+func get_weapon_position() -> Vector2:
+	var w := _get_active_weapon_node()
+	return w.global_position if w else global_position
+
+# Bounce Barrage (Calamity) aktivasyon anı: silahta tek seferlik enerji
+# patlaması (8 frame, non-loop). Sadece AnimatedSprite2D silahlarda (Cyclone/Leila)
+# çalışır — Vector'un silahı statik Sprite2D olduğu için bu efekti taşıyamıyor.
 func play_weapon_burst() -> void:
-	if not (_cyclone_weapon_anim and is_instance_valid(_cyclone_weapon_anim)):
+	var w := _get_active_weapon_node()
+	if not (w is AnimatedSprite2D):
 		return
 	if not ResourceLoader.exists("res://assets/VFX/calamitys/bounceBarrage/frame_000.png"):
 		return
@@ -744,45 +774,54 @@ func play_weapon_burst() -> void:
 		i += 1
 	burst.sprite_frames = sf
 	burst.scale = Vector2(0.6, 0.6)
-	_cyclone_weapon_anim.add_child(burst)
+	w.add_child(burst)
 	burst.play("burst")
 	burst.animation_finished.connect(burst.queue_free)
 
-# Bounce Barrage (Calamity): Cyclone'un silahına süre boyunca elektriklenme efekti —
-# sürekli mavi-cyan kıvılcım parçacıkları + pulse eden modulate.
+# Silaha süre boyunca elektriklenme efekti — sürekli mavi-cyan kıvılcım parçacıkları
+# + pulse eden modulate. Bounce Barrage (Cyclone) ve Momentum Burst (Vector) ortak
+# kullanıyor; hangi karakterin silahı ekrandaysa ona uygulanır (Sprite2D/AnimatedSprite2D
+# ikisini de destekler — speed_scale sadece AnimatedSprite2D'de var).
 func electrify_weapon(duration: float) -> void:
-	if not (_cyclone_weapon_anim and is_instance_valid(_cyclone_weapon_anim)):
+	var target := _get_active_weapon_node()
+	if target == null:
 		return
 	if is_instance_valid(_electrify_particles):
 		_electrify_particles.queue_free()
 	if _electrify_tween:
 		_electrify_tween.kill()
+	_electrify_target = target
 
 	var particles := CPUParticles2D.new()
-	particles.amount = 14
+	particles.amount = 22
 	particles.lifetime = 0.35
 	particles.explosiveness = 0.0
 	particles.emission_shape = CPUParticles2D.EMISSION_SHAPE_SPHERE
-	particles.emission_sphere_radius = 14.0
+	particles.emission_sphere_radius = 16.0
 	particles.direction = Vector2(0, -1)
 	particles.spread = 180.0
-	particles.initial_velocity_min = 20.0
-	particles.initial_velocity_max = 60.0
-	particles.scale_amount_min = 1.0
-	particles.scale_amount_max = 2.0
+	particles.initial_velocity_min = 30.0
+	particles.initial_velocity_max = 90.0
+	particles.scale_amount_min = 1.2
+	particles.scale_amount_max = 2.5
 	particles.color = Color(0.5, 0.85, 1.0, 0.9)
-	particles.z_index = 8
+	# Silahın kendi z_index'inin HER ZAMAN üstünde kalsın diye ona göre hesaplanıyor —
+	# sabit z_index=8, Vector'un silahı (z=15) gibi daha yüksek z'li bir node'un
+	# ARKASINDA kalıp görünmez oluyordu (Cyclone'un silahı z=7 olduğu için o
+	# durumda tesadüfen sorun çıkmamıştı).
+	particles.z_index = target.z_index + 1
 	particles.z_as_relative = false
-	_cyclone_weapon_anim.add_child(particles)
+	target.add_child(particles)
 	particles.emitting = true
 	_electrify_particles = particles
 
-	_cyclone_weapon_anim.speed_scale = 3.0
+	if target is AnimatedSprite2D:
+		target.speed_scale = 3.0
 
 	_electrify_tween = create_tween()
 	_electrify_tween.set_loops()
-	_electrify_tween.tween_property(_cyclone_weapon_anim, "modulate", Color(0.6, 0.9, 1.0), 0.15)
-	_electrify_tween.tween_property(_cyclone_weapon_anim, "modulate", Color(1.0, 1.0, 1.0), 0.15)
+	_electrify_tween.tween_property(target, "modulate", Color(0.4, 0.85, 1.0), 0.15)
+	_electrify_tween.tween_property(target, "modulate", Color(1.0, 1.0, 1.0), 0.15)
 
 	get_tree().create_timer(duration, false).timeout.connect(_stop_electrify_weapon)
 
@@ -794,9 +833,11 @@ func _stop_electrify_weapon() -> void:
 		_electrify_particles.emitting = false
 		_electrify_particles.queue_free()
 		_electrify_particles = null
-	if _cyclone_weapon_anim and is_instance_valid(_cyclone_weapon_anim):
-		_cyclone_weapon_anim.modulate = Color(1.0, 1.0, 1.0)
-		_cyclone_weapon_anim.speed_scale = 1.0
+	if _electrify_target and is_instance_valid(_electrify_target):
+		_electrify_target.modulate = Color(1.0, 1.0, 1.0)
+		if _electrify_target is AnimatedSprite2D:
+			_electrify_target.speed_scale = 1.0
+	_electrify_target = null
 
 func _weapon_recoil() -> void:
 	if not _weapon_sprite: return

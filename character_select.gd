@@ -1,7 +1,7 @@
 extends Control
 
-var _font_bold    = preload("res://assets/orbitronfont/Orbitron-Bold.ttf")
-var _font_regular = preload("res://assets/orbitronfont/Orbitron-Regular.ttf")
+var _font_bold    = preload("res://assets/silverfont/Silver.ttf")
+var _font_regular = preload("res://assets/silverfont/Silver.ttf")
 
 const CHARS: Array = [
 	{"id":"vector",  "name":"Vector",  "theme":"Kinetik",      "color":Color(0,0.75,1,1),    "passive":"Normal Ball +3 hasar",             "balls":["Normal Ball","Split Ball","Pierce Ball"],             "sc":2.5},
@@ -74,7 +74,7 @@ func _make_arrow(txt: String) -> Button:
 	b.text = txt
 	b.size = Vector2(60, 60)
 	b.add_theme_font_override("font", _font_bold)
-	b.add_theme_font_size_override("font_size", 26)
+	b.add_theme_font_size_override("font_size", 38)
 	b.add_theme_color_override("font_color",       Color(0, 0.9, 1))
 	b.add_theme_color_override("font_hover_color", Color(1, 1,   1))
 	return b
@@ -132,7 +132,7 @@ func _fill_side(card: Panel, c: Dictionary) -> void:
 		lk.position = Vector2(0, card.size.y / 2 - 18)
 		lk.size     = Vector2(card.size.x, 36)
 		lk.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		lk.add_theme_font_size_override("font_size", 22)
+		lk.add_theme_font_size_override("font_size", 38)
 		card.add_child(lk)
 
 	var nm := Label.new()
@@ -141,7 +141,7 @@ func _fill_side(card: Panel, c: Dictionary) -> void:
 	nm.size     = Vector2(card.size.x, 24)
 	nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	nm.add_theme_font_override("font", _font_bold)
-	nm.add_theme_font_size_override("font_size", 11)
+	nm.add_theme_font_size_override("font_size", 19)
 	nm.add_theme_color_override("font_color", Color(col.r, col.g, col.b, 0.65) if not locked else Color(0.4, 0.4, 0.4))
 	card.add_child(nm)
 
@@ -175,7 +175,7 @@ func _fill_center(card: Panel, c: Dictionary) -> void:
 		lk.position = Vector2(0, card.size.y / 2 - 30)
 		lk.size     = Vector2(card.size.x, 60)
 		lk.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		lk.add_theme_font_size_override("font_size", 40)
+		lk.add_theme_font_size_override("font_size", 57)
 		card.add_child(lk)
 
 	var nm := Label.new()
@@ -184,7 +184,7 @@ func _fill_center(card: Panel, c: Dictionary) -> void:
 	nm.size     = Vector2(card.size.x, 34)
 	nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	nm.add_theme_font_override("font", _font_bold)
-	nm.add_theme_font_size_override("font_size", 17)
+	nm.add_theme_font_size_override("font_size", 19)
 	nm.add_theme_color_override("font_color", col if not locked else Color(0.5, 0.5, 0.5))
 	card.add_child(nm)
 
@@ -194,7 +194,7 @@ func _fill_center(card: Panel, c: Dictionary) -> void:
 	th.size     = Vector2(card.size.x, 22)
 	th.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	th.add_theme_font_override("font", _font_regular)
-	th.add_theme_font_size_override("font_size", 12)
+	th.add_theme_font_size_override("font_size", 19)
 	th.add_theme_color_override("font_color", Color(col.r, col.g, col.b, 0.6) if not locked else Color(0.4, 0.4, 0.4))
 	card.add_child(th)
 
@@ -211,7 +211,7 @@ func _fill_center(card: Panel, c: Dictionary) -> void:
 		lv_lbl.size     = Vector2(card.size.x - 8, 22)
 		lv_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		lv_lbl.add_theme_font_override("font", _font_bold)
-		lv_lbl.add_theme_font_size_override("font_size", 13)
+		lv_lbl.add_theme_font_size_override("font_size", 19)
 		lv_lbl.add_theme_color_override("font_color", col)
 		card.add_child(lv_lbl)
 
@@ -363,7 +363,7 @@ func _make_left_btn(label_text: String, col: Color) -> Button:
 	b.text = label_text
 	b.flat = true
 	b.add_theme_font_override("font", _font_bold)
-	b.add_theme_font_size_override("font_size", 20)
+	b.add_theme_font_size_override("font_size", 38)
 	b.add_theme_color_override("font_color",       col)
 	b.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 1.0))
 	b.add_theme_color_override("font_pressed_color", col.lightened(0.3))
@@ -468,7 +468,7 @@ func _open_achievements() -> void:
 	var title := Label.new()
 	title.text = "★  BAŞARIMLAR"
 	title.add_theme_font_override("font", _font_bold)
-	title.add_theme_font_size_override("font_size", 42)
+	title.add_theme_font_size_override("font_size", 57)
 	title.add_theme_color_override("font_color", Color(1.0, 0.85, 0.0))
 	title.position = Vector2(600, 60)
 	canvas.add_child(title)
@@ -477,7 +477,7 @@ func _open_achievements() -> void:
 	chip_lbl.name = "ChipLbl"
 	chip_lbl.text = "Bakiye: %d Chip" % GameData.chips
 	chip_lbl.add_theme_font_override("font", _font_bold)
-	chip_lbl.add_theme_font_size_override("font_size", 22)
+	chip_lbl.add_theme_font_size_override("font_size", 38)
 	chip_lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.8))
 	chip_lbl.position = Vector2(600, 120)
 	canvas.add_child(chip_lbl)
@@ -528,7 +528,7 @@ func _open_achievements() -> void:
 		var cat_lbl := Label.new()
 		cat_lbl.text = cat["title"]
 		cat_lbl.add_theme_font_override("font", _font_bold)
-		cat_lbl.add_theme_font_size_override("font_size", 14)
+		cat_lbl.add_theme_font_size_override("font_size", 19)
 		cat_lbl.add_theme_color_override("font_color", Color(0.4, 0.4, 0.5))
 		var spacer := Control.new()
 		spacer.custom_minimum_size = Vector2(0, 6)
@@ -547,7 +547,7 @@ func _open_achievements() -> void:
 			lbl.text = info["label"]
 			lbl.custom_minimum_size = Vector2(620, 0)
 			lbl.add_theme_font_override("font", _font_bold)
-			lbl.add_theme_font_size_override("font_size", 16)
+			lbl.add_theme_font_size_override("font_size", 19)
 			if is_completed:
 				lbl.add_theme_color_override("font_color", Color(0.0, 1.0, 0.7))
 			elif is_claimed:
@@ -560,14 +560,14 @@ func _open_achievements() -> void:
 			reward_lbl.text = "+%d Chip" % info["reward"]
 			reward_lbl.custom_minimum_size = Vector2(120, 0)
 			reward_lbl.add_theme_font_override("font", _font_bold)
-			reward_lbl.add_theme_font_size_override("font_size", 15)
+			reward_lbl.add_theme_font_size_override("font_size", 19)
 			reward_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.0) if not is_claimed else Color(0.3, 0.3, 0.3))
 			row.add_child(reward_lbl)
 
 			var collect_btn := Button.new()
 			collect_btn.custom_minimum_size = Vector2(160, 36)
 			collect_btn.add_theme_font_override("font", _font_bold)
-			collect_btn.add_theme_font_size_override("font_size", 14)
+			collect_btn.add_theme_font_size_override("font_size", 19)
 			if is_claimed:
 				collect_btn.text     = "ALINDI ✓"
 				collect_btn.disabled = true
@@ -591,7 +591,7 @@ func _open_achievements() -> void:
 	var close_btn := Button.new()
 	close_btn.text = "✕  Kapat"
 	close_btn.add_theme_font_override("font", _font_bold)
-	close_btn.add_theme_font_size_override("font_size", 18)
+	close_btn.add_theme_font_size_override("font_size", 19)
 	close_btn.add_theme_color_override("font_color", Color(0.8, 0.2, 0.2))
 	close_btn.size     = Vector2(200, 50)
 	close_btn.position = Vector2(860, 940)
@@ -621,7 +621,7 @@ func _open_shop() -> void:
 	var title := Label.new()
 	title.text = "⬡  BLACK MARKET  —  %s" % CHARS[_cur]["name"].to_upper()
 	title.add_theme_font_override("font", _font_bold)
-	title.add_theme_font_size_override("font_size", 38)
+	title.add_theme_font_size_override("font_size", 57)
 	title.add_theme_color_override("font_color", char_col)
 	title.position = Vector2(480, 55)
 	canvas.add_child(title)
@@ -629,7 +629,7 @@ func _open_shop() -> void:
 	var chip_lbl := Label.new()
 	chip_lbl.text = "Bakiye: %d Chip" % GameData.chips
 	chip_lbl.add_theme_font_override("font", _font_bold)
-	chip_lbl.add_theme_font_size_override("font_size", 22)
+	chip_lbl.add_theme_font_size_override("font_size", 38)
 	chip_lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.8))
 	chip_lbl.position = Vector2(480, 115)
 	canvas.add_child(chip_lbl)
@@ -667,7 +667,7 @@ func _open_shop() -> void:
 		var name_lbl := Label.new()
 		name_lbl.text = item["name"]
 		name_lbl.add_theme_font_override("font", _font_bold)
-		name_lbl.add_theme_font_size_override("font_size", 17)
+		name_lbl.add_theme_font_size_override("font_size", 19)
 		name_lbl.add_theme_color_override("font_color", col if not maxed else Color(0.3,0.3,0.3))
 		name_lbl.position = Vector2(528, row_y + 8)
 		canvas.add_child(name_lbl)
@@ -675,7 +675,7 @@ func _open_shop() -> void:
 		var desc_lbl := Label.new()
 		desc_lbl.text = item["desc"]
 		desc_lbl.add_theme_font_override("font", _font_regular)
-		desc_lbl.add_theme_font_size_override("font_size", 13)
+		desc_lbl.add_theme_font_size_override("font_size", 19)
 		desc_lbl.add_theme_color_override("font_color", Color(0.6,0.6,0.65) if not maxed else Color(0.28,0.28,0.28))
 		desc_lbl.position = Vector2(528, row_y + 36)
 		canvas.add_child(desc_lbl)
@@ -690,7 +690,7 @@ func _open_shop() -> void:
 
 		var buy_btn := Button.new()
 		buy_btn.add_theme_font_override("font", _font_bold)
-		buy_btn.add_theme_font_size_override("font_size", 14)
+		buy_btn.add_theme_font_size_override("font_size", 19)
 		buy_btn.size     = Vector2(155, 42)
 		buy_btn.position = Vector2(1255, row_y + 20)
 		if maxed:
@@ -715,7 +715,7 @@ func _open_shop() -> void:
 	var close_btn := Button.new()
 	close_btn.text = "✕  Kapat"
 	close_btn.add_theme_font_override("font", _font_bold)
-	close_btn.add_theme_font_size_override("font_size", 18)
+	close_btn.add_theme_font_size_override("font_size", 19)
 	close_btn.add_theme_color_override("font_color", Color(0.8,0.2,0.2))
 	close_btn.size     = Vector2(200, 50)
 	close_btn.position = Vector2(860, 950)

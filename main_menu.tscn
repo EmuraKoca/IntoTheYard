@@ -1,8 +1,8 @@
 [gd_scene format=3 uid="uid://in5hhk02q7t8"]
 
 [ext_resource type="Script" uid="uid://745y30w6no5i" path="res://main_menu.gd" id="1_06t4h"]
-[ext_resource type="FontFile" uid="uid://bdbf1qeb2yg1s" path="res://assets/orbitronfont/Orbitron-Bold.ttf" id="font_bold"]
-[ext_resource type="FontFile" uid="uid://xo24eqnt6ct1" path="res://assets/orbitronfont/Orbitron-Regular.ttf" id="font_regular"]
+[ext_resource type="FontFile" path="res://assets/silverfont/Silver.ttf" id="font_bold"]
+[ext_resource type="FontFile" path="res://assets/silverfont/Silver.ttf" id="font_regular"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1"]
 content_margin_left = 14.0
@@ -144,7 +144,7 @@ offset_right = 1920.0
 offset_bottom = 295.0
 theme_override_colors/font_color = Color(0, 0.95, 1, 1)
 theme_override_fonts/font = ExtResource("font_bold")
-theme_override_font_sizes/font_size = 88
+theme_override_font_sizes/font_size = 133
 text = "INTO THE YARD"
 horizontal_alignment = 1
 
@@ -154,7 +154,7 @@ offset_right = 1920.0
 offset_bottom = 342.0
 theme_override_colors/font_color = Color(1, 0.18, 0.58, 0.82)
 theme_override_fonts/font = ExtResource("font_regular")
-theme_override_font_sizes/font_size = 17
+theme_override_font_sizes/font_size = 19
 text = "[ ITY CORP. — SECURE TERMINAL v2.1 ]"
 horizontal_alignment = 1
 
@@ -173,7 +173,7 @@ offset_right = 1165.0
 offset_bottom = 515.0
 theme_override_colors/font_color = Color(0, 0.95, 1, 1)
 theme_override_fonts/font = ExtResource("font_bold")
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 38
 theme_override_styles/normal = SubResource("StyleBoxFlat_1")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_3")
 theme_override_styles/hover = SubResource("StyleBoxFlat_2")
@@ -187,7 +187,7 @@ offset_right = 1165.0
 offset_bottom = 613.0
 theme_override_colors/font_color = Color(0, 0.95, 1, 1)
 theme_override_fonts/font = ExtResource("font_bold")
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 38
 theme_override_styles/normal = SubResource("StyleBoxFlat_1")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_3")
 theme_override_styles/hover = SubResource("StyleBoxFlat_2")
@@ -201,7 +201,7 @@ offset_right = 1165.0
 offset_bottom = 711.0
 theme_override_colors/font_color = Color(0, 0.95, 1, 1)
 theme_override_fonts/font = ExtResource("font_bold")
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 38
 theme_override_styles/normal = SubResource("StyleBoxFlat_1")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_3")
 theme_override_styles/hover = SubResource("StyleBoxFlat_2")
@@ -215,7 +215,7 @@ offset_right = 1165.0
 offset_bottom = 809.0
 theme_override_colors/font_color = Color(1, 0.18, 0.58, 1)
 theme_override_fonts/font = ExtResource("font_bold")
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 38
 theme_override_styles/normal = SubResource("StyleBoxFlat_5")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_7")
 theme_override_styles/hover = SubResource("StyleBoxFlat_6")
@@ -229,5 +229,5 @@ offset_right = 400.0
 offset_bottom = 1068.0
 theme_override_colors/font_color = Color(0, 0.68, 0.78, 0.38)
 theme_override_fonts/font = ExtResource("font_regular")
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 19
 text = "v0.0.6.6  //  ALPHA BUILD  //  ITY CORP. 2099"

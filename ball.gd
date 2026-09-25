@@ -1,6 +1,13 @@
 extends CharacterBody2D
 
 static var _steam_cloud_sf: SpriteFrames = null  # paylaşılan, bir kez yüklenir
+# Top sprite'ları (folder+frame_count) — her top spawn'ında sıfırdan SpriteFrames
+# inşa edip diskten tekrar tekrar load() etmek (özellikle normal top gibi HER atışta
+# tetiklenen yollarda) gözle görülür kasmaya sebep oluyordu. Godot'ta SpriteFrames
+# birden fazla AnimatedSprite2D arasında güvenle paylaşılabiliyor (steam cloud'daki
+# `_steam_cloud_sf` ile aynı desen, play/frame instance-level) — tip başına bir kez
+# inşa edilip önbelleğe alınıyor.
+static var _ball_sprite_frames_cache: Dictionary = {}
 
 var speed = 600.0
 var damage = 0
@@ -385,15 +392,19 @@ func _setup_ball_sprite() -> void:
 	else:
 		folder = "normalBall";      frame_count = 9
 
-	var frames := SpriteFrames.new()
-	if frames.has_animation("default"):
-		frames.remove_animation("default")
-	frames.add_animation("spin")
-	frames.set_animation_speed("spin", 12.0)
-	frames.set_animation_loop("spin", true)
-	for i in range(frame_count):
-		var tex: Texture2D = load("res://assets/balls/%s/frame_%03d.png" % [folder, i])
-		frames.add_frame("spin", tex)
+	var _cache_key: String = folder + "_" + str(frame_count)
+	var frames: SpriteFrames = _ball_sprite_frames_cache.get(_cache_key)
+	if frames == null:
+		frames = SpriteFrames.new()
+		if frames.has_animation("default"):
+			frames.remove_animation("default")
+		frames.add_animation("spin")
+		frames.set_animation_speed("spin", 12.0)
+		frames.set_animation_loop("spin", true)
+		for i in range(frame_count):
+			var tex: Texture2D = load("res://assets/balls/%s/frame_%03d.png" % [folder, i])
+			frames.add_frame("spin", tex)
+		_ball_sprite_frames_cache[_cache_key] = frames
 
 	_sprite = AnimatedSprite2D.new()
 	_sprite.sprite_frames  = frames

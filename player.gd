@@ -1044,13 +1044,24 @@ func take_damage(amount) -> void:
 	if invincible or _ghost_step_active:
 		return
 	invincible = true
-	if false:
-		pass  # take_damage animasyonları kaldırıldı
+	_react_flash_physical()
 	var game = get_parent()
 	if game.has_method("player_damaged"):
 		game.player_damaged(amount)
 	await get_tree().create_timer(0.3).timeout
 	invincible = false
+
+# Düşmanlardaki fiziksel-vuruş beyaz flaşıyla aynı desen (base_enemy.gd::_react_flash) —
+# oyuncu hasar aldığında da görsel geri bildirim versin diye. _flash_id çakışan
+# flaşlarda sadece son flaşın rengi sıfırlamasına izin veriyor.
+var _flash_id: int = 0
+func _react_flash_physical() -> void:
+	modulate = Color(2.0, 2.0, 2.0, 1.0)
+	_flash_id += 1
+	var my_id := _flash_id
+	await get_tree().create_timer(0.08, false).timeout
+	if is_instance_valid(self) and my_id == _flash_id:
+		modulate = Color(1, 1, 1, 1)
 
 func _draw() -> void:
 	# Karakter gölgesi — tüm karakterler için ayakların altında oval

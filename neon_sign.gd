@@ -21,7 +21,7 @@ func _ready() -> void:
 	await get_tree().process_frame
 	_base_y = position.y
 
-	var font_bold = load("res://assets/orbitronfont/Orbitron-Bold.ttf")
+	var font_bold = load("res://assets/silverfont/Silver.ttf")
 
 	# ── Tabela arka plan ──────────────────────────────────────────
 	var panel := ColorRect.new()
@@ -62,7 +62,7 @@ func _ready() -> void:
 	_label1 = Label.new()
 	_label1.text          = "ITY\nCorp.\nR&D\nUnit."
 	_label1.add_theme_font_override("font", font_bold)
-	_label1.add_theme_font_size_override("font_size", 11)
+	_label1.add_theme_font_size_override("font_size", 19)
 	_label1.add_theme_color_override("font_color", COLOR_MAIN)
 	_label1.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_label1.size     = Vector2(SIGN_W - 8, 110)

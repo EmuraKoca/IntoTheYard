@@ -23,7 +23,405 @@ ile işaretli, hiçbir karaktere özel olmayıp tüm karakterlerin havuzunda gö
 Hiçbiri karaktere özel bir core'a bağlı olmadığı için `requires` gerekmiyor (zaten yoktu,
 doğru). xlsx dosyaları Speed Upgrade düzeltmesini yansıtacak şekilde yeniden üretildi.
 
-## SIRADAKİ: Font seçimi (2026-09-23, kullanıcı evde karar verecek)
+## Momentum Burst (176, Vector) — Yard Engine + silah elektriklenmesi (2026-09-24)
+
+Kullanıcı, VFX'i olmayan Calamity'ler sorulunca **Momentum Burst**'ü işaret etti — Vector
+"The Yard Engine" ortak makinesini (Backdoor/Systemic Failure/System Crash'in kullandığı)
+hiç kullanmıyordu. İstenen: makineden Vector'un silahına elektrik akımı gitsin, süre
+boyunca silahta da elektriklenme (hız arttığı belli olsun) görünsün.
+
+**`ball_launcher.gd` genelleştirildi** — eskiden `electrify_weapon()`/`play_weapon_burst()`
+sadece `_cyclone_weapon_anim`'e (Cyclone'un AnimatedSprite2D silahı) çalışıyordu, Bounce
+Barrage için yazılmışlardı. Yeni `_get_active_weapon_node()` helper'ı o an ekranda hangi
+karakterin silahı varsa onu döndürüyor (Cyclone/Leila: AnimatedSprite2D, Vector:
+Sprite2D — `speed_scale` sadece AnimatedSprite2D'de var, kontrol ediliyor). Yeni
+`get_weapon_position()` — VFX'lerin hedef alması için silahın o anki dünya pozisyonu.
+`electrify_weapon()` artık hangi node olursa olsun (parçacık + pulse eden modulate)
+uygulanabiliyor, `play_weapon_burst()` (tek seferlik patlama) sadece AnimatedSprite2D
+silahlarda çalışıyor (Vector'un statik Sprite2D'si animasyon oynatamadığı için bilerek
+dışarıda bırakıldı — Momentum Burst zaten bunu çağırmıyor, sadece `electrify_weapon`).
+
+**`_activate_momentum_burst()` yeniden yazıldı** — `_vfx_yard_engine()`'in aynı deseni
+(makine belirir, son 2 frame'de tetikleme) ama tek hedefli özel bir versiyon: sahadaki
+düşmanlara değil, **doğrudan Vector'un silahına** (`launcher.get_weapon_position()`) tek
+bir cyan/elektrik `_vfx_engine_bolt()` çizgisi gidiyor. Çizginin ulaştığı an (mekanik
+DEĞİŞMEDİ): stack'ler tüketiliyor, `momentum_burst_bonus` hesaplanıyor, ardından
+`electrify_weapon(10.0)` çağrılıp silah 10sn boyunca (bonus süresiyle birebir) kıvılcım
+saçıyor + pulse ediyor — hız artışının görsel karşılığı. Sprite yoksa eski davranışa
+(ekran flaşı) düşüyor, crash yok.
+
+**DEBUG override (test için, `_ready()`'de)**: 3 slot da "💨" (Momentum Burst) ile
+dolduruluyor, `has_momentum_engine=true` + `momentum_stacks=20` set ediliyor (Momentum
+Engine hiç almadan da kart hemen test edilebilsin diye). **Test bitince bu blok
+kaldırılmalı**, kalıcı build'e sızmamalı — eskiden bu blokta Leila'nın Wildfire testi
+duruyordu, o kaldırılıp yerine bu geldi.
+
+**Test sırasında bulunan gerçek bug — düzeltildi (2026-09-24)**: Vector'un silahındaki
+kıvılcım parçacıkları hiç görünmüyordu, çünkü sabit `z_index=8` veriliyordu ama Vector'un
+silah sprite'ı (`_weapon_sprite`) `z_index=15` ile çiziliyor — parçacıklar silahın
+ARKASINDA kalıp görünmez oluyordu. (Cyclone'un silahı z=7 olduğu için Bounce Barrage'da
+bu sorun hiç fark edilmemişti, tesadüfen doğru sıradaydı.) Fix: parçacık z_index'i artık
+`target.z_index + 1` olarak dinamik hesaplanıyor, hangi karakterin silahı olursa olsun
+her zaman önde kalıyor. Parçacık sayısı/hızı da (14→22, hız 20-60→30-90) biraz
+güçlendirildi, daha net görünsün diye.
+
+**2./3. basışta hiç VFX oynamaması — BUG DEĞİL, mekaniğin kendisi**: Momentum Burst
+TÜM stack'i harcayıp sıfırlıyor (`p.momentum_stacks = 0`). Debug momentum_stacks'i
+sadece `_ready()`'de BİR KEZ 20'ye set ediyor — ilk kullanımdan sonra 0'da kalıyor,
+tekrar dolması için normal oyun mekaniği gereği **yürümek** gerekiyor (Momentum
+Engine: yürürken her 4sn +1 stack). `if stacks <= 0: return` satırı EN BAŞTA kontrol
+edildiği için stack yokken fonksiyon hiçbir VFX'e (motor/bolt/silah) ulaşmadan hemen
+çıkıyor — "birikmiş bir durum" değil, tam tersi, harcanmış durumda. Test sırasında
+iki kullanım arasında biraz yürümek gerekiyor.
+
+## Full Breach (175) — ekran flaşı kaldırıldı (2026-09-24, kullanıcı test sonrası karar)
+
+`_react_flash_screen(Color(1.0, 0.2, 0.1, 0.5))` çağrısı silindi — sprite VFX
+(`_vfx_full_breach_burst`, aura parçacıkları) + `screen_shake_heavy()` zaten yeterli
+geri bildirim veriyordu, kırmızı flaş fazlaydı. (Rampart Collapse'ta daha önce aynı
+kararla mavi flaş kaldırılmıştı — aynı desen.)
+
+## Yard Engine — alan/nokta hedefli Calamity'lere genelleştirildi (2026-09-24)
+
+Kullanıcı isteği: alan etkili (oyuncunun tıkladığı bir noktayı hedefleyen) Calamity'ler
+de Yard Engine'e bağlansın — makine belirsin, tıklanan noktaya Calamity'nin kendi renk
+paletine uyan bir elektrik çizgisi göndersin, çizgi ulaşınca kartın asıl VFX'i (örn.
+Gravitational Force'un vorteksi) orada başlasın.
+
+**Yeni paylaşımlı fonksiyon: `_vfx_yard_engine_to_point(get_target_pos, bolt_color,
+on_arrival, fallback_fn)`** (`game_scene.gd`) — `_vfx_yard_engine()`'den (düşman listesine
+çoklu bolt gönderen versiyon) farklı olarak SERBEST bir tek noktaya tek çizgi gönderiyor.
+`get_target_pos` bir `Callable` (`Vector2` döndürür) — hedef pozisyon makine animasyonu
+oynarken (yaklaşık 1sn) hâlâ değişebilir diye (örn. oyuncu hareket ediyorsa silah
+pozisyonu), çizgi ateşlenirken YENİDEN okunuyor, spawn anında sabitlenmiyor. Sprite
+yoksa `fallback_fn` çağrılır (kendi ekran flaşı + asıl etkiyi tetiklemesi gerekiyor).
+
+**Momentum Burst (176) refactor edildi** — eskiden kendi içinde tekrarlayan ~50 satırlık
+makine/bolt kodu vardı, şimdi bu paylaşımlı fonksiyonu çağırıyor (davranış aynı, sadece
+kod tekilleşti).
+
+**Gravitational Force (9) — Yard Engine'e bağlandı**: `_activate_gravity(pos)` artık
+önce makineyi çağırıyor (mor/violet `Color(0.65, 0.1, 1.0)` — kartın kendi parçacık
+rengiyle aynı), çizgi tıklanan noktaya ulaşınca `_vfx_gravity(pos)` + 5sn'lik çekim
+mekaniği başlıyor. Önceden VFX/etki tıklar tıklamaz anında başlıyordu, artık makine
+animasyonu kadar (~1-1.3sn) bir "hazırlanma" gecikmesi var — kullanıcı test edip
+zamanlamayı onaylamalı.
+
+**Henüz bağlanmayan diğer alan/nokta hedefli Vector Calamity'leri**: Siege Rain (199,
+kendi "düşen meteor" görsel dilini zaten kullanıyor) ve Rampart Collapse (177, kendi
+şarj+fırlatma+patlama sistemi zaten var) — ikisi de kendi VFX kimliğine sahip, Yard
+Engine'e bağlamak mantık değiştirir. Kullanıcıya bunlar için de istenip istenmediği
+sorulacak, henüz dokunulmadı.
+
+**WormHole (198) — Yard Engine'e bağlandı (2026-09-24)**: `_activate_wormhole()` da
+aynı desene geçirildi. Bolt rengi mor (`Color(0.4, 0.0, 0.8)` — WormHole'ün kendi
+rengi). Fonksiyonun sonundaki eski `_react_flash_screen(Color(0.4, 0.0, 0.8, 0.3))`
+kapanış flaşı kaldırıldı — artık makinenin kendi giriş/çıkış animasyonu yeterli
+görsel kapanış hissi veriyor, ayrı bir flaşa gerek kalmadı. 45 frame'lik gerçek
+sprite VFX kullanıcı tarafından eklendi (`_vfx_wormhole_open()` zaten dinamik
+`while ResourceLoader.exists(...)` ile yüklüyordu, kod tarafında değişiklik
+gerekmedi).
+
+### WormHole artık tıklamalı (kullanıcı kararı, 2026-09-24) + tüm hedefli Calamity'ler Avlu'ya kilitlendi
+Kullanıcı: "WormHole karakterin çevresinde değil, istediğimiz yerde (Yard içinde)
+açılsın" + "diğer tüm alan etkili skillerde mouse Yard dışına çıkmasın" dedi. İki
+değişiklik:
+- **WormHole hedefleme deseni değişti**: `_activate_wormhole()` artık `target_pos:
+  Vector2` parametresi alıyor (Gravitational Force/Rampart Collapse ile aynı desen),
+  eskiden `player.aim_direction × 120px` ile oyuncunun ÖNÜNE sabit açılıyordu, artık
+  tıklanan noktaya açılıyor. Nişan önizleme çemberindeki WormHole'e özel "oyuncunun
+  önüne sabitle" override'ı (`elif calamity == "🕳️": ... player.global_position +
+  aim_direction × 120`) silindi — artık diğer hedefli Calamity'ler gibi doğrudan
+  mouse pozisyonunu takip ediyor. Kart açıklaması "around Vector" → "at the targeted
+  point" olarak güncellendi (EN+TR).
+- **Yeni merkezi `_clamp_to_yard(pos: Vector2) -> Vector2` helper'ı** (`game_scene.gd`,
+  `_yard_subjects()`'in hemen üstünde) — Avlu dikdörtgenine (x:385-1920, y:255-1080,
+  projede zaten tekrar eden sabit değerler) kilitliyor. İki yere bağlandı: (1)
+  `_consume_calamity()` — gerçek aktivasyon pozisyonu artık HER ZAMAN kilitli, mouse
+  Avlu dışındaysa (cadde/tribün) en yakın Avlu kenarına clamp'leniyor; (2) `_process`
+  içindeki nişan önizleme çemberi — çember de aynı şekilde kilitleniyor, oyuncu neyi
+  göreceğini önceden biliyor (önizleme ile gerçek sonuç arasında sürpriz yok). Bu,
+  Vector'un Gravitational Force/Rampart Collapse/WormHole'ü ve diğer karakterlerin
+  tüm hedefli Calamity'lerini (Lightning, Flame Zone, Volcanic Rift, Siege Rain,
+  Glitch Field, Decay Field) kapsıyor — hepsi aynı merkezi noktadan geçiyor.
+
+## Sağ Panel — Fusion Energy kaldırıldı, Calamity yukarı taşındı + süreli Calamity
+geri sayımı eklendi (2026-09-24)
+
+Kullanıcı ekran görüntüsü paylaştı: sağ panelde "⚡ FUSION ENERGY" başlığı boş bir
+alanı işgal ediyordu. Kontrol edilince gerçek sebep bulundu: **Fusion Zone mekaniği
+ITY 2'ye ertelenmiş** (`_ready()`'deki eski yorum: "Fusion Zone şimdilik tüm
+karakterler için kapalı"), `$UI/FusionEnergyBar` zaten `visible=false` yapılıyordu
+ama `$UI/LabelFusionEnergy` (başlık) unutulmuş, hâlâ görünürdü — ekrandaki boşluğun
+gerçek sebebi buydu.
+
+- **`$UI/LabelFusionEnergy.visible = false`** eklendi (`_ready()`).
+- **`LabelCalamity`** (Calamity başlığı) `game_scene.tscn`'de y:612→**506**'ya taşındı
+  (Fusion Energy başlığının eski yerine, kutu boyu da 612-842'den 506-530'a
+  küçültüldü — eskiden kartın açıklamasını da içeren eski bir tasarımdan kalma
+  gereksiz büyüklükteydi, artık sadece başlık tutuyor).
+- **`_setup_calamity_cells()`**'teki `CAL_PY` sabiti 636→**530** (hücreler başlığın
+  hemen altında).
+- **Yeni: süreli Calamity geri sayımı**. `_calamity_timer_label` (yeni Label,
+  hücrelerin 8px altında, y≈578) her frame (`_process` → `_update_calamity_timer_label()`)
+  güncelleniyor. `_CALAMITY_TIMER_DEFS` sabiti (player.gd'deki hangi `_xxx_timer`
+  değişkeninin hangi karta ait olduğunu eşliyor): Full Breach (`_full_breach_timer`),
+  Momentum Burst (`_momentum_burst_timer`), Bounce Barrage (`bounce_barrage_timer`) —
+  şu an projede sadece bu 3 Calamity'nin "bitiş süresi olan kalıcı buff" tarzı bir
+  `player.gd` değişkeni var (diğerleri ya anlık ya da kendi coroutine'i içinde yerel
+  `duration`/`elapsed` kullanıyor, dışarıdan okunamıyor). Aynı anda birden fazlası
+  aktifse (örn. Full Breach + Momentum Burst üst üste kullanılırsa) hepsi alt alta
+  satır satır gösteriliyor: "Full Breach = 5s\nMomentum Burst = 12s" gibi. İsimler
+  kart-adı kuralı gereği hep İngilizce (locale'den bağımsız).
+- DataBar (XP/upgrade ilerleme çubuğu, y=698) ve altındaki "DATA HARVESTED"/"0 units"
+  etiketlerine dokunulmadı — yeterli boşluk vardı, çakışma riski yok.
+
+**AÇIK KONU — kullanıcı "dil kısmının da elden geçmesi gerek" dedi, henüz
+dokunulmadı**: sağ panelde TR/EN karışık kullanım var — "SEVİYE"/"TOPLAR"/
+"GELİŞTİRMELER"/"— FELAKET —" Türkçe iken "Launchable Cores"/"Connected Cores"/
+"FUSION ENERGY"/"DATA HARVESTED"/"units" İngilizce. Ayrıca **gerçek bir tutarsızlık
+bulundu**: `lang.gd`'deki `"ui_upgrades_chain": "▸ Zincir Artışı"` — Chain Extension
+kartının alınma sayacını gösteren bu satır kart ADINI Türkçeye çevirmiş, halbuki
+proje kuralı "kart isimleri her zaman İngilizce kalır" (glossary keyword'leri gibi).
+Kullanıcıya hangi yönde standartlaştırmak istediği (panel geneli TR mi kalsın, kart-
+ilişkili özel isimler mi hep İngilizce olsun) sorulacak, kapsamlı bir ayrı tur olarak
+ele alınacak.
+
+## Vector Calamity — Yard Engine + VFX/UI turu TAMAMLANDI (2026-09-24)
+
+Kullanıcı Vector'un 7 Calamity'sini (Gravitational Force, Shockwave, Full Breach,
+Momentum Burst, Rampart Collapse, WormHole, Siege Rain) tek tek test etti, hepsi
+onaylandı. Bu turda yapılanların özeti:
+- Momentum Burst + Gravitational Force + WormHole artık "The Yard Engine" makinesini
+  kullanıyor (bkz. yukarıdaki ilgili bölümler) — Momentum Burst silaha, diğer ikisi
+  tıklanan/hesaplanan noktaya elektrik gönderiyor.
+- Full Breach ve WormHole'ün gereksiz kapanış ekran flaşları kaldırıldı.
+- WormHole tıklamalı hale geldi (eskiden oyuncunun önüne sabitti), tüm hedefli
+  Calamity'ler Avlu sınırına kilitlendi (`_clamp_to_yard()`).
+- Sağ paneldeki ölü "Fusion Energy" alanı Calamity başlığı/hücrelerine devredildi,
+  süreli buff'lar (Full Breach/Momentum Burst/Bounce Barrage) için canlı geri sayım
+  eklendi.
+- **Siege Rain (199) — açıklama bug'ı bulundu ve düzeltildi**: kart açıklaması hâlâ
+  redesign-öncesi değerleri gösteriyordu ("7sn, her 0.5sn'de bir") — gerçek kod uzun
+  süredir "14sn, her 1sn'de bir" olarak çalışıyordu, açıklama hiç güncellenmemişti.
+  EN+TR düzeltildi.
+- Vector Calamity test turunda kullanılan tüm DEBUG override'ları (`_ready()`'deki
+  calamity_slots/momentum_stacks bloğu) **temizlendi**, kalıcı build'e sızmıyor.
+
+**AÇIK/BEKLEYEN İŞLER**:
+- Siege Rain ve Rampart Collapse henüz Yard Engine'e bağlanmadı (ikisinin de kendi
+  VFX kimliği var, kullanıcı isterse ayrıca konuşulacak).
+- Sağ panelin dil tutarlılığı (TR/EN karışık kullanım + "Zincir Artışı" gibi kart-adı
+  çeviri hatası) henüz ele alınmadı, kullanıcıdan yön kararı bekleniyor.
+- `_CALAMITY_TIMER_DEFS`'e şu an sadece 3 Calamity var (Full Breach/Momentum Burst/
+  Bounce Barrage) — diğer süreli etkiler (Gravitational Force'un 5sn çekimi, Siege
+  Rain'in 14sn'si vb.) kendi coroutine'lerinde yerel değişken kullandığı için bu
+  sisteme henüz bağlı değil, istenirse ayrı bir refactor gerekir.
+
+## Momentum Burst — Yard Engine GERİ ALINDI, Bounce Barrage deseni (2026-09-24)
+
+Kullanıcı kararıyla Momentum Burst'ün Yard Engine bağlantısı iptal edildi —
+`_activate_momentum_burst()` artık Cyclone'un Bounce Barrage'ıyla BİREBİR aynı
+desende: makine/bolt beklemeden anında `electrify_weapon(10.0)` + `play_weapon_burst()`
+çağırıyor. `play_weapon_burst()` sadece AnimatedSprite2D silahlarda (Cyclone/Leila)
+çalıştığı için Vector'da (Sprite2D) sessizce no-op oluyor — Vector'da sadece sürekli
+kıvılcım+pulse (`electrify_weapon`) kalıyor, tek seferlik patlama sprite'ı yok (zaten
+Bounce Barrage'ın kendi patlaması da sadece AnimatedSprite2D silahlarda çalışıyordu,
+aynı kısıtlama). `_vfx_yard_engine_to_point()` helper'ı hâlâ duruyor — Gravitational
+Force ve WormHole tarafından kullanılmaya devam ediyor, sadece Momentum Burst
+kaldırıldı.
+
+## Data Storm (129, Cyclone) — BUG FIX: genel geri bildirim yoktu, Yard Engine'e bağlandı (2026-09-24)
+
+Kullanıcı test edip doğru tespit etti: Data Storm'da hiçbir genel (ekran seviyesinde)
+geri bildirim yoktu. Kontrol edilince: `_activate_data_storm()` sahadaki Glitched
+düşmanları tek tek gezip her birinde küçük, lokal bir patlama sprite'ı
+(`_vfx_data_storm_burst`, gerçek ve çalışıyor) oynatıyordu ama **hiçbir shake/flash
+çağrısı yoktu** — sahada Glitched düşman yoksa kart tamamen SESSİZCE hiçbir şey
+yapmadan tüketiliyordu (görsel/işitsel sıfır onay).
+
+**Fix**: `_activate_data_storm()` artık "The Yard Engine" ortak makinesini kullanıyor
+(`_vfx_yard_engine(_vfx_data_storm_burst, Color(0.7, 0.0, 0.8, 1.0), Color(0.7, 0.0,
+0.8, 0.4), _is_glitched)` — Data Storm'un kendi rengiyle, `_is_glitched` filtresiyle).
+Kullanıcı kararı: **shake olsun, flash olmasın** — `_vfx_yard_engine`'in sprite
+mevcutken zaten flash çağırmayan, sadece `_fire_bolts` içinde `_screen_shake_strong()`
+çağıran davranışı buna zaten birebir uyuyordu, ek bir değişikliğe gerek kalmadı
+(flash sadece sprite dosyası EKSİKSE fallback yolunda çalışıyor, o normal koşulda
+tetiklenmiyor). Yan fayda: makine artık sahada hiç Glitched düşman olmasa bile
+belirip kayboluyor (bolt gönderilmese de) — "kart tetiklendi" hissi artık hiçbir
+zaman sıfır olmuyor, eski sessiz-no-op bug'ı da bu sayede kendiliğinden çözüldü.
+
+## KRİTİK BUG FIX: 14 Cyclone kartının pickup handler'ı hiç çalışmıyordu (2026-09-24)
+
+Kullanıcı Virus Core (160) kartını seçti, hiçbir şey olmadı ("top sayısı 5 değildi,
+ilk upgrade'di" — yani core limiti bug'ı değildi, gerçek bir şey kırıktı). Kaynağı
+bulundu: `game_scene.gd`'de bu tip kartların (Cyclone "Rogue" bloğu) pickup
+efektlerini uygulayan `match index:` ifadesi şu satırla sarılıydı:
+
+```gdscript
+elif index >= 114 and index <= 146:
+    var p := get_node("Player")
+    match index:
+        114: ...
+        ...
+        163: $BallLauncher.queue_upgrade_ball("ricochet_core")
+```
+
+**Üst sınır (146) yanlıştı** — match bloğunun içinde 148'den 163'e kadar birçok
+`case` vardı ama dış `elif` şartı `index <= 146` olduğu için index 146'nın ÜSTÜNDEKİ
+HİÇBİR kart bu bloğa hiç girmiyordu, `match` içindeki ilgili case'ler tamamen ölü
+kodtu. Muhtemelen bu kartlar zamanla eklenirken (159-163 Identity Core dalgası,
+148-156 Individuality/Utility ekleri) üst sınır güncellenmeyi unutulmuş.
+
+**Etkilenen 14 kart (hiçbiri seçildiğinde efekti uygulanmıyordu)**:
+Stack Overflow (148), Viral Load (149), Memory Leak (150), Corruption Protocol (151),
+Cascade Delete (152), Zero Day (154), Kernel Panic (155), Systemic Failure'ın
+Calamity slotuna eklenmesi (156), Backstab Protocol (158), **Phantom Circuit Core
+(159), Virus Core (160), Decay Core (161), Static Core (162), Ricochet Core (163)**.
+
+**ÖNEMLİ NOT**: Bu kartların hepsinin kod tarafındaki gerçek MEKANİĞİ (`ball.gd`,
+`base_enemy.gd` içindeki `can_X`/`has_X` bayraklarına bağlı davranış) daha önceki
+review turlarında ayrıntılıca incelenip doğru bulunmuştu — ama o incelemeler sadece
+"bayrak set edilirse ne olur" kısmını doğruluyordu, **bayrağın gerçekten set
+edildiği pickup tetikleme yolunu** kontrol etmemiştik. Yani "implementasyon doğru"
+diye onaylanan bu 14 kart aslında **hiçbir zaman gerçekten alınamıyordu** — ekran
+görüntüsünde havuzda görünüp seçilebiliyorlardı ama seçilince efekt hiç
+uygulanmıyordu (tıpkı kullanıcının bulduğu gibi).
+
+**Fix**: `elif index >= 114 and index <= 146:` → `elif index >= 114 and index <= 163:`
+(match bloğundaki en yüksek case değeriyle eşleşecek şekilde). Tek satırlık değişiklik,
+tüm 14 kartı aynı anda düzeltti. **Kullanıcıya not**: geçmiş review turlarında bu 14
+kart için "implementasyon doğru" denmişti — o değerlendirme mekanik AÇISINDAN hâlâ
+geçerli, sadece "kart hiç tetiklenmiyordu" katmanı o turlarda kaçırılmıştı.
+
+## PERFORMANS BUG FIX: Backdoor/Systemic Failure kalabalık odada kısa kasmaya sebep oluyordu (2026-09-24)
+
+Kullanıcı: Backdoor kullandıktan hemen sonra (kalabalık düşman varken) kısa süreli bir
+kasma yaşadı, ~3sn sonra Data Storm'a basınca glitchli düşman kalmamıştı.
+
+**Kök sebep**: `_vfx_yard_engine()`'in bolt-ateşleme döngüsü (`_fire_bolts`), filtresi
+olmayan (Backdoor, Systemic Failure — TÜM sahadaki düşmanları hedefleyen) Calamity'lerde
+sahadaki HER düşman için **aynı frame içinde** bir `Line2D` (zigzag çizgi) + `Tween`
+oluşturuyor, ayrıca `apply_fn.call()` (örn. `apply_glitch()`) de kendi içinde bir debuff
+ikonu ekliyor. Kalabalık bir odada (30-40+ düşman) bu, tek frame'de onlarca node/tween/
+sprite oluşturulması demek — gözle görülür bir CPU spike'ı/kasma.
+
+**Fix**: `_fire_bolts` artık hedef listesini önce topluyor, sonra her 6 hedefte bir
+`await get_tree().process_frame` ile bir sonraki frame'e geçiyor — iş birkaç frame'e
+yayılıyor (60 FPS'te 30 düşman ≈ 5 frame ≈ 80ms), görsel olarak hâlâ neredeyse anlık
+ama tek frame'lik spike ortadan kalkıyor. `_vfx_yard_engine()` kullanan TÜM Calamity'leri
+etkiliyor (Backdoor, Systemic Failure, Data Storm, System Crash, Wildfire) — sadece
+filtresiz olanlarda (Backdoor/Systemic Failure) pratikte fark yaratır, filtreli olanlar
+zaten az sayıda hedefle çalışıyordu.
+
+**İkincil gözlem (bug değil, muhtemelen zamanlama)**: Backdoor → Data Storm arasında
+~3sn beklenmiş ama Data Storm'a basıldığında glitchli düşman kalmamıştı. Backdoor'un
+kendi Glitch süresi **3sn'lik açık bir süre** (`apply_glitch(3.0)`, taban 2sn'lik
+varsayılanın üstünde, kasıtlı) ama HEM Backdoor'un HEM Data Storm'un kendi Yard Engine
+giriş animasyonu ~1.3sn sürüyor (bolt'lar animasyonun SON 2 frame'inde ateşleniyor) —
+yani Backdoor'un glitch'i gerçekte ~1.3sn'de başlayıp ~4.3sn'de bitiyor, kullanıcı
+Data Storm'a "~3sn sonra" bastıysa, Data Storm'un KENDİ ~1.3sn'lik giriş animasyonu
+da eklenince bolt'ları gerçekte ~4.3sn işaretinde ateşleniyor — tam da glitch'in
+bitiş anına denk geliyor, üstüne kasma da birkaç yüz ms yiyorsa süre kolayca kaçmış
+olabilir. Kod tarafında bir hata değil, saf zamanlama — kullanıcı isterse Backdoor'un
+glitch süresi (3sn → 4-5sn) artırılabilir, henüz değiştirilmedi.
+
+## PERFORMANS BUG FIX #2: BallLauncher top fırlatacağı sırada kasma (2026-09-24, aynı gün devamı)
+
+Kullanıcı kasmaların Calamity'lerin yanında **BallLauncher'ın sağ üstte top fırlatacağı
+sırada** da olduğunu belirtti. İki ayrı kök sebep bulundu, ikisi de aynı desen
+(SpriteFrames'i her seferinde sıfırdan inşa edip diskten yeniden `load()` etmek):
+
+1. **`ball.gd::_setup_ball_sprite()`** — her top spawn'ında (her `_ready()`'de, yani
+   run başında birden fazla top aynı anda kurulurken ya da run içinde yeni bir core
+   alınıp `queue_upgrade_ball` ile sıraya girince) TÜM tipler için (normal top dahil!)
+   `SpriteFrames.new()` + `frame_count` kadar `load()` çağrısıyla sıfırdan inşa
+   ediliyordu. **Fix**: `static var _ball_sprite_frames_cache: Dictionary` eklendi
+   (steam cloud VFX'teki `_steam_cloud_sf` ile aynı, zaten kanıtlanmış paylaşım deseni)
+   — folder+frame_count anahtarına göre tip başına BİR KEZ inşa edilip önbelleğe
+   alınıyor, sonraki her spawn'da doğrudan oradan okunuyor. Sadece ortak/basit yol
+   (normal top + çoğu Identity/Connected Core) kapsandı; Ricochet Core'un 7-segmentli
+   özel `rc_frames` bloğuna (top başına sadece 1 kez, ricochet core görece nadir
+   olduğu için) dokunulmadı — düşük öncelik, istenirse ayrıca eklenir.
+2. **`ball_launcher.gd::_update_preview_sprite()` — muhtemel asıl suçlu**: bu fonksiyon
+   `_process()`'te HER FRAME çağrılıyor, sıradaki top tipi (`next_type`) değiştiğinde
+   (kuyruk ilerledikçe sıkça değişebilir) aynı şekilde `SpriteFrames.new()` +
+   `load()` döngüsüyle sıfırdan inşa ediyordu — **tam olarak "top fırlatılacağı sırada"
+   görünen önizleme sprite'ı**. Aynı önbellekleme deseni burada da uygulandı
+   (`static var _preview_sprite_frames_cache`, `ball_launcher.gd`'ye ayrı, ball.gd'nin
+   içine karışmadan).
+
+İkisi de davranışı DEĞİŞTİRMİYOR (aynı SpriteFrames içerikleri, sadece tekrar inşa
+etmek yerine önbellekten okunuyor) — sadece spawn/önizleme-değişimi anındaki CPU
+işini ortadan kaldırıyor.
+
+## Yard Engine animasyonu hızlandırıldı (2026-09-24, kullanıcı: kombo yapmakta zorlanıyordu)
+
+`_vfx_yard_engine()` ve `_vfx_yard_engine_to_point()`'teki "start"/"end" animasyon
+hızı 12fps → **22fps**'e çıkarıldı (4 satır, iki fonksiyonda da aynı). 16 frame'lik
+her aşama artık ~1.33sn yerine ~0.73sn sürüyor — tam bir giriş+çıkış döngüsü ~2.67sn'den
+~1.45sn'ye indi. Tetikleme mantığı (son 2 frame'de bolt ateşleme) zaten frame indeksine
+göre çalıştığı için otomatik olarak daha erken/hızlı tetikleniyor, ayrı bir değişikliğe
+gerek kalmadı.
+
+## Oyuncu hasar alınca beyaz flaş eklendi (2026-09-25)
+
+Kullanıcı fark etti: düşmanlar fiziksel hasar alınca beyaz yanıp sönüyordu (2026-09-19
+tarihli "Fiziksel Vuruş Geri Bildirimi" özelliği) ama **oyuncunun kendisi hasar alınca
+hiçbir görsel geri bildirim yoktu**. `player.gd::take_damage()`'a aynı desende
+(`base_enemy.gd::_react_flash()`'in birebir kopyası — `_flash_id` korumalı, çakışan
+art arda hasarlarda sadece son flaşın rengi sıfırlamasına izin veriyor) yeni bir
+`_react_flash_physical()` fonksiyonu eklendi, `take_damage()`'ın başında çağrılıyor.
+
+**Uygulama detayı**: Player 3 ayrı karakter sprite'ı barındırıyor (`$VectorSprite`/
+`$CycloneSprite`/`$LeilaSprite`, sadece biri o an görünür) — ama `modulate` Player
+ROOT node'una (CharacterBody2D) uygulanıyor, tek tek sprite seçmeye gerek yok
+(Godot'ta modulate çocuklara miras geçiyor, gizli olanlar zaten görünmüyor,
+zararsız). Player root'unda `modulate` başka hiçbir yerde kullanılmıyordu (sadece
+dash-trail hayalet klonlarında, ayrı bir node), çakışma riski yok.
+
+## Font: Silver indirildi ve projeye eklendi (2026-09-25) — HENÜZ UI'ya BAĞLANMADI
+
+Font önerileri (Pixel Operator / Grand9K Pixel) araştırılırken **Silver** (Poppy Works,
+itch.io) daha iyi çıktı: lisans **CC BY 4.0** (ticari kullanım serbest, sadece atıf;
+Grand9K'nın CC-BY-SA'sındaki ShareAlike şartı yok), $100.000 bütçe/kazanç eşiğini
+aşarsa hello@poppy.works ile doğrudan lisans gerekiyor. Dil kapsamı çok geniş
+(Latin+Kiril+CJK+Tayca+Devanagari…, 13.783 glyph), Türkçe karakterlerin (ğ ş ı İ ö ü ç)
+hepsi fonttools ile doğrulandı — eksik yok. Gamepad/klavye/mouse ikonları fontun
+içinde. SIGNALIS, Crypt of the NecroDancer, World of Horror gibi oyunlarda kullanılıyor.
+Bilinen küçük sorunlar (topluluk yorumları): dikey hizalama kayması ve büyük "I"
+kerning'i — Godot'ta Y-offset ayarı gerekebilir.
+
+- Dosya: `assets/silverfont/Silver.ttf` (3.7 MB) + `assets/silverfont/LICENSE.txt`
+  (atıf notu). Kullanıcı ücretsiz yolu seçildi ("No thanks, just take me to the
+  downloads"), ödeme yapılmadı.
+- **YAPILACAK**: (1) oyunun credits ekranına "Silver font by Poppy Works" atfı
+  eklenmeli (CC BY 4.0 zorunluluğu), (2) UI'daki mevcut Orbitron font referansları
+  (`game_scene.gd` başındaki `_font_bold`/`_font_regular` preload'ları + `.tscn`'deki
+  `font_regular`/`font_bold` ExtResource'ları) Silver'a çevrilecek — kullanıcı onayı
+  bekleniyor, Orbitron şu an oyunun UI kimliği.
+
+### KARAR (2026-09-25): Probly12 iptal, SILVER kullanılıyor — TEST BEKLİYOR
+Probly12 denendi ("çok küçük", 12px tasarım, sembol eksik) → **komple kaldırıldı**
+(`assets/probly12font/` silindi, kodda referans yok). Fontlar (`game_scene`/`main_menu`/
+`character_select` `.gd`+`.tscn`, `neon_sign.gd`) `res://assets/silverfont/Silver.ttf`'e
+çevrildi (Bold/Regular aynı dosya, Silver tek ağırlık). `Silver.ttf.import`:
+antialiasing=0, hinting=0, subpixel=0, oversampling=1.0 (pixel keskin).
+**Silver'ın gerçek piksel ızgarası 19px** (1 piksel = 100/1900 em; büyük harf 9px, x-height
+6px, glyph advance 6px). Bu yüzden TÜM font boyutları `19 * max(1, round(eski*1.46/19))`
+formülüyle 19'un katlarına oturtuldu (≤18→19, 20-28→38, 36-42→57, 48-52→76, 64→95,
+88→133) — 117 yer (tscn `theme_override_font_sizes`, gd `add_theme_font_size_override`,
+`.font_size =`, `_dfs/_nfs/desc_font_size`). Kart açıklama kademeleri (13/11/10) artık
+hepsi 19. **Riskler**: 19→38 sıçraması büyük; sabit kutular taşabilir (sağ panel 272px,
+menü butonları, hover pop-up). `▸ ⏸ ⚡ ◻` glyph'leri Silver'da yok (fallback); `→ ≥ ≤ — •`
+var. **Yapılacak**: (1) credits ekranına "Silver font by Poppy Works" atfı (CC BY 4.0),
+(2) `assets/orbitronfont/` artık referanssız — silinebilir. Geri alma: `git diff` (boyutlar
+dağınık, eski boyutlar HEAD'de).
+**Lisans notu**: Silver CC BY 4.0 ama bütçe/kazanç >$100.000 ise yazardan doğrudan lisans
+gerekiyor; uçuk teklif gelirse plan: pazarlık ya da başka fonta geçiş (font 7 dosyada
+tek satırla değişiyor; OFL alternatifleri: Galmuri, DotGothic16, Fusion Pixel, Unifont).
+
+## (ESKİ NOT) Font seçimi (2026-09-23)
 
 Kullanıcı pixel-art'a yakışan, hem Türkçe (ğ/ş/ı/İ/ö/ü/ç) hem gelecekte başka diller
 için de kullanılabilecek bir font istedi. İki öneri sunuldu, kullanıcı evde ikisini de

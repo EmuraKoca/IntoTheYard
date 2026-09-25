@@ -1,8 +1,8 @@
 [gd_scene format=3 uid="uid://cnhi6rr27ggi2"]
 
 [ext_resource type="Script" uid="uid://brpii3xdtvybk" path="res://character_select.gd" id="1_tddig"]
-[ext_resource type="FontFile" uid="uid://bdbf1qeb2yg1s" path="res://assets/orbitronfont/Orbitron-Bold.ttf" id="font_bold"]
-[ext_resource type="FontFile" uid="uid://xo24eqnt6ct1" path="res://assets/orbitronfont/Orbitron-Regular.ttf" id="font_regular"]
+[ext_resource type="FontFile" path="res://assets/silverfont/Silver.ttf" id="font_bold"]
+[ext_resource type="FontFile" path="res://assets/silverfont/Silver.ttf" id="font_regular"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_4"]
 content_margin_left = 14.0
@@ -142,7 +142,7 @@ custom_minimum_size = Vector2(580, 0)
 layout_mode = 2
 theme_override_colors/font_color = Color(0, 0.95, 1, 1)
 theme_override_fonts/font = ExtResource("font_bold")
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 38
 autowrap_mode = 2
 
 [node name="LabelTalent" type="Label" parent="InfoPanel" unique_id=736729985]
@@ -150,7 +150,7 @@ custom_minimum_size = Vector2(580, 0)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.4, 1, 0.2, 1)
 theme_override_fonts/font = ExtResource("font_regular")
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 38
 autowrap_mode = 2
 
 [node name="LabelPassive" type="Label" parent="InfoPanel" unique_id=415756468]
@@ -158,7 +158,7 @@ custom_minimum_size = Vector2(580, 0)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.55, 0.1, 1)
 theme_override_fonts/font = ExtResource("font_regular")
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 38
 autowrap_mode = 2
 
 [node name="LabelDescription" type="Label" parent="InfoPanel" unique_id=975325873]
@@ -166,7 +166,7 @@ custom_minimum_size = Vector2(580, 0)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.75, 0.78, 0.92, 1)
 theme_override_fonts/font = ExtResource("font_regular")
-theme_override_font_sizes/font_size = 17
+theme_override_font_sizes/font_size = 19
 autowrap_mode = 2
 
 [node name="ColorRect" type="ColorRect" parent="." unique_id=1036777609]
@@ -184,7 +184,7 @@ offset_right = 1510.0
 offset_bottom = 1053.0
 theme_override_colors/font_color = Color(1, 0.18, 0.58, 1)
 theme_override_fonts/font = ExtResource("font_bold")
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 38
 theme_override_styles/normal = SubResource("StyleBoxFlat_4")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_6")
 theme_override_styles/hover = SubResource("StyleBoxFlat_5")
@@ -199,7 +199,7 @@ offset_right = 1250.0
 offset_bottom = 1053.0
 theme_override_colors/font_color = Color(0, 0.95, 1, 1)
 theme_override_fonts/font = ExtResource("font_bold")
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 38
 theme_override_styles/normal = SubResource("StyleBoxFlat_1")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_3")
 theme_override_styles/hover = SubResource("StyleBoxFlat_2")
@@ -214,7 +214,7 @@ offset_right = 1920.0
 offset_bottom = 90.0
 theme_override_colors/font_color = Color(0, 0.95, 1, 1)
 theme_override_fonts/font = ExtResource("font_bold")
-theme_override_font_sizes/font_size = 52
+theme_override_font_sizes/font_size = 76
 text = "SELECT YOUR CHARACTER"
 horizontal_alignment = 1
 
@@ -252,7 +252,7 @@ offset_right = 390.0
 offset_bottom = 746.0
 theme_override_colors/font_color = Color(0, 0.95, 1, 1)
 theme_override_fonts/font = ExtResource("font_bold")
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 19
 text = "Name : Vector"
 
 [node name="LabelTalent" type="Label" parent="HBoxContainer/CharacterPanel/CardsContainer/VectorCard" unique_id=667916799]
@@ -265,7 +265,7 @@ offset_right = 390.0
 offset_bottom = 776.0
 theme_override_colors/font_color = Color(0.4, 1, 0.2, 1)
 theme_override_fonts/font = ExtResource("font_regular")
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 19
 text = "Talent : Jai Alai"
 
 [node name="LeilaCard" type="Panel" parent="HBoxContainer/CharacterPanel/CardsContainer" unique_id=621024200]
@@ -286,7 +286,7 @@ offset_right = 390.0
 offset_bottom = 746.0
 theme_override_colors/font_color = Color(0, 0.95, 1, 1)
 theme_override_fonts/font = ExtResource("font_bold")
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 19
 text = "???"
 
 [node name="LabelTalent" type="Label" parent="HBoxContainer/CharacterPanel/CardsContainer/LeilaCard" unique_id=1492451817]
@@ -299,7 +299,7 @@ offset_right = 390.0
 offset_bottom = 776.0
 theme_override_colors/font_color = Color(0.4, 1, 0.2, 1)
 theme_override_fonts/font = ExtResource("font_regular")
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 19
 text = "Talent : Tennis"
 
 [node name="CycloneCard" type="Panel" parent="HBoxContainer/CharacterPanel/CardsContainer" unique_id=1123510453]
@@ -320,7 +320,7 @@ offset_right = 390.0
 offset_bottom = 746.0
 theme_override_colors/font_color = Color(0, 0.95, 1, 1)
 theme_override_fonts/font = ExtResource("font_bold")
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 19
 text = "???"
 
 [node name="LabelTalent" type="Label" parent="HBoxContainer/CharacterPanel/CardsContainer/CycloneCard" unique_id=97291653]
@@ -333,5 +333,5 @@ offset_right = 390.0
 offset_bottom = 776.0
 theme_override_colors/font_color = Color(0.4, 1, 0.2, 1)
 theme_override_fonts/font = ExtResource("font_regular")
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 19
 text = "Talent : Sapak Takraw"

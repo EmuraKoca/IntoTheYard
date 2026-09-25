@@ -1,0 +1,10 @@
+Silver — a font for games
+Authors: Poppy Works, Wolfgang Wozniak
+Major Contributors: Itou Hiro (PixelMPlus), leedheo (DOSGothic), ぶち
+Source: https://poppyworks.itch.io/silver
+License: Creative Commons Attribution 4.0 International (CC BY 4.0)
+         https://creativecommons.org/licenses/by/4.0/
+
+Ticari kullanıma açık, atıf zorunlu (oyunun credits ekranına "Silver font by Poppy Works" yazılmalı).
+NOT: Toplam prodüksiyon bütçesi/kazancı $100.000 USD'yi aşarsa hello@poppy.works ile
+doğrudan lisans görüşmesi gerekiyor.

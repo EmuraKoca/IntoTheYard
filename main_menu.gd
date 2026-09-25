@@ -1,7 +1,7 @@
 extends Node2D
 
-@onready var _font_bold    = preload("res://assets/orbitronfont/Orbitron-Bold.ttf")
-@onready var _font_regular = preload("res://assets/orbitronfont/Orbitron-Regular.ttf")
+@onready var _font_bold    = preload("res://assets/silverfont/Silver.ttf")
+@onready var _font_regular = preload("res://assets/silverfont/Silver.ttf")
 
 # ── Ayarlar kalıcı depolama ───────────────────────────────────────────────────
 const SETTINGS_PATH := "user://settings.cfg"
@@ -111,7 +111,7 @@ func _show_confirm_dialog() -> void:
 	var title := Label.new()
 	title.text = Lang.t("ng_title")
 	title.add_theme_font_override("font", _font_bold)
-	title.add_theme_font_size_override("font_size", 20)
+	title.add_theme_font_size_override("font_size", 38)
 	title.add_theme_color_override("font_color", Color(1.0, 0.18, 0.58, 1.0))
 	title.position = Vector2(20, 18)
 	box.add_child(title)
@@ -120,7 +120,7 @@ func _show_confirm_dialog() -> void:
 	var warn := Label.new()
 	warn.text = Lang.t("ng_warn")
 	warn.add_theme_font_override("font", _font_regular)
-	warn.add_theme_font_size_override("font_size", 16)
+	warn.add_theme_font_size_override("font_size", 19)
 	warn.add_theme_color_override("font_color", Color(0.85, 0.85, 0.85))
 	warn.autowrap_mode = TextServer.AUTOWRAP_WORD
 	warn.position = Vector2(20, 60)
@@ -152,7 +152,7 @@ func _show_confirm_dialog() -> void:
 	var yes_btn := Button.new()
 	yes_btn.text = Lang.t("ng_yes")
 	yes_btn.add_theme_font_override("font", _font_bold)
-	yes_btn.add_theme_font_size_override("font_size", 15)
+	yes_btn.add_theme_font_size_override("font_size", 19)
 	yes_btn.add_theme_color_override("font_color", Color(1.0, 0.18, 0.58, 1.0))
 	yes_btn.add_theme_stylebox_override("normal", _make_style.call(Color(0.08,0.02,0.05,0.95), Color(1.0,0.18,0.58,1.0), Color(1.0,0.18,0.58,0.3)))
 	yes_btn.add_theme_stylebox_override("hover",  _make_style.call(Color(0.22,0.04,0.10,0.97), Color(1.0,0.25,0.65,1.0), Color(1.0,0.25,0.65,0.5)))
@@ -170,7 +170,7 @@ func _show_confirm_dialog() -> void:
 	var no_btn := Button.new()
 	no_btn.text = Lang.t("ng_no")
 	no_btn.add_theme_font_override("font", _font_bold)
-	no_btn.add_theme_font_size_override("font_size", 15)
+	no_btn.add_theme_font_size_override("font_size", 19)
 	no_btn.add_theme_color_override("font_color", Color(0.0, 0.95, 1.0, 1.0))
 	no_btn.add_theme_stylebox_override("normal", _make_style.call(Color(0.02,0.03,0.10,0.95), Color(0.0,0.95,1.0,1.0), Color(0.0,0.95,1.0,0.3)))
 	no_btn.add_theme_stylebox_override("hover",  _make_style.call(Color(0.00,0.22,0.28,0.97), Color(0.0,1.0,1.0,1.0),  Color(0.0,1.0,1.0,0.5)))
@@ -241,7 +241,7 @@ func _build_settings_ui() -> void:
 	title.size = Vector2(W, 40)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_override("font", _font_bold)
-	title.add_theme_font_size_override("font_size", 26)
+	title.add_theme_font_size_override("font_size", 38)
 	title.add_theme_color_override("font_color", Color(0, 0.95, 1, 1))
 	panel.add_child(title)
 
@@ -365,7 +365,7 @@ func _build_controls_tab(parent: Control, rect: Rect2) -> Control:
 	note.position = Vector2(0, rect.size.y - 30)
 	note.size = Vector2(rect.size.x, 26)
 	note.add_theme_font_override("font", _font_regular)
-	note.add_theme_font_size_override("font_size", 12)
+	note.add_theme_font_size_override("font_size", 19)
 	note.add_theme_color_override("font_color", Color(0.5, 0.6, 0.7, 0.55))
 	cont.add_child(note)
 
@@ -405,7 +405,7 @@ func _build_audio_tab(parent: Control, rect: Rect2) -> Control:
 		val_lbl.position = Vector2(615, y + 30)
 		val_lbl.size     = Vector2(60, 28)
 		val_lbl.add_theme_font_override("font", _font_bold)
-		val_lbl.add_theme_font_size_override("font_size", 15)
+		val_lbl.add_theme_font_size_override("font_size", 19)
 		val_lbl.add_theme_color_override("font_color", Color(0, 0.95, 1, 1))
 		val_lbl.text = "%d%%" % int(buses[i][2] * 100)
 		cont.add_child(val_lbl)
@@ -595,7 +595,7 @@ func _make_tab_btn(label: String, idx: int) -> Button:
 	var btn := Button.new()
 	btn.text = label
 	btn.add_theme_font_override("font", _font_bold)
-	btn.add_theme_font_size_override("font_size", 14)
+	btn.add_theme_font_size_override("font_size", 19)
 	btn.pressed.connect(func(): _switch_tab(idx))
 	return btn
 
@@ -603,7 +603,7 @@ func _make_button(label: String, font_color: Color, bg: Color, border: Color) ->
 	var btn := Button.new()
 	btn.text = label
 	btn.add_theme_font_override("font", _font_bold)
-	btn.add_theme_font_size_override("font_size", 17)
+	btn.add_theme_font_size_override("font_size", 19)
 	btn.add_theme_color_override("font_color", font_color)
 	var s := StyleBoxFlat.new()
 	s.bg_color     = bg

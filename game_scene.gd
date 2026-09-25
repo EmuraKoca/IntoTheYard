@@ -1,7 +1,7 @@
 extends Node2D
 
-var _font_bold    = preload("res://assets/orbitronfont/Orbitron-Bold.ttf")
-var _font_regular = preload("res://assets/orbitronfont/Orbitron-Regular.ttf")
+var _font_bold    = preload("res://assets/silverfont/Silver.ttf")
+var _font_regular = preload("res://assets/silverfont/Silver.ttf")
 var _gameplay_music_stream = preload("res://assets/music/gameplayTheme.ogg")
 
 var level = 1
@@ -35,6 +35,14 @@ var _glossary_panel: Panel = null
 var _glossary_label: RichTextLabel = null
 var _low_hp_vignette: TextureRect = null
 var _calamity_cells: Array = []
+var _calamity_timer_label: Label = null
+# Süreli (buff bırakan) Calamity'lerin player.gd'deki geri sayım değişkenleri —
+# karta özel isim burada tutuluyor, isim her zaman İngilizce kalıyor (kart adı kuralı).
+const _CALAMITY_TIMER_DEFS: Array = [
+	{"var": "_full_breach_timer",    "name": "Full Breach"},
+	{"var": "_momentum_burst_timer", "name": "Momentum Burst"},
+	{"var": "bounce_barrage_timer",  "name": "Bounce Barrage"},
+]
 
 const _CORE_DISPLAY_NAMES: Dictionary = {
 	"normal":     "Normal Core",     "electric":   "Electric Core",
@@ -415,7 +423,7 @@ func show_boss_bar(boss_node: Node2D, boss_name: String = "CYBER 404") -> void:
 	name_label.name = "BossName"
 	name_label.text = boss_name
 	name_label.position = Vector2(760, 20)
-	name_label.add_theme_font_size_override("font_size", 24)
+	name_label.add_theme_font_size_override("font_size", 38)
 	name_label.add_theme_font_override("font", _font_bold)
 	name_label.modulate = Color(1, 0.3, 0.3)
 	boss_bar_canvas.add_child(name_label)
@@ -570,8 +578,8 @@ func _show_cards_unlocked(lv_from: int, lv_to: int) -> void:
 			name_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
 			name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
 			name_lbl.clip_contents = true
-			var _nfs: int = 17
-			if u["name"].length() > 14: _nfs = 14
+			var _nfs: int = 19
+			if u["name"].length() > 14: _nfs = 19
 			name_lbl.add_theme_font_size_override("font_size", _nfs)
 			name_lbl.add_theme_font_override("font", _font_bold)
 			name_lbl.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0))
@@ -589,9 +597,9 @@ func _show_cards_unlocked(lv_from: int, lv_to: int) -> void:
 			desc_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
 			desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
 			desc_lbl.clip_contents = true
-			var _dfs: int = 13
-			if u.get("desc", "").length() > 40: _dfs = 11
-			if u.get("desc", "").length() > 60: _dfs = 10
+			var _dfs: int = 19
+			if u.get("desc", "").length() > 40: _dfs = 19
+			if u.get("desc", "").length() > 60: _dfs = 19
 			desc_lbl.add_theme_font_size_override("font_size", _dfs)
 			desc_lbl.add_theme_font_override("font", _font_regular)
 			desc_lbl.add_theme_color_override("font_color", Color(0.85, 0.85, 0.85))
@@ -602,7 +610,7 @@ func _show_cards_unlocked(lv_from: int, lv_to: int) -> void:
 			var page_lbl := Label.new()
 			page_lbl.text = "%d / %d" % [page + 1, total_pages]
 			page_lbl.add_theme_font_override("font", _font_regular)
-			page_lbl.add_theme_font_size_override("font_size", 14)
+			page_lbl.add_theme_font_size_override("font_size", 19)
 			page_lbl.add_theme_color_override("font_color", Color(0.6, 0.7, 0.8, 0.7))
 			page_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			page_lbl.size     = Vector2(200, 24)
@@ -612,7 +620,7 @@ func _show_cards_unlocked(lv_from: int, lv_to: int) -> void:
 		var hint_lbl := Label.new()
 		hint_lbl.text = Lang.t("unlock_hint")
 		hint_lbl.add_theme_font_override("font", _font_regular)
-		hint_lbl.add_theme_font_size_override("font_size", 16)
+		hint_lbl.add_theme_font_size_override("font_size", 19)
 		hint_lbl.add_theme_color_override("font_color", Color(0.6, 0.7, 0.8, 0.8))
 		hint_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		hint_lbl.size     = Vector2(900, 30)
@@ -623,7 +631,7 @@ func _show_cards_unlocked(lv_from: int, lv_to: int) -> void:
 		var is_last_page: bool = (page == total_pages - 1)
 		btn.text = Lang.t("unlock_continue") if is_last_page else ("SONRAKI  ▶" if Lang.locale == "tr" else "NEXT  ▶")
 		btn.add_theme_font_override("font", _font_bold)
-		btn.add_theme_font_size_override("font_size", 24)
+		btn.add_theme_font_size_override("font_size", 38)
 		btn.size     = Vector2(360, 60)
 		btn.position = Vector2((1920 - 360) / 2.0, 812)
 		canvas.add_child(btn)
@@ -667,7 +675,7 @@ func _show_run_end_screen() -> void:
 
 	var title := Label.new()
 	title.text = Lang.t("run_end_title")
-	title.add_theme_font_size_override("font_size", 52)
+	title.add_theme_font_size_override("font_size", 76)
 	title.add_theme_font_override("font", _font_bold)
 	title.modulate = Color(0.2, 1.0, 0.6)
 	title.position = Vector2(660, 200)
@@ -678,7 +686,7 @@ func _show_run_end_screen() -> void:
 	]
 	var stats := Label.new()
 	stats.text = stats_text
-	stats.add_theme_font_size_override("font_size", 28)
+	stats.add_theme_font_size_override("font_size", 38)
 	stats.add_theme_font_override("font", _font_bold)
 	stats.modulate = Color(0.85, 0.85, 0.9)
 	stats.position = Vector2(760, 340)
@@ -686,7 +694,7 @@ func _show_run_end_screen() -> void:
 
 	var chips_earned := GameData.chips - _run_start_chips
 	var chip_lbl := Label.new()
-	chip_lbl.add_theme_font_size_override("font_size", 32)
+	chip_lbl.add_theme_font_size_override("font_size", 38)
 	chip_lbl.add_theme_font_override("font", _font_bold)
 	if chips_earned > 0:
 		chip_lbl.text = "+ %d Chip" % chips_earned
@@ -699,7 +707,7 @@ func _show_run_end_screen() -> void:
 
 	var chip_total_lbl := Label.new()
 	chip_total_lbl.text = "Toplam: %d Chip" % GameData.chips
-	chip_total_lbl.add_theme_font_size_override("font_size", 22)
+	chip_total_lbl.add_theme_font_size_override("font_size", 38)
 	chip_total_lbl.add_theme_font_override("font", _font_bold)
 	chip_total_lbl.modulate = Color(0.6, 0.6, 0.7)
 	chip_total_lbl.position = Vector2(760, 560)
@@ -707,7 +715,7 @@ func _show_run_end_screen() -> void:
 
 	var btn := Button.new()
 	btn.text = Lang.t("go_continue")
-	btn.add_theme_font_size_override("font_size", 26)
+	btn.add_theme_font_size_override("font_size", 38)
 	btn.position = Vector2(760, 620)
 	btn.size     = Vector2(400, 60)
 	canvas.add_child(btn)
@@ -784,7 +792,7 @@ func _show_hasmen_selection() -> void:
 	hasmen_label.size = Vector2(580, 40)
 	hasmen_label.position = Vector2(1310, 108)
 	hasmen_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	hasmen_label.add_theme_font_size_override("font_size", 26)
+	hasmen_label.add_theme_font_size_override("font_size", 38)
 	hasmen_label.add_theme_font_override("font", _font_bold)
 	hasmen_label.add_theme_color_override("font_color", Color(1, 0.18, 0.58, 1))
 	canvas.add_child(hasmen_label)
@@ -835,7 +843,7 @@ func _show_hasmen_selection() -> void:
 	dialog.size = Vector2(426, 180)
 	dialog.position = Vector2(836, 78)
 	dialog.autowrap_mode = TextServer.AUTOWRAP_WORD
-	dialog.add_theme_font_size_override("font_size", 18)
+	dialog.add_theme_font_size_override("font_size", 19)
 	dialog.add_theme_font_override("font", _font_regular)
 	dialog.add_theme_color_override("font_color", Color(0.88, 0.93, 1.0, 1.0))
 	canvas.add_child(dialog)
@@ -844,7 +852,7 @@ func _show_hasmen_selection() -> void:
 	var section_label = Label.new()
 	section_label.text = Lang.t("ui_avail_upgrades")
 	section_label.position = Vector2(50, 388)
-	section_label.add_theme_font_size_override("font_size", 18)
+	section_label.add_theme_font_size_override("font_size", 19)
 	section_label.add_theme_font_override("font", _font_bold)
 	section_label.add_theme_color_override("font_color", Color(0, 0.88, 1, 0.72))
 	canvas.add_child(section_label)
@@ -867,7 +875,7 @@ func _show_hasmen_selection() -> void:
 	var title1 = Label.new()
 	title1.text = "Synergy Protocol"
 	title1.position = Vector2(65, 440)
-	title1.add_theme_font_size_override("font_size", 20)
+	title1.add_theme_font_size_override("font_size", 38)
 	title1.add_theme_font_override("font", _font_bold)
 	title1.add_theme_color_override("font_color", Color(0, 0.95, 1, 1))
 	canvas.add_child(title1)
@@ -876,7 +884,7 @@ func _show_hasmen_selection() -> void:
 	desc1.text = "An 'ITY RE-Processor device' is airdropped onto the field."
 	desc1.size = Vector2(660, 50)
 	desc1.position = Vector2(65, 472)
-	desc1.add_theme_font_size_override("font_size", 15)
+	desc1.add_theme_font_size_override("font_size", 19)
 	desc1.add_theme_font_override("font", _font_regular)
 	desc1.add_theme_color_override("font_color", Color(0.70, 0.75, 0.85))
 	canvas.add_child(desc1)
@@ -916,7 +924,7 @@ func _show_hasmen_selection() -> void:
 	var title2 = Label.new()
 	title2.text = "???????????????????"
 	title2.position = Vector2(65, 600)
-	title2.add_theme_font_size_override("font_size", 20)
+	title2.add_theme_font_size_override("font_size", 38)
 	title2.add_theme_font_override("font", _font_regular)
 	title2.add_theme_color_override("font_color", Color(0.45, 0.45, 0.55))
 	canvas.add_child(title2)
@@ -939,7 +947,7 @@ func _show_hasmen_selection() -> void:
 	var title3 = Label.new()
 	title3.text = "???????????????????"
 	title3.position = Vector2(65, 730)
-	title3.add_theme_font_size_override("font_size", 20)
+	title3.add_theme_font_size_override("font_size", 38)
 	title3.add_theme_font_override("font", _font_regular)
 	title3.add_theme_color_override("font_color", Color(0.45, 0.45, 0.55))
 	canvas.add_child(title3)
@@ -969,7 +977,7 @@ func _activate_fusion_zone() -> void:
 		_processor_btn.offset_right  = 1912.0
 		_processor_btn.offset_bottom = 488.0
 		_processor_btn.add_theme_font_override("font", _font_bold)
-		_processor_btn.add_theme_font_size_override("font_size", 12)
+		_processor_btn.add_theme_font_size_override("font_size", 19)
 		_processor_btn.pressed.connect(_on_processor_toggle)
 		$UI.add_child(_processor_btn)
 		_update_processor_btn()
@@ -1167,6 +1175,9 @@ func _ready() -> void:
 	if _ps:
 		_ps.visible = false
 	$UI/FusionEnergyBar.visible = false
+	# Fusion Zone ITY 2'ye ertelendiği için başlığı da gizlendi — bu alan artık
+	# Calamity başlığı/hücreleri tarafından kullanılıyor (bkz. _setup_calamity_cells).
+	$UI/LabelFusionEnergy.visible = false
 	_setup_data_bar()
 	_setup_auto_toggle()
 	_setup_neon_sign()
@@ -1186,13 +1197,14 @@ func _ready() -> void:
 		for _ci in range(min(_cal_start, max_calamity_slots)):
 			calamity_slots.append(_cal_pool[_ci])
 
-	# ── DEBUG: Cyclone Calamity sprite test override (test bitince kaldır) ──
+	# ── DEBUG: Cyclone Calamity tek tek test override (test bitince kaldır) ──
+	# İlk 3: Data Storm / Backdoor / Bounce Barrage
 	calamity_slots.clear()
-	for _dbg_cal in ["🔥", "🔥💥", "🔥💥"]:
+	for _dbg_cal in ["💾", "👾", "🎱"]:
 		if calamity_slots.size() < max_calamity_slots:
 			calamity_slots.append(_dbg_cal)
 	update_ui()
-	$BallLauncher.queue_upgrade_ball("fire")
+
 	$UI/CalamityCircle.visible = false
 
 	await get_tree().process_frame
@@ -1294,7 +1306,7 @@ func _setup_armor_bar() -> void:
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	lbl.add_theme_font_override("font", _font_bold)
-	lbl.add_theme_font_size_override("font_size", 10)
+	lbl.add_theme_font_size_override("font_size", 19)
 	lbl.add_theme_color_override("font_color", Color(0.9, 0.95, 1.0))
 	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	lbl.z_index = ab.z_index + 1
@@ -1321,7 +1333,7 @@ func _setup_frost_barrier_ui() -> void:
 	lbl2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl2.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	lbl2.add_theme_font_override("font", _font_bold)
-	lbl2.add_theme_font_size_override("font_size", 10)
+	lbl2.add_theme_font_size_override("font_size", 19)
 	lbl2.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0))
 	lbl2.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	lbl2.z_index = fb.z_index + 1
@@ -1649,7 +1661,7 @@ func _setup_core_panel() -> void:
 	lbl_launch.size = Vector2(PW, 16.0)
 	lbl_launch.position = Vector2(PX, PY)
 	lbl_launch.add_theme_font_override("font", _font_bold)
-	lbl_launch.add_theme_font_size_override("font_size", 11)
+	lbl_launch.add_theme_font_size_override("font_size", 19)
 	lbl_launch.add_theme_color_override("font_color", Color(0.55, 0.8, 1.0, 0.9))
 	lbl_launch.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	$UI.add_child(lbl_launch)
@@ -1695,7 +1707,7 @@ func _setup_core_panel() -> void:
 	lbl_conn.size = Vector2(PW, 16.0)
 	lbl_conn.position = Vector2(PX, PY + 18.0 + CELL + 10.0)
 	lbl_conn.add_theme_font_override("font", _font_bold)
-	lbl_conn.add_theme_font_size_override("font_size", 11)
+	lbl_conn.add_theme_font_size_override("font_size", 19)
 	lbl_conn.add_theme_color_override("font_color", Color(0.55, 0.8, 1.0, 0.9))
 	lbl_conn.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	$UI.add_child(lbl_conn)
@@ -1803,8 +1815,8 @@ func _setup_card_glossary(parent: Node) -> void:
 	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	lbl.add_theme_font_override("normal_font", _font_regular)
 	lbl.add_theme_font_override("bold_font", _font_bold)
-	lbl.add_theme_font_size_override("normal_font_size", 12)
-	lbl.add_theme_font_size_override("bold_font_size", 12)
+	lbl.add_theme_font_size_override("normal_font_size", 19)
+	lbl.add_theme_font_size_override("bold_font_size", 19)
 	lbl.add_theme_color_override("default_color", Color(0.9, 0.9, 0.95))
 	panel.add_child(lbl)
 
@@ -1865,7 +1877,7 @@ func _setup_tooltip() -> void:
 	lbl.z_index = 100
 	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	lbl.add_theme_font_override("font", _font_bold)
-	lbl.add_theme_font_size_override("font_size", 11)
+	lbl.add_theme_font_size_override("font_size", 19)
 	lbl.add_theme_color_override("font_color", Color(1.0, 1.0, 0.85, 1.0))
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = Color(0.05, 0.05, 0.12, 0.95)
@@ -1882,7 +1894,7 @@ func _setup_tooltip() -> void:
 
 func _setup_calamity_cells() -> void:
 	const CAL_PX := 1640.0
-	const CAL_PY := 636.0
+	const CAL_PY := 530.0
 	const CELL_W := 40.0
 	const CELL_H := 40.0
 	const GAP    := 6.0
@@ -1910,7 +1922,7 @@ func _setup_calamity_cells() -> void:
 		icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		icon.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		icon.add_theme_font_override("font", _font_bold)
-		icon.add_theme_font_size_override("font_size", 18)
+		icon.add_theme_font_size_override("font_size", 19)
 		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		cell.add_child(icon)
 		var icon_tex := TextureRect.new()
@@ -1931,6 +1943,29 @@ func _setup_calamity_cells() -> void:
 			if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 				_on_calamity_cell_clicked(ci)
 		)
+
+	# Süreli (buff bırakan) Calamity'ler için aktif geri sayım — hücrelerin
+	# hemen altında, "Momentum Burst = 12s" gibi satır satır gösterir.
+	_calamity_timer_label = Label.new()
+	_calamity_timer_label.position = Vector2(CAL_PX, CAL_PY + CELL_H + 8.0)
+	_calamity_timer_label.size = Vector2(272.0, 60.0)
+	_calamity_timer_label.add_theme_font_override("font", _font_regular)
+	_calamity_timer_label.add_theme_font_size_override("font_size", 19)
+	_calamity_timer_label.add_theme_color_override("font_color", Color(0.6, 0.9, 1.0, 0.9))
+	$UI.add_child(_calamity_timer_label)
+
+func _update_calamity_timer_label() -> void:
+	if not is_instance_valid(_calamity_timer_label): return
+	var p := _player_node
+	if p == null:
+		_calamity_timer_label.text = ""
+		return
+	var lines: Array[String] = []
+	for _def in _CALAMITY_TIMER_DEFS:
+		var _t = p.get(_def["var"])
+		if _t != null and _t > 0.0:
+			lines.append("%s = %ds" % [_def["name"], int(ceil(_t))])
+	_calamity_timer_label.text = "\n".join(lines)
 
 func _on_core_cell_hover(index: int) -> void:
 	if _tooltip_label == null:
@@ -2045,7 +2080,7 @@ func _dispatch_calamity_effect(calamity: String, mouse_pos: Vector2) -> void:
 	elif calamity == "🏚️":  # Rampart Collapse
 		_activate_rampart_collapse(mouse_pos)
 	elif calamity == "🕳️":  # WormHole
-		_activate_wormhole()
+		_activate_wormhole(mouse_pos)
 	elif calamity == "🌧️":  # Siege Rain
 		_activate_siege_rain(mouse_pos)
 	elif calamity == "🔥💥":  # Wildfire
@@ -2061,7 +2096,7 @@ func _consume_calamity(index: int, mouse_pos: Vector2) -> void:
 	if index < 0 or index >= calamity_slots.size():
 		return
 	var calamity: String = calamity_slots[index]
-	_dispatch_calamity_effect(calamity, mouse_pos)
+	_dispatch_calamity_effect(calamity, _clamp_to_yard(mouse_pos))
 	# Void Resonance: 4 farklı reaksiyon olduysa slot tüketme
 	var _vr_skip := false
 	if _player_node and _player_node.get("has_void_resonance") and _player_node.has_void_resonance:
@@ -2144,7 +2179,7 @@ func _show_discard_overlay(new_core_name: String) -> void:
 	title.size = Vector2(400.0, 60.0)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_override("font", _font_bold)
-	title.add_theme_font_size_override("font_size", 36)
+	title.add_theme_font_size_override("font_size", 57)
 	title.add_theme_color_override("font_color", Color(1.0, 0.35, 0.2))
 	canvas.add_child(title)
 
@@ -2155,7 +2190,7 @@ func _show_discard_overlay(new_core_name: String) -> void:
 	sub.size = Vector2(800.0, 36.0)
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	sub.add_theme_font_override("font", _font_regular)
-	sub.add_theme_font_size_override("font_size", 18)
+	sub.add_theme_font_size_override("font_size", 19)
 	sub.add_theme_color_override("font_color", Color(0.8, 0.8, 0.9))
 	canvas.add_child(sub)
 
@@ -2209,7 +2244,7 @@ func _show_discard_overlay(new_core_name: String) -> void:
 		name_lbl.position = Vector2(0.0, float(CELL) + 2.0)
 		name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		name_lbl.add_theme_font_override("font", _font_regular)
-		name_lbl.add_theme_font_size_override("font_size", 10)
+		name_lbl.add_theme_font_size_override("font_size", 19)
 		name_lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.85))
 		name_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		cell_bg.add_child(name_lbl)
@@ -2288,7 +2323,7 @@ func _setup_auto_toggle() -> void:
 	btn.position = Vector2(1762, 22)
 	btn.size     = Vector2(88, 28)
 	btn.add_theme_font_override("font", _font_bold)
-	btn.add_theme_font_size_override("font_size", 10)
+	btn.add_theme_font_size_override("font_size", 19)
 	btn.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
 	$UI.add_child(btn)
 	btn.pressed.connect(func() -> void:
@@ -2333,7 +2368,7 @@ func _setup_data_bar() -> void:
 	_data_bar_label.visible = false
 	_data_bar_label.position = _DATA_BAR_POS + Vector2(50, -18)
 	_data_bar_label.add_theme_font_override("font", _font_bold)
-	_data_bar_label.add_theme_font_size_override("font_size", 10)
+	_data_bar_label.add_theme_font_size_override("font_size", 19)
 	_data_bar_label.add_theme_color_override("font_color", Color(0.0, 1.0, 0.55))
 	_data_bar_canvas.add_child(_data_bar_label)
 
@@ -2368,7 +2403,7 @@ func _spawn_data_particles(world_pos: Vector2, amount: float, count: int) -> voi
 		var lbl := Label.new()
 		lbl.text = chars[randi() % chars.size()]
 		lbl.add_theme_font_override("font", _font_regular)
-		lbl.add_theme_font_size_override("font_size", 13)
+		lbl.add_theme_font_size_override("font_size", 19)
 		lbl.add_theme_color_override("font_color", Color(0.0, 1.0, 0.35, 0.9))
 		lbl.position = screen_pos + Vector2(randf_range(-18, 18), randf_range(-18, 18))
 		_data_particle_canvas.add_child(lbl)
@@ -2486,7 +2521,7 @@ func show_game_over() -> void:
 	hasmen_name.text     = "MR. HASMEN"
 	hasmen_name.position = Vector2(1385, 150)
 	hasmen_name.add_theme_font_override("font", _font_bold)
-	hasmen_name.add_theme_font_size_override("font_size", 18)
+	hasmen_name.add_theme_font_size_override("font_size", 19)
 	hasmen_name.add_theme_color_override("font_color", Color(1.0, 0.08, 0.58, 0.85))
 	canvas.add_child(hasmen_name)
 
@@ -2495,7 +2530,7 @@ func show_game_over() -> void:
 	header.text     = Lang.t("go_header")
 	header.position = Vector2(80, 70)
 	header.add_theme_font_override("font", _font_bold)
-	header.add_theme_font_size_override("font_size", 22)
+	header.add_theme_font_size_override("font_size", 38)
 	header.add_theme_color_override("font_color", Color(1.0, 0.08, 0.58, 1.0))
 	canvas.add_child(header)
 
@@ -2527,7 +2562,7 @@ func show_game_over() -> void:
 		key.text     = row[0]
 		key.position = Vector2(110, 172 + i * 72)
 		key.add_theme_font_override("font", _font_regular)
-		key.add_theme_font_size_override("font_size", 13)
+		key.add_theme_font_size_override("font_size", 19)
 		key.add_theme_color_override("font_color", Color(0.5, 0.6, 0.7))
 		canvas.add_child(key)
 
@@ -2535,7 +2570,7 @@ func show_game_over() -> void:
 		val.text     = row[1]
 		val.position = Vector2(110, 190 + i * 72)
 		val.add_theme_font_override("font", _font_bold)
-		val.add_theme_font_size_override("font_size", 28)
+		val.add_theme_font_size_override("font_size", 38)
 		val.add_theme_color_override("font_color", row[2])
 		canvas.add_child(val)
 
@@ -2552,7 +2587,7 @@ func show_game_over() -> void:
 	quote_lbl.size          = Vector2(1190, 60)
 	quote_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
 	quote_lbl.add_theme_font_override("font", _font_regular)
-	quote_lbl.add_theme_font_size_override("font_size", 17)
+	quote_lbl.add_theme_font_size_override("font_size", 19)
 	quote_lbl.add_theme_color_override("font_color", Color(0.85, 0.80, 1.0))
 	canvas.add_child(quote_lbl)
 
@@ -2560,7 +2595,7 @@ func show_game_over() -> void:
 	attr_lbl.text     = "— Mr. Hasmen, ITY Corp."
 	attr_lbl.position = Vector2(110, 584)
 	attr_lbl.add_theme_font_override("font", _font_bold)
-	attr_lbl.add_theme_font_size_override("font_size", 12)
+	attr_lbl.add_theme_font_size_override("font_size", 19)
 	attr_lbl.add_theme_color_override("font_color", Color(1.0, 0.08, 0.58, 0.75))
 	canvas.add_child(attr_lbl)
 
@@ -2705,8 +2740,8 @@ func _build_all_upgrades() -> void:
 	{"name": "Full Breach",       "category": "Calamity",      "color": Color(0.9, 0.2, 0.1),  "desc": "Armor resets, 8s:\nCore Damage ×2.5",                   "index": 175, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 4},
 	{"name": "Momentum Burst",    "category": "Calamity",      "color": Color(0.0, 0.8, 1.0),  "desc": "Spend all Momentum:\n+5% Core Speed per stack (10s)",            "index": 176, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 4, "requires": [35]},
 	{"name": "Rampart Collapse",  "category": "Calamity",      "color": Color(0.2, 0.85, 1.0),  "desc": "Deals AoE damage equal to Armor Cap\nat the targeted point. Armor resets",       "index": 177, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 5},
-	{"name": "WormHole",          "category": "Calamity",      "color": Color(0.4, 0.0, 0.8),  "desc": "Opens a wormhole around Vector\nApproaching enemies vanish into the void (Boss immune)", "index": 198, "weight": 2, "rarity": "legendary", "chars": ["vector"], "min_level": 4},
-	{"name": "Siege Rain",        "category": "Calamity",      "color": Color(0.4, 0.4, 0.5),  "desc": "7s: a Siege Core falls on the\ntarget area every 0.5s",     "index": 199, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 4},
+	{"name": "WormHole",          "category": "Calamity",      "color": Color(0.4, 0.0, 0.8),  "desc": "Opens a wormhole at the targeted point\nApproaching enemies vanish into the void (Boss immune)", "index": 198, "weight": 2, "rarity": "legendary", "chars": ["vector"], "min_level": 4},
+	{"name": "Siege Rain",        "category": "Calamity",      "color": Color(0.4, 0.4, 0.5),  "desc": "14s: a Siege Core falls on the\ntarget area every 1s",     "index": 199, "weight": 2,  "rarity": "legendary", "chars": ["vector"], "min_level": 4},
 	# ── Leila (Elemental) ─────────────────────────────────────────────────────
 	{"name": "Electric Core",       "category": "Identity",      "color": Color(0.2, 0.5, 1.0), "desc": "Core gains electricity",                    "index": 1,  "weight": 10, "rarity": "common", "chars": ["leila"], "min_level": 0},
 	{"name": "Cryo Core",           "category": "Identity",      "color": Color(0.5, 0.8, 1.0), "desc": "Slows subject by 25%",                      "index": 15, "weight": 10, "rarity": "common", "chars": ["leila"], "min_level": 0},
@@ -2961,7 +2996,7 @@ func show_upgrade_menu() -> void:
 	var title = Label.new()
 	title.text = Lang.t("ui_level_up")
 	title.position = Vector2(860, 150)
-	title.add_theme_font_size_override("font_size", 48)
+	title.add_theme_font_size_override("font_size", 76)
 	title.add_theme_font_override("font", _font_bold)
 	title.modulate = Color(1, 0.8, 0, 0.0)
 	canvas.add_child(title)
@@ -3034,7 +3069,7 @@ func show_upgrade_menu() -> void:
 		cat_label.position = Vector2(tx + _cat_cx - _cat_w * 0.5, ty + _cat_cy - _cat_h * 0.5)
 		cat_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		cat_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		cat_label.add_theme_font_size_override("font_size", 10)
+		cat_label.add_theme_font_size_override("font_size", 19)
 		cat_label.add_theme_font_override("font", _font_bold)
 		cat_label.add_theme_color_override("font_color", Color(0.1, 0.1, 0.1))
 		cat_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -3086,11 +3121,11 @@ func show_upgrade_menu() -> void:
 		desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD
 		desc_label.clip_contents = true
 		var _desc_plain_len: int = _desc_str.length()
-		var desc_font_size: int = 13
+		var desc_font_size: int = 19
 		if _desc_plain_len > 40:
-			desc_font_size = 11
+			desc_font_size = 19
 		if _desc_plain_len > 60:
-			desc_font_size = 10
+			desc_font_size = 19
 		desc_label.add_theme_font_size_override("normal_font_size", desc_font_size)
 		desc_label.add_theme_font_size_override("bold_font_size", desc_font_size)
 		desc_label.add_theme_font_override("normal_font", _font_regular)
@@ -3180,21 +3215,29 @@ func show_upgrade_menu() -> void:
 	glitch_tw.tween_callback(glitch_rect.queue_free)
 
 func _activate_gravity(pos: Vector2) -> void:
-	_vfx_gravity(pos)
-	var duration = 5.0
-	var elapsed = 0.0
-	while elapsed < duration:
-		if upgrading:
+	var _run_pull := func():
+		_vfx_gravity(pos)
+		var duration = 5.0
+		var elapsed = 0.0
+		while elapsed < duration:
+			if upgrading:
+				await get_tree().process_frame
+				continue
+			var subjects = get_tree().get_nodes_in_group("subjects")
+			for subject in subjects:
+				if subject.global_position.distance_to(pos) < 150:
+					var direction = (pos - subject.global_position).normalized()
+					subject.global_position += direction * 60 * get_process_delta_time()
+			elapsed += get_process_delta_time()
 			await get_tree().process_frame
-			continue
-		var subjects = get_tree().get_nodes_in_group("subjects")
-		for subject in subjects:
-			if subject.global_position.distance_to(pos) < 150:
-				var direction = (pos - subject.global_position).normalized()
-				subject.global_position += direction * 60 * get_process_delta_time()
-		elapsed += get_process_delta_time()
-		await get_tree().process_frame
-		
+
+	_vfx_yard_engine_to_point(
+		func() -> Vector2: return pos,
+		Color(0.65, 0.1, 1.0, 1.0),
+		_run_pull,
+		_run_pull
+	)
+
 func _activate_freezing_cold() -> void:
 	_react_flash_screen(Color(0.7, 0.95, 1.0, 0.3))
 	_vfx_freezing_cold()
@@ -3407,9 +3450,9 @@ func _activate_emp() -> void:
 	_screen_shake_small()
 
 func _activate_data_storm() -> void:
-	for subject in get_tree().get_nodes_in_group("subjects"):
-		if is_instance_valid(subject) and subject.global_position.x >= 385.0 and subject.get("is_glitched") and subject.is_glitched:
-			_vfx_data_storm_burst(subject)
+	var _is_glitched := func(e) -> bool:
+		return e.get("is_glitched") == true
+	_vfx_yard_engine(_vfx_data_storm_burst, Color(0.7, 0.0, 0.8, 1.0), Color(0.7, 0.0, 0.8, 0.4), _is_glitched)
 
 # Data Storm'un hedef seçici olmayan, "her Glitched düşmanda ayrı ayrı" VFX'i — glitch
 # element göstergesinin yerine 16 frame'lik bir "bozulma patlaması" oynuyor, animasyon
@@ -3486,7 +3529,7 @@ func _vfx_yard_engine(apply_fn: Callable, bolt_color: Color, fallback_flash: Col
 	var sf := SpriteFrames.new()
 	if sf.has_animation("default"): sf.remove_animation("default")
 	sf.add_animation("start")
-	sf.set_animation_speed("start", 12.0)
+	sf.set_animation_speed("start", 22.0)
 	sf.set_animation_loop("start", false)
 	var i := 0
 	while ResourceLoader.exists("res://assets/VFX/theYardEngine/starting/frame_%03d.png" % i):
@@ -3494,7 +3537,7 @@ func _vfx_yard_engine(apply_fn: Callable, bolt_color: Color, fallback_flash: Col
 		i += 1
 	var start_frame_count := i
 	sf.add_animation("end")
-	sf.set_animation_speed("end", 12.0)
+	sf.set_animation_speed("end", 22.0)
 	sf.set_animation_loop("end", false)
 	var j := 0
 	while ResourceLoader.exists("res://assets/VFX/theYardEngine/ending/frame_%03d.png" % j):
@@ -3505,19 +3548,90 @@ func _vfx_yard_engine(apply_fn: Callable, bolt_color: Color, fallback_flash: Col
 	engine.play("start")
 
 	var _bolts_fired := false
+	# Kalabalık odalarda (Backdoor/Systemic Failure gibi filtresiz — TÜM düşmanları
+	# hedefleyen Calamity'lerde) tüm bolt+apply işini AYNI frame'de yapmak (her biri bir
+	# Line2D+Tween oluşturuyor, apply_fn de debuff ikonu ekleyebiliyor) gözle görülür bir
+	# kasmaya sebep oluyordu — düşman sayısı fazlaysa iş birkaç frame'e yayılıyor, görsel
+	# olarak hâlâ neredeyse anlık (60 FPS'te 6 düşman/frame) ama tek frame'lik CPU spike'ı
+	# ortadan kalkıyor.
 	var _fire_bolts := func():
 		_screen_shake_strong()
+		var _targets: Array = []
 		for subject in _yard_subjects():
 			if filter_fn.is_valid() and not filter_fn.call(subject): continue
+			_targets.append(subject)
+		var _n := 0
+		for subject in _targets:
+			if not is_instance_valid(subject): continue
 			if to_engine:
 				_vfx_engine_bolt(subject.global_position, yard_center, bolt_color)
 			else:
 				_vfx_engine_bolt(yard_center, subject.global_position, bolt_color)
 			apply_fn.call(subject)
+			_n += 1
+			if _n % 6 == 0:
+				await get_tree().process_frame
 	engine.frame_changed.connect(func():
 		if not _bolts_fired and is_instance_valid(engine) and engine.animation == "start" and engine.frame >= max(start_frame_count - 2, 0):
 			_bolts_fired = true
 			_fire_bolts.call()
+	)
+
+	await engine.animation_finished
+	if not is_instance_valid(engine): return
+	engine.play("end")
+	await engine.animation_finished
+	if is_instance_valid(engine): engine.queue_free()
+
+# "The Yard Engine" — sahanın merkezinde beliren makineden düşmanlara değil, SERBEST
+# bir noktaya (oyuncunun tıkladığı hedef, silah pozisyonu vb.) tek bir elektrik çizgisi
+# gönderir. Çizgi hedefe ulaştığı an on_arrival çağrılır — asıl Calamity etkisi ve
+# kendi VFX'i (örn. Gravitational Force'un vorteksi) o anda başlar. get_target_pos bir
+# Callable olduğu için hedef, makine animasyonu oynarken (yaklaşık 1sn) hâlâ hareket
+# eden bir şey olabilir (örn. Momentum Burst'te oyuncunun silahı) — pozisyon çizgi
+# ateşlenirken YENİDEN okunuyor, spawn anında değil. Sprite yoksa fallback_fn çağrılıp
+# (kendi ekran flaşı + asıl etkiyi tetiklemesi gerekir) aynen devam ediyor, crash yok.
+func _vfx_yard_engine_to_point(get_target_pos: Callable, bolt_color: Color, on_arrival: Callable, fallback_fn: Callable) -> void:
+	if not ResourceLoader.exists("res://assets/VFX/theYardEngine/starting/frame_000.png"):
+		fallback_fn.call()
+		return
+
+	var yard_center := Vector2(1152, 667)
+	var engine := AnimatedSprite2D.new()
+	engine.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	engine.z_index = 6
+	engine.global_position = yard_center
+	var sf := SpriteFrames.new()
+	if sf.has_animation("default"): sf.remove_animation("default")
+	sf.add_animation("start")
+	sf.set_animation_speed("start", 22.0)
+	sf.set_animation_loop("start", false)
+	var i := 0
+	while ResourceLoader.exists("res://assets/VFX/theYardEngine/starting/frame_%03d.png" % i):
+		sf.add_frame("start", load("res://assets/VFX/theYardEngine/starting/frame_%03d.png" % i))
+		i += 1
+	var start_frame_count := i
+	sf.add_animation("end")
+	sf.set_animation_speed("end", 22.0)
+	sf.set_animation_loop("end", false)
+	var j := 0
+	while ResourceLoader.exists("res://assets/VFX/theYardEngine/ending/frame_%03d.png" % j):
+		sf.add_frame("end", load("res://assets/VFX/theYardEngine/ending/frame_%03d.png" % j))
+		j += 1
+	engine.sprite_frames = sf
+	add_child(engine)
+	engine.play("start")
+
+	var _bolt_fired := false
+	var _fire_bolt := func():
+		_screen_shake_strong()
+		var target_pos: Vector2 = get_target_pos.call()
+		_vfx_engine_bolt(yard_center, target_pos, bolt_color)
+		on_arrival.call()
+	engine.frame_changed.connect(func():
+		if not _bolt_fired and is_instance_valid(engine) and engine.animation == "start" and engine.frame >= max(start_frame_count - 2, 0):
+			_bolt_fired = true
+			_fire_bolt.call()
 	)
 
 	await engine.animation_finished
@@ -3678,7 +3792,6 @@ func _activate_full_breach() -> void:
 	_update_armor_ui()
 	p.full_breach_mult = 2.5
 	p._full_breach_timer = 8.0
-	_react_flash_screen(Color(1.0, 0.2, 0.1, 0.5))
 	screen_shake_heavy()
 	_vfx_full_breach_burst(p)
 
@@ -3719,7 +3832,11 @@ func _activate_momentum_burst() -> void:
 	p.momentum_stacks = 0
 	p.momentum_burst_bonus = float(stacks) * 0.05
 	p._momentum_burst_timer = 10.0
-	_react_flash_screen(Color(0.0, 0.9, 1.0, 0.4))
+	var launcher := get_node_or_null("BallLauncher")
+	if launcher and launcher.has_method("electrify_weapon"):
+		launcher.electrify_weapon(10.0)
+	if launcher and launcher.has_method("play_weapon_burst"):
+		launcher.play_weapon_burst()
 
 func _activate_rampart_collapse(target_pos: Vector2) -> void:
 	var p := get_node_or_null("Player")
@@ -3843,66 +3960,76 @@ func _vfx_rampart_impact(pos: Vector2) -> void:
 		impact.animation_finished.connect(func():
 			if is_instance_valid(impact): impact.queue_free())
 
-func _activate_wormhole() -> void:
+func _activate_wormhole(target_pos: Vector2) -> void:
 	var player := get_node_or_null("Player")
 	if not player: return
-	# Delik pozisyonu: player'ın TAM önünde (o anki bakış/nişan yönü — sağ/sol değil)
-	var _face_dir: Vector2 = player.aim_direction if player.get("aim_direction") else Vector2(1, 0)
-	if _face_dir == Vector2.ZERO: _face_dir = Vector2(1, 0)
-	var worm_pos: Vector2 = player.global_position + _face_dir.normalized() * 120.0
-	var duration := 5.0
 
-	var visual: CanvasItem = _vfx_wormhole_open(worm_pos, duration)
-	var _consuming: Array = []  # şu an merkeze çekilip küçülen düşmanlar
+	# Delik pozisyonu artık oyuncunun önü değil, tıklanan nokta (Gravitational Force
+	# ile aynı desen) — Avlu dışına çıkamaz, _consume_calamity zaten kilitliyor.
+	var _get_worm_pos := func() -> Vector2:
+		return target_pos
 
-	# 5 saniye boyunca yaklaşan düşmanları yakalayıp merkeze çekiyor
-	var elapsed := 0.0
-	while elapsed < duration:
-		var _dt := get_process_delta_time()
-		elapsed += _dt
-		for s in get_tree().get_nodes_in_group("subjects"):
-			if not is_instance_valid(s) or s in _consuming: continue
-			if s.get("is_boss") and s.is_boss: continue  # Boss etkilenmez
-			if s.get("is_dead") and s.is_dead: continue
-			if worm_pos.distance_to(s.global_position) <= 70.0:
-				_consuming.append(s)
-				if s.has_method("set_physics_process"): s.set_physics_process(false)
-				if s.has_node("CollisionShape2D"): s.get_node("CollisionShape2D").set_deferred("disabled", true)
-				s.set_meta("wormhole_pull_t", 0.0)
-				s.set_meta("wormhole_start_pos", s.global_position)
-				s.set_meta("wormhole_start_scale", s.scale)
-		# Yakalanmış düşmanları döndürerek + küçülterek merkeze çek
-		for i in range(_consuming.size() - 1, -1, -1):
-			var s2 = _consuming[i]
-			if not is_instance_valid(s2):
-				_consuming.remove_at(i)
-				continue
-			var t: float = s2.get_meta("wormhole_pull_t") + _dt
-			s2.set_meta("wormhole_pull_t", t)
-			var pull_dur := 0.4
-			var pt: float = clamp(t / pull_dur, 0.0, 1.0)
-			var _start_pos: Vector2 = s2.get_meta("wormhole_start_pos")
-			var _start_scale: Vector2 = s2.get_meta("wormhole_start_scale")
-			s2.global_position = _start_pos.lerp(worm_pos, pt)
-			s2.scale = _start_scale.lerp(Vector2.ZERO, pt)
-			s2.rotation += 14.0 * _dt
-			if pt >= 1.0:
-				var score_val: int = s2.get("score_value") if s2.get("score_value") else 0
-				subject_died(score_val / 2, worm_pos)
-				s2.queue_free()
-				_consuming.remove_at(i)
-		await get_tree().process_frame
+	var _run_wormhole := func():
+		var worm_pos: Vector2 = _get_worm_pos.call()
+		var duration := 5.0
 
-	# Süre bitiminde hâlâ çekilmekte olan düşman kalırsa donuk kalmasın diye tamamla
-	for s2 in _consuming:
-		if not is_instance_valid(s2): continue
-		var score_val: int = s2.get("score_value") if s2.get("score_value") else 0
-		subject_died(score_val / 2, worm_pos)
-		s2.queue_free()
+		var visual: CanvasItem = _vfx_wormhole_open(worm_pos, duration)
+		var _consuming: Array = []  # şu an merkeze çekilip küçülen düşmanlar
 
-	if is_instance_valid(visual):
-		visual.queue_free()
-	_react_flash_screen(Color(0.4, 0.0, 0.8, 0.3))
+		# 5 saniye boyunca yaklaşan düşmanları yakalayıp merkeze çekiyor
+		var elapsed := 0.0
+		while elapsed < duration:
+			var _dt := get_process_delta_time()
+			elapsed += _dt
+			for s in get_tree().get_nodes_in_group("subjects"):
+				if not is_instance_valid(s) or s in _consuming: continue
+				if s.get("is_boss") and s.is_boss: continue  # Boss etkilenmez
+				if s.get("is_dead") and s.is_dead: continue
+				if worm_pos.distance_to(s.global_position) <= 70.0:
+					_consuming.append(s)
+					if s.has_method("set_physics_process"): s.set_physics_process(false)
+					if s.has_node("CollisionShape2D"): s.get_node("CollisionShape2D").set_deferred("disabled", true)
+					s.set_meta("wormhole_pull_t", 0.0)
+					s.set_meta("wormhole_start_pos", s.global_position)
+					s.set_meta("wormhole_start_scale", s.scale)
+			# Yakalanmış düşmanları döndürerek + küçülterek merkeze çek
+			for i in range(_consuming.size() - 1, -1, -1):
+				var s2 = _consuming[i]
+				if not is_instance_valid(s2):
+					_consuming.remove_at(i)
+					continue
+				var t: float = s2.get_meta("wormhole_pull_t") + _dt
+				s2.set_meta("wormhole_pull_t", t)
+				var pull_dur := 0.4
+				var pt: float = clamp(t / pull_dur, 0.0, 1.0)
+				var _start_pos: Vector2 = s2.get_meta("wormhole_start_pos")
+				var _start_scale: Vector2 = s2.get_meta("wormhole_start_scale")
+				s2.global_position = _start_pos.lerp(worm_pos, pt)
+				s2.scale = _start_scale.lerp(Vector2.ZERO, pt)
+				s2.rotation += 14.0 * _dt
+				if pt >= 1.0:
+					var score_val: int = s2.get("score_value") if s2.get("score_value") else 0
+					subject_died(score_val / 2, worm_pos)
+					s2.queue_free()
+					_consuming.remove_at(i)
+			await get_tree().process_frame
+
+		# Süre bitiminde hâlâ çekilmekte olan düşman kalırsa donuk kalmasın diye tamamla
+		for s2 in _consuming:
+			if not is_instance_valid(s2): continue
+			var score_val: int = s2.get("score_value") if s2.get("score_value") else 0
+			subject_died(score_val / 2, worm_pos)
+			s2.queue_free()
+
+		if is_instance_valid(visual):
+			visual.queue_free()
+
+	_vfx_yard_engine_to_point(
+		_get_worm_pos,
+		Color(0.4, 0.0, 0.8, 1.0),
+		_run_wormhole,
+		_run_wormhole
+	)
 
 # WormHole VFX: gerçek sprite animasyonu (Gravitational Force ile aynı desen) —
 # dosyalar assets/VFX/calamitys/wormhole/frame_000..00N.png'ye eklenince otomatik
@@ -4024,6 +4151,11 @@ func _spawn_siege_rain_impact(pos: Vector2, dmg: int, radius: float) -> void:
 
 # Sahadaki düşmanlar "subjects" grubunda ("enemies" diye bir grup hiç yok). Sadece canlı
 # ve tam Avlu dikdörtgeni (x:385-1920, y:255-1080) içindekileri döndürür.
+# Alan/nokta hedefli Calamity'lerin hedefini Avlu dikdörtgenine kilitler — mouse Avlu
+# dışına (cadde/tribün) çıksa bile hem nişan önizlemesi hem gerçek etki Avlu içinde kalır.
+func _clamp_to_yard(pos: Vector2) -> Vector2:
+	return Vector2(clampf(pos.x, 385.0, 1920.0), clampf(pos.y, 255.0, 1080.0))
+
 func _yard_subjects() -> Array:
 	return get_tree().get_nodes_in_group("subjects").filter(func(s):
 		if not is_instance_valid(s) or s.get("is_dead"): return false
@@ -4238,7 +4370,7 @@ func _show_rts_overlay() -> void:
 	lbl.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.8))
 	lbl.add_theme_constant_override("shadow_offset_x", 2)
 	lbl.add_theme_constant_override("shadow_offset_y", 2)
-	lbl.add_theme_font_size_override("font_size", 18)
+	lbl.add_theme_font_size_override("font_size", 19)
 	if _font_bold:
 		lbl.add_theme_font_override("font", _font_bold)
 	lbl.position = Vector2(16, 8)
@@ -4265,7 +4397,7 @@ func _show_pause_menu() -> void:
 	var title = Label.new()
 	title.text = Lang.t("pause_title")
 	title.position = Vector2(880, 300)
-	title.add_theme_font_size_override("font_size", 64)
+	title.add_theme_font_size_override("font_size", 95)
 	title.add_theme_font_override("font", _font_bold)
 	title.modulate = Color(1, 0.8, 0)
 	canvas.add_child(title)
@@ -4325,7 +4457,7 @@ func _show_pause_settings(pause_canvas: CanvasLayer) -> void:
 	var title := Label.new()
 	title.text = Lang.t("set_title")
 	title.position = Vector2(880, 280)
-	title.add_theme_font_size_override("font_size", 48)
+	title.add_theme_font_size_override("font_size", 76)
 	title.add_theme_font_override("font", _font_bold)
 	title.modulate = Color(1, 0.8, 0)
 	overlay.add_child(title)
@@ -4343,7 +4475,7 @@ func _show_pause_settings(pause_canvas: CanvasLayer) -> void:
 		var lbl := Label.new()
 		lbl.text = buses[i][0]
 		lbl.position = Vector2(720, 380 + i * 90)
-		lbl.add_theme_font_size_override("font_size", 18)
+		lbl.add_theme_font_size_override("font_size", 19)
 		lbl.add_theme_font_override("font", _font_bold)
 		lbl.modulate = Color(0.82, 0.92, 1, 0.9)
 		overlay.add_child(lbl)
@@ -4361,7 +4493,7 @@ func _show_pause_settings(pause_canvas: CanvasLayer) -> void:
 		var val_lbl := Label.new()
 		val_lbl.text = "%d%%" % int(cur_vol * 100)
 		val_lbl.position = Vector2(1135, 410 + i * 90)
-		val_lbl.add_theme_font_size_override("font_size", 16)
+		val_lbl.add_theme_font_size_override("font_size", 19)
 		val_lbl.add_theme_font_override("font", _font_bold)
 		val_lbl.modulate = Color(0, 0.95, 1, 1)
 		overlay.add_child(val_lbl)
@@ -4777,6 +4909,7 @@ func _draw_dashed_line(from: Vector2, to: Vector2, color: Color, width: float) -
 func _process(delta: float) -> void:
 	_update_core_panel()   # her frame güncelle — deferred add_child'ı yakala
 	_update_low_hp_vignette()
+	_update_calamity_timer_label()
 
 	var p := _player_node
 
@@ -4882,7 +5015,7 @@ func _process(delta: float) -> void:
 			_spawn_subject()
 	
 	if calamity_aiming and not calamity_slots.is_empty():
-		var mouse_pos = get_viewport().get_mouse_position()
+		var mouse_pos = _clamp_to_yard(get_viewport().get_mouse_position())
 		$UI/CalamityCircle.visible = true
 		$UI/CalamityCircle.position = mouse_pos
 		var calamity = calamity_slots[calamity_index]
@@ -4907,12 +5040,6 @@ func _process(delta: float) -> void:
 
 		if calamity == "🔥💥":  # Wildfire — hedef yok, tüm Yanan düşmanlar
 			$UI/CalamityCircle.visible = false
-		elif calamity == "🕳️":  # WormHole — mouse'a değil, karakterin tam önüne sabit açılır
-			var _wp := _player_node
-			if _wp:
-				var _fd: Vector2 = _wp.aim_direction if _wp.get("aim_direction") else Vector2(1, 0)
-				if _fd == Vector2.ZERO: _fd = Vector2(1, 0)
-				$UI/CalamityCircle.position = _wp.global_position + _fd.normalized() * 120.0
 		elif calamity == "💻💥":  # System Crash — hedef yok
 			$UI/CalamityCircle.visible = false
 		$UI/CalamityCircle.queue_redraw()
@@ -5327,7 +5454,7 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 		pass  # level bazlı bonus _apply_utility_level'da uygulanıyor
 
 	# ── Cyclone — Rogue ──────────────────────────────────────────────────────
-	elif index >= 114 and index <= 146:
+	elif index >= 114 and index <= 163:
 		var p := get_node("Player")
 		match index:
 			114: p.has_ricochet_strike    = true
