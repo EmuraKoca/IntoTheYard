@@ -4584,7 +4584,7 @@ func _show_pause_settings(pause_canvas: CanvasLayer) -> void:
 			cfg.save("user://settings.cfg")
 		)
 
-	var back_btn := _make_neon_button(Lang.t("ui_back"), "back", false, Vector2(755, 760))
+	var back_btn := _make_neon_button(Lang.t("ui_back"), "back", true, Vector2(755, 760))
 	back_btn.pressed.connect(func(): overlay.queue_free())
 	overlay.add_child(back_btn)
 

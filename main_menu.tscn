@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" path="res://assets/menuIcons/play.png" id="icon_play"]
 [ext_resource type="Texture2D" path="res://assets/menuIcons/load.png" id="icon_load"]
 [ext_resource type="Texture2D" path="res://assets/menuIcons/settings.png" id="icon_settings"]
+[ext_resource type="Texture2D" path="res://assets/menuIcons/credits.png" id="icon_credits"]
 [ext_resource type="Texture2D" path="res://assets/menuIcons/quit.png" id="icon_quit"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1"]
@@ -251,6 +252,7 @@ theme_override_colors/icon_hover_color = Color(0, 0.95, 1, 1)
 theme_override_colors/icon_pressed_color = Color(0, 0.95, 1, 1)
 theme_override_colors/icon_focus_color = Color(0, 0.95, 1, 1)
 theme_override_constants/h_separation = 16
+icon = ExtResource("icon_credits")
 text = "CREDITS"
 
 [node name="BtnQuit" type="Button" parent="." unique_id=2071815634]

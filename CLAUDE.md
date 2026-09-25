@@ -3069,3 +3069,6 @@ alt bölge olarak `.tscn`'de kullanılıyor olabilirler, agent tam emin olamadı
 
 ## Credits ekranı eklendi (2026-09-25)
 Ana menüye CREDITS butonu (`BtnCredits`, Quit bir kademe aşağı, y=837) + basit overlay (`_on_credits`, `main_menu.gd`): "Silver font by Poppy Works — CC BY 4.0" (CC BY atıf şartı karşılandı). İleride başka atıflar `body.text`'e eklenir. `mm_credits` Lang anahtarı (TR: KREDİLER). Oyunda denenmedi.
+
+## Credits ikonu + ekran yenileme + pembe Geri butonları (2026-09-25)
+`menuIcons/credits.png` (yıldız benzeri 10x10 ikon) Credits butonuna bağlandı. Credits ekranı pause menüsü stiline çevrildi (95px sarı başlık, cyan başlık + açık renk satır; yeni atıflar `_on_credits` içindeki `lines` listesine eklenir). Credits ve pause-Ayarlar "Geri" butonları Quit'teki pembe renge (`back.png` ikonlu) çevrildi. Oyunda denenmedi.

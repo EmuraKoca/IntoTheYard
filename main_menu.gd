@@ -195,34 +195,69 @@ func _on_credits() -> void:
 	add_child(cv)
 	var dim := ColorRect.new()
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
-	dim.color = Color(0, 0, 0, 0.9)
+	dim.color = Color(0, 0, 0, 0.92)
 	cv.add_child(dim)
 	var title := Label.new()
 	title.text = Lang.t("mm_credits")
-	title.position = Vector2(0, 260)
-	title.size = Vector2(1920, 90)
+	title.position = Vector2(0, 230)
+	title.size = Vector2(1920, 140)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_override("font", _font_bold)
-	title.add_theme_font_size_override("font_size", 76)
+	title.add_theme_font_size_override("font_size", 95)
 	title.modulate = Color(1, 0.8, 0)
 	cv.add_child(title)
-	var body := Label.new()
-	body.text = "Silver font by Poppy Works
-CC BY 4.0"
-	body.position = Vector2(0, 430)
-	body.size = Vector2(1920, 140)
-	body.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	body.add_theme_font_override("font", _font_bold)
-	body.add_theme_font_size_override("font_size", 38)
-	body.modulate = Color(0.82, 0.92, 1, 1)
-	cv.add_child(body)
+	var lines := [["Silver Font", "Poppy Works  -  CC BY 4.0"]]
+	for i in lines.size():
+		var head := Label.new()
+		head.text = lines[i][0]
+		head.position = Vector2(0, 430 + i * 130)
+		head.size = Vector2(1920, 50)
+		head.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		head.add_theme_font_override("font", _font_bold)
+		head.add_theme_font_size_override("font_size", 38)
+		head.modulate = Color(0, 0.95, 1, 1)
+		cv.add_child(head)
+		var who := Label.new()
+		who.text = lines[i][1]
+		who.position = Vector2(0, 430 + i * 130 + 56)
+		who.size = Vector2(1920, 50)
+		who.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		who.add_theme_font_override("font", _font_bold)
+		who.add_theme_font_size_override("font_size", 38)
+		who.modulate = Color(0.82, 0.92, 1, 1)
+		cv.add_child(who)
+	var col := Color(1, 0.18, 0.58, 1)
 	var back := Button.new()
 	back.text = Lang.t("ui_back")
 	back.position = Vector2(755, 700)
 	back.size = Vector2(410, 70)
+	back.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	back.icon = load("res://assets/menuIcons/back.png")
 	back.add_theme_font_override("font", _font_bold)
 	back.add_theme_font_size_override("font_size", 38)
-	back.add_theme_color_override("font_color", Color(0, 0.95, 1, 1))
+	back.add_theme_constant_override("h_separation", 16)
+	for c in ["font_color", "icon_normal_color", "icon_hover_color", "icon_pressed_color", "icon_focus_color"]:
+		back.add_theme_color_override(c, col)
+	var defs := {
+		"normal":  [Color(0.08, 0.02, 0.05, 0.92), col, 10],
+		"hover":   [Color(0.2, 0.03, 0.09, 0.97), Color(1, 0.35, 0.7, 1), 18],
+		"pressed": [Color(0.15, 0.02, 0.06, 0.97), Color(1, 0.15, 0.45, 1), 0],
+	}
+	for key in defs:
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = defs[key][0]
+		sb.border_color = defs[key][1]
+		sb.set_border_width_all(2)
+		sb.set_corner_radius_all(4)
+		sb.content_margin_left = 14.0
+		sb.content_margin_right = 14.0
+		sb.content_margin_top = 22.0
+		sb.content_margin_bottom = 10.0
+		if defs[key][2] > 0:
+			sb.shadow_color = Color(defs[key][1].r, defs[key][1].g, defs[key][1].b, 0.45)
+			sb.shadow_size = defs[key][2]
+		back.add_theme_stylebox_override(key, sb)
+	back.add_theme_stylebox_override("focus", back.get_theme_stylebox("normal"))
 	back.pressed.connect(func(): cv.queue_free())
 	cv.add_child(back)
 
