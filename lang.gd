@@ -80,9 +80,6 @@ const _TR := {
 	"ui_level":            "◈  SEVİYE ",
 	"ui_upgrades_header":  "— GELİŞTİRMELER —",
 	"ui_upgrades_none":    "  yok",
-	"ui_upgrades_speed":   "▸ Hız Artışı",
-	"ui_upgrades_chain":   "▸ Zincir Artışı",
-	"ui_upgrades_next":    "▸ Sonraki",
 	"ui_calamity_header":  "— FELAKET —",
 	"ui_cores_header":     "— CORE'LAR —",
 	"ui_data_units":       " birim",
@@ -113,7 +110,7 @@ const _TR := {
 	"unlock_hint":     "Yeni kartlar sonraki runlarda görünecek.",
 
 	# ── Oyun İçi — Ek ────────────────────────────────────────────────────────
-	"ui_balls":            "⬤  TOPLAR   ",
+	"ui_balls":            "⬤  CORE'LAR   ",
 	"ui_release_core":     "CORE BIRAK",
 	"ui_cancel":           "İptal",
 	"ui_auto_on":          "OTO  AÇIK",
@@ -197,9 +194,6 @@ const _EN := {
 	"ui_level":            "◈  LEVEL ",
 	"ui_upgrades_header":  "— UPGRADES —",
 	"ui_upgrades_none":    "  none",
-	"ui_upgrades_speed":   "▸ Speed Up",
-	"ui_upgrades_chain":   "▸ Chain Up",
-	"ui_upgrades_next":    "▸ Next One",
 	"ui_calamity_header":  "— CALAMITY —",
 	"ui_cores_header":     "— CORES —",
 	"ui_data_units":       " units",
@@ -230,7 +224,7 @@ const _EN := {
 	"unlock_hint":     "New cards will appear in future runs.",
 
 	# ── Oyun İçi — Ek ────────────────────────────────────────────────────────
-	"ui_balls":            "⬤  BALLS   ",
+	"ui_balls":            "⬤  CORES   ",
 	"ui_release_core":     "RELEASE A CORE",
 	"ui_cancel":           "Cancel",
 	"ui_auto_on":          "AUTO  ON",

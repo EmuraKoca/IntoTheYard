@@ -446,6 +446,26 @@ sabit metinleri `cs_quests`/`cs_market` anahtarlarına taşındı (TR: Görevler
 Karakter class isimleri (Kinetik/Elemental/Manipülasyon) hâlâ `CHARS`'ta sabit TR — dil
 anahtarına taşınmadı. **Vector'un "Normal Ball +3 hasar" pasifi kodda da silindi** (`ball_launcher.gd` `vector_bonus`,
 kullanıcı onayı): Vector'un normal topu artık 8 değil **5 + ball_mastery** hasar verir.
+**Sağ panel: Geliştirmeler listesi + core sayacı düzeltildi (2026-09-25)**:
+- **"Geliştirmeler" hiç gerçek veri göstermiyordu**: `update_ui()` sadece 3 eski sabit kontrol
+  yapıyordu (`SPEED>300`, `chain_length>220` — bu başlangıçtan beri true olduğu için
+  "Zincir Artışı" hep sabit görünüyordu —, `has_next_one`). Artık `_owned_indices`'ten
+  gerçekten alınan **Utility/Individuality/ortak** kartlar listeleniyor (en yeni üstte, max 6
+  satır + "+N", Utility ise `Lv2/Lv3` eki; Identity core'lar ve Calamity'ler zaten kendi
+  slotlarında olduğu için, Medkit anlık olduğu için hariç). `_refresh_upgrade_list()`
+  (`_on_upgrade_selected`'te çağrılıyor) metni önbelleğe alıyor, `update_ui()` sadece atıyor.
+  Eski `ui_upgrades_speed/chain/next` dil anahtarları silindi.
+- **Core sayacı yanlıştı**: `orbit_balls.size() / MAX_ORBIT(10)` sadece rezervdeki (fırlatılmayı
+  bekleyen) topları sayıyordu; havadaki 3 başlangıç topu sayılmıyordu ve 10 azami yanlıştı.
+  Artık `player_balls` grubundaki TÜM core'lar (normal + launchable + connected, havadakiler
+  dahil; Scatter parçaları ve Mirror Image bonus topları hariç) / **azami = 3 + shop core bonusu
+  + 5 launchable + 3 connected (=11)**. Etiket TOPLAR→**CORE'LAR** (EN: CORES).
+**Pause menüsü yenilendi (2026-09-25)**: eskiden düz gri varsayılan `Button`'lar (200×55, küçük yazı,
+başlık x=880 sabit → ortalı değildi). Yeni yardımcı `_make_neon_button(text, icon, pink, pos)`
+(`game_scene.gd`) ana menüdeki neon stili (cyan / Çıkış için pembe, hover glow, Silver 38, 22px üst
+marj, `menuIcons` PNG ikonları) kodla üretiyor; yeni `assets/menuIcons/home.png` (Ana Menü).
+Başlık 1920 genişlikli Label ile ortalandı. Butonlar 410×70, x=755, y=420/518/616/714 (Devam,
+Ayarlar, Ana Menü, Çıkış). Ayarlar alt ekranı (`_show_pause_settings`) da aynı tarza çevrildi: ortalı başlık, sürgü etiket/değerleri 38px, ses etiketleri `set_audio_master/music/sfx` Lang anahtarlarından (eskiden sabit TR "Ana Ses/Müzik/Efektler"), cyan dolgulu slider + kare tutamaç (kodla üretilen `ImageTexture`), neon GERİ butonu (yeni `menuIcons/back.png`).
 **Lisans notu**: Silver CC BY 4.0 ama bütçe/kazanç >$100.000 ise yazardan doğrudan lisans
 gerekiyor; uçuk teklif gelirse plan: pazarlık ya da başka fonta geçiş (font 7 dosyada
 tek satırla değişiyor; OFL alternatifleri: Galmuri, DotGothic16, Fusion Pixel, Unifont).

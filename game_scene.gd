@@ -36,6 +36,7 @@ var _glossary_label: RichTextLabel = null
 var _low_hp_vignette: TextureRect = null
 var _calamity_cells: Array = []
 var _calamity_timer_label: Label = null
+var _upgrade_list_lines: String = ""   # sağ panel "Geliştirmeler" listesi, kart seçilince yenilenir
 # Süreli (buff bırakan) Calamity'lerin player.gd'deki geri sayım değişkenleri —
 # karta özel isim burada tutuluyor, isim her zaman İngilizce kalıyor (kart adı kuralı).
 const _CALAMITY_TIMER_DEFS: Array = [
@@ -1212,12 +1213,47 @@ func _ready() -> void:
 	
 
 
+# Core sayacı her frame güncelleniyor: toplar ağaca ertelenmiş add_child ile giriyor, sadece
+# update_ui() çağrıldığında saymak ilk atılan topu kaçırıyordu.
+func _update_core_counter() -> void:
+	var _ui_p := get_node_or_null("Player")
+	if _ui_p == null: return
+	var _core_total: int = 0
+	for _cb in get_tree().get_nodes_in_group("player_balls"):
+		if not is_instance_valid(_cb): continue
+		if _cb.get("is_scatter_piece") or _cb in _mirror_image_balls: continue
+		_core_total += 1
+	var _core_max: int = 3 + GameData.get_shop_core_bonus() + _ui_p.special_core_count_max + _ui_p.connected_core_count_max
+	$UI/LabelBalls.text = Lang.t("ui_balls") + str(_core_total) + " / " + str(_core_max)
+
+func _refresh_upgrade_list() -> void:
+	const MAX_LINES := 6
+	var names: Array[String] = []
+	for oi in _owned_indices:
+		if oi == 20: continue  # Medkit anlık iyileştirme, kalıcı geliştirme değil
+		for u in upgrades:
+			if u.get("index", -1) != oi: continue
+			var cat: String = u.get("category", "")
+			if cat == "Identity" or cat == "Calamity": break  # zaten core/Calamity slotlarında görünüyor
+			var nm: String = u["name"]
+			var lv: int = _utility_levels.get(nm, 0)
+			if cat == "Utility" and lv > 1:
+				nm += " Lv%d" % lv
+			names.append(nm)
+			break
+	names.reverse()
+	var out := ""
+	for i in range(mini(names.size(), MAX_LINES)):
+		out += "» " + names[i] + "\n"
+	if names.size() > MAX_LINES:
+		out += "   +%d" % (names.size() - MAX_LINES) + "\n"
+	_upgrade_list_lines = out
+
 func update_ui() -> void:
 	$UI/LabelLevel.text = Lang.t("ui_level") + str(level)
 	$UI/IntegrityBar.max_value = player_max_hp
 	$UI/IntegrityBar.value = player_hp
 	var _ui_p := get_node("Player")
-	$UI/LabelBalls.text = Lang.t("ui_balls") + str(_ui_p.orbit_balls.size()) + " / " + str(_ui_p.MAX_ORBIT)
 	$UI/IntegrityBar.max_value = player_max_hp
 	$UI/IntegrityBar.value = player_hp
 	if player_armor > 0:
@@ -1233,16 +1269,12 @@ func update_ui() -> void:
 	else:
 		$UI/HealthBar2/Label.text = str(player_hp) + " / " + str(player_max_hp)
 
-	# Aktif upgrade'ler
+	# Aktif upgrade'ler — gerçekten alınan Utility/Individuality/ortak kartlar (en yeni üstte)
 	var upgrade_text = Lang.t("ui_upgrades_header") + "\n"
-	if get_node("Player").SPEED > 300:
-		upgrade_text += Lang.t("ui_upgrades_speed") + "\n"
-	if get_node("Player").chain_length > 220:
-		upgrade_text += Lang.t("ui_upgrades_chain") + "\n"
-	if get_node("Player").has_next_one:
-		upgrade_text += Lang.t("ui_upgrades_next") + "\n"
-	if upgrade_text == Lang.t("ui_upgrades_header") + "\n":
+	if _upgrade_list_lines.is_empty():
 		upgrade_text += Lang.t("ui_upgrades_none")
+	else:
+		upgrade_text += _upgrade_list_lines
 	$UI/LabelUpgrades.text = upgrade_text
 
 	var catch_lbl = get_node_or_null("UI/LabelCatch")
@@ -4381,62 +4413,82 @@ func _hide_rts_overlay() -> void:
 		_rts_overlay.queue_free()
 		_rts_overlay = null
 
+# Ana menüdeki neon buton stilinin kodla üretilen kopyası (pause menüsü vb. için).
+# ikon: menuIcons PNG'si (beyaz, buton yazı rengiyle tint); pink=true → Çıkış tarzı kırmızı-pembe.
+func _make_neon_button(text: String, icon_name: String, pink: bool, pos: Vector2) -> Button:
+	var col: Color = Color(1, 0.18, 0.58, 1) if pink else Color(0, 0.95, 1, 1)
+	var btn := Button.new()
+	btn.text = text
+	btn.size = Vector2(410, 70)
+	btn.position = pos
+	btn.process_mode = Node.PROCESS_MODE_ALWAYS
+	btn.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	btn.add_theme_font_override("font", _font_bold)
+	btn.add_theme_font_size_override("font_size", 38)
+	btn.add_theme_constant_override("h_separation", 16)
+	for c in ["font_color", "icon_normal_color", "icon_hover_color", "icon_pressed_color", "icon_focus_color"]:
+		btn.add_theme_color_override(c, col)
+	var icon_path := "res://assets/menuIcons/%s.png" % icon_name
+	if ResourceLoader.exists(icon_path):
+		btn.icon = load(icon_path)
+	var defs := {
+		"normal":  [Color(0.08, 0.02, 0.05, 0.92) if pink else Color(0.02, 0.03, 0.1, 0.92), col, 10],
+		"hover":   [Color(0.2, 0.03, 0.09, 0.97) if pink else Color(0, 0.22, 0.28, 0.97), Color(1, 0.35, 0.7, 1) if pink else Color(0, 1, 1, 1), 18],
+		"pressed": [Color(0.15, 0.02, 0.06, 0.97) if pink else Color(0, 0.12, 0.16, 0.97), Color(1, 0.15, 0.45, 1) if pink else Color(0, 0.75, 0.82, 1), 0],
+	}
+	for key in defs:
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = defs[key][0]
+		sb.border_color = defs[key][1]
+		sb.set_border_width_all(2)
+		sb.set_corner_radius_all(4)
+		sb.content_margin_left = 14.0
+		sb.content_margin_right = 14.0
+		sb.content_margin_top = 22.0   # Silver'da büyük harfler satır kutusunun üstünde kalıyor → 6px aşağı
+		sb.content_margin_bottom = 10.0
+		if defs[key][2] > 0:
+			sb.shadow_color = Color(defs[key][1].r, defs[key][1].g, defs[key][1].b, 0.45)
+			sb.shadow_size = defs[key][2]
+		btn.add_theme_stylebox_override(key, sb)
+	btn.add_theme_stylebox_override("focus", btn.get_theme_stylebox("normal"))
+	return btn
+
 func _show_pause_menu() -> void:
 	get_tree().paused = true
-	
+
 	var canvas = CanvasLayer.new()
 	canvas.process_mode = Node.PROCESS_MODE_ALWAYS
 	canvas.name = "PauseMenu"
 	add_child(canvas)
-	
+
 	var panel = ColorRect.new()
 	panel.color = Color(0, 0, 0, 0.85)
 	panel.size = Vector2(1920, 1080)
 	canvas.add_child(panel)
-	
+
 	var title = Label.new()
 	title.text = Lang.t("pause_title")
-	title.position = Vector2(880, 300)
+	title.position = Vector2(0, 230)
+	title.size = Vector2(1920, 140)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 95)
 	title.add_theme_font_override("font", _font_bold)
 	title.modulate = Color(1, 0.8, 0)
 	canvas.add_child(title)
 
-	var resume_btn = Button.new()
-	resume_btn.text = Lang.t("pause_resume")
-	resume_btn.size = Vector2(200, 55)
-	resume_btn.position = Vector2(860, 450)
-	resume_btn.process_mode = Node.PROCESS_MODE_ALWAYS
-	resume_btn.add_theme_font_override("font", _font_bold)
+	var resume_btn := _make_neon_button(Lang.t("pause_resume"), "play", false, Vector2(755, 420))
 	resume_btn.pressed.connect(_on_resume.bind(canvas))
 	canvas.add_child(resume_btn)
 
-	var menu_btn = Button.new()
-	menu_btn.text = Lang.t("pause_menu")
-	menu_btn.size = Vector2(200, 55)
-	menu_btn.position = Vector2(860, 530)
-	menu_btn.process_mode = Node.PROCESS_MODE_ALWAYS
-	menu_btn.add_theme_font_override("font", _font_bold)
-	menu_btn.pressed.connect(_on_main_menu.bind(canvas))
-	canvas.add_child(menu_btn)
-
-	var settings_btn = Button.new()
-	settings_btn.text = Lang.t("ui_settings")
-	settings_btn.size = Vector2(200, 55)
-	settings_btn.position = Vector2(860, 530)
-	settings_btn.process_mode = Node.PROCESS_MODE_ALWAYS
-	settings_btn.add_theme_font_override("font", _font_bold)
+	var settings_btn := _make_neon_button(Lang.t("ui_settings"), "settings", false, Vector2(755, 518))
 	settings_btn.pressed.connect(_show_pause_settings.bind(canvas))
 	canvas.add_child(settings_btn)
 
-	menu_btn.position = Vector2(860, 610)
+	var menu_btn := _make_neon_button(Lang.t("pause_menu"), "home", false, Vector2(755, 616))
+	menu_btn.pressed.connect(_on_main_menu.bind(canvas))
+	canvas.add_child(menu_btn)
 
-	var quit_btn = Button.new()
-	quit_btn.text = Lang.t("pause_quit")
-	quit_btn.size = Vector2(200, 55)
-	quit_btn.position = Vector2(860, 690)
-	quit_btn.process_mode = Node.PROCESS_MODE_ALWAYS
-	quit_btn.add_theme_font_override("font", _font_bold)
+	var quit_btn := _make_neon_button(Lang.t("pause_quit"), "quit", true, Vector2(755, 714))
 	quit_btn.pressed.connect(_on_quit_game)
 	canvas.add_child(quit_btn)
 
@@ -4456,28 +4508,37 @@ func _show_pause_settings(pause_canvas: CanvasLayer) -> void:
 
 	var title := Label.new()
 	title.text = Lang.t("set_title")
-	title.position = Vector2(880, 280)
+	title.position = Vector2(0, 200)
+	title.size = Vector2(1920, 100)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 76)
 	title.add_theme_font_override("font", _font_bold)
 	title.modulate = Color(1, 0.8, 0)
 	overlay.add_child(title)
 
+	# Ana menü ayarlarıyla aynı slider stili (cyan dolgu, koyu ray) + kare tutamaç
+	var grabber_img := Image.create(16, 32, false, Image.FORMAT_RGBA8)
+	grabber_img.fill(Color(0, 0.95, 1, 1))
+	var grabber_tex := ImageTexture.create_from_image(grabber_img)
+
 	var buses := [
-		["Ana Ses",  "Master"],
-		["Müzik",    "Music"],
-		["Efektler", "SFX"],
+		[Lang.t("set_audio_master"), "Master"],
+		[Lang.t("set_audio_music"),  "Music"],
+		[Lang.t("set_audio_sfx"),    "SFX"],
 	]
 	for i in buses.size():
 		var bus_name: String = buses[i][1]
 		var bus_idx  := AudioServer.get_bus_index(bus_name)
 		var cur_vol  := db_to_linear(AudioServer.get_bus_volume_db(bus_idx)) if bus_idx >= 0 else 1.0
+		var row_y: float = 360.0 + i * 120.0
 
 		var lbl := Label.new()
 		lbl.text = buses[i][0]
-		lbl.position = Vector2(720, 380 + i * 90)
-		lbl.add_theme_font_size_override("font_size", 19)
+		lbl.position = Vector2(560, row_y)
+		lbl.size = Vector2(800, 50)
+		lbl.add_theme_font_size_override("font_size", 38)
 		lbl.add_theme_font_override("font", _font_bold)
-		lbl.modulate = Color(0.82, 0.92, 1, 0.9)
+		lbl.modulate = Color(0.82, 0.92, 1, 0.95)
 		overlay.add_child(lbl)
 
 		var slider := HSlider.new()
@@ -4485,15 +4546,30 @@ func _show_pause_settings(pause_canvas: CanvasLayer) -> void:
 		slider.max_value = 1.0
 		slider.step      = 0.01
 		slider.value     = cur_vol
-		slider.size      = Vector2(400, 30)
-		slider.position  = Vector2(720, 410 + i * 90)
+		slider.size      = Vector2(680, 32)
+		slider.position  = Vector2(560, row_y + 56)
 		slider.process_mode = Node.PROCESS_MODE_ALWAYS
+		var track := StyleBoxFlat.new()
+		track.bg_color = Color(0.05, 0.12, 0.18, 0.9)
+		track.set_border_width_all(1)
+		track.border_color = Color(0, 0.6, 0.75, 0.6)
+		track.set_corner_radius_all(3)
+		var fill := StyleBoxFlat.new()
+		fill.bg_color = Color(0, 0.85, 1, 0.85)
+		fill.set_corner_radius_all(3)
+		slider.add_theme_stylebox_override("slider", track)
+		slider.add_theme_stylebox_override("grabber_area", fill)
+		slider.add_theme_stylebox_override("grabber_area_highlight", fill)
+		slider.add_theme_icon_override("grabber", grabber_tex)
+		slider.add_theme_icon_override("grabber_highlight", grabber_tex)
+		slider.add_theme_icon_override("grabber_disabled", grabber_tex)
 		overlay.add_child(slider)
 
 		var val_lbl := Label.new()
 		val_lbl.text = "%d%%" % int(cur_vol * 100)
-		val_lbl.position = Vector2(1135, 410 + i * 90)
-		val_lbl.add_theme_font_size_override("font_size", 19)
+		val_lbl.position = Vector2(1270, row_y + 46)
+		val_lbl.size = Vector2(160, 50)
+		val_lbl.add_theme_font_size_override("font_size", 38)
 		val_lbl.add_theme_font_override("font", _font_bold)
 		val_lbl.modulate = Color(0, 0.95, 1, 1)
 		overlay.add_child(val_lbl)
@@ -4508,12 +4584,7 @@ func _show_pause_settings(pause_canvas: CanvasLayer) -> void:
 			cfg.save("user://settings.cfg")
 		)
 
-	var back_btn := Button.new()
-	back_btn.text = Lang.t("ui_back")
-	back_btn.size = Vector2(200, 55)
-	back_btn.position = Vector2(860, 700)
-	back_btn.process_mode = Node.PROCESS_MODE_ALWAYS
-	back_btn.add_theme_font_override("font", _font_bold)
+	var back_btn := _make_neon_button(Lang.t("ui_back"), "back", false, Vector2(755, 760))
 	back_btn.pressed.connect(func(): overlay.queue_free())
 	overlay.add_child(back_btn)
 
@@ -4910,6 +4981,7 @@ func _process(delta: float) -> void:
 	_update_core_panel()   # her frame güncelle — deferred add_child'ı yakala
 	_update_low_hp_vignette()
 	_update_calamity_timer_label()
+	_update_core_counter()
 
 	var p := _player_node
 
@@ -5079,6 +5151,8 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 		elif _cat == "Utility":
 			_utility_levels[_uname] = _utility_levels.get(_uname, 0) + 1
 			_apply_utility_level(index, _utility_levels[_uname])
+
+	_refresh_upgrade_list()
 
 	# ── Identity kart: core sayacını artır ────────────────────────────────────
 	var _p := get_node("Player")
