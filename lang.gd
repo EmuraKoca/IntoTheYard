@@ -44,15 +44,15 @@ func status_glossary(keyword: String) -> String:
 
 const _TR := {
 	# ── Ana Menü ─────────────────────────────────────────────────────────────
-	"mm_new_game":   "▶  YENİ OYUN",
-	"mm_load_game":  "▶  KAYDI YÜKLE",
-	"mm_settings":   "⚙  AYARLAR",
-	"mm_quit":       "■  ÇIKIŞ",
+	"mm_new_game":   "YENİ OYUN",
+	"mm_load_game":  "KAYDI YÜKLE",
+	"mm_settings":   "AYARLAR",
+	"mm_quit":       "ÇIKIŞ",
 	"mm_subtitle":   "[ ITY CORP. — GÜVENLİ TERMİNAL v2.1 ]",
 	"mm_version":    "v0.0.9.5  //  ALFA YAPIM  //  ITY CORP. 2099",
 
 	# ── Settings ─────────────────────────────────────────────────────────────
-	"set_title":           "⚙  AYARLAR",
+	"set_title":           "≡  AYARLAR",
 	"set_tab_controls":    "KONTROLLER",
 	"set_tab_audio":       "SES",
 	"set_tab_display":     "EKRAN",
@@ -128,8 +128,10 @@ const _TR := {
 
 	# ── Karakter Seçim ────────────────────────────────────────────────────────
 	"cs_name":             "İsim: ",
-	"cs_passive":          "Pasif: ",
 	"cs_locked":           "Bu karakter henüz kilitli.",
+	"cs_theme_vector":   "Kinetik",
+	"cs_theme_leila":    "Elemental",
+	"cs_theme_cyclone":  "Manipülasyon",
 
 	# ── Yeni Oyun Onayı ───────────────────────────────────────────────────────
 	"ng_title":   "! YENİ OYUN",
@@ -137,7 +139,10 @@ const _TR := {
 	"ng_yes":     "EVET — SİL VE BAŞLA",
 	"ng_no":      "HAYIR — GERİ DÖN",
 	"cs_next_unlock": "\nSonraki: ",
-	"cs_balls":        "Toplar: ",
+	"cs_level_line":  "SEVİYE %d  —  %d / %d XP",
+	"cs_level_max":   "SEVİYE %d  —  MAKS",
+	"cs_quests":      "Görevler",
+	"cs_market":      "Black Market",
 
 	# ── Hasmen Alıntıları ─────────────────────────────────────────────────────
 	"quote_0": "Sefil. Sabrımın sınırları var, başarısızlık oranının aksine.",
@@ -156,15 +161,15 @@ const _TR := {
 
 const _EN := {
 	# ── Ana Menü ─────────────────────────────────────────────────────────────
-	"mm_new_game":   "▶  NEW GAME",
-	"mm_load_game":  "▶  LOAD GAME",
-	"mm_settings":   "⚙  SETTINGS",
-	"mm_quit":       "■  QUIT",
+	"mm_new_game":   "NEW GAME",
+	"mm_load_game":  "LOAD GAME",
+	"mm_settings":   "SETTINGS",
+	"mm_quit":       "QUIT",
 	"mm_subtitle":   "[ ITY CORP. — SECURE TERMINAL v2.1 ]",
 	"mm_version":    "v0.0.9.5  //  ALPHA BUILD  //  ITY CORP. 2099",
 
 	# ── Settings ─────────────────────────────────────────────────────────────
-	"set_title":           "⚙  SETTINGS",
+	"set_title":           "≡  SETTINGS",
 	"set_tab_controls":    "CONTROLS",
 	"set_tab_audio":       "AUDIO",
 	"set_tab_display":     "DISPLAY",
@@ -240,8 +245,10 @@ const _EN := {
 
 	# ── Karakter Seçim ────────────────────────────────────────────────────────
 	"cs_name":             "Name: ",
-	"cs_passive":          "Passive: ",
 	"cs_locked":           "This character is not yet unlocked.",
+	"cs_theme_vector":   "Kinetic",
+	"cs_theme_leila":    "Elemental",
+	"cs_theme_cyclone":  "Manipulation",
 
 	# ── Yeni Oyun Onayı ───────────────────────────────────────────────────────
 	"ng_title":   "! NEW GAME",
@@ -249,7 +256,10 @@ const _EN := {
 	"ng_yes":     "YES — DELETE & START",
 	"ng_no":      "NO — GO BACK",
 	"cs_next_unlock": "\nNext: ",
-	"cs_balls":        "Balls: ",
+	"cs_level_line":  "LEVEL %d  —  %d / %d XP",
+	"cs_level_max":   "LEVEL %d  —  MAX",
+	"cs_quests":      "Quests",
+	"cs_market":      "Black Market",
 
 	# ── Hasmen Alıntıları ─────────────────────────────────────────────────────
 	"quote_0": "Pathetic. My patience has limits, unlike your failure rate.",

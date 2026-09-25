@@ -417,6 +417,35 @@ menü butonları, hover pop-up). `▸ ⏸ ⚡ ◻` glyph'leri Silver'da yok (fal
 var. **Yapılacak**: (1) credits ekranına "Silver font by Poppy Works" atfı (CC BY 4.0),
 (2) `assets/orbitronfont/` artık referanssız — silinebilir. Geri alma: `git diff` (boyutlar
 dağınık, eski boyutlar HEAD'de).
+**Ana menü buton ortalama (2026-09-25)**: Silver'ın ascent/descent'i asimetrik (1200/-900,
+büyük harf 900) → metin buton içinde ~6px yukarıda kalıyordu. `main_menu.tscn`'deki 6
+buton StyleBoxFlat'ında (`StyleBoxFlat_1,2,3,5,6,7`) `content_margin_top` 10 → **22**
+(alt 10 aynı) yapıldı = metin 6px aşağı. `⚙` Silver'da yok (fallback font satır yüksekliğini
+bozuyordu) → `≡` ile değiştirildi (`main_menu.tscn` + `lang.gd` mm_settings/set_title).
+`▶` ve `■` Silver'da mevcut, dokunulmadı. Alt yazı (19px) küçük — 38'e çıkarma önerisi
+kullanıcı onayı bekliyor.
+**Ana menü ikonları PNG'ye çevrildi (2026-09-25)**: kullanıcı klasik ikon (disket=Kaydı Yükle,
+güç düğmesi=Çıkış) istedi — font glyph'iyle mümkün değil (Silver'da yok). PIL ile 10x10
+pixel-art çizilip 2x (20x20) + altta 12px saydam boşluk (32px yükseklik; metin 6px aşağı
+kaydırıldığı için ikon dikey hizalı kalsın) `assets/menuIcons/{play,load,settings,quit}.png`
+üretildi (beyaz, butonun font rengiyle `icon_*_color` tint). Butonlar `Button.icon` +
+`texture_filter=1` + `h_separation=16` kullanıyor; `lang.gd` `mm_*` metinlerinden `▶ ■ ≡`
+glyph'leri kaldırıldı. Godot ilk açılışta PNG'leri import eder. Oyun içi ayar ekranı başlığı
+(`set_title`) hâlâ `≡` glyph'i kullanıyor.
+**Karakter seçim ekranı (2026-09-25)**: CONFIRM/BACK butonlarının 6 StyleBoxFlat'ında
+`content_margin_top` 10→22 (menüdeki aynı Silver dikey-ortalama düzeltmesi; `▶ ◀` glyph'leri
+Silver'da var, metinde kaldı). Karakter kartlarında isim + class (Kinetik…) 19→**38**: orta kart
+isim `y-130` / class `y-82` (yükseklik 44), yan kartlar isim `y-62` (yükseklik 44) —
+görselde taşma/çakışma kontrolü kullanıcıda.
+**Karakter seçim sol bilgi paneli sadeleştirildi (2026-09-25)**: eski tasarımdan kalma
+`Pasif: ...` satırı (`LabelPassive` gizlendi, `CHARS`'tan `"passive"` alanı silindi) ve
+`Toplar: ...` (başlangıç core'ları, `"balls"` alanı silindi) kaldırıldı; `cs_passive`/`cs_balls`
+dil anahtarları silindi. LV/XP satırı 19→38 ve Lang'a alındı (`cs_level_line`/`cs_level_max`):
+max seviyede eski "11921 / 1 XP" saçmalığı yerine "SEVİYE 5 — MAKS". "Görevler"/"Black Market"
+sabit metinleri `cs_quests`/`cs_market` anahtarlarına taşındı (TR: Görevler, EN: Quests).
+Karakter class isimleri (Kinetik/Elemental/Manipülasyon) hâlâ `CHARS`'ta sabit TR — dil
+anahtarına taşınmadı. **Vector'un "Normal Ball +3 hasar" pasifi kodda da silindi** (`ball_launcher.gd` `vector_bonus`,
+kullanıcı onayı): Vector'un normal topu artık 8 değil **5 + ball_mastery** hasar verir.
 **Lisans notu**: Silver CC BY 4.0 ama bütçe/kazanç >$100.000 ise yazardan doğrudan lisans
 gerekiyor; uçuk teklif gelirse plan: pazarlık ya da başka fonta geçiş (font 7 dosyada
 tek satırla değişiyor; OFL alternatifleri: Galmuri, DotGothic16, Fusion Pixel, Unifont).

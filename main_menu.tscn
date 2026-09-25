@@ -3,10 +3,14 @@
 [ext_resource type="Script" uid="uid://745y30w6no5i" path="res://main_menu.gd" id="1_06t4h"]
 [ext_resource type="FontFile" path="res://assets/silverfont/Silver.ttf" id="font_bold"]
 [ext_resource type="FontFile" path="res://assets/silverfont/Silver.ttf" id="font_regular"]
+[ext_resource type="Texture2D" path="res://assets/menuIcons/play.png" id="icon_play"]
+[ext_resource type="Texture2D" path="res://assets/menuIcons/load.png" id="icon_load"]
+[ext_resource type="Texture2D" path="res://assets/menuIcons/settings.png" id="icon_settings"]
+[ext_resource type="Texture2D" path="res://assets/menuIcons/quit.png" id="icon_quit"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1"]
 content_margin_left = 14.0
-content_margin_top = 10.0
+content_margin_top = 22.0
 content_margin_right = 14.0
 content_margin_bottom = 10.0
 bg_color = Color(0.02, 0.03, 0.1, 0.92)
@@ -24,7 +28,7 @@ shadow_size = 10
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3"]
 content_margin_left = 14.0
-content_margin_top = 10.0
+content_margin_top = 22.0
 content_margin_right = 14.0
 content_margin_bottom = 10.0
 bg_color = Color(0, 0.12, 0.16, 0.97)
@@ -40,7 +44,7 @@ corner_radius_bottom_left = 4
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2"]
 content_margin_left = 14.0
-content_margin_top = 10.0
+content_margin_top = 22.0
 content_margin_right = 14.0
 content_margin_bottom = 10.0
 bg_color = Color(0, 0.22, 0.28, 0.97)
@@ -58,7 +62,7 @@ shadow_size = 18
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5"]
 content_margin_left = 14.0
-content_margin_top = 10.0
+content_margin_top = 22.0
 content_margin_right = 14.0
 content_margin_bottom = 10.0
 bg_color = Color(0.08, 0.02, 0.05, 0.92)
@@ -76,7 +80,7 @@ shadow_size = 10
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7"]
 content_margin_left = 14.0
-content_margin_top = 10.0
+content_margin_top = 22.0
 content_margin_right = 14.0
 content_margin_bottom = 10.0
 bg_color = Color(0.15, 0.02, 0.06, 0.97)
@@ -92,7 +96,7 @@ corner_radius_bottom_left = 4
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6"]
 content_margin_left = 14.0
-content_margin_top = 10.0
+content_margin_top = 22.0
 content_margin_right = 14.0
 content_margin_bottom = 10.0
 bg_color = Color(0.25, 0.04, 0.1, 0.97)
@@ -178,7 +182,14 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_1")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_3")
 theme_override_styles/hover = SubResource("StyleBoxFlat_2")
 theme_override_styles/focus = SubResource("StyleBoxFlat_1")
-text = "▶  NEW GAME"
+texture_filter = 1
+theme_override_colors/icon_normal_color = Color(0, 0.95, 1, 1)
+theme_override_colors/icon_hover_color = Color(0, 0.95, 1, 1)
+theme_override_colors/icon_pressed_color = Color(0, 0.95, 1, 1)
+theme_override_colors/icon_focus_color = Color(0, 0.95, 1, 1)
+theme_override_constants/h_separation = 16
+icon = ExtResource("icon_play")
+text = "NEW GAME"
 
 [node name="BtnLoadGame" type="Button" parent="." unique_id=1566071146]
 offset_left = 755.0
@@ -192,7 +203,14 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_1")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_3")
 theme_override_styles/hover = SubResource("StyleBoxFlat_2")
 theme_override_styles/focus = SubResource("StyleBoxFlat_1")
-text = "▶  LOAD GAME"
+texture_filter = 1
+theme_override_colors/icon_normal_color = Color(0, 0.95, 1, 1)
+theme_override_colors/icon_hover_color = Color(0, 0.95, 1, 1)
+theme_override_colors/icon_pressed_color = Color(0, 0.95, 1, 1)
+theme_override_colors/icon_focus_color = Color(0, 0.95, 1, 1)
+theme_override_constants/h_separation = 16
+icon = ExtResource("icon_load")
+text = "LOAD GAME"
 
 [node name="BtnSettings" type="Button" parent="." unique_id=707070707]
 offset_left = 755.0
@@ -206,7 +224,14 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_1")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_3")
 theme_override_styles/hover = SubResource("StyleBoxFlat_2")
 theme_override_styles/focus = SubResource("StyleBoxFlat_1")
-text = "⚙  SETTINGS"
+texture_filter = 1
+theme_override_colors/icon_normal_color = Color(0, 0.95, 1, 1)
+theme_override_colors/icon_hover_color = Color(0, 0.95, 1, 1)
+theme_override_colors/icon_pressed_color = Color(0, 0.95, 1, 1)
+theme_override_colors/icon_focus_color = Color(0, 0.95, 1, 1)
+theme_override_constants/h_separation = 16
+icon = ExtResource("icon_settings")
+text = "SETTINGS"
 
 [node name="BtnQuit" type="Button" parent="." unique_id=2071815634]
 offset_left = 755.0
@@ -220,7 +245,14 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_5")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_7")
 theme_override_styles/hover = SubResource("StyleBoxFlat_6")
 theme_override_styles/focus = SubResource("StyleBoxFlat_5")
-text = "■  QUIT"
+texture_filter = 1
+theme_override_colors/icon_normal_color = Color(1, 0.18, 0.58, 1)
+theme_override_colors/icon_hover_color = Color(1, 0.18, 0.58, 1)
+theme_override_colors/icon_pressed_color = Color(1, 0.18, 0.58, 1)
+theme_override_colors/icon_focus_color = Color(1, 0.18, 0.58, 1)
+theme_override_constants/h_separation = 16
+icon = ExtResource("icon_quit")
+text = "QUIT"
 
 [node name="LabelVersion" type="Label" parent="." unique_id=606060606]
 offset_left = 28.0

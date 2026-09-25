@@ -245,8 +245,7 @@ func _launch_typed_ball(ball_type: String) -> void:
 			return
 
 	var ball = ball_scene.instantiate()
-	var vector_bonus: int = 3 if player_node.character_type == "vector" else 0
-	ball.max_damage = 5 + player_node.ball_mastery + vector_bonus
+	ball.max_damage = 5 + player_node.ball_mastery
 	# Başlangıç sekansında fırlatılan normal toplar küçük, özellikli core'lar büyük
 	ball.is_normal_core = _startup_active and ball_type == ""
 

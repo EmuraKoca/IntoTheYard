@@ -4,9 +4,9 @@ var _font_bold    = preload("res://assets/silverfont/Silver.ttf")
 var _font_regular = preload("res://assets/silverfont/Silver.ttf")
 
 const CHARS: Array = [
-	{"id":"vector",  "name":"Vector",  "theme":"Kinetik",      "color":Color(0,0.75,1,1),    "passive":"Normal Ball +3 hasar",             "balls":["Normal Ball","Split Ball","Pierce Ball"],             "sc":2.5},
-	{"id":"leila",   "name":"Leila",   "theme":"Elemental",    "color":Color(1,0.18,0.47,1), "passive":"Elemental top %20 ekstra patlama", "balls":["Fire Ball","Water Ball","Cryo Ball","Electric Ball"], "sc":2.5},
-	{"id":"cyclone", "name":"Cyclone", "theme":"Manipülasyon", "color":Color(0.22,1,0.08,1), "passive":"Glitch ölünce başkasına sıçrar",   "balls":["Glitch Ball","Mimic Ball","Data Leech Ball"],         "sc":2.5},
+	{"id":"vector",  "name":"Vector",      "color":Color(0,0.75,1,1),             "sc":2.5},
+	{"id":"leila",   "name":"Leila",    "color":Color(1,0.18,0.47,1), "sc":2.5},
+	{"id":"cyclone", "name":"Cyclone", "color":Color(0.22,1,0.08,1),         "sc":2.5},
 ]
 
 var _cur: int = 0
@@ -137,11 +137,11 @@ func _fill_side(card: Panel, c: Dictionary) -> void:
 
 	var nm := Label.new()
 	nm.text = c["name"] if not locked else "???"
-	nm.position = Vector2(0, card.size.y - 46)
-	nm.size     = Vector2(card.size.x, 24)
+	nm.position = Vector2(0, card.size.y - 62)
+	nm.size     = Vector2(card.size.x, 44)
 	nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	nm.add_theme_font_override("font", _font_bold)
-	nm.add_theme_font_size_override("font_size", 19)
+	nm.add_theme_font_size_override("font_size", 38)
 	nm.add_theme_color_override("font_color", Color(col.r, col.g, col.b, 0.65) if not locked else Color(0.4, 0.4, 0.4))
 	card.add_child(nm)
 
@@ -180,21 +180,21 @@ func _fill_center(card: Panel, c: Dictionary) -> void:
 
 	var nm := Label.new()
 	nm.text = c["name"] if not locked else "???"
-	nm.position = Vector2(0, card.size.y - 96)
-	nm.size     = Vector2(card.size.x, 34)
+	nm.position = Vector2(0, card.size.y - 130)
+	nm.size     = Vector2(card.size.x, 44)
 	nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	nm.add_theme_font_override("font", _font_bold)
-	nm.add_theme_font_size_override("font_size", 19)
+	nm.add_theme_font_size_override("font_size", 38)
 	nm.add_theme_color_override("font_color", col if not locked else Color(0.5, 0.5, 0.5))
 	card.add_child(nm)
 
 	var th := Label.new()
-	th.text = c["theme"] if not locked else "???"
-	th.position = Vector2(0, card.size.y - 62)
-	th.size     = Vector2(card.size.x, 22)
+	th.text = Lang.t("cs_theme_" + c["id"]) if not locked else "???"
+	th.position = Vector2(0, card.size.y - 82)
+	th.size     = Vector2(card.size.x, 44)
 	th.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	th.add_theme_font_override("font", _font_regular)
-	th.add_theme_font_size_override("font_size", 19)
+	th.add_theme_font_size_override("font_size", 38)
 	th.add_theme_color_override("font_color", Color(col.r, col.g, col.b, 0.6) if not locked else Color(0.4, 0.4, 0.4))
 	card.add_child(th)
 
@@ -253,8 +253,7 @@ func _update_info() -> void:
 	lbl_name.text = Lang.t("cs_name") + (c["name"] if not locked else "???")
 	lbl_name.add_theme_color_override("font_color", col if not locked else Color(0.5, 0.5, 0.5))
 
-	var lbl_pass: Label = info.get_node("LabelPassive")
-	lbl_pass.text = Lang.t("cs_passive") + (c["passive"] if not locked else "???")
+	info.get_node("LabelPassive").visible = false  # eski tasarımdan kalma pasif satırı artık kullanılmıyor
 
 	var lbl_desc: Label = info.get_node("LabelDescription")
 	if locked:
@@ -269,10 +268,12 @@ func _update_info() -> void:
 			var next_unlock: String = GameData.get_unlock_for_level(char_id, lv + 1)
 			if next_unlock != "":
 				unlock_str = Lang.t("cs_next_unlock") + next_unlock + " (Lv%d)" % (lv + 1)
-		var balls_str := ""
-		if c["balls"].size() > 0:
-			balls_str = Lang.t("cs_balls") + ", ".join(c["balls"]) + "\n"
-		lbl_desc.text = balls_str + "LV %d  —  %d / %d XP%s" % [lv, xp_cur, xp_need, unlock_str]
+		var level_line: String
+		if xp_need <= 1:
+			level_line = Lang.t("cs_level_max") % lv
+		else:
+			level_line = Lang.t("cs_level_line") % [lv, xp_cur, xp_need]
+		lbl_desc.text = level_line + unlock_str
 
 	if info.has_node("LabelTalent"):
 		info.get_node("LabelTalent").visible = false
@@ -382,14 +383,14 @@ func _build_left_menu() -> void:
 	info.add_child(spacer)
 
 	var pending := GameData.completed_milestones.size()
-	var gorev_text := "Görevler" + ("  [%d]" % pending if pending > 0 else "")
+	var gorev_text := Lang.t("cs_quests") + ("  [%d]" % pending if pending > 0 else "")
 	var gorev_col  := Color(1.0, 0.85, 0.0) if pending > 0 else Color(0.7, 0.7, 0.75)
 	var gorev_btn  := _make_left_btn(gorev_text, gorev_col)
 	gorev_btn.name = "AchievBtn"
 	gorev_btn.pressed.connect(_open_achievements)
 	info.add_child(gorev_btn)
 
-	var market_btn := _make_left_btn("Black Market", Color(0.0, 1.0, 0.8))
+	var market_btn := _make_left_btn(Lang.t("cs_market"), Color(0.0, 1.0, 0.8))
 	market_btn.name = "ShopBtn"
 	market_btn.pressed.connect(_open_shop)
 	info.add_child(market_btn)
@@ -602,7 +603,7 @@ func _refresh_header_buttons() -> void:
 	var ab := $InfoPanel.get_node_or_null("AchievBtn")
 	if ab:
 		var pending := GameData.completed_milestones.size()
-		ab.text = "Görevler" + ("  [%d]" % pending if pending > 0 else "")
+		ab.text = Lang.t("cs_quests") + ("  [%d]" % pending if pending > 0 else "")
 		ab.add_theme_color_override("font_color", Color(1.0, 0.85, 0.0) if pending > 0 else Color(0.7, 0.7, 0.75))
 
 func _open_shop() -> void:
