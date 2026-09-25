@@ -3066,3 +3066,6 @@ alt bölge olarak `.tscn`'de kullanılıyor olabilirler, agent tam emin olamadı
   cyber_shotgun, cyber_shooter, cyber_rifle — her birinin sprite node ismi farklı
   (örn. `$ArmedSprite`, `$HeavySprite`, `$ShotgunSprite` vb.), kopyala-yapıştır
   yaparken bu isimleri değiştirmeyi unutma.
+
+## Credits ekranı eklendi (2026-09-25)
+Ana menüye CREDITS butonu (`BtnCredits`, Quit bir kademe aşağı, y=837) + basit overlay (`_on_credits`, `main_menu.gd`): "Silver font by Poppy Works — CC BY 4.0" (CC BY atıf şartı karşılandı). İleride başka atıflar `body.text`'e eklenir. `mm_credits` Lang anahtarı (TR: KREDİLER). Oyunda denenmedi.

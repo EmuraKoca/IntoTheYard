@@ -48,6 +48,7 @@ const _TR := {
 	"mm_load_game":  "KAYDI YÜKLE",
 	"mm_settings":   "AYARLAR",
 	"mm_quit":       "ÇIKIŞ",
+	"mm_credits": "KREDİLER",
 	"mm_subtitle":   "[ ITY CORP. — GÜVENLİ TERMİNAL v2.1 ]",
 	"mm_version":    "v0.0.9.5  //  ALFA YAPIM  //  ITY CORP. 2099",
 
@@ -162,6 +163,7 @@ const _EN := {
 	"mm_load_game":  "LOAD GAME",
 	"mm_settings":   "SETTINGS",
 	"mm_quit":       "QUIT",
+	"mm_credits": "CREDITS",
 	"mm_subtitle":   "[ ITY CORP. — SECURE TERMINAL v2.1 ]",
 	"mm_version":    "v0.0.9.5  //  ALPHA BUILD  //  ITY CORP. 2099",
 

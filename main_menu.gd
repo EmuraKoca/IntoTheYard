@@ -50,12 +50,14 @@ func _ready() -> void:
 	$BtnLoadGame.pressed.connect(_on_load_game)
 	$BtnSettings.pressed.connect(_on_settings)
 	$BtnQuit.pressed.connect(_on_quit)
+	$BtnCredits.pressed.connect(_on_credits)
 
 func _apply_menu_lang() -> void:
 	$BtnNewGame.text  = Lang.t("mm_new_game")
 	$BtnLoadGame.text = Lang.t("mm_load_game")
 	$BtnSettings.text = Lang.t("mm_settings")
 	$BtnQuit.text     = Lang.t("mm_quit")
+	$BtnCredits.text  = Lang.t("mm_credits")
 	if has_node("LabelSubtitle"):
 		$LabelSubtitle.text = Lang.t("mm_subtitle")
 	if has_node("LabelVersion"):
@@ -186,6 +188,43 @@ func _show_confirm_dialog() -> void:
 func _on_load_game() -> void:
 	GameData.load_data()
 	get_tree().change_scene_to_file("res://character_select.tscn")
+
+func _on_credits() -> void:
+	var cv := CanvasLayer.new()
+	cv.layer = 10
+	add_child(cv)
+	var dim := ColorRect.new()
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.color = Color(0, 0, 0, 0.9)
+	cv.add_child(dim)
+	var title := Label.new()
+	title.text = Lang.t("mm_credits")
+	title.position = Vector2(0, 260)
+	title.size = Vector2(1920, 90)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_override("font", _font_bold)
+	title.add_theme_font_size_override("font_size", 76)
+	title.modulate = Color(1, 0.8, 0)
+	cv.add_child(title)
+	var body := Label.new()
+	body.text = "Silver font by Poppy Works
+CC BY 4.0"
+	body.position = Vector2(0, 430)
+	body.size = Vector2(1920, 140)
+	body.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	body.add_theme_font_override("font", _font_bold)
+	body.add_theme_font_size_override("font_size", 38)
+	body.modulate = Color(0.82, 0.92, 1, 1)
+	cv.add_child(body)
+	var back := Button.new()
+	back.text = Lang.t("ui_back")
+	back.position = Vector2(755, 700)
+	back.size = Vector2(410, 70)
+	back.add_theme_font_override("font", _font_bold)
+	back.add_theme_font_size_override("font_size", 38)
+	back.add_theme_color_override("font_color", Color(0, 0.95, 1, 1))
+	back.pressed.connect(func(): cv.queue_free())
+	cv.add_child(back)
 
 func _on_quit() -> void:
 	get_tree().quit()
