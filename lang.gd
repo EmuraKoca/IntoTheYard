@@ -48,7 +48,7 @@ const _TR := {
 	"mm_load_game":  "KAYDI YÜKLE",
 	"mm_settings":   "AYARLAR",
 	"mm_quit":       "ÇIKIŞ",
-	"mm_credits": "KREDİLER",
+	"mm_credits": "EMEĞİ GEÇENLER",
 	"mm_subtitle":   "[ ITY CORP. — GÜVENLİ TERMİNAL v2.1 ]",
 	"mm_version":    "v0.0.9.5  //  ALFA YAPIM  //  ITY CORP. 2099",
 
