@@ -83,6 +83,9 @@ const _TR := {
 	"ui_upgrades_none":    "  yok",
 	"ui_calamity_header":  "— FELAKET —",
 	"ui_cores_header":     "— CORE'LAR —",
+	"ui_launchable_cores": "Fırlatılabilir Core'lar",
+	"ui_connected_cores": "Bağlı Core'lar",
+	"ui_data_title":       "TOPLANAN VERİ",
 	"ui_data_units":       " birim",
 	"ui_avail_upgrades":   "// MEVCUT GELİŞTİRMELER //",
 
@@ -198,6 +201,9 @@ const _EN := {
 	"ui_upgrades_none":    "  none",
 	"ui_calamity_header":  "— CALAMITY —",
 	"ui_cores_header":     "— CORES —",
+	"ui_launchable_cores": "Launchable Cores",
+	"ui_connected_cores": "Connected Cores",
+	"ui_data_title":       "DATA HARVESTED",
 	"ui_data_units":       " units",
 	"ui_avail_upgrades":   "// AVAILABLE UPGRADES //",
 

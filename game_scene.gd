@@ -1218,6 +1218,7 @@ func _update_core_counter() -> void:
 		if _cb.get("is_scatter_piece") or _cb in _mirror_image_balls: continue
 		_core_total += 1
 	var _core_max: int = 3 + GameData.get_shop_core_bonus() + _ui_p.special_core_count_max + _ui_p.connected_core_count_max
+	$UI/LabelDataTitle.text = Lang.t("ui_data_title")
 	$UI/LabelBalls.text = Lang.t("ui_balls") + str(_core_total) + " / " + str(_core_max)
 
 func _refresh_upgrade_list() -> void:
@@ -1683,7 +1684,7 @@ func _setup_core_panel() -> void:
 
 	# ── Launchable Cores başlığı + 5 hücre ──────────────────────────────────
 	var lbl_launch := Label.new()
-	lbl_launch.text = "Launchable Cores"
+	lbl_launch.text = Lang.t("ui_launchable_cores")
 	lbl_launch.size = Vector2(PW, 16.0)
 	lbl_launch.position = Vector2(PX, PY)
 	lbl_launch.add_theme_font_override("font", _font_bold)
@@ -1729,7 +1730,7 @@ func _setup_core_panel() -> void:
 
 	# ── Connected Cores başlığı + 3 hücre ───────────────────────────────────
 	var lbl_conn := Label.new()
-	lbl_conn.text = "Connected Cores"
+	lbl_conn.text = Lang.t("ui_connected_cores")
 	lbl_conn.size = Vector2(PW, 16.0)
 	lbl_conn.position = Vector2(PX, PY + 18.0 + CELL + 10.0)
 	lbl_conn.add_theme_font_override("font", _font_bold)
