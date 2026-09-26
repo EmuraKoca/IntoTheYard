@@ -24,42 +24,42 @@ Aşağıdakilerin hiçbirinin sesi henüz yok. Arama anahtar kelimeleri (freesou
 
 ## 2. PAUSE / GENEL AKIŞ
 
-| # | Olay | Öncelik | Arama |
-|---|---|---|---|
-| 13 | Oyunu duraklat (pause aç) | P2 | pause in |
-| 14 | Devam et (pause kapat) | P2 | pause out |
-| 15 | Run başlangıcı (sahaya giriş) | P2 | game start, whoosh |
-| 16 | Game Over / ölüm ekranı | P1 | game over, defeat |
-| 17 | Zafer / run bitişi (varsa) | P3 | victory jingle |
+| #   | Olay                          | Öncelik | Arama              |
+| --- | ----------------------------- | ------- | ------------------ |
+| 13  | Oyunu duraklat (pause aç)     | P2      | pause in           |
+| 14  | Devam et (pause kapat)        | P2      | pause out          |
+| 15  | Run başlangıcı (sahaya giriş) | P2      | game start, whoosh |
+| 16  | Game Over / ölüm ekranı       | P1      | game over, defeat  |
+| 17  | Zafer / run bitişi (varsa)    | P3      | victory jingle     |
 
 ## 3. KART SEÇİM EKRANI (level-up)
 
-| # | Olay | Öncelik | Arama |
-|---|---|---|---|
-| 18 | Level-up anı (menü açılırken) | P1 | level up, power up |
-| 19 | Kartların ekrana gelişi (3 kart) | P2 | card deal, whoosh |
-| 20 | Kart üzerinde gezinme (hover, büyüme animasyonu) | P1 | card hover, tick |
-| 21 | Kart seçme (tıklama) | P1 | card select, confirm |
-| 22 | Nadirlik sesleri: rare / epic / legendary kart geldiğinde farklı parıltı | P2 | rare item, sparkle, legendary |
-| 23 | Keyword sözlüğü paneli (glossary) açılışı | P3 | tooltip |
-| 24 | Kart alındıktan sonra menü kapanışı | P2 | menu close |
-| 25 | Core kartı seçilince (yeni top eklendi) | P2 | equip, power up |
-| 26 | Medkit / Max Health Up alınınca | P2 | heal, health pickup |
+| #   | Olay                                                                     | Öncelik | Arama                         |
+| --- | ------------------------------------------------------------------------ | ------- | ----------------------------- |
+| 18  | Level-up anı (menü açılırken)                                            | P1      | level up, power up            |
+| 19  | Kartların ekrana gelişi (3 kart)                                         | P2      | card deal, whoosh             |
+| 20  | Kart üzerinde gezinme (hover, büyüme animasyonu)                         | P1      | card hover, tick              |
+| 21  | Kart seçme (tıklama)                                                     | P1      | card select, confirm          |
+| 22  | Nadirlik sesleri: rare / epic / legendary kart geldiğinde farklı parıltı | P2      | rare item, sparkle, legendary |
+| 23  | Keyword sözlüğü paneli (glossary) açılışı                                | P3      | tooltip                       |
+| 24  | Kart alındıktan sonra menü kapanışı                                      | P2      | menu close                    |
+| 25  | Core kartı seçilince (yeni top eklendi)                                  | P2      | equip, power up               |
+| 26  | Medkit / Max Health Up alınınca                                          | P2      | heal, health pickup           |
 
 ## 4. CALAMITY SİSTEMİ (genel)
 
-| # | Olay | Öncelik | Arama |
-|---|---|---|---|
-| 27 | Calamity slotuna kart eklendi | P1 | item pickup, charge |
-| 28 | Slot hover | P3 | ui hover |
-| 29 | Slot tıklama / nişan modu açılış (hedefli Calamity) | P1 | target lock, aim |
-| 30 | Nişan iptali (Escape) | P3 | cancel |
-| 31 | Calamity ateşleme / tetikleme (genel onay sesi) | P1 | activate, trigger |
-| 32 | Slot dolu, kart alınamadı | P3 | error, denied |
-| 33 | Süreli buff bitişi (Full Breach, Momentum Burst, Bounce Barrage) | P2 | power down |
-| 34 | **The Yard Engine**: makine yerden yükselir | P1 | machine rise, mechanical start |
-| 35 | Yard Engine: elektrik çizgileri ateşlenir (bolt) | P1 | electric zap, arc |
-| 36 | Yard Engine: makine yere gömülür | P2 | machine retract |
+| #   | Olay                                                             | Öncelik | Arama                          |
+| --- | ---------------------------------------------------------------- | ------- | ------------------------------ |
+| 27  | Calamity slotuna kart eklendi                                    | P1      | item pickup, charge            |
+| 28  | Slot hover                                                       | P3      | ui hover                       |
+| 29  | Slot tıklama / nişan modu açılış (hedefli Calamity)              | P1      | target lock, aim               |
+| 30  | Nişan iptali (Escape)                                            | P3      | cancel                         |
+| 31  | Calamity ateşleme / tetikleme (genel onay sesi)                  | P1      | activate, trigger              |
+| 32  | Slot dolu, kart alınamadı                                        | P3      | error, denied                  |
+| 33  | Süreli buff bitişi (Full Breach, Momentum Burst, Bounce Barrage) | P2      | power down                     |
+| 34  | **The Yard Engine**: makine yerden yükselir                      | P1      | machine rise, mechanical start |
+| 35  | Yard Engine: elektrik çizgileri ateşlenir (bolt)                 | P1      | electric zap, arc              |
+| 36  | Yard Engine: makine yere gömülür                                 | P2      | machine retract                |
 
 ## 5. CALAMITY — VECTOR (7)
 

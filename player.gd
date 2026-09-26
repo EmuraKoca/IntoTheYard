@@ -293,7 +293,6 @@ const _CHAIN_GRAVITY: float = 0.0
 const _CHAIN_DAMPING: float = 8.0
 const _CHAIN_TENSION: float = 120.0
 var _chain_velocities: Array[Vector2] = []
-var _vector_dead: bool = false
 var _lmb_was_pressed: bool = false
 var _footstep_timer: float = 0.0  # melee sadece tıklama anında tetiklensin
 
@@ -532,7 +531,7 @@ func _angle_to_chain_dir(angle: float) -> String:
 	return _CHAIN_DIR_NAMES[sector]
 
 func _process(_delta: float) -> void:
-	if character_type != "vector" or _vector_dead:
+	if character_type != "vector":
 		return
 	var sprite: AnimatedSprite2D = $VectorSprite
 	# Güvenlik: sprite hiçbir zaman görünmez kalmasın
@@ -972,7 +971,7 @@ func _update_anim_dir() -> void:
 
 
 func _update_vector_animation() -> void:
-	if _vector_dead or _vector_oneshot:
+	if _vector_oneshot:
 		return
 	var anim := ("walk_" + _anim_dir) if velocity != Vector2.ZERO else "idle_N"
 	if $VectorSprite.animation != anim:
@@ -980,8 +979,6 @@ func _update_vector_animation() -> void:
 
 
 func _play_vector_oneshot(anim_name: String) -> void:
-	if _vector_dead:
-		return
 	if not $VectorSprite.sprite_frames.has_animation(anim_name):
 		return
 	_vector_oneshot = true
@@ -1022,14 +1019,6 @@ func _spawn_dash_ghost() -> void:
 	var tw: Tween = ghost.create_tween()
 	tw.tween_property(ghost, "modulate:a", 0.0, 0.35).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	tw.tween_callback(ghost.queue_free)
-
-
-func play_death() -> void:
-	if character_type != "vector":
-		return
-	_vector_dead = true
-	_vector_oneshot = true
-	$VectorSprite.play("death")
 
 
 func _no_ball_nearby() -> bool:

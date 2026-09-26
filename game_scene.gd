@@ -2514,8 +2514,39 @@ func player_damaged(amount: int = 1) -> void:
 		get_tree().paused = true
 		show_game_over()
 
-func show_game_over() -> void:
+# Ölüm: karaktere doğru kapanan siyah daire (iris-out), sonra Game Over ekranı
+func _play_death_iris() -> void:
+	var iris := CanvasLayer.new()
+	iris.layer = 100
+	iris.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(iris)
+	var shader := Shader.new()
+	shader.code = """
+shader_type canvas_item;
+uniform vec2 center = vec2(960.0, 540.0);
+uniform float radius = 1400.0;
+void fragment() {
+	float d = distance(UV * vec2(1920.0, 1080.0), center);
+	COLOR = vec4(0.0, 0.0, 0.0, step(radius, d));
+}
+"""
+	var mat := ShaderMaterial.new()
+	mat.shader = shader
+	var pl := get_node_or_null("Player")
+	if pl:
+		mat.set_shader_parameter("center", pl.get_global_transform_with_canvas().origin)
+	var rect := ColorRect.new()
+	rect.size = Vector2(1920, 1080)
+	rect.material = mat
+	iris.add_child(rect)
+	var tw := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	tw.tween_method(func(r: float): mat.set_shader_parameter("radius", r), 1400.0, 0.0, 1.2)		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	await tw.finished
 	await get_tree().create_timer(0.5).timeout
+	iris.queue_free()
+
+func show_game_over() -> void:
+	await _play_death_iris()
 
 	var canvas = CanvasLayer.new()
 	canvas.process_mode = Node.PROCESS_MODE_ALWAYS
@@ -3023,7 +3054,9 @@ func show_upgrade_menu() -> void:
 	
 	var title = Label.new()
 	title.text = Lang.t("ui_level_up")
-	title.position = Vector2(860, 150)
+	title.position = Vector2(20, 150)   # 1920 genişlik, merkez x=980 = kart grubunun ortası (520 + 920/2)
+	title.size = Vector2(1920, 100)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 76)
 	title.add_theme_font_override("font", _font_bold)
 	title.modulate = Color(1, 0.8, 0, 0.0)
@@ -3162,21 +3195,13 @@ func show_upgrade_menu() -> void:
 		desc_panel.add_child(desc_label)
 
 		# Confirm ve Skip ortada
-		var confirm_btn = Button.new()
-		confirm_btn.text = Lang.t("upgrade_confirm")
-		confirm_btn.size = Vector2(180, 55)
-		confirm_btn.position = Vector2(830, 820)
-		confirm_btn.process_mode = Node.PROCESS_MODE_ALWAYS
-		confirm_btn.add_theme_font_override("font", _font_bold)
+		var confirm_btn := _make_neon_button(Lang.t("upgrade_confirm"), "confirm", false, Vector2(665, 820))
+		confirm_btn.size = Vector2(300, 70)
 		confirm_btn.pressed.connect(_on_confirm.bind(canvas))
 		canvas.add_child(confirm_btn)
 
-		var skip_btn = Button.new()
-		skip_btn.text = Lang.t("upgrade_skip")
-		skip_btn.size = Vector2(180, 55)
-		skip_btn.position = Vector2(1030, 820)
-		skip_btn.process_mode = Node.PROCESS_MODE_ALWAYS
-		skip_btn.add_theme_font_override("font", _font_bold)
+		var skip_btn := _make_neon_button(Lang.t("upgrade_skip"), "skip", true, Vector2(995, 820))
+		skip_btn.size = Vector2(300, 70)
 		skip_btn.pressed.connect(_on_skip.bind(canvas))
 		canvas.add_child(skip_btn)
 		
