@@ -160,6 +160,7 @@ func _show_confirm_dialog() -> void:
 	yes_btn.add_theme_stylebox_override("hover",  _make_style.call(Color(0.22,0.04,0.10,0.97), Color(1.0,0.25,0.65,1.0), Color(1.0,0.25,0.65,0.5)))
 	yes_btn.add_theme_stylebox_override("pressed",_make_style.call(Color(0.05,0.01,0.03,0.97), Color(1.0,0.15,0.45,1.0), Color(0,0,0,0)))
 	yes_btn.add_theme_stylebox_override("focus",  _make_style.call(Color(0.08,0.02,0.05,0.95), Color(1.0,0.18,0.58,1.0), Color(0,0,0,0)))
+	yes_btn.set_meta("sfx_click", "confirmClick")
 	yes_btn.position = Vector2(20, 160)
 	yes_btn.size = Vector2(248, 48)
 	yes_btn.pressed.connect(func():

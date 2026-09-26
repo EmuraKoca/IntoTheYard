@@ -7,20 +7,20 @@ Aşağıdakilerin hiçbirinin sesi henüz yok. Arama anahtar kelimeleri (freesou
 ---
 ## 1. MENÜ / UI
 
-| # | Olay | Öncelik | Arama |
-|---|---|---|---|
-| 1 | Buton hover (ana menü, pause, karakter seçimi, ayarlar) | P1 | ui hover, blip |
-| 2 | Buton tıklama / onay | P1 | ui click, confirm |
-| 3 | Geri / iptal butonu | P2 | ui back, cancel |
-| 4 | Çıkış butonu (pembe) | P3 | power down |
-| 5 | Yeni Oyun onay penceresi açılışı (Evet/Hayır) | P3 | ui warning |
-| 6 | Ayarlar sürgüsü kaydırma (tık tık) | P3 | slider tick |
-| 7 | Karakter seçimi: karakter değiştirme (sol/sağ) | P2 | ui swipe, select |
-| 8 | Karakter seçimi: onay (Confirm) | P2 | ui start, confirm heavy |
-| 9 | Chip COLLECT (milestone ödülü) | P2 | coin collect, reward |
-| 10 | Chip mağazası: satın alma / yetersiz bakiye | P2 | purchase, error buzz |
-| 11 | Başarım / milestone tamamlandı | P2 | achievement unlock |
-| 12 | Credits ekranı açılışı | P3 | ui open |
+| #   | Olay                                                    | Öncelik | Arama                   |
+| --- | ------------------------------------------------------- | ------- | ----------------------- |
+| 1   | Buton hover (ana menü, pause, karakter seçimi, ayarlar) | P1      | ui hover, blip          |
+| 2   | Buton tıklama / onay                                    | P1      | ui click, confirm       |
+| 3   | Geri / iptal butonu                                     | P2      | ui back, cancel         |
+| 4   | Çıkış butonu (pembe)                                    | P3      | power down              |
+| 5   | Yeni Oyun onay penceresi açılışı (Evet/Hayır)           | P3      | ui warning              |
+| 6   | Ayarlar sürgüsü kaydırma (tık tık)                      | P3      | slider tick             |
+| 7   | Karakter seçimi: karakter değiştirme (sol/sağ)          | P2      | ui swipe, select        |
+| 8   | Karakter seçimi: onay (Confirm)                         | P2      | ui start, confirm heavy |
+| 9   | Chip COLLECT (milestone ödülü)                          | P2      | coin collect, reward    |
+| 10  | Chip mağazası: satın alma / yetersiz bakiye             | P2      | purchase, error buzz    |
+| 11  | Başarım / milestone tamamlandı                          | P2      | achievement unlock      |
+| 12  | Credits ekranı açılışı                                  | P3      | ui open                 |
 
 ## 2. PAUSE / GENEL AKIŞ
 

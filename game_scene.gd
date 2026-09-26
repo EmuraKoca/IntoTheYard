@@ -2951,6 +2951,7 @@ func _get_card_art_path(card: Dictionary, char_id: String) -> String:
 
 func show_upgrade_menu() -> void:
 	upgrading = true
+	Sfx.play("selectCardScreen")
 	# Void Resonance: her dalga başında reaksiyon sayacı sıfırla
 	var _vr_p := get_node_or_null("Player")
 	if _vr_p:
@@ -4450,6 +4451,7 @@ func _make_neon_button(text: String, icon_name: String, pink: bool, pos: Vector2
 
 func _show_pause_menu() -> void:
 	get_tree().paused = true
+	Sfx.play("pause")
 
 	var canvas = CanvasLayer.new()
 	canvas.process_mode = Node.PROCESS_MODE_ALWAYS
@@ -4472,6 +4474,7 @@ func _show_pause_menu() -> void:
 	canvas.add_child(title)
 
 	var resume_btn := _make_neon_button(Lang.t("pause_resume"), "play", false, Vector2(755, 420))
+	resume_btn.set_meta("sfx_click", "")   # unpause sesi _on_resume'da
 	resume_btn.pressed.connect(_on_resume.bind(canvas))
 	canvas.add_child(resume_btn)
 
@@ -4584,6 +4587,7 @@ func _show_pause_settings(pause_canvas: CanvasLayer) -> void:
 	overlay.add_child(back_btn)
 
 func _on_resume(canvas: CanvasLayer) -> void:
+	Sfx.play("unpause")
 	canvas.queue_free()
 	get_tree().paused = false
 

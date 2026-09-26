@@ -27,6 +27,7 @@ func _ready() -> void:
 	if old: old.visible = false
 
 	$Button.pressed.connect(_on_back)
+	$Button2.set_meta("sfx_click", "characterSelect")
 	$Button2.pressed.connect(_on_confirm)
 
 	_build_ui()
@@ -72,6 +73,7 @@ func _build_ui() -> void:
 func _make_arrow(txt: String) -> Button:
 	var b := Button.new()
 	b.text = txt
+	b.set_meta("sfx_click", "")   # ses _slide içinde
 	b.size = Vector2(60, 60)
 	b.add_theme_font_override("font", _font_bold)
 	b.add_theme_font_size_override("font_size", 38)
@@ -87,6 +89,7 @@ func _make_panel(pos: Vector2, sz: Vector2) -> Panel:
 
 # ── Güncelleme ────────────────────────────────────────────────────────────────
 func _slide(dir: int) -> void:
+	Sfx.play("characterSwipe")
 	_cur = (_cur + dir + CHARS.size()) % CHARS.size()
 	_stop_matrix()
 	_refresh()
@@ -575,6 +578,7 @@ func _open_achievements() -> void:
 				collect_btn.add_theme_color_override("font_color", Color(0.3, 0.5, 0.3))
 			elif is_completed:
 				collect_btn.text = "COLLECT"
+				collect_btn.set_meta("sfx_click", "chipCollect")
 				collect_btn.add_theme_color_override("font_color", Color(0.0, 1.0, 0.7))
 				var k: String = key
 				collect_btn.pressed.connect(func():
@@ -700,14 +704,16 @@ func _open_shop() -> void:
 			buy_btn.add_theme_color_override("font_color", Color(0.3,0.6,0.3))
 		elif not affordable:
 			buy_btn.text     = "%d Chip" % cost
-			buy_btn.disabled = true
+			buy_btn.set_meta("sfx_click", "errorBuzz")   # disabled değil: tıklayınca hata sesi
 			buy_btn.add_theme_color_override("font_color", Color(0.38,0.38,0.38))
 		else:
 			buy_btn.text = "%d Chip" % cost
 			buy_btn.add_theme_color_override("font_color", Color(0.0,1.0,0.8))
 			var iid: String = item["id"]
+			buy_btn.set_meta("sfx_click", "")
 			buy_btn.pressed.connect(func():
 				if GameData.buy_item(iid):
+					Sfx.play("purchase")
 					canvas.queue_free()
 					_open_shop()
 			)

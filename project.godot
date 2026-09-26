@@ -20,6 +20,7 @@ config/windows_native_icon="res://assets/ıtyico.ico"
 
 GameData="*uid://bofht7p6252ff"
 Lang="*res://lang.gd"
+Sfx="*res://sfx.gd"
 
 [display]
 
