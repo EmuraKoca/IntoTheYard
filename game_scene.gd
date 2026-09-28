@@ -1114,6 +1114,7 @@ func _ready() -> void:
 		menu_music.queue_free()
 
 	var music := AudioStreamPlayer.new()
+	music.name           = "GameplayMusic"
 	music.stream        = _gameplay_music_stream
 	music.volume_db     = -8.0
 	music.bus           = "Music"
@@ -2515,6 +2516,10 @@ func player_damaged(amount: int = 1) -> void:
 		var _death_dur := 0.0
 		if _dying_p and _dying_p.has_method("play_death") and _dying_p.play_death():
 			_death_dur = _dying_p.death_anim_duration()
+		var _music := get_node_or_null("GameplayMusic")
+		if _music:
+			_music.stop()
+		Sfx.play_path("res://assets/sfx/characters/death.ogg")
 		get_tree().paused = true
 		show_game_over(_death_dur)
 

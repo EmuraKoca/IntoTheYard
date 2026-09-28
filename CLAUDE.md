@@ -3144,3 +3144,12 @@ ezmemesi için yeni `_cyclone_dead` bayrağı eklendi (Vector'daki `_vector_dead
 ANIM_FRAME_COUNT` (14) / paylaşımlı `DEATH_ANIM_DURATION` (2.357sn). **3 karakterin de ölüm
 animasyonu artık bağlı** — `game_scene.gd` tarafında hiçbir değişiklik gerekmedi, `play_death()`
 zaten `character_type`'a bakıp doğru sprite'ı seçiyor.
+
+## Ölüm sesi + müzik durdurma (2026-09-28, oyunda denenmedi)
+Kullanıcı `assets/sfx/characters/death.ogg` ekledi (3 karakter için ortak, zaten Vorbis).
+`Sfx`'e genel `play_path(path, volume_db)` eklendi (UI klasörü dışındaki tam yoldan tek
+seferlik ses — `play()`'in altyapısı `_play_stream()`'e çıkarıldı, ikisi de paylaşıyor).
+`game_scene.gd::player_damaged()`'da HP sıfırlanınca (`play_death()` çağrısından hemen sonra,
+pause'dan ÖNCE) gameplay müziği (`music.name = "GameplayMusic"`, yeni verildi) durduruluyor,
+ardından `Sfx.play_path("res://assets/sfx/characters/death.ogg")` bir kez çalıyor (loop yok,
+SFX bus'ı pause'da da akıyor — `Sfx` havuzu zaten `PROCESS_MODE_ALWAYS`).

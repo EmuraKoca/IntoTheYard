@@ -28,14 +28,22 @@ func play(sound: String) -> void:
 	if not _cache.has(sound):
 		var path := DIR + sound + ".ogg"
 		_cache[sound] = load(path) if ResourceLoader.exists(path) else null
-	var stream: AudioStream = _cache[sound]
+	_play_stream(_cache[sound], VOLUME.get(sound, 0.0))
+
+# UI klasörü dışındaki tam yoldan tek seferlik ses (örn. "res://assets/sfx/characters/death.ogg")
+func play_path(path: String, volume_db: float = 0.0) -> void:
+	if not _cache.has(path):
+		_cache[path] = load(path) if ResourceLoader.exists(path) else null
+	_play_stream(_cache[path], volume_db)
+
+func _play_stream(stream: AudioStream, volume_db: float) -> void:
 	if stream == null:
 		return
 	var p := _players[_next]
 	_next = (_next + 1) % POOL_SIZE
 	p.bus = "SFX" if AudioServer.get_bus_index("SFX") >= 0 else "Master"   # SFX bus'ı ana menüde çalışırken oluşturulur
 	p.stream = stream
-	p.volume_db = VOLUME.get(sound, 0.0)
+	p.volume_db = volume_db
 	p.play()
 
 func _on_node_added(node: Node) -> void:
