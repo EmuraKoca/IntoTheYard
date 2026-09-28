@@ -1199,13 +1199,6 @@ func _ready() -> void:
 		for _ci in range(min(_cal_start, max_calamity_slots)):
 			calamity_slots.append(_cal_pool[_ci])
 
-	# DEBUG: Vector'un son Calamity'si (Siege Rain) test için otomatik slota ekleniyor.
-	# Test bitince bu blok kaldırılmalı.
-	calamity_slots.clear()
-	for _dbg_cal in ["🌧️"]:
-		if calamity_slots.size() < max_calamity_slots:
-			calamity_slots.append(_dbg_cal)
-
 	update_ui()
 
 	$UI/CalamityCircle.visible = false
@@ -3420,33 +3413,74 @@ func _vfx_freezing_cold() -> void:
 	shrink_tw.tween_callback(storm.queue_free)
 	shrink_tw.tween_callback(func(): if is_instance_valid(wind): wind.queue_free())
 
+# YENİDEN TASARIM (2026-09-28, kullanıcı 37 karelik yeni sprite ekledi): "The Yard Engine"
+# Avlu'nun tam merkezine mavi tonlarda bir ışın fırlatıyor, ışın ulaştığı an oradan bu
+# dalga efekti çıkıp Avlu sınırlarına doğru büyüyerek yayılıyor — Shockwave'deki (kırpma +
+# 0.6→büyük ölçek) desenle birebir aynı, sadece merkez player değil Yard'ın kendisi ve
+# sprite farklı. Bir kez oynuyor, loop yok.
 func _activate_monsoon() -> void:
-	for subject in get_tree().get_nodes_in_group("subjects"):
-		if is_instance_valid(subject) and subject.global_position.x >= 385.0 and subject.has_method("apply_wet"):
-			subject.apply_wet()
-	_react_flash_screen(Color(0.1, 0.4, 1.0, 0.4))
-	_play_monsoon_vfx()
+	# GÖRÜNÜR Avlu merkezi — Yard Engine'in diğer kartlarda kullandığı Vector2(1152,667)
+	# oyun dünyasının matematiksel merkezi ama sağ paneli (x:1630-1920) kapsıyor, o yüzden
+	# ekranda sağa kaymış görünüyordu. Monsoon'un büyük halka efekti bunu çok belirgin
+	# gösterdiği için SADECE bu kartta gerçekten görünen alanın (x:385-1630) merkezi
+	# kullanılıyor — diğer Yard Engine kartları (Data Storm, Backdoor vb.) etkilenmiyor.
+	var visible_center := Vector2(1007.5, 667.0)
+	var _run_ripple := func():
+		for subject in _yard_subjects():
+			if subject.has_method("apply_wet"):
+				subject.apply_wet()
+		_play_monsoon_vfx(visible_center)
+	_vfx_yard_engine_to_point(
+		func() -> Vector2: return visible_center,
+		Color(0.1, 0.55, 1.0, 1.0),
+		_run_ripple,
+		_run_ripple,
+		visible_center
+	)
 
-func _play_monsoon_vfx() -> void:
-	var frames := SpriteFrames.new()
-	if frames.has_animation("default"): frames.remove_animation("default")
-	frames.add_animation("rain")
-	frames.set_animation_speed("rain", 8.0)
-	frames.set_animation_loop("rain", false)
-	for i in range(1, 5):
-		var path := "res://assets/VFX/monsoonVFX/rain_drops-%02d.png" % i
-		frames.add_frame("rain", load(path))
-	var vfx := AnimatedSprite2D.new()
-	vfx.sprite_frames = frames
-	# Saha alanı: x 385→1920, y 0→1080
-	var field_w: float = 1920.0 - 385.0
-	var field_h: float = 1080.0
-	vfx.position = Vector2(385.0 + field_w * 0.5, field_h * 0.5)
-	vfx.z_index = 10
-	vfx.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	add_child(vfx)
-	vfx.play("rain")
-	vfx.animation_finished.connect(vfx.queue_free)
+func _play_monsoon_vfx(pos: Vector2 = Vector2(1152.0, 667.0)) -> void:
+	var total := 0
+	while ResourceLoader.exists("res://assets/VFX/monsoonVFX/frame_%03d.png" % total):
+		total += 1
+	if total == 0:
+		_react_flash_screen(Color(0.1, 0.4, 1.0, 0.4))
+		return
+
+	# Yard dışına taşmasın diye kırpma alanı (Shockwave ile aynı sınır/desen)
+	var clip := Node2D.new()
+	clip.z_index = 1
+	add_child(clip)
+	var mask := Polygon2D.new()
+	mask.color = Color(0, 0, 0, 0)
+	mask.polygon = PackedVector2Array([
+		Vector2(385.0, 255.0), Vector2(1920.0, 255.0),
+		Vector2(1920.0, 1080.0), Vector2(385.0, 1080.0)
+	])
+	clip.add_child(mask)
+	clip.clip_children = CanvasItem.CLIP_CHILDREN_ONLY
+
+	var fps := 20.0
+	var ripple := AnimatedSprite2D.new()
+	ripple.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	ripple.position = pos
+	ripple.scale = Vector2(0.6, 0.6)
+	var sf := SpriteFrames.new()
+	if sf.has_animation("default"): sf.remove_animation("default")
+	sf.add_animation("ripple")
+	sf.set_animation_speed("ripple", fps)
+	sf.set_animation_loop("ripple", false)
+	for i in range(total):
+		sf.add_frame("ripple", load("res://assets/VFX/monsoonVFX/frame_%03d.png" % i))
+	ripple.sprite_frames = sf
+	clip.add_child(ripple)
+	ripple.play("ripple")
+
+	var grow_tw := create_tween()
+	grow_tw.tween_property(ripple, "scale", Vector2(6.0, 6.0), float(total) / fps)		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+
+	ripple.animation_finished.connect(func():
+		if is_instance_valid(clip): clip.queue_free()
+	)
 
 func _activate_volcanic_rift(pos: Vector2) -> void:
 	_vfx_volcanic_rift(pos)
@@ -3665,12 +3699,12 @@ func _vfx_yard_engine(apply_fn: Callable, bolt_color: Color, fallback_flash: Col
 # eden bir şey olabilir (örn. Momentum Burst'te oyuncunun silahı) — pozisyon çizgi
 # ateşlenirken YENİDEN okunuyor, spawn anında değil. Sprite yoksa fallback_fn çağrılıp
 # (kendi ekran flaşı + asıl etkiyi tetiklemesi gerekir) aynen devam ediyor, crash yok.
-func _vfx_yard_engine_to_point(get_target_pos: Callable, bolt_color: Color, on_arrival: Callable, fallback_fn: Callable) -> void:
+func _vfx_yard_engine_to_point(get_target_pos: Callable, bolt_color: Color, on_arrival: Callable, fallback_fn: Callable, engine_pos: Vector2 = Vector2(1152.0, 667.0)) -> void:
 	if not ResourceLoader.exists("res://assets/VFX/theYardEngine/starting/frame_000.png"):
 		fallback_fn.call()
 		return
 
-	var yard_center := Vector2(1152, 667)
+	var yard_center := engine_pos
 	var engine := AnimatedSprite2D.new()
 	engine.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	engine.z_index = 6

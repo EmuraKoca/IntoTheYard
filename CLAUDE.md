@@ -3197,3 +3197,42 @@ Kullanıcı: ses dosyasının kendisi zaten düşme+çarpma sırasını içeriyo
 sonda impact) — bu yüzden isabet anında DEĞİL, Core'un düşmeye BAŞLADIĞI anda çalmalı ki
 sesin kendi impact kısmı gerçek çarpma anıyla çakışsın. Çağrı `_spawn_siege_rain_impact()`'in
 başına, `burst.play("fall")`'dan hemen önce taşındı.
+
+## Monsoon (95) VFX düzeltildi — Avlu'nun tamamını kaplıyor (2026-09-28, oyunda denenmedi)
+Kullanıcı fark etti: görsel "kötü duruyordu". Kök sebep: `_play_monsoon_vfx()` 256×240'lık
+yağmur damlası sprite'ını hiç büyütmeden Avlu'nun (~1535×825px) tam ortasına koyuyordu, 0.5sn
+(4 kare × 8fps) sonra kayboluyordu — mekanik (tüm Avlu'daki düşmanlara Wet) ile görsel kapsamı
+tamamen uyuşmuyordu, ortada ufak bir yama gibi kalıyordu. Fix: `AnimatedSprite2D` yerine
+`TextureRect` + `STRETCH_TILE` — doku orijinal boyutunda bozulmadan Avlu'nun TAMAMINI
+kaplayacak şekilde tekrarlanıyor (`_react_flash_screen` ile aynı sınır: x 385-1920, y
+255-1080), 4 kare elle 8fps'te 3 tur (~1.5sn) döndürülüp 0.3sn'de soluyor. Mekanik
+(`apply_wet`, aktivasyon anında anlık) değişmedi, sadece görsel.
+
+## Monsoon (95) komple yeniden tasarlandı — Yard Engine + genişleyen dalga (2026-09-28, oyunda denenmedi)
+Kullanıcı eski 4 karelik `rain_drops-*.png`'yi sildi, yerine `assets/VFX/monsoonVFX/frame_000-036.png`
+(37 kare, 256×256, parlak mavi halka + su damlası patlaması, son karelerde damlalar dışa
+savrulup soluyor) koydu. İstek: "The Yard Engine" Avlu'nun tam ortasına mavi ışın fırlatsın,
+ışın ulaştığı an bu efekt oradan çıkıp Avlu sınırlarına doğru büyüyerek yayılsın, bir kez
+çalışsın (loop yok) — Shockwave'in "0.6→büyük ölçek, Yard'a kırpılmış" deseniyle aynı mantık.
+`_activate_monsoon()` artık `_vfx_yard_engine_to_point()` kullanıyor (hedef = Yard merkezi,
+`Vector2(1152,667)` — engine zaten orada duruyor, bu yüzden çizgi kısa/anlık ama zararsız),
+`on_arrival`'da hem `_yard_subjects()`'e Wet uygulanıyor hem `_play_monsoon_vfx()` çağrılıyor.
+`_play_monsoon_vfx()` komple yeniden yazıldı: Shockwave'deki `Polygon2D` kırpma alanı
+(x:385-1920, y:255-1080) + `AnimatedSprite2D` (20fps, 37 kare ≈1.85sn, non-loop) Avlu
+merkezinde `scale` 0.6→6.0 büyüyor (`TRANS_QUAD`/`EASE_OUT`), animasyon bitince kırpma
+node'u siliniyor. `fallback_fn` de aynı `_run_ripple` closure'ı (sprite eksikse zaten
+`_play_monsoon_vfx()`'in kendi `total==0` guard'ı ekran flaşına düşüyor, crash yok).
+Eskiden Monsoon her koşulda etki uyguluyordu (`x>=385` manuel kontrol) — artık `_yard_subjects()`
+üzerinden ölü/ceset düşmanlar da hariç tutuluyor (küçük bir iyileşme, davranışı bozmuyor).
+
+### Düzeltme: Monsoon'un merkezi görünür alana taşındı (2026-09-28, aynı gün, ekran görüntüsü)
+Kullanıcı ekran görüntüsü paylaştı: dalga efekti sağa kaymış görünüyordu. Kök sebep: Yard
+Engine'in tüm kartlarda paylaştığı `Vector2(1152, 667)` — bu, oyun dünyasının MATEMATİKSEL
+merkezi (Avlu sınırı kod içinde x:385-1920) ama sağ UI paneli (x:1630-1920, `game_scene.tscn`
+`ColorRect` ile doğrulandı) o alanın bir kısmını kapatıyor — oyuncunun GERÇEKTEN GÖRDÜĞÜ alan
+x:385-1630. Küçük/ince VFX'lerde bu fark fark edilmiyordu, Monsoon'un büyük halkası belirgin
+kıldı. Fix: `_vfx_yard_engine_to_point()`'e opsiyonel `engine_pos` parametresi eklendi
+(varsayılan hâlâ `Vector2(1152,667)` — diğer TÜM Yard Engine kartları etkilenmedi), Monsoon
+bu parametreyi ve ripple'ın kendi konumunu (`_play_monsoon_vfx(pos)`, artık parametre alıyor)
+`Vector2(1007.5, 667.0)` (görünür alanın gerçek merkezi) olarak veriyor — SADECE Monsoon
+etkilendi.

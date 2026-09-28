@@ -7,30 +7,30 @@ Aşağıdakilerin hiçbirinin sesi henüz yok. Arama anahtar kelimeleri (freesou
 ---
 ## 1. MENÜ / UI
 
-| #   | Olay                                                    | Öncelik | Arama                   |
-| --- | ------------------------------------------------------- | ------- | ----------------------- |
-| 1   | Buton hover (ana menü, pause, karakter seçimi, ayarlar) | P1      | ui hover, blip          |
-| 2   | Buton tıklama / onay                                    | P1      | ui click, confirm       |
-| 3   | Geri / iptal butonu                                     | P2      | ui back, cancel         |
-| 4   | Çıkış butonu (pembe)                                    | P3      | power down              |
-| 5   | Yeni Oyun onay penceresi açılışı (Evet/Hayır)           | P3      | ui warning              |
-| 6   | Ayarlar sürgüsü kaydırma (tık tık)                      | P3      | slider tick             |
-| 7   | Karakter seçimi: karakter değiştirme (sol/sağ)          | P2      | ui swipe, select        |
-| 8   | Karakter seçimi: onay (Confirm)                         | P2      | ui start, confirm heavy |
-| 9   | Chip COLLECT (milestone ödülü)                          | P2      | coin collect, reward    |
-| 10  | Chip mağazası: satın alma / yetersiz bakiye             | P2      | purchase, error buzz    |
-| 11  | Başarım / milestone tamamlandı                          | P2      | achievement unlock      |
-| 12  | Credits ekranı açılışı                                  | P3      | ui open                 |
+| #   | Olay                                                    | Öncelik | Arama                     |
+| --- | ------------------------------------------------------- | ------- | ------------------------- |
+| 1   | Buton hover (ana menü, pause, karakter seçimi, ayarlar) | P1      | ui hover, blip +          |
+| 2   | Buton tıklama / onay                                    | P1      | ui click, confirm +       |
+| 3   | Geri / iptal butonu                                     | P2      | ui back, cancel +         |
+| 4   | Çıkış butonu (pembe)                                    | P3      | power down +              |
+| 5   | Yeni Oyun onay penceresi açılışı (Evet/Hayır)           | P3      | ui warning +              |
+| 6   | Ayarlar sürgüsü kaydırma (tık tık)                      | P3      | slider tick +             |
+| 7   | Karakter seçimi: karakter değiştirme (sol/sağ)          | P2      | ui swipe, select +        |
+| 8   | Karakter seçimi: onay (Confirm)                         | P2      | ui start, confirm heavy + |
+| 9   | Chip COLLECT (milestone ödülü)                          | P2      | coin collect, reward +    |
+| 10  | Chip mağazası: satın alma / yetersiz bakiye             | P2      | purchase, error buzz +    |
+| 11  | Başarım / milestone tamamlandı                          | P2      | achievement unlock +      |
+| 12  | Credits ekranı açılışı                                  | P3      | ui open +                 |
 
 ## 2. PAUSE / GENEL AKIŞ
 
-| #   | Olay                          | Öncelik | Arama              |
-| --- | ----------------------------- | ------- | ------------------ |
-| 13  | Oyunu duraklat (pause aç)     | P2      | pause in           |
-| 14  | Devam et (pause kapat)        | P2      | pause out          |
-| 15  | Run başlangıcı (sahaya giriş) | P2      | game start, whoosh |
-| 16  | Game Over / ölüm ekranı       | P1      | game over, defeat  |
-| 17  | Zafer / run bitişi (varsa)    | P3      | victory jingle     |
+| #   | Olay                          | Öncelik | Arama                |
+| --- | ----------------------------- | ------- | -------------------- |
+| 13  | Oyunu duraklat (pause aç)     | P2      | pause in +           |
+| 14  | Devam et (pause kapat)        | P2      | pause out +          |
+| 15  | Run başlangıcı (sahaya giriş) | P2      | game start, whoosh + |
+| 16  | Game Over / ölüm ekranı       | P1      | game over, defeat +  |
+| 17  | Zafer / run bitişi (varsa)    | P3      | victory jingle +     |
 
 ## 3. KART SEÇİM EKRANI (level-up)
 
@@ -63,28 +63,28 @@ Aşağıdakilerin hiçbirinin sesi henüz yok. Arama anahtar kelimeleri (freesou
 
 ## 5. CALAMITY — VECTOR (7)
 
-| #   | Kart                | Ses ihtiyacı                                                                | Arama                                          |
-| --- | ------------------- | --------------------------------------------------------------------------- | ---------------------------------------------- |
-| 37  | Gravitational Force | Vorteks açılış + 5sn süren düşük uğultu (loop) + kapanış                    | gravity well, black hole hum                   |
-| 38  | Shockwave           | Geniş şok dalgası patlaması                                                 | shockwave, explosion boom                      |
-| 39  | Full Breach         | Armor kırılma + güç yükselişi; 8sn aktifken hafif enerji loop'u (opsiyonel) | armor break, power surge                       |
-| 40  | Momentum Burst      | Hızlanma / elektriklenme (silah üzerinde kıvılcım loop'u, 10sn)             | speed boost, electric crackle                  |
-| 41  | Rampart Collapse    | Şarj toplanması → fırlatma → çarpma patlaması (3 aşama)                     | charge up, projectile launch, impact explosion |
-| 42  | WormHole            | Portal açılış + emme (düşmanlar çekilirken) + kapanış                       | portal open, suction, warp                     |
-| 43  | Siege Rain          | 14 kez meteor düşüşü (kısa varyasyonlar, 3-4 farklı) + çarpma               | meteor fall, impact, rumble                    |
+| #   | Kart                | Ses ihtiyacı                                                                | Arama                                            |
+| --- | ------------------- | --------------------------------------------------------------------------- | ------------------------------------------------ |
+| 37  | Gravitational Force | Vorteks açılış + 5sn süren düşük uğultu (loop) + kapanış                    | gravity well, black hole hum +                   |
+| 38  | Shockwave           | Geniş şok dalgası patlaması                                                 | shockwave, explosion boom+                       |
+| 39  | Full Breach         | Armor kırılma + güç yükselişi; 8sn aktifken hafif enerji loop'u (opsiyonel) | armor break, power surge +                       |
+| 40  | Momentum Burst      | Hızlanma / elektriklenme (silah üzerinde kıvılcım loop'u, 10sn)             | speed boost, electric crackle +                  |
+| 41  | Rampart Collapse    | Şarj toplanması → fırlatma → çarpma patlaması (3 aşama)                     | charge up, projectile launch, impact explosion + |
+| 42  | WormHole            | Portal açılış + emme (düşmanlar çekilirken) + kapanış                       | portal open, suction, warp +                     |
+| 43  | Siege Rain          | 14 kez meteor düşüşü (kısa varyasyonlar, 3-4 farklı) + çarpma               | meteor fall, impact, rumble +                    |
 
 ## 6. CALAMITY — LEILA (8)
 
-| # | Kart | Ses ihtiyacı | Arama |
-|---|---|---|---|
-| 44 | Lightning | Şimşek çakması + gök gürültüsü | lightning strike |
-| 45 | Flame Zone | Alev alanı açılış + 3sn yanma loop'u | fire ignite, flame burst |
-| 46 | Freezing Cold | Hortum girişi + süpürme rüzgarı (loop) + donma | blizzard wind, ice freeze |
-| 47 | Monsoon | Yağmur başlangıcı (tüm saha) | rain, downpour |
-| 48 | EMP Pulse | EMP patlaması + her isabet alan düşmanda şimşek | emp pulse, electric discharge |
-| 49 | Volcanic Rift | Yer yarılması + lav erüpsiyonu (4sn) | volcano eruption, lava |
-| 50 | Thunderstorm | 5sn boyunca her saniye 2 şimşek (kısa varyasyonlar) | thunder crack |
-| 51 | Wildfire | Yanan düşmanlar patlar (küçük patlamalar, çoklu) | fire explosion, ignite |
+| #   | Kart          | Ses ihtiyacı                                        | Arama                         |
+| --- | ------------- | --------------------------------------------------- | ----------------------------- |
+| 44  | Lightning     | Şimşek çakması + gök gürültüsü                      | lightning strike              |
+| 45  | Flame Zone    | Alev alanı açılış + 3sn yanma loop'u                | fire ignite, flame burst      |
+| 46  | Freezing Cold | Hortum girişi + süpürme rüzgarı (loop) + donma      | blizzard wind, ice freeze     |
+| 47  | Monsoon       | Yağmur başlangıcı (tüm saha)                        | rain, downpour                |
+| 48  | EMP Pulse     | EMP patlaması + her isabet alan düşmanda şimşek     | emp pulse, electric discharge |
+| 49  | Volcanic Rift | Yer yarılması + lav erüpsiyonu (4sn)                | volcano eruption, lava        |
+| 50  | Thunderstorm  | 5sn boyunca her saniye 2 şimşek (kısa varyasyonlar) | thunder crack                 |
+| 51  | Wildfire      | Yanan düşmanlar patlar (küçük patlamalar, çoklu)    | fire explosion, ignite        |
 
 ## 7. CALAMITY — CYCLONE (8)
 

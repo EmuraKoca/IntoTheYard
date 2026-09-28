@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bajen7ygs43o2"
-path="res://.godot/imported/rain_drops-04.png-76b302e813219becdc376fa8054da24a.ctex"
+uid="uid://1ti3dki2xpy7"
+path="res://.godot/imported/frame_028.png-de47954e5d7a4dc49db993f2c7150ecd.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/VFX/monsoonVFX/rain_drops-04.png"
-dest_files=["res://.godot/imported/rain_drops-04.png-76b302e813219becdc376fa8054da24a.ctex"]
+source_file="res://assets/VFX/monsoonVFX/frame_028.png"
+dest_files=["res://.godot/imported/frame_028.png-de47954e5d7a4dc49db993f2c7150ecd.ctex"]
 
 [params]
 
