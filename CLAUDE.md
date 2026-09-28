@@ -3120,3 +3120,27 @@ oynatma hızı `frame_count / duration` ile yeniden hesaplanıyor (14/2.357 ≈ 
 yürüme 10fps'in çok altında, göze belirgin bir yavaşlık/slow-motion hissi veriyor).
 `death_anim_duration()` hâlâ aynı süreyi döndürdüğü için iris kapanma süresi (game_scene.gd,
 `close_duration = death_dur`) otomatik senkron kaldı, ayrı bir değişikliğe gerek kalmadı.
+
+## Leila ölüm animasyonu bağlandı (2026-09-28, aynı gün, oyunda denenmedi)
+Vector ile aynı desende: `assets/charsRedesign/leila/animations/death/` (14 kare, Vector'unkinden
+farklı olarak `animations/` altında, doğrudan `charsRedesign/leila/` altında değil). `play_death()`
+genelleştirildi — artık `character_type`'a göre Vector ya da Leila'nın sprite'ını oynatıyor.
+Leila'da ayrı bir `_leila_dead` bayrağına gerek kalmadı: `_update_leila_animation()` zaten
+`_leila_oneshot` iken erken çıkıyor ve Vector'daki gibi "animasyon durunca idle'a geri dön"
+şeklinde bir 2. bekçi (`_process`'teki vector-özel blok) Leila'da hiç yok — tek gereken
+`_on_leila_anim_finished()`'a `animation == "death"` guard'ı eklemekti (oneshot flag'i
+sıfırlanmasın, son karede donuk kalsın). Süre/hız mantığı Vector'la birebir aynı:
+`LEILA_DEATH_ANIM_FRAME_COUNT` (14) / paylaşımlı `DEATH_ANIM_DURATION` (2.357sn) = fps,
+`death_anim_duration()` her iki karakter için de aynı sabit süreyi döndürüyor, iris zaten
+buna göre senkronlanıyor (game_scene.gd tarafında değişiklik gerekmedi). Cyclone'un ölüm
+animasyonu hâlâ yok, gelince aynı desenle eklenecek.
+
+## Cyclone ölüm animasyonu bağlandı (2026-09-28, aynı gün, oyunda denenmedi)
+Vector/Leila ile aynı desende: `assets/charsRedesign/cyclone/animations/death/` (14 kare).
+Cyclone'un Leila'dan farkı: hiçbir "tek seferlik animasyon" (oneshot) mekanizması yoktu —
+`_update_cyclone_animation()` her frame doğrudan `velocity`'e göre walk/idle atıyordu, ölümü
+ezmemesi için yeni `_cyclone_dead` bayrağı eklendi (Vector'daki `_vector_dead`'in eşdeğeri).
+`play_death()`'e üçüncü dal eklendi. Süre/hız Vector/Leila ile birebir aynı: `CYCLONE_DEATH_
+ANIM_FRAME_COUNT` (14) / paylaşımlı `DEATH_ANIM_DURATION` (2.357sn). **3 karakterin de ölüm
+animasyonu artık bağlı** — `game_scene.gd` tarafında hiçbir değişiklik gerekmedi, `play_death()`
+zaten `character_type`'a bakıp doğru sprite'ı seçiyor.

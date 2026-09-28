@@ -57,8 +57,11 @@ var has_next_one: bool  = false
 var _anim_dir: String = "N"
 var _vector_oneshot: bool = false
 var _vector_dead: bool = false
-const DEATH_ANIM_FRAME_COUNT: int = 14
-const DEATH_ANIM_DURATION: float = 2.357   # eskiden 33 kare × 14fps — slow-motion için toplam süre sabit tutuluyor, fps buna göre yeniden hesaplanıyor
+var _cyclone_dead: bool = false
+const DEATH_ANIM_FRAME_COUNT: int = 14           # Vector
+const LEILA_DEATH_ANIM_FRAME_COUNT: int = 14     # Leila
+const CYCLONE_DEATH_ANIM_FRAME_COUNT: int = 14   # Cyclone
+const DEATH_ANIM_DURATION: float = 2.357   # her iki karakterde de sabit toplam süre — fps kare sayısına göre yeniden hesaplanıp slow-motion elde ediliyor
 
 # ── Vector Armor & Stack sistemi ─────────────────────────────────────────────
 var has_armor_core: bool = false
@@ -843,6 +846,12 @@ func _setup_cyclone_sprite() -> void:
 		for i in range(count):
 			frames.add_frame(key, load(base + "Crouched_Walking/" + dir_folder[d] + "/frame_%03d.png" % i))
 
+	frames.add_animation("death")
+	frames.set_animation_speed("death", CYCLONE_DEATH_ANIM_FRAME_COUNT / DEATH_ANIM_DURATION)
+	frames.set_animation_loop("death", false)
+	for i in range(CYCLONE_DEATH_ANIM_FRAME_COUNT):
+		frames.add_frame("death", load(base + "death/frame_%03d.png" % i))
+
 	sprite.sprite_frames  = frames
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	sprite.scale          = Vector2(0.71, 0.71)
@@ -919,6 +928,12 @@ func _setup_leila_sprite() -> void:
 		for i in range(start, start + 8):
 			frames.add_frame(key, load(base + "walk/" + dir_folder[d] + "/frame_%03d.png" % i))
 
+	frames.add_animation("death")
+	frames.set_animation_speed("death", LEILA_DEATH_ANIM_FRAME_COUNT / DEATH_ANIM_DURATION)
+	frames.set_animation_loop("death", false)
+	for i in range(LEILA_DEATH_ANIM_FRAME_COUNT):
+		frames.add_frame("death", load(base + "death/frame_%03d.png" % i))
+
 	sprite.sprite_frames  = frames
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	sprite.scale          = Vector2(0.71, 0.71)
@@ -939,6 +954,8 @@ func _update_leila_animation() -> void:
 			sprite.play("idle_N_intro")
 
 func _update_cyclone_animation() -> void:
+	if _cyclone_dead:
+		return
 	_cyclone_crouched = Input.is_key_pressed(KEY_CTRL)
 	var sprite: AnimatedSprite2D = $CycloneSprite
 	var anim: String
@@ -958,6 +975,8 @@ func _play_leila_oneshot(anim_name: String) -> void:
 
 func _on_leila_anim_finished() -> void:
 	var sprite: AnimatedSprite2D = $LeilaSprite
+	if sprite.animation == "death":
+		return   # son karede donuk kalsın, oneshot sıfırlanmasın
 	if sprite.animation == "idle_N_intro":
 		sprite.play("idle_N_loop")
 		return
@@ -988,15 +1007,29 @@ func _update_vector_animation() -> void:
 
 
 func play_death() -> bool:
-	if character_type != "vector":
-		return false
-	if not $VectorSprite.sprite_frames.has_animation("death"):
-		return false
-	_vector_dead = true
-	_vector_oneshot = true
-	$VectorSprite.process_mode = Node.PROCESS_MODE_ALWAYS
-	$VectorSprite.play("death")
-	return true
+	if character_type == "vector":
+		if not $VectorSprite.sprite_frames.has_animation("death"):
+			return false
+		_vector_dead = true
+		_vector_oneshot = true
+		$VectorSprite.process_mode = Node.PROCESS_MODE_ALWAYS
+		$VectorSprite.play("death")
+		return true
+	elif character_type == "leila":
+		if not $LeilaSprite.sprite_frames.has_animation("death"):
+			return false
+		_leila_oneshot = true
+		$LeilaSprite.process_mode = Node.PROCESS_MODE_ALWAYS
+		$LeilaSprite.play("death")
+		return true
+	elif character_type == "cyclone":
+		if not $CycloneSprite.sprite_frames.has_animation("death"):
+			return false
+		_cyclone_dead = true
+		$CycloneSprite.process_mode = Node.PROCESS_MODE_ALWAYS
+		$CycloneSprite.play("death")
+		return true
+	return false
 
 func death_anim_duration() -> float:
 	return DEATH_ANIM_DURATION
