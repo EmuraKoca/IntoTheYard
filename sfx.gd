@@ -31,12 +31,14 @@ func play(sound: String) -> void:
 	_play_stream(_cache[sound], VOLUME.get(sound, 0.0))
 
 # UI klasörü dışındaki tam yoldan tek seferlik ses (örn. "res://assets/sfx/characters/death.ogg")
-func play_path(path: String, volume_db: float = 0.0) -> void:
+# pitch_scale < 1.0 sesi yavaşlatıp fiziksel olarak uzatır (dosyaya dokunmadan) — kısa kalan
+# seslerde (örn. Gravitational Force) kullanılabilir.
+func play_path(path: String, volume_db: float = 0.0, pitch_scale: float = 1.0) -> void:
 	if not _cache.has(path):
 		_cache[path] = load(path) if ResourceLoader.exists(path) else null
-	_play_stream(_cache[path], volume_db)
+	_play_stream(_cache[path], volume_db, pitch_scale)
 
-func _play_stream(stream: AudioStream, volume_db: float) -> void:
+func _play_stream(stream: AudioStream, volume_db: float, pitch_scale: float = 1.0) -> void:
 	if stream == null:
 		return
 	var p := _players[_next]
@@ -44,6 +46,7 @@ func _play_stream(stream: AudioStream, volume_db: float) -> void:
 	p.bus = "SFX" if AudioServer.get_bus_index("SFX") >= 0 else "Master"   # SFX bus'ı ana menüde çalışırken oluşturulur
 	p.stream = stream
 	p.volume_db = volume_db
+	p.pitch_scale = pitch_scale
 	p.play()
 
 func _on_node_added(node: Node) -> void:

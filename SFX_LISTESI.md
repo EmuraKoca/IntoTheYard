@@ -63,15 +63,15 @@ Aşağıdakilerin hiçbirinin sesi henüz yok. Arama anahtar kelimeleri (freesou
 
 ## 5. CALAMITY — VECTOR (7)
 
-| # | Kart | Ses ihtiyacı | Arama |
-|---|---|---|---|
-| 37 | Gravitational Force | Vorteks açılış + 5sn süren düşük uğultu (loop) + kapanış | gravity well, black hole hum |
-| 38 | Shockwave | Geniş şok dalgası patlaması | shockwave, explosion boom |
-| 39 | Full Breach | Armor kırılma + güç yükselişi; 8sn aktifken hafif enerji loop'u (opsiyonel) | armor break, power surge |
-| 40 | Momentum Burst | Hızlanma / elektriklenme (silah üzerinde kıvılcım loop'u, 10sn) | speed boost, electric crackle |
-| 41 | Rampart Collapse | Şarj toplanması → fırlatma → çarpma patlaması (3 aşama) | charge up, projectile launch, impact explosion |
-| 42 | WormHole | Portal açılış + emme (düşmanlar çekilirken) + kapanış | portal open, suction, warp |
-| 43 | Siege Rain | 14 kez meteor düşüşü (kısa varyasyonlar, 3-4 farklı) + çarpma | meteor fall, impact, rumble |
+| #   | Kart                | Ses ihtiyacı                                                                | Arama                                          |
+| --- | ------------------- | --------------------------------------------------------------------------- | ---------------------------------------------- |
+| 37  | Gravitational Force | Vorteks açılış + 5sn süren düşük uğultu (loop) + kapanış                    | gravity well, black hole hum                   |
+| 38  | Shockwave           | Geniş şok dalgası patlaması                                                 | shockwave, explosion boom                      |
+| 39  | Full Breach         | Armor kırılma + güç yükselişi; 8sn aktifken hafif enerji loop'u (opsiyonel) | armor break, power surge                       |
+| 40  | Momentum Burst      | Hızlanma / elektriklenme (silah üzerinde kıvılcım loop'u, 10sn)             | speed boost, electric crackle                  |
+| 41  | Rampart Collapse    | Şarj toplanması → fırlatma → çarpma patlaması (3 aşama)                     | charge up, projectile launch, impact explosion |
+| 42  | WormHole            | Portal açılış + emme (düşmanlar çekilirken) + kapanış                       | portal open, suction, warp                     |
+| 43  | Siege Rain          | 14 kez meteor düşüşü (kısa varyasyonlar, 3-4 farklı) + çarpma               | meteor fall, impact, rumble                    |
 
 ## 6. CALAMITY — LEILA (8)
 

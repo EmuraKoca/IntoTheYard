@@ -3153,3 +3153,47 @@ seferlik ses — `play()`'in altyapısı `_play_stream()`'e çıkarıldı, ikisi
 pause'dan ÖNCE) gameplay müziği (`music.name = "GameplayMusic"`, yeni verildi) durduruluyor,
 ardından `Sfx.play_path("res://assets/sfx/characters/death.ogg")` bir kez çalıyor (loop yok,
 SFX bus'ı pause'da da akıyor — `Sfx` havuzu zaten `PROCESS_MODE_ALWAYS`).
+
+## Vector Calamity + Yard Engine + Black Market sesleri bağlandı (2026-09-28, oyunda denenmedi)
+Kullanıcı `assets/sfx/calamitys/vector/` (6 dosya), `assets/sfx/engines/yardEngineImpact.ogg`,
+`assets/sfx/ui/blackMarketEntrance.ogg` ekledi (hepsi Vorbis, sorunsuz). Tümü tek seferlik
+(`Sfx.play_path`), loop yok:
+- **Yard Engine ateşleme sesi** (`yardEngineImpact.ogg`): hem `_vfx_yard_engine()`'in
+  `_fire_bolts` hem `_vfx_yard_engine_to_point()`'in `_fire_bolt` closure'unda,
+  `_screen_shake_strong()` ile aynı anda — makineyi kullanan TÜM Calamity'lerde ortak
+  (Data Storm, Backdoor, Systemic Failure, System Crash, Wildfire, Gravitational Force,
+  WormHole).
+- **Gravitational Force + WormHole** (`gravatioanlForceWormHole.ogg`, isim kullanıcının
+  kendi yazımı — dosya adı bu şekilde bırakıldı): ikisi de `_vfx_yard_engine_to_point`
+  kullanıyor, `on_arrival` closure'ının (`_run_pull` / `_run_wormhole`) en başında, asıl
+  görsel efekt (vorteks/solucan deliği) başlamadan hemen önce çalıyor.
+- **Shockwave** (`shockwave.ogg`): `_activate_shockwave()` başında.
+- **Full Breach** (`fullBreach.ogg`): `_activate_full_breach()` başında.
+- **Momentum Burst** (`momentumBurst.ogg`): `_activate_momentum_burst()`'te stack kontrolü
+  geçince (stack yoksa ses de çalmıyor).
+- **Rampart Collapse** (`rampartCollapse.ogg`): `_activate_rampart_collapse()` başında.
+- **Siege Rain** (`siegeRain.ogg`): `_activate_siege_rain()` başında (14sn'lik darbe
+  dizisinin başlangıcında bir kez).
+- **Black Market** (`blackMarketEntrance.ogg`): `character_select.gd::_open_shop()` başında
+  — buton zaten genel `menuClick` sesini çalıyor (Sfx'in otomatik Button hover/click'i),
+  bu ikisinin üzerine ekleniyor.
+
+## Gravitational Force / WormHole sesi uzatıldı (2026-09-28, oyunda denenmedi)
+Kullanıcı sesin kısa kaldığını söyledi (dosya 4.7sn, ama kısa hissettiriyordu). `Sfx.play_path()`'e
+`pitch_scale` parametresi eklendi (dosyaya dokunmadan oynatma hızını yavaşlatıp fiziksel olarak
+uzatıyor). `gravatioanlForceWormHole.ogg` artık `0.8` pitch_scale ile çalıyor (~4.7sn → ~5.9sn,
+5sn'lik çekim/solucan deliği süresine daha yakın), yan etki olarak biraz daha derin/ağır bir ton
+— vorteks hissine uyuyor. İhtiyaç olursa başka seslerde de aynı parametre kullanılabilir.
+
+## Düzeltme: Siege Rain sesi her darbede çalsın (2026-09-28, aynı gün)
+Kullanıcı: Siege Rain'in mekaniği diğerlerinden farklı (14sn boyunca 14 ayrı darbe) — ses
+aktivasyon anında bir kez değil, **her düşen Siege Core'un isabet anında** çalmalı. Ses çağrısı
+`_activate_siege_rain()`'in başından `_spawn_siege_rain_impact()`'in içine, `_screen_shake()`
+ile aynı satıra (isabet + hasar uygulanan an) taşındı — artık 14 darbenin her birinde ayrı
+ayrı çalıyor.
+
+### Düzeltme 2: Siege Rain sesi düşüşün başında çalıyor (2026-09-28, aynı gün)
+Kullanıcı: ses dosyasının kendisi zaten düşme+çarpma sırasını içeriyor (başta düşüş sesi,
+sonda impact) — bu yüzden isabet anında DEĞİL, Core'un düşmeye BAŞLADIĞI anda çalmalı ki
+sesin kendi impact kısmı gerçek çarpma anıyla çakışsın. Çağrı `_spawn_siege_rain_impact()`'in
+başına, `burst.play("fall")`'dan hemen önce taşındı.

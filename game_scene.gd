@@ -1199,6 +1199,13 @@ func _ready() -> void:
 		for _ci in range(min(_cal_start, max_calamity_slots)):
 			calamity_slots.append(_cal_pool[_ci])
 
+	# DEBUG: Vector'un son Calamity'si (Siege Rain) test için otomatik slota ekleniyor.
+	# Test bitince bu blok kaldırılmalı.
+	calamity_slots.clear()
+	for _dbg_cal in ["🌧️"]:
+		if calamity_slots.size() < max_calamity_slots:
+			calamity_slots.append(_dbg_cal)
+
 	update_ui()
 
 	$UI/CalamityCircle.visible = false
@@ -3281,6 +3288,7 @@ func show_upgrade_menu() -> void:
 
 func _activate_gravity(pos: Vector2) -> void:
 	var _run_pull := func():
+		Sfx.play_path("res://assets/sfx/calamitys/vector/gravatioanlForceWormHole.ogg", 0.0, 0.8)
 		_vfx_gravity(pos)
 		var duration = 5.0
 		var elapsed = 0.0
@@ -3621,6 +3629,7 @@ func _vfx_yard_engine(apply_fn: Callable, bolt_color: Color, fallback_flash: Col
 	# ortadan kalkıyor.
 	var _fire_bolts := func():
 		_screen_shake_strong()
+		Sfx.play_path("res://assets/sfx/engines/yardEngineImpact.ogg")
 		var _targets: Array = []
 		for subject in _yard_subjects():
 			if filter_fn.is_valid() and not filter_fn.call(subject): continue
@@ -3690,6 +3699,7 @@ func _vfx_yard_engine_to_point(get_target_pos: Callable, bolt_color: Color, on_a
 	var _bolt_fired := false
 	var _fire_bolt := func():
 		_screen_shake_strong()
+		Sfx.play_path("res://assets/sfx/engines/yardEngineImpact.ogg")
 		var target_pos: Vector2 = get_target_pos.call()
 		_vfx_engine_bolt(yard_center, target_pos, bolt_color)
 		on_arrival.call()
@@ -3805,6 +3815,7 @@ func _clear_mirror_image() -> void:
 
 # ── Vector Calamity ───────────────────────────────────────────────────────────
 func _activate_shockwave() -> void:
+	Sfx.play_path("res://assets/sfx/calamitys/vector/shockwave.ogg")
 	var dmg: int = max(1, player_armor / 2)
 	for subject in get_tree().get_nodes_in_group("subjects"):
 		if is_instance_valid(subject) and subject.global_position.x >= 385.0:
@@ -3853,6 +3864,7 @@ func _vfx_shockwave() -> void:
 func _activate_full_breach() -> void:
 	var p := get_node_or_null("Player")
 	if p == null: return
+	Sfx.play_path("res://assets/sfx/calamitys/vector/fullBreach.ogg")
 	player_armor = 0
 	_update_armor_ui()
 	p.full_breach_mult = 2.5
@@ -3894,6 +3906,7 @@ func _activate_momentum_burst() -> void:
 	if p == null: return
 	var stacks: int = p.momentum_stacks
 	if stacks <= 0: return
+	Sfx.play_path("res://assets/sfx/calamitys/vector/momentumBurst.ogg")
 	p.momentum_stacks = 0
 	p.momentum_burst_bonus = float(stacks) * 0.05
 	p._momentum_burst_timer = 10.0
@@ -3904,6 +3917,7 @@ func _activate_momentum_burst() -> void:
 		launcher.play_weapon_burst()
 
 func _activate_rampart_collapse(target_pos: Vector2) -> void:
+	Sfx.play_path("res://assets/sfx/calamitys/vector/rampartCollapse.ogg")
 	var p := get_node_or_null("Player")
 	if p == null: return
 	player_armor = 0
@@ -4035,6 +4049,7 @@ func _activate_wormhole(target_pos: Vector2) -> void:
 		return target_pos
 
 	var _run_wormhole := func():
+		Sfx.play_path("res://assets/sfx/calamitys/vector/gravatioanlForceWormHole.ogg", 0.0, 0.8)
 		var worm_pos: Vector2 = _get_worm_pos.call()
 		var duration := 5.0
 
@@ -4174,6 +4189,8 @@ func _spawn_siege_rain_impact(pos: Vector2, dmg: int, radius: float) -> void:
 	var _total_frames := 0
 	while ResourceLoader.exists("res://assets/VFX/calamitys/siegeRain/frame_%03d.png" % _total_frames):
 		_total_frames += 1
+
+	Sfx.play_path("res://assets/sfx/calamitys/vector/siegeRain.ogg")
 
 	if _total_frames > 0:
 		var burst := AnimatedSprite2D.new()

@@ -611,6 +611,7 @@ func _refresh_header_buttons() -> void:
 		ab.add_theme_color_override("font_color", Color(1.0, 0.85, 0.0) if pending > 0 else Color(0.7, 0.7, 0.75))
 
 func _open_shop() -> void:
+	Sfx.play_path("res://assets/sfx/ui/blackMarketEntrance.ogg")
 	var char_id: String = CHARS[_cur]["id"]
 	var char_col: Color = CHARS[_cur]["color"]
 
