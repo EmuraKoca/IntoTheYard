@@ -2511,11 +2511,15 @@ func player_damaged(amount: int = 1) -> void:
 	player_hp -= amount
 	update_ui()
 	if player_hp <= 0:
+		var _dying_p := get_node_or_null("Player")
+		var _death_dur := 0.0
+		if _dying_p and _dying_p.has_method("play_death") and _dying_p.play_death():
+			_death_dur = _dying_p.death_anim_duration()
 		get_tree().paused = true
-		show_game_over()
+		show_game_over(_death_dur)
 
 # Ölüm: karaktere doğru kapanan siyah daire (iris-out), sonra Game Over ekranı
-func _play_death_iris() -> void:
+func _play_death_iris(close_duration: float = 1.2, hold_time: float = 0.4) -> void:
 	var iris := CanvasLayer.new()
 	iris.layer = 100
 	iris.process_mode = Node.PROCESS_MODE_ALWAYS
@@ -2540,13 +2544,16 @@ void fragment() {
 	rect.material = mat
 	iris.add_child(rect)
 	var tw := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-	tw.tween_method(func(r: float): mat.set_shader_parameter("radius", r), 1400.0, 0.0, 1.2)		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.tween_method(func(r: float): mat.set_shader_parameter("radius", r), 1400.0, 0.0, close_duration)		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	await tw.finished
-	await get_tree().create_timer(0.5).timeout
+	await get_tree().create_timer(hold_time).timeout
 	iris.queue_free()
 
-func show_game_over() -> void:
-	await _play_death_iris()
+func show_game_over(death_dur: float = 0.0) -> void:
+	# Ölüm animasyonu iris-out ile AYNI ANDA oynar (play_death() zaten daha önce
+	# çağrıldı) — daire tam ölüm animasyonu bitince kapanacak şekilde ölçekleniyor.
+	var close_duration: float = death_dur if death_dur > 0.0 else 1.2
+	await _play_death_iris(close_duration)
 
 	var canvas = CanvasLayer.new()
 	canvas.process_mode = Node.PROCESS_MODE_ALWAYS

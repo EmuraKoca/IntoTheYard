@@ -3080,3 +3080,43 @@ Yeni autoload `Sfx` (`sfx.gd`, `project.godot`): 8'lik ses havuzu, pause'da da �
 ## Ölüm iris-out efekti (2026-09-26, oyunda denenmedi)
 `show_game_over()` artık önce `_play_death_iris()` çağırıyor: oyuncunun ekran konumunda (`get_global_transform_with_canvas().origin`) merkezlenen sert kenarlı siyah daire shader'ı (CanvasLayer 100, `step()` ile), yarıçap 1400→0 1.2sn (QUAD ease-in), ardından 0.5sn siyah bekleme, sonra Game Over ekranı. Sahne donuk (paused). Ölüm sesi henüz yok (SFX_LISTESI #122).
 - Ölü kod temizlendi (2026-09-26): `player.gd` `play_death()` + `_vector_dead` silindi (tscn'de 'death' animasyonu yoktu, hiç çağrılmıyordu).
+
+## Vector ölüm animasyonu bağlandı (2026-09-28, oyunda denenmedi)
+Kullanıcı `assets/charsRedesign/vector/death/` altına 33 frame'lik gerçek ölüm animasyonu
+ekledi. `player.gd`'ye geri eklendi: `_vector_dead` bayrağı + `play_death() -> bool` (SpriteFrames'e
+"death" animasyonu — 14fps, non-loop, 33 frame — eklendi `_setup_vector_sprite_new()`'de) +
+`death_anim_duration()`. `_process`/`_update_vector_animation` artık `_vector_dead` iken sprite'ı
+ezmiyor. **Pause sırasında oynaması için**: `play_death()` çağrıldığında SADECE `$VectorSprite`
+node'unun `process_mode`'u `ALWAYS` yapılıyor (Player'ın tamamı değil — Player paused kalınca
+input/hareket/fizik donuyor, sadece AnimatedSprite2D'nin kendi iç oynatma mekanizması pause'u
+görmezden geliyor).
+
+`game_scene.gd::player_damaged()`: HP 0'a inince artık `get_tree().paused=true`'dan ÖNCE
+`play_death()` çağrılıyor (Vector değilse veya "death" animasyonu yoksa `false` dönüp no-op —
+Leila/Cyclone şimdilik hâlâ donuk kalıyor, animasyonları gelince aynı desenle eklenecek).
+`show_game_over(death_dur)` artık iris-out'tan ÖNCE `death_dur` (33/14 ≈ 2.36sn) kadar bekliyor —
+animasyon bitene kadar sahne "donmuş" görünüyor ama aslında Vector'un ölüm animasyonu oynuyor,
+ardından iris kapanıp Game Over ekranı geliyor.
+
+### Düzeltme: iris ile ölüm animasyonu paralel oynuyor (2026-09-28, aynı gün)
+Kullanıcı: "ölürken aynı sırada iris de oynasa". Eskiden iris, `death_dur` (≈2.36sn) kadar
+bekleyip ONDAN SONRA başlıyordu. Artık `play_death()` çağrıldığı anda hem ölüm animasyonu
+HEM iris aynı anda başlıyor — `_play_death_iris(hold_time)` 1.2sn'de kapanıyor, kapandıktan
+sonra `hold_time = max(0.5, death_dur - 1.2)` kadar siyah bekliyor (yani toplam siyah-kalma
+süresi ≥ ölüm animasyonu süresi) — animasyon iris'in arkasında saklı bitiyor, iris açılıp
+geri sahneyi göstermeden direkt Game Over ekranına geçiyor.
+
+### Düzeltme 2: iris kapanma süresi ölüm animasyonuna eşitlendi (2026-09-28, aynı gün)
+Kullanıcı: "frame'lerin hepsi oynamadan iris kapanıyor". Sabit 1.2sn yerine daire artık
+`death_dur`'a (33 frame ≈ 2.36sn) göre kapanıyor — `_play_death_iris(close_duration,
+hold_time=0.4)`, animasyon TAM bitince daire de tam kapanıyor, ardından 0.4sn sabit siyah
+bekleme + Game Over ekranı.
+
+### 14 kareye indirilen animasyon — slow motion (2026-09-28, aynı gün)
+Kullanıcı ölüm animasyonunu 33'ten 14 kareye indirdi ama "iris kapanma süresi aynı kalsın,
+animasyon yavaşlasın (slow motion)" istedi. `DEATH_ANIM_FRAME_COUNT`/`DEATH_ANIM_DURATION`
+sabitleri ayrıştırıldı — toplam süre (2.357sn, eski 33/14fps ile birebir) sabit tutulup
+oynatma hızı `frame_count / duration` ile yeniden hesaplanıyor (14/2.357 ≈ 5.94fps — normal
+yürüme 10fps'in çok altında, göze belirgin bir yavaşlık/slow-motion hissi veriyor).
+`death_anim_duration()` hâlâ aynı süreyi döndürdüğü için iris kapanma süresi (game_scene.gd,
+`close_duration = death_dur`) otomatik senkron kaldı, ayrı bir değişikliğe gerek kalmadı.

@@ -56,6 +56,9 @@ var has_next_one: bool  = false
 # Vector animation
 var _anim_dir: String = "N"
 var _vector_oneshot: bool = false
+var _vector_dead: bool = false
+const DEATH_ANIM_FRAME_COUNT: int = 14
+const DEATH_ANIM_DURATION: float = 2.357   # eskiden 33 kare × 14fps — slow-motion için toplam süre sabit tutuluyor, fps buna göre yeniden hesaplanıyor
 
 # ── Vector Armor & Stack sistemi ─────────────────────────────────────────────
 var has_armor_core: bool = false
@@ -531,7 +534,7 @@ func _angle_to_chain_dir(angle: float) -> String:
 	return _CHAIN_DIR_NAMES[sector]
 
 func _process(_delta: float) -> void:
-	if character_type != "vector":
+	if character_type != "vector" or _vector_dead:
 		return
 	var sprite: AnimatedSprite2D = $VectorSprite
 	# Güvenlik: sprite hiçbir zaman görünmez kalmasın
@@ -871,6 +874,12 @@ func _setup_vector_sprite_new() -> void:
 		for i in range(count):
 			frames.add_frame(key, load(base + "Walk/" + dir_folder[d] + "/frame_%03d.png" % i))
 
+	frames.add_animation("death")
+	frames.set_animation_speed("death", DEATH_ANIM_FRAME_COUNT / DEATH_ANIM_DURATION)
+	frames.set_animation_loop("death", false)
+	for i in range(DEATH_ANIM_FRAME_COUNT):
+		frames.add_frame("death", load("res://assets/charsRedesign/vector/death/frame_%03d.png" % i))
+
 	sprite.sprite_frames  = frames
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	sprite.scale          = Vector2(0.71, 0.71)
@@ -971,11 +980,26 @@ func _update_anim_dir() -> void:
 
 
 func _update_vector_animation() -> void:
-	if _vector_oneshot:
+	if _vector_oneshot or _vector_dead:
 		return
 	var anim := ("walk_" + _anim_dir) if velocity != Vector2.ZERO else "idle_N"
 	if $VectorSprite.animation != anim:
 		$VectorSprite.play(anim)
+
+
+func play_death() -> bool:
+	if character_type != "vector":
+		return false
+	if not $VectorSprite.sprite_frames.has_animation("death"):
+		return false
+	_vector_dead = true
+	_vector_oneshot = true
+	$VectorSprite.process_mode = Node.PROCESS_MODE_ALWAYS
+	$VectorSprite.play("death")
+	return true
+
+func death_anim_duration() -> float:
+	return DEATH_ANIM_DURATION
 
 
 func _play_vector_oneshot(anim_name: String) -> void:
