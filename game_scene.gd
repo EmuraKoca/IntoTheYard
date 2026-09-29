@@ -759,6 +759,7 @@ func _on_confirm(canvas: CanvasLayer) -> void:
 func _on_skip(canvas: CanvasLayer) -> void:
 	canvas.queue_free()
 	upgrading = false
+	Sfx.set_gameplay_muted(false)
 	get_tree().paused = false
 	level += 1
 	update_ui()
@@ -1198,6 +1199,13 @@ func _ready() -> void:
 		_cal_pool.shuffle()
 		for _ci in range(min(_cal_start, max_calamity_slots)):
 			calamity_slots.append(_cal_pool[_ci])
+
+	# DEBUG: Leila'nın kalan 2 Calamity'si (Thunderstorm / Wildfire) test için otomatik
+	# slota ekleniyor. Test bitince bu blok kaldırılmalı.
+	calamity_slots.clear()
+	for _dbg_cal in ["⛈️", "🔥💥"]:
+		if calamity_slots.size() < max_calamity_slots:
+			calamity_slots.append(_dbg_cal)
 
 	update_ui()
 
@@ -2193,6 +2201,7 @@ func _show_discard_overlay(new_core_name: String) -> void:
 	add_child(canvas)
 	get_tree().paused = true
 	upgrading = true
+	Sfx.set_gameplay_muted(true)
 
 	# Karartma
 	var bg := ColorRect.new()
@@ -2306,6 +2315,7 @@ func _show_discard_overlay(new_core_name: String) -> void:
 		canvas.queue_free()
 		get_tree().paused = false
 		upgrading = false
+		Sfx.set_gameplay_muted(false)
 		_pending_core_type = ""
 	)
 	canvas.add_child(cancel_btn)
@@ -2314,6 +2324,7 @@ func _discard_ball(ball_node, canvas: CanvasLayer) -> void:
 	canvas.queue_free()
 	get_tree().paused = false
 	upgrading = false
+	Sfx.set_gameplay_muted(false)
 
 	# Orbit'ten çıkar
 	var player := get_node("Player")
@@ -2857,7 +2868,7 @@ func _build_all_upgrades() -> void:
 	# ── Leila Calamity ────────────────────────────────────────────────────────
 	{"name": "Freezing Cold",           "category": "Calamity",      "color": Color(0.6, 0.9, 1.0), "desc": "A blizzard sweeps across the Yard.\n[b]Wet[/b] enemies in its path become [b]Frozen[/b],\nothers are [b]Slowed[/b]",        "index": 94, "weight": 2,  "rarity": "legendary", "chars": ["leila"], "min_level": 4, "requires_any": [17, 62, 65, 185]},
 	{"name": "Volcanic Rift",      "category": "Calamity",      "color": Color(1.0, 0.3, 0.0), "desc": "Deals 2 damage every 0.5s for 4s to\nenemies in the area and applies [b]Burning[/b]",                 "index": 97, "weight": 2,  "rarity": "legendary", "chars": ["leila"], "min_level": 4},
-	{"name": "Thunderstorm",       "category": "Calamity",      "color": Color(0.3, 0.5, 1.0), "desc": "Every second for 5s, strikes 2 random enemies\nfor 5 damage and applies [b]Electrified[/b]",             "index": 98, "weight": 2,  "rarity": "legendary", "chars": ["leila"], "min_level": 5},
+	{"name": "Thunderstorm",       "category": "Calamity",      "color": Color(0.3, 0.5, 1.0), "desc": "1s of calm, then strikes 2 random enemies\nevery second for 4s, 5 damage + [b]Electrified[/b]",             "index": 98, "weight": 2,  "rarity": "legendary", "chars": ["leila"], "min_level": 5},
 	# ── Leila Connected Cores (iç yörünge) ───────────────────────────────────
 	{"name": "Mist Core",             "category": "Identity",      "color": Color(0.3, 0.6, 1.0),  "desc": "Every 4s: applies Wet to 1 enemy\nwithin range",                    "index": 185, "weight": 5, "rarity": "uncommon",  "chars": ["leila"], "min_level": 1},
 	{"name": "Frost Aura Core",       "category": "Identity",      "color": Color(0.5, 0.85, 1.0), "desc": "Enemies that enter range automatically\nget Slowed",                 "index": 186, "weight": 5, "rarity": "rare",      "chars": ["leila"], "min_level": 2},
@@ -2994,6 +3005,7 @@ func _get_card_art_path(card: Dictionary, char_id: String) -> String:
 
 func show_upgrade_menu() -> void:
 	upgrading = true
+	Sfx.set_gameplay_muted(true)
 	Sfx.play("selectCardScreen")
 	# Void Resonance: her dalga başında reaksiyon sayacı sıfırla
 	var _vr_p := get_node_or_null("Player")
@@ -3326,6 +3338,19 @@ func _freezing_cold_tick(pos: Vector2) -> void:
 func _vfx_freezing_cold() -> void:
 	if not ResourceLoader.exists("res://assets/VFX/calamitys/freezingCold/frame_000.png"):
 		return
+	# Ses fırtınanın kendi ömrüne bağlı (sabit çalıp bitmiyor) — rota her seferinde
+	# rastgele/farklı sürede bittiği için dosyanın (13.39sn) tamamı hep çalarsa fırtına
+	# ekrandan çıktıktan sonra da bir süre öten bir ses kalıyordu. Artık fırtına küçülüp
+	# kaybolmaya başladığı anda (aşağıdaki shrink_tw) ses de aynı anda azalarak kapanıyor.
+	var storm_audio: AudioStreamPlayer = null
+	var _sfx_path := "res://assets/sfx/calamitys/leila/freezingCold.ogg"
+	if ResourceLoader.exists(_sfx_path):
+		storm_audio = AudioStreamPlayer.new()
+		storm_audio.process_mode = Node.PROCESS_MODE_ALWAYS
+		storm_audio.bus = "GameplaySFX" if AudioServer.get_bus_index("GameplaySFX") >= 0 else "Master"
+		storm_audio.stream = load(_sfx_path)
+		add_child(storm_audio)
+		storm_audio.play()
 	var _launcher := get_node_or_null("BallLauncher")
 	var spawn_pos: Vector2 = _launcher.global_position if _launcher else Vector2(1539, 317)
 	# Her seferinde rastgele bir zigzag rota — ama sadece tek bir bölgede takılıp
@@ -3412,6 +3437,12 @@ func _vfx_freezing_cold() -> void:
 	shrink_tw.parallel().tween_property(storm, "modulate:a", 0.0, 0.4)
 	shrink_tw.tween_callback(storm.queue_free)
 	shrink_tw.tween_callback(func(): if is_instance_valid(wind): wind.queue_free())
+	# Ses de görselle AYNI ANDA azalarak kapanıyor (fırtına gerçekte ne kadar sürdüyse)
+	if storm_audio:
+		var audio_fade := create_tween()
+		audio_fade.tween_property(storm_audio, "volume_db", -40.0, 0.8)
+		audio_fade.tween_callback(storm_audio.stop)
+		audio_fade.tween_callback(storm_audio.queue_free)
 
 # YENİDEN TASARIM (2026-09-28, kullanıcı 37 karelik yeni sprite ekledi): "The Yard Engine"
 # Avlu'nun tam merkezine mavi tonlarda bir ışın fırlatıyor, ışın ulaştığı an oradan bu
@@ -3426,6 +3457,7 @@ func _activate_monsoon() -> void:
 	# kullanılıyor — diğer Yard Engine kartları (Data Storm, Backdoor vb.) etkilenmiyor.
 	var visible_center := Vector2(1007.5, 667.0)
 	var _run_ripple := func():
+		Sfx.play_path("res://assets/sfx/calamitys/leila/monsoon.ogg")
 		for subject in _yard_subjects():
 			if subject.has_method("apply_wet"):
 				subject.apply_wet()
@@ -3483,19 +3515,27 @@ func _play_monsoon_vfx(pos: Vector2 = Vector2(1152.0, 667.0)) -> void:
 	)
 
 func _activate_volcanic_rift(pos: Vector2) -> void:
-	_vfx_volcanic_rift(pos)
-	var elapsed := 0.0
-	while elapsed < 4.0:
-		var subjects = get_tree().get_nodes_in_group("subjects")
-		for subject in subjects:
-			if is_instance_valid(subject) and subject.global_position.distance_to(pos) < 84:
-				subject.take_damage(2)
-				if subject.has_method("_react_flash"):
-					subject._react_flash(Color(1.0, 0.4, 0.1, 1.0))
-				if subject.has_method("apply_burn"):
-					subject.apply_burn()
-		elapsed += 0.5
-		await get_tree().create_timer(0.5, false).timeout
+	var _run_rift := func():
+		Sfx.play_path("res://assets/sfx/calamitys/leila/volcanicRift.ogg")
+		_vfx_volcanic_rift(pos)
+		var elapsed := 0.0
+		while elapsed < 4.0:
+			var subjects = get_tree().get_nodes_in_group("subjects")
+			for subject in subjects:
+				if is_instance_valid(subject) and subject.global_position.distance_to(pos) < 84:
+					subject.take_damage(2)
+					if subject.has_method("_react_flash"):
+						subject._react_flash(Color(1.0, 0.4, 0.1, 1.0))
+					if subject.has_method("apply_burn"):
+						subject.apply_burn()
+			elapsed += 0.5
+			await get_tree().create_timer(0.5, false).timeout
+	_vfx_yard_engine_to_point(
+		func() -> Vector2: return pos,
+		Color(1.0, 0.4, 0.1, 1.0),
+		_run_rift,
+		_run_rift
+	)
 
 # Volcanic Rift'in gerçek sprite VFX'i — 4sn'lik tek seferlik animasyon (44 frame ×
 # 11fps = 4sn, hasar süresiyle birebir eşleşiyor). Scale animasyonu yok (kullanıcı
@@ -3526,9 +3566,14 @@ func _vfx_volcanic_rift(pos: Vector2) -> void:
 	if is_instance_valid(rift): rift.queue_free()
 
 func _activate_thunderstorm() -> void:
+	Sfx.play_path("res://assets/sfx/calamitys/leila/thunderStorm.ogg")
 	_react_flash_screen(Color(0.5, 0.5, 1.0, 0.3))
-	var elapsed := 0.0
-	while elapsed < 5.0:
+	# Toplam süre 5sn: ilk saniye SADECE fon sesi (çarpma yok, thunderStorm.ogg ile
+	# çakışmasın), sonraki 4 saniyede (t=2,3,4,5) yıldırımlar düşüyor. Toplam 4×2 = 8 vuruş.
+	for _wave in range(5):
+		await get_tree().create_timer(1.0, false).timeout
+		if _wave == 0:
+			continue
 		var subjects: Array = get_tree().get_nodes_in_group("subjects").filter(
 			func(s): return is_instance_valid(s) and s.global_position.x >= 385.0
 		)
@@ -3542,18 +3587,17 @@ func _activate_thunderstorm() -> void:
 					s.apply_electrified()
 				if s.has_method("_react_flash"):
 					s._react_flash(Color(1.0, 1.0, 0.6, 1.0))
+				Sfx.play_path("res://assets/sfx/calamitys/leila/lightning.ogg")
 				_vfx_lightning(s.global_position)
-		elapsed += 1.0
-		await get_tree().create_timer(1.0, false).timeout
 
 func _activate_emp() -> void:
+	Sfx.play_path("res://assets/sfx/calamitys/leila/empPulse.ogg")
 	for subject in get_tree().get_nodes_in_group("subjects"):
 		if is_instance_valid(subject) and subject.global_position.x >= 385.0 and subject.get("is_electrified") and subject.is_electrified:
 			subject.take_damage(15)
 			if subject.has_method("_react_flash"):
 				subject._react_flash(Color(0.4, 0.7, 1.0, 1.0))
 			_vfx_lightning_bolt(subject.global_position)
-	_react_flash_screen(Color(0.3, 0.6, 1.0, 0.5))
 	_screen_shake_small()
 
 func _activate_data_storm() -> void:
@@ -4377,6 +4421,7 @@ func _activate_decay_field(pos: Vector2) -> void:
 
 
 func _activate_wildfire() -> void:
+	Sfx.play_path("res://assets/sfx/calamitys/leila/wildfire.ogg")
 	# Yard Engine: makineden SADECE o an yanan düşmanlara çizgi gider, her biri patlar
 	# (10 hasar) ve yakınındaki, yanmayan en fazla 2 düşmana Burning yayar.
 	# Yanan düşmanların listesi ilk kontrolde donduruluyor → yeni tutuşanlar aynı kullanımda
@@ -4539,6 +4584,7 @@ func _make_neon_button(text: String, icon_name: String, pink: bool, pos: Vector2
 
 func _show_pause_menu() -> void:
 	get_tree().paused = true
+	Sfx.set_gameplay_muted(true)
 	Sfx.play("pause")
 
 	var canvas = CanvasLayer.new()
@@ -4675,11 +4721,13 @@ func _show_pause_settings(pause_canvas: CanvasLayer) -> void:
 	overlay.add_child(back_btn)
 
 func _on_resume(canvas: CanvasLayer) -> void:
+	Sfx.set_gameplay_muted(false)
 	Sfx.play("unpause")
 	canvas.queue_free()
 	get_tree().paused = false
 
 func _on_main_menu(canvas: CanvasLayer) -> void:
+	Sfx.set_gameplay_muted(false)
 	canvas.queue_free()
 	get_tree().paused = false
 	get_tree().change_scene_to_file("res://main_menu.tscn")
@@ -4688,6 +4736,7 @@ func _on_quit_game() -> void:
 	get_tree().quit()
 
 func _activate_lightning(pos: Vector2) -> void:
+	Sfx.play_path("res://assets/sfx/calamitys/leila/lightning.ogg")
 	var subjects = get_tree().get_nodes_in_group("subjects")
 	for subject in subjects:
 		if subject.global_position.distance_to(pos) < 100:
@@ -4699,21 +4748,29 @@ func _activate_lightning(pos: Vector2) -> void:
 	_vfx_lightning(pos)
 
 func _activate_flame(pos: Vector2) -> void:
-	_vfx_flame(pos)
-	var flame_timer = get_tree().create_timer(0.5, false)
-	var hits = 0
-	while hits < 6:
-		var subjects = get_tree().get_nodes_in_group("subjects")
-		for subject in subjects:
-			if subject.global_position.distance_to(pos) < 84:
-				subject.take_damage(4)
-				if subject.has_method("_react_flash"):
-					subject._react_flash(Color(1.0, 0.5, 0.1, 1.0))
-				if subject.has_method("apply_burn") and subject.get("is_burning") == false:
-					subject.apply_burn()
-		hits += 1
-		await flame_timer.timeout
-		flame_timer = get_tree().create_timer(0.5, false)
+	var _run_flame := func():
+		Sfx.play_path("res://assets/sfx/calamitys/leila/flameZone.ogg")
+		_vfx_flame(pos)
+		var flame_timer = get_tree().create_timer(0.5, false)
+		var hits = 0
+		while hits < 6:
+			var subjects = get_tree().get_nodes_in_group("subjects")
+			for subject in subjects:
+				if subject.global_position.distance_to(pos) < 84:
+					subject.take_damage(4)
+					if subject.has_method("_react_flash"):
+						subject._react_flash(Color(1.0, 0.5, 0.1, 1.0))
+					if subject.has_method("apply_burn") and subject.get("is_burning") == false:
+						subject.apply_burn()
+			hits += 1
+			await flame_timer.timeout
+			flame_timer = get_tree().create_timer(0.5, false)
+	_vfx_yard_engine_to_point(
+		func() -> Vector2: return pos,
+		Color(1.0, 0.5, 0.1, 1.0),
+		_run_flame,
+		_run_flame
+	)
 
 # ── VFX: Lightning ────────────────────────────────────────────────────────────
 func _vfx_lightning(pos: Vector2) -> void:
@@ -5220,6 +5277,7 @@ func _process(delta: float) -> void:
 func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 	canvas.queue_free()
 	upgrading = false
+	Sfx.set_gameplay_muted(false)
 	get_tree().paused = false
 	level += 1
 	GameData.record_upgrade_taken()

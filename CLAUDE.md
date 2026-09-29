@@ -3236,3 +3236,104 @@ kıldı. Fix: `_vfx_yard_engine_to_point()`'e opsiyonel `engine_pos` parametresi
 bu parametreyi ve ripple'ın kendi konumunu (`_play_monsoon_vfx(pos)`, artık parametre alıyor)
 `Vector2(1007.5, 667.0)` (görünür alanın gerçek merkezi) olarak veriyor — SADECE Monsoon
 etkilendi.
+
+## Leila Calamity sesleri bağlandı (2026-09-29, oyunda denenmedi)
+Kullanıcı `assets/sfx/calamitys/leila/` altına 8 dosya ekledi (Lightning/Flame Zone/
+Freezing Cold/Monsoon/EMP Pulse/Volcanic Rift/Thunderstorm/Wildfire — Leila'nın 8
+Calamity'sinin hepsi, hepsi Vorbis). Süreler mekaniklerle örtüşüyor (Volcanic Rift 4.01sn
+= tam 4sn hasar süresi, Thunderstorm 5.04sn = tam 5sn, Freezing Cold 13.39sn ≈ fırtınanın
+Avlu'yu gezme süresi). 7'si aktivasyon anında bir kez çalıyor (`Sfx.play_path`, Vector
+Calamity'lerle aynı desen): Lightning, Flame Zone, EMP Pulse, Wildfire, Volcanic Rift,
+Monsoon (`_run_ripple` closure'ının başında, ışın ulaşınca), Thunderstorm (aktivasyon anı).
+**Thunderstorm'a özel ek**: kullanıcı isteğiyle `thunderStorm.ogg` aktivasyonda bir kez
+çalmanın YANINDA, 5sn boyunca her çarpmada (`_vfx_lightning()` çağrısıyla aynı satırda,
+saniyede 2 hedef) AYRICA `lightning.ogg` de çalıyor — iki ses üst üste biniyor.
+**Freezing Cold bağlandı, sonra fırtınanın ömrüne senkronlandı (2026-09-29, aynı gün)**:
+ilk denemede `freezingCold.ogg` (13.39sn) `_activate_freezing_cold()` başında sabit
+çalıyordu — ama fırtınanın rotası (waypoint'ler) her seferinde RASTGELE, gerçek gezinme
+süresi genelde 13.39sn'den kısa, bu yüzden fırtına ekrandan çıkıp küçüldükten sonra da
+ses bir süre daha ötmeye devam ediyordu (kullanıcı: "sahadan çıktığında azalarak
+kaybolmuyor"). Fix: `Sfx.play_path` yerine `_vfx_freezing_cold()` içinde özel bir
+`AudioStreamPlayer` (`storm_audio`) oluşturulup fırtınanın kendisiyle aynı anda
+başlatılıyor, fırtına küçülüp kaybolmaya başladığı TAM anda (`shrink_tw` ile paralel)
+sesin `volume_db`'si de 0.8sn'de -40'a inip duruyor/siliniyor — artık ses fırtınanın
+GERÇEK (rastgele) süresine otomatik uyum sağlıyor, sabit 13.39sn dinlemek zorunda
+kalınmıyor.
+
+**DEBUG**: test için ilk 3 Leila Calamity'si (⚡ Lightning / 🔥 Flame Zone / ❄️ Freezing
+Cold) `_ready()`'de otomatik slota ekleniyor. **Test bitince kaldırılmalı.**
+
+## EMP Pulse ekran flaşı kaldırıldı + level-up ekranında SFX artık susuyor (2026-09-29)
+- **EMP Pulse (96)**: `_react_flash_screen(Color(0.3, 0.6, 1.0, 0.5))` çağrısı silindi —
+  isabet alan düşmanlarda zaten `_vfx_lightning_bolt` + hit-flash var, ekran flaşı fazlaydı
+  (Full Breach/Rampart Collapse'daki aynı kararın devamı). `_screen_shake_small()` kaldı.
+- **SFX pause/level-up kontrolü**: kullanıcı fark etti, oyun-içi tek seferlik sesler
+  (calamity, ölüm) level-up/iskarta ekranı açıkken durmuyordu — Godot'ta ses çalma
+  SceneTree pause'undan bağımsız çalışıyor, `paused=true` olsa bile devam ediyor. Fix:
+  `sfx.gd`'ye ikinci bir bus eklendi — **"GameplaySFX"** ("SFX" bus'ına send ediliyor,
+  yani ayarlardaki SFX sürgüsünü hâlâ takip ediyor). `play()` (UI hover/click) hâlâ
+  doğrudan "SFX" bus'ında, hiçbir zaman susturulmuyor. `play_path()` (tüm calamity/ölüm
+  sesleri) artık "GameplaySFX"te. Yeni `Sfx.set_gameplay_muted(bool)` — `upgrading = true/
+  false` olan HER 6 noktaya (`show_upgrade_menu`, `_on_skip`, `_on_upgrade_selected`,
+  core-iskarta ekranının aç/kapat/iptal 3 noktası) eşleştirilip çağrıldı. Freezing Cold'un
+  özel `storm_audio`'su da "SFX" yerine "GameplaySFX" bus'ına taşındı, o da artık
+  kapsanıyor. Menüdeki buton tıklama/hover sesleri etkilenmiyor, sadece o anda çalan/
+  başlayacak calamity/ölüm sesleri susuyor (mute, pause değil — menü kapanınca kaldığı
+  yerden DEVAM ETMEZ, yeni tetiklenen sesler duyulur).
+
+### Düzeltme: Pause menüsünde de SFX susmuyordu (2026-09-29, aynı gün)
+Önceki düzeltme sadece `upgrading` (level-up/iskarta) noktalarını kapsıyordu — asıl
+duraklatma menüsü (`_show_pause_menu`) AYRI bir kod yolu, `upgrading` hiç set etmiyor,
+o yüzden hâlâ susmuyordu. `_show_pause_menu()`'ye `Sfx.set_gameplay_muted(true)`,
+`_on_resume()`'a `set_gameplay_muted(false)` eklendi. `_on_main_menu()`'ye de eklendi —
+`Sfx` autoload olduğu için sahneler arası hayatta kalıyor, ana menüye dönerken
+susturulmuş kalmaması için oraya da unmute eklendi.
+
+## Flame Zone + Volcanic Rift Yard Engine'e bağlandı (2026-09-29, oyunda denenmedi)
+Kullanıcı isteğiyle Gravitational Force/WormHole/Monsoon'daki aynı desen: makine sahanın
+merkezinde belirip tıklanan noktaya kartın kendi renginde bir ışın gönderiyor, ışın
+ulaşınca kartın MEVCUT VFX'i (Flame Zone'un alev sprite'ı / Volcanic Rift'in erüpsiyon
+sprite'ı) ve hasar döngüsü olduğu gibi başlıyor — `_vfx_yard_engine_to_point(get_target_pos,
+bolt_color, on_arrival, fallback_fn)` ile sarmalandı, `on_arrival`/`fallback_fn` ikisi de
+aynı closure (`_run_flame`/`_run_rift`) — sprite eksikse bile kartın kendi etkisi/sesleri
+hiç aksamadan aynı şekilde çalışıyor. Bolt rengi: Flame Zone turuncu `Color(1.0,0.5,0.1)`,
+Volcanic Rift kırmızı-turuncu `Color(1.0,0.4,0.1)` — ikisi de kartın kendi VFX rengine
+yakın. Mekanik/hasar/ses hiç değişmedi, sadece önüne ~0.7-1.3sn'lik makine giriş animasyonu
+eklendi (diğer Yard Engine kartlarıyla aynı gecikme).
+
+## BUG FIX: Thunderstorm'un fon sesi ilk Lightning çarpmasında kesiliyordu (2026-09-29)
+Kök sebep: `Sfx.play_path()` HER çağrıda `AudioServer.set_bus_send("GameplaySFX", "SFX")`
+çağırıyordu (redundant — zaten doğru hedefe bağlıydı) — Godot bunu bus'ı yeniden bağlama
+gibi işleyip o bus'ta o an çalmakta olan başka bir sesi kesiyordu. Thunderstorm aktivasyonda
+`thunderStorm.ogg`'u başlatıyor, hemen ardından (aynı saniyede) ilk çarpma `lightning.ogg`
+için tekrar `play_path()` çağırınca bus yeniden bağlanıp Thunderstorm'un fon sesini
+susturuyordu. Fix: `sfx.gd`'ye `_gameplay_bus_linked` bayrağı eklendi, `_route_gameplay_bus()`
+artık sadece "SFX" bus'ı bulunup GERÇEKTEN bağlanana kadar (genelde oyunda bir kez, ana
+menüden geçerken) çağrılıyor, sonrasında dokunulmuyor.
+
+## Thunderstorm (98) yeniden ayarlandı — 0.saniye çarpması kaldırıldı (2026-09-29)
+Kullanıcı: "hâlâ tamamı çalmıyor, Lightning önden başlıyor" — kök sebep bus yönlendirmesi
+değil ZAMANLAMAYDI: eski kod `thunderStorm.ogg`'u başlatır başlatmaz (t=0) AYNI FRAME'DE
+ilk dalganın `lightning.ogg`'unu da çalıyordu (while döngüsü `await`'den önce bir tur
+çalışıyordu) — iki ses sıfır gecikmeyle üst üste binip biri kesiliyordu.
+**Fix**: döngü artık `for _wave in range(4): await create_timer(1.0,false).timeout; ...vur...`
+— ilk vuruş artık t≈1sn'de (fon sesiyle çakışmıyor), toplam **4 dalga × 2 hedef = 8 vuruş**
+(eskiden 5×2=10). Kart süresi 5sn → **4sn**, EN+TR açıklamalar buna göre güncellendi.
+
+### Düzeltme: süre 5sn'de kaldı, sadece ilk saniye sakin (2026-09-29, aynı gün)
+Kullanıcı: toplam süre 5sn'de kalsın, sadece ilk saniye fon sesiyle sakin geçsin, yıldırımlar
+2. saniyeden itibaren düşsün. Döngü `for _wave in range(5)` oldu — `_wave==0` turunda hiç
+çarpma yok (`continue`, sadece bekliyor), 2./3./4./5. turlarda (t=2,3,4,5) vuruyor. Toplam
+süre 5sn, vuruş sayısı yine 4 dalga × 2 = 8 (değişmedi). Açıklamalar "1s of calm, then...
+4s" / "İlk 1sn sakin, ardından 4sn..." olarak güncellendi.
+
+### GERÇEK BUG FIX: Thunderstorm her turda 2 kez bekliyordu (2026-09-29, aynı gün)
+Kullanıcı ısrarla haklı çıktı ("koda dikkatli bak, tactical mode açık değildi") — sorun
+Tactical Mode değil, BENİM önceki düzenlemedeki hataydı. Döngüyü `while elapsed<5.0` →
+`for _wave in range(5)` yaparken, eski döngünün SONUNDAKİ `await create_timer(1.0,
+false).timeout` satırını silmeyi unutmuştum — yeni döngünün BAŞINDAKİ await ile birlikte
+her tur (0. tur hariç, çünkü `continue` bottom-await'i atlıyordu) **çift bekliyordu**:
+wave=1: +1s (top) → vur → +1s (bottom) = tur başına 2sn. Sonuç: gerçek vuruşlar 2, 4, 6,
+8. saniyelerde, toplam 9sn — kullanıcının kronometreyle ölçtüğü BİREBİR eşleşiyor.
+**Fix**: döngü sonundaki fazladan `await` satırı silindi. Artık tek await/tur, vuruşlar
+gerçekten 1, 2, 3, 4. saniyelerde (0. tur sakin), toplam 5sn.

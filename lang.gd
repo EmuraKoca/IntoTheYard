@@ -353,7 +353,7 @@ const _DESC_TR: Dictionary = {
 	95: "Yard'daki tüm düşmanlar\n[b]Wet[/b] olur",
 	96: "Yard'daki tüm [b]Electrified[/b] düşmanlar\n15 hasar alır",
 	97: "Alandaki düşmanlara 4sn boyunca her\n0.5sn'de 2 hasar verir ve [b]Burning[/b] uygular",
-	98: "5sn boyunca her saniye rastgele 2 düşmana\n5 hasar verir ve [b]Electrified[/b] uygular",
+	98: "İlk 1sn sakin, ardından 4sn boyunca her saniye\nrastgele 2 düşmana 5 hasar verir ve [b]Electrified[/b] uygular",
 	129: "Avlu'daki tüm [b]Glitched[/b] düşmanlar bozulma\npatlamasıyla 10 hasar alır, Glitch'leri temizlenir",
 	130: "Avlu'daki tüm düşmanlar 3sn boyunca\n[b]Glitched[/b] olur",
 	138: "5sn boyunca Core Hızı ×3 olur",
