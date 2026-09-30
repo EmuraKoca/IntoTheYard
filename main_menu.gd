@@ -207,7 +207,10 @@ func _on_credits() -> void:
 	title.add_theme_font_size_override("font_size", 95)
 	title.modulate = Color(1, 0.8, 0)
 	cv.add_child(title)
-	var lines := [["Silver Font", "Poppy Works  -  CC BY 4.0"]]
+	var lines := [
+		["Silver Font", "Poppy Works  -  CC BY 4.0"],
+		["Special Thanks", "Çağla Dondurma"],
+	]
 	for i in lines.size():
 		var head := Label.new()
 		head.text = lines[i][0]
@@ -415,8 +418,8 @@ func _build_controls_tab(parent: Control, rect: Rect2) -> Control:
 	var col1  := 0.0
 	var col2  := 380.0
 
-	_add_label(cont, Lang.t("set_ctrl_header_action"), Vector2(col1, 0), 13, Color(0, 0.7, 0.8, 0.7), _font_bold)
-	_add_label(cont, Lang.t("set_ctrl_header_key"),    Vector2(col2, 0), 13, Color(0, 0.7, 0.8, 0.7), _font_bold)
+	_add_label(cont, Lang.t("set_ctrl_header_action"), Vector2(col1, 0), 19, Color(0, 0.7, 0.8, 0.7), _font_bold)
+	_add_label(cont, Lang.t("set_ctrl_header_key"),    Vector2(col2, 0), 19, Color(0, 0.7, 0.8, 0.7), _font_bold)
 
 	var line := ColorRect.new()
 	line.position = Vector2(0, 22)
@@ -431,8 +434,8 @@ func _build_controls_tab(parent: Control, rect: Rect2) -> Control:
 		bg.size     = Vector2(rect.size.x + 16, row_h - 4)
 		bg.color    = Color(0, 0.5, 0.6, 0.06) if i % 2 == 0 else Color(0, 0, 0, 0)
 		cont.add_child(bg)
-		_add_label(cont, controls[i][0], Vector2(col1, y), 15, Color(0.82, 0.92, 1, 0.9), _font_regular)
-		_add_label(cont, controls[i][1], Vector2(col2, y), 15, Color(0, 0.95, 1, 1), _font_bold)
+		_add_label(cont, controls[i][0], Vector2(col1, y), 19, Color(0.82, 0.92, 1, 0.9), _font_regular)
+		_add_label(cont, controls[i][1], Vector2(col2, y), 19, Color(0, 0.95, 1, 1), _font_bold)
 
 	# Not
 	var note := Label.new()
@@ -464,7 +467,7 @@ func _build_audio_tab(parent: Control, rect: Rect2) -> Control:
 
 	for i in range(buses.size()):
 		var y := 30.0 + i * 90
-		_add_label(cont, buses[i][0], Vector2(0, y), 16, Color(0.82, 0.92, 1, 0.9), _font_bold)
+		_add_label(cont, buses[i][0], Vector2(0, y), 19, Color(0.82, 0.92, 1, 0.9), _font_bold)
 
 		var slider := HSlider.new()
 		slider.position   = Vector2(0, y + 30)
@@ -523,7 +526,7 @@ func _build_display_tab(parent: Control, rect: Rect2) -> Control:
 	parent.add_child(cont)
 
 	# ── Çözünürlük ────────────────────────────────────────────────────────────
-	_add_label(cont, Lang.t("set_display_resolution"), Vector2(0, 20), 16, Color(0.82, 0.92, 1, 0.9), _font_bold)
+	_add_label(cont, Lang.t("set_display_resolution"), Vector2(0, 20), 19, Color(0.82, 0.92, 1, 0.9), _font_bold)
 
 	var res_btns: Array = []
 	for i in RESOLUTIONS.size():
@@ -557,7 +560,7 @@ func _build_display_tab(parent: Control, rect: Rect2) -> Control:
 		)
 
 	# ── Tam Ekran ─────────────────────────────────────────────────────────────
-	_add_label(cont, Lang.t("set_display_fs"), Vector2(0, 130), 16, Color(0.82, 0.92, 1, 0.9), _font_bold)
+	_add_label(cont, Lang.t("set_display_fs"), Vector2(0, 130), 19, Color(0.82, 0.92, 1, 0.9), _font_bold)
 
 	var fs_btn := _make_button(
 		"ON" if fullscreen else "OFF",
@@ -580,7 +583,7 @@ func _build_display_tab(parent: Control, rect: Rect2) -> Control:
 	cont.add_child(fs_btn)
 
 	_add_label(cont, Lang.t("set_display_note"),
-		Vector2(0, rect.size.y - 30), 12, Color(0.5, 0.6, 0.7, 0.55), _font_regular)
+		Vector2(0, rect.size.y - 30), 19, Color(0.5, 0.6, 0.7, 0.55), _font_regular)
 
 	return cont
 
@@ -594,7 +597,7 @@ func _build_language_tab(parent: Control, rect: Rect2) -> Control:
 	cont.visible  = false
 	parent.add_child(cont)
 
-	_add_label(cont, Lang.t("set_lang_title"), Vector2(0, 20), 18, Color(0.82, 0.92, 1, 0.9), _font_bold)
+	_add_label(cont, Lang.t("set_lang_title"), Vector2(0, 20), 19, Color(0.82, 0.92, 1, 0.9), _font_bold)
 
 	var langs := [["English", "en"], ["Türkçe", "tr"]]
 	for i in range(langs.size()):
@@ -619,7 +622,7 @@ func _build_language_tab(parent: Control, rect: Rect2) -> Control:
 		cont.add_child(lb)
 
 	_add_label(cont, Lang.t("set_lang_note"),
-		Vector2(0, rect.size.y - 30), 12, Color(0.5, 0.6, 0.7, 0.55), _font_regular)
+		Vector2(0, rect.size.y - 30), 19, Color(0.5, 0.6, 0.7, 0.55), _font_regular)
 
 	return cont
 

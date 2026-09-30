@@ -3,6 +3,29 @@
 Bu dosya, farklı bilgisayarlardaki (ev / işyeri) Claude Code oturumları arasında bağlam
 köprüsü olarak kullanılır. Her oturum başında oku, her oturum sonunda güncelle.
 
+## BUG FIX: Ayarlar ekranındaki bazı puntolar Silver'ın 19px ızgarasına hiç oturmamıştı (2026-09-30, oyunda denenmedi)
+
+Kullanıcı: "Kontroller kısmındaki yazı aşırı küçük, okunmuyor." Kontrol edilince: Silver
+font'a geçiş sırasında (2026-09-25, `19 * max(1, round(eski*1.46/19))` formülü) `main_menu.gd`
+içindeki **ayarlar ekranını kodla üreten** `_build_controls_tab`/`_build_audio_tab`/
+`_build_display_tab`/`_build_language_tab` fonksiyonlarındaki `_add_label(...)` çağrıları
+gözden kaçmış — bunlar `.tscn`'deki `theme_override_font_sizes` taramasına dahil değildi
+(dinamik olarak runtime'da Control ağacı kuruluyor), formül hiç uygulanmamıştı. Silver'ın
+gerçek piksel ızgarası 19px olduğu için 12-18 arası boyutlar bulanık/eksik glyph
+render ediyordu.
+
+**Fix — hepsi 19'a çekildi**:
+- Kontroller sekmesi: sütun başlıkları (13→19) + tuş satırları (15→19).
+- Ses sekmesi: bus etiketleri (16→19).
+- Display sekmesi: "Çözünürlük" başlığı (16→19), "Tam Ekran" başlığı (16→19), alt not (12→19).
+- Dil sekmesi: başlık (18→19), alt not (12→19).
+
+`add_theme_font_size_override("font_size", ...)` ile doğrudan set edilen yerler (buton
+metinleri, slider değer etiketleri vb.) zaten 19/38/95 gibi doğru katlardaydı — sadece
+`_add_label()` helper'ına geçilen ham sayı parametreleri (tscn taramasının kapsamı
+dışında kaldığı için) kaçmıştı. Aynı kaçak başka bir ekranda varsa (kod ile üretilen,
+`.tscn`'de görünmeyen Control ağaçları) aynı yöntemle kontrol edilmeli.
+
 ## Cyclone Calamity sesleri bağlandı (2026-09-30, oyunda denenmedi)
 
 Kullanıcı `assets/sfx/calamitys/cyclone/` altına Cyclone'un 8 Calamity'sinin hepsi için
@@ -251,16 +274,15 @@ gerçek sebebi buydu.
 - DataBar (XP/upgrade ilerleme çubuğu, y=698) ve altındaki "DATA HARVESTED"/"0 units"
   etiketlerine dokunulmadı — yeterli boşluk vardı, çakışma riski yok.
 
-**AÇIK KONU — kullanıcı "dil kısmının da elden geçmesi gerek" dedi, henüz
-dokunulmadı**: sağ panelde TR/EN karışık kullanım var — "SEVİYE"/"TOPLAR"/
-"GELİŞTİRMELER"/"— FELAKET —" Türkçe iken "Launchable Cores"/"Connected Cores"/
-"FUSION ENERGY"/"DATA HARVESTED"/"units" İngilizce. Ayrıca **gerçek bir tutarsızlık
-bulundu**: `lang.gd`'deki `"ui_upgrades_chain": "▸ Zincir Artışı"` — Chain Extension
-kartının alınma sayacını gösteren bu satır kart ADINI Türkçeye çevirmiş, halbuki
-proje kuralı "kart isimleri her zaman İngilizce kalır" (glossary keyword'leri gibi).
-Kullanıcıya hangi yönde standartlaştırmak istediği (panel geneli TR mi kalsın, kart-
-ilişkili özel isimler mi hep İngilizce olsun) sorulacak, kapsamlı bir ayrı tur olarak
-ele alınacak.
+**AÇIK KONU ÇÖZÜLDÜ (2026-09-30 doğrulandı)**: yukarıdaki "sağ panel dil tutarsızlığı"
+notu artık geçersiz — aynı 2026-09-25 turunun bir parçası olarak "Fırlatılabilir Core'lar"/
+"Launchable Cores", "Bağlı Core'lar"/"Connected Cores", "— FELAKET —"/"— CALAMITY —",
+"— GELİŞTİRMELER —"/"— UPGRADES —", "TOPLANAN VERİ"/"DATA HARVESTED", " birim"/" units",
+"CORE'LAR"/"CORES" hepsi zaten `Lang.t()` üzerinden ayrışmıştı. `ui_upgrades_chain`
+("▸ Zincir Artışı") anahtarı da Geliştirmeler listesi dinamikleştirilirken zaten
+silinmişti (bkz. yukarıdaki "Sağ panel: Geliştirmeler listesi + core sayacı düzeltildi"
+bölümü). Not sadece o zaman güncellenmemiş kalmıştı, kullanıcı sorunca kontrol edilip
+kapatıldı — ek bir iş gerekmiyor.
 
 ## Vector Calamity — Yard Engine + VFX/UI turu TAMAMLANDI (2026-09-24)
 

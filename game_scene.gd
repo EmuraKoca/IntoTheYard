@@ -1200,13 +1200,6 @@ func _ready() -> void:
 		for _ci in range(min(_cal_start, max_calamity_slots)):
 			calamity_slots.append(_cal_pool[_ci])
 
-	# DEBUG: Cyclone'un ilk 3 Calamity'si (Data Storm / Backdoor / Bounce Barrage) SFX
-	# testi için otomatik slota ekleniyor. Test bitince bu blok kaldırılmalı.
-	calamity_slots.clear()
-	for _dbg_cal in ["💾", "👾", "🎱"]:
-		if calamity_slots.size() < max_calamity_slots:
-			calamity_slots.append(_dbg_cal)
-
 	update_ui()
 
 	$UI/CalamityCircle.visible = false
