@@ -3,6 +3,116 @@
 Bu dosya, farklı bilgisayarlardaki (ev / işyeri) Claude Code oturumları arasında bağlam
 köprüsü olarak kullanılır. Her oturum başında oku, her oturum sonunda güncelle.
 
+### BUG FIX: Kalan kareler (26-36) hiç oynamıyordu (kullanıcı fark etti, aynı gün)
+Kullanıcı: "frame'lerin hepsi oynamıyor". Kök sebep: `game_scene.gd::_on_boss_emerged()`
+`boss_emerged` sinyali gelir gelmez (25. kare) kutuyu **0.3sn'de** soldurup
+`queue_free()` ediyordu — 14fps'te 0.3sn ≈ 4 kare, yani 25-29 arası birkaç kare
+solarak görünüp kutu siliniyordu, kalan ~7 kare (30-36) hiç oynamadan kayboluyordu.
+**Fix**: `crate_intro.gd`'ye `_owns_cleanup: bool` bayrağı eklendi — sprite yolunda
+`boss_emerged` (25. karede) tetiklenirken bu bayrak `true` yapılıyor, fonksiyon
+`emit_signal`'den SONRA `await spr.animation_finished` ile animasyonun GERÇEKTEN
+bitmesini bekliyor, ancak o zaman kendi soldurma+silme işlemini kendisi yapıyor.
+`game_scene.gd::_on_boss_emerged()` artık `crate._owns_cleanup == true` ise kutuyu
+erken silmiyor (temizliği kutunun kendisine bırakıyor) — sadece eski procedural
+fallback yolunda (animasyon zaten tam bitmiş oluyor) eskisi gibi hemen soldurup
+siliyor. Böylece boss 25. karede spawn oluyor AMA kutu 36. kareye kadar tam
+oynayıp öyle kayboluyor, hiçbir kare atlanmıyor.
+
+### Düzeltme: gerçek düşüş hareketi + boyut küçültme + gölgenin sabit yere bağlanması (aynı gün)
+Kullanıcı test etti: "düşme yok, bir anda beliriyor kutu" — sprite'ın kendi kareleri
+(0-9. kareler) görsel olarak yeterli bir düşüş hissi VERMİYORDU, land_pos'ta sabit
+duruyordu, sadece animasyon oynuyordu. Gerçek bir Y-tween eklendi: kutu artık
+`land_pos.y - 700px`'ten (ekran dışı yukarı) başlayıp, `IMPACT_FRAME/FPS` (~0.71sn)
+süresinde `land_pos.y`'ye düşüyor (`TRANS_QUAD`/`EASE_IN`) — animasyonun kendi kareleriyle
+SENKRON, çarpma anında (10. kare) hem animasyon hem gerçek pozisyon aynı ana denk geliyor.
+**Boyut küçültüldü**: `CRATE_SPRITE_SCALE` 1.8 → **1.3** (kullanıcı: "biraz küçültebilir
+miyiz"). **Gölge mimarisi düzeltildi**: gölge artık kutunun child'ı DEĞİL — kutu havada
+hareket ederken gölgenin YERDE (`land_pos`) sabit kalması gerektiği için kutuyla aynı
+parent'a (`game_scene`) ekleniyor, `global_position` ile land_pos'a sabitleniyor. Kutu
+`queue_free()` olunca (`tree_exiting` sinyali) gölge de birlikte temizleniyor, sızıntı yok.
+
+## Boss intro sandığı — kesin frame zamanlaması, büyütme, gölge + gerçek 10sn tetikleme (2026-09-30, aynı gün devamı)
+
+Kullanıcı sprite'ı kare kare izleyip kesin zamanlamayı verdi: **0-9 düşüş, 10 çarpma,
+14 ilk kırılma, 25 boss artık deliklerden görünür hale geliyor** (37 kare toplam).
+`crate_intro.gd`'deki tahmini `%35` oranı bu kesin sayılarla değiştirildi:
+`IMPACT_FRAME=10` ("landed" sinyali → kamera sarsıntısı), `VISIBLE_FRAME=25`
+("boss_emerged" sinyali → gerçek boss spawn'ı artık animasyon TAM bitmeden, 25. karede
+tetikleniyor — `game_scene.gd::_on_boss_emerged()` bu sinyali alınca kutuyu 0.3sn'de
+soldurup siliyor, kalan ~11 kare bu solma sırasında görsel olarak örtüşüyor, "boss
+deliklerden görünüyor" hissini pekiştiriyor). `CRACK_FRAME=14` şimdilik sadece bilgi
+amaçlı sabit, ayrı bir tetikleme yok.
+
+**Boyut büyütüldü**: kullanıcı "çok küçük" dedi — `CRATE_SPRITE_SCALE=1.8` sabiti eklendi,
+`AnimatedSprite2D.scale` buna set ediliyor.
+
+**Düşüş gölgesi eklendi**: `_setup_fall_shadow()`/`_update_fall_shadow(frame)` — kutunun
+altına sabit bir elips (`Polygon2D`, z_index=-1, kutunun altında kalıyor), 0. karede
+`scale=0.15`'ten başlayıp 10. kareye (çarpma anı) kadar `1.0`'a büyüyor, sonrasında sabit
+kalıyor — "düşerken küçükten büyüyen gölge" isteğine birebir. Gölgenin dikey konumu
+(`position.y = 62 * CRATE_SPRITE_SCALE`) tahmini bir değer, sprite'ın gerçek taban
+noktasına göre oyunda ince ayar gerekebilir.
+
+### Boss zamanlaması gerçek 10 saniyeye sabitlendi, level-up ekranından bağımsızlaştı
+Kullanıcı: "level up ekranını kapatır kapatmaz boss geliyor, anlaşılmıyor — normalde
+10. dakikada sorun olmuyordu, bunu direkt 10. saniyeye sabitleyelim." Eski debug
+yaklaşımı (`_on_upgrade_selected()`'da "ilk kart seçilince hemen") kaldırıldı — bunun
+yerine oyunun **gerçek** (`elapsed_time`, `_process()`'te her frame `delta` ile artan,
+`get_tree().paused` iken donan) süre sayacına bağlı yeni bir kontrol eklendi:
+`if not _debug_boss_triggered and elapsed_time >= 10.0: ... _start_boss_intro()`.
+Bu, normal `BOSS_SPAWN_TIME=600.0` (10 dakika) mekanizmasının BİREBİR aynısı, sadece
+süre 10 saniyeye çekilmiş hâli — level-up ekranının ne zaman kapatıldığından tamamen
+bağımsız, ne zaman geleceği net (oyun süresinin 10. saniyesi). `_debug_boss_triggered`
+bayrağı eklendi (eski `_debug_first_upgrade_done`'ın yerine geçti). **Test bitince bu
+blok (+ `_debug_boss_triggered` değişkeni) kaldırılmalı**, `BOSS_SPAWN_TIME` zaten
+600.0'da bırakıldı (dokunulmadı) — sadece debug'daki paralel 10sn kontrolü kaldırılacak.
+
+## Boss intro sandığı gerçek sprite'a bağlandı (2026-09-30, oyunda denenmedi)
+
+`crate_intro.gd` eskiden tamamen `_draw()` ile procedural çiziliyordu (ahşap tahtalar,
+metal köşe bantları, kapak açılıp uçması, boss'un kırmızı gözlerinin yükselmesi — hepsi
+kod içinde geometrik şekillerle). Kullanıcı Pixellab'de düşüş+çarpma+parçalanma temalı
+tek sürekli bir animasyon ürettirdi, `assets/VFX/bossCrate/frame_000..036.png` (37 kare,
+168×168) olarak eklendi.
+
+**Yapılan**: `play_intro(land_pos)` artık önce sprite'ı arıyor
+(`ResourceLoader.exists("res://assets/VFX/bossCrate/frame_000.png")`) — varsa
+`_play_intro_sprite()`, yoksa eski procedural sekans `_play_intro_fallback()`'e
+(fonksiyon adı değişti, davranışı BİREBİR aynı, silinmedi) düşüyor. Sprite yolu:
+`AnimatedSprite2D` (14fps, non-loop, 37÷14≈2.6sn), `land_pos`'ta sabit duruyor (Y ekseni
+tween'i yok — düşüş hareketi artık animasyonun kendi kareleri içinde, prompt'ta
+"frame 1-3 düşüyor" diye tarif edilmişti). Kamera sarsıntısını tetikleyen `"landed"`
+sinyali animasyonun **~%35'lik frame'inde** (`int(total * 0.35)`, çarpma anına denk
+gelmesi beklenen tahmini nokta) ateşleniyor, `"boss_emerged"` (asıl boss spawn'ı) ise
+animasyon TAMAMEN bitince.
+
+**Test edilmesi gereken/kesin olmayan nokta**: `%35` çarpma tahmini gerçek sprite'ı
+görmeden yapıldı (prompt'taki "10 kavramsal karenin 4.'sü impact" oranından
+hesaplandı) — oyunda test edilip kamera sarsıntısının gerçek çarpma anıyla eşleşip
+eşleşmediği kontrol edilmeli, tutmazsa `_impact_frame` oranı (`0.35`) ayarlanabilir.
+
+## DEBUG: Cyber-404 boss'u artık ilk level'dan sonra hemen geliyor (2026-09-30, test için)
+
+Kullanıcı sadece Cyber-404'ü (bölüm sırasındaki 3 boss'tan ikincisi — Smiler → Cyber404
+→ Nyx, `_spawn_section_boss()`'taki `_boss_check_index` sırası) test etmek istedi, normal
+akışta boss'lar her bölümde **10. dakikada** (`BOSS_SPAWN_TIME=600.0`) geliyor — test için
+o kadar beklemek gerekmesin diye kısayol eklendi.
+
+`_on_upgrade_selected()`'a (`level += 1`'in hemen altına) eklendi: ilk kart seçilince
+doğrudan `_start_boss_intro()` çağrılıyor (Smiler/Nyx dispatch zincirini atlayıp —
+`_spawn_boss_at()` zaten koşulsuz `cyber_404_scene` instantiate ediyor, ayrı bir branch
+gerekmedi), `_cyber404_spawned` + `_boss_spawned` true'ya çekiliyor (normal 10dk'lık
+zamanlayıcı bir daha tetiklenmesin, aynı testte ikinci bir boss gelmesin diye).
+
+**BUG FIX**: ilk denemede `level == 1` kontrolü kullanılmıştı ama `level` değişkeni
+(`game_scene.gd:7`) zaten **1'den başlıyor** — ilk kart seçiminde `level += 1` ile
+**2** oluyor, `level == 1` hiçbir zaman tutmuyordu, boss hiç gelmiyordu (kullanıcı test
+edip fark etti). Yeni `_debug_first_upgrade_done: bool` bayrağı eklendi, sayıya bağımlı
+olmadan "bu run'da ilk kart mı seçildi" kontrolü buradan yapılıyor.
+
+**Test bitince bu blok (+ `_debug_first_upgrade_done` değişkeni) kaldırılmalı**, kalıcı
+build'e sızmamalı.
+
 ## BUG FIX: Ayarlar ekranındaki bazı puntolar Silver'ın 19px ızgarasına hiç oturmamıştı (2026-09-30, oyunda denenmedi)
 
 Kullanıcı: "Kontroller kısmındaki yazı aşırı küçük, okunmuyor." Kontrol edilince: Silver

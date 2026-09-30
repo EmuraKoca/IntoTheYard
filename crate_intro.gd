@@ -1,7 +1,11 @@
 extends Node2D
-# Procedurel tahta sandık — boss intro sekansı
+# Boss intro sandığı — düşme + iniş + parçalanma sekansı
 # Kullanım: crate.play_intro(land_pos: Vector2)
 # Sinyaller: "landed" (kamera sarsıntısı), "boss_emerged" (boss spawn zamanı)
+#
+# Öncelik: assets/VFX/bossCrate/frame_000.png.. (gerçek sprite animasyonu — düşüş,
+# çarpma, sarsılma, parçalanma tek sürekli animasyon olarak). Sprite yoksa eski
+# procedural (_draw ile çizilen) sekansa düşülüyor, crash yok.
 
 signal landed
 signal boss_emerged
@@ -20,7 +24,7 @@ const C_METAL_DARK := Color(0.28, 0.30, 0.33)
 const C_RIVET      := Color(0.68, 0.70, 0.74)
 const C_DANGER     := Color(0.95, 0.72, 0.04)
 
-# Animasyon state
+# Animasyon state (sadece procedural fallback için)
 var _lid_angle    : float   = 0.0
 var _lid_offset_y : float   = 0.0
 var _show_lid     : bool    = true
@@ -28,9 +32,17 @@ var _flash        : float   = 0.0
 var _dust_t       : float   = -1.0
 var _boss_rise    : float   = 0.0
 var _shake_ofs    : Vector2 = Vector2.ZERO
+var _use_fallback_draw : bool = false
+var _shadow : Polygon2D = null
+var _owns_cleanup : bool = false  # true ise game_scene.gd kutuyu erken silmez
+
+# Sprite animasyonunda kutu görsel olarak küçük kaldığı için büyütme çarpanı
+const CRATE_SPRITE_SCALE := 1.3
 
 # ─────────────────────────────────────────────────────────────────────────────
 func _process(delta: float) -> void:
+	if not _use_fallback_draw:
+		return
 	if _flash > 0.0:
 		_flash = max(0.0, _flash - delta * 3.5)
 	if _dust_t >= 0.0 and _dust_t < 1.0:
@@ -38,6 +50,8 @@ func _process(delta: float) -> void:
 	queue_redraw()
 
 func _draw() -> void:
+	if not _use_fallback_draw:
+		return
 	var b := _shake_ofs
 	_draw_shadow(b)
 	_draw_body(b)
@@ -186,6 +200,102 @@ func _draw_boss_rise(b: Vector2) -> void:
 
 # ─── Ana sekans ───────────────────────────────────────────────────────────────
 func play_intro(land_pos: Vector2) -> void:
+	if ResourceLoader.exists("res://assets/VFX/bossCrate/frame_000.png"):
+		await _play_intro_sprite(land_pos)
+	else:
+		await _play_intro_fallback(land_pos)
+
+# Gerçek sprite animasyonu — düşüş + çarpma + sarsılma + parçalanma tek sürekli
+# animasyon olarak (37 kare). Kullanıcının kare kare tarif ettiği kesin zamanlama:
+# 0-9: düşüş, 10: çarpma, 14: ilk kırılma, 25: boss deliklerden görünür hale geliyor.
+# Kutunun kendisi düşme boyunca sabit dünya pozisyonunda kalıyor (Y ekseninde
+# tween'lenmiyor — düşüş hareketi animasyonun kendi kareleri içinde).
+const IMPACT_FRAME  := 10
+const CRACK_FRAME   := 14  # şu an bilgi amaçlı, ayrı bir tetikleme yok
+const VISIBLE_FRAME := 25  # boss bu kareden itibaren deliklerden görünüyor → spawn edilir
+
+const FALL_FPS := 14.0
+const FALL_START_OFFSET := 700.0  # ekran dışı yukarıdan düşüş mesafesi
+
+func _play_intro_sprite(land_pos: Vector2) -> void:
+	# Ekran dışı yukarıdan başlayıp land_pos'a düşüyor — sprite'ın kendi kareleri
+	# görsel olarak yeterli düşüş hissi vermiyordu (kullanıcı: "bir anda beliriyor"),
+	# gerçek bir Y-tween eklendi. Tween süresi çarpma karesiyle (IMPACT_FRAME) senkron.
+	position = Vector2(land_pos.x, land_pos.y - FALL_START_OFFSET)
+	z_index  = 5
+
+	_setup_fall_shadow(land_pos)
+
+	var spr := AnimatedSprite2D.new()
+	spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	spr.scale = Vector2(CRATE_SPRITE_SCALE, CRATE_SPRITE_SCALE)
+	var sf := SpriteFrames.new()
+	if sf.has_animation("default"): sf.remove_animation("default")
+	sf.add_animation("crate")
+	sf.set_animation_loop("crate", false)
+	var total := 0
+	while ResourceLoader.exists("res://assets/VFX/bossCrate/frame_%03d.png" % total):
+		sf.add_frame("crate", load("res://assets/VFX/bossCrate/frame_%03d.png" % total))
+		total += 1
+	sf.set_animation_speed("crate", FALL_FPS)
+	spr.sprite_frames = sf
+	add_child(spr)
+	spr.play("crate")
+
+	var fall_tw := create_tween()
+	fall_tw.tween_property(self, "position:y", land_pos.y, float(IMPACT_FRAME) / FALL_FPS)\
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+
+	var _landed_fired  := false
+	var _visible_fired := false
+	spr.frame_changed.connect(func():
+		_update_fall_shadow(spr.frame)
+		if not _landed_fired and spr.frame >= IMPACT_FRAME:
+			_landed_fired = true
+			emit_signal("landed")
+		if not _visible_fired and spr.frame >= VISIBLE_FRAME:
+			_visible_fired = true
+			# game_scene.gd::_on_boss_emerged() bu bayrağı görünce kutuyu HEMEN
+			# soldurup silmiyor — animasyonun kalan kareleri (25→36) oynamaya devam
+			# etsin diye temizlik bu fonksiyonun sonunda (animasyon bitince) yapılıyor.
+			_owns_cleanup = true
+			emit_signal("boss_emerged")
+	)
+
+	await spr.animation_finished
+	var fade_tw := create_tween()
+	fade_tw.tween_property(self, "modulate:a", 0.0, 0.3)
+	await fade_tw.finished
+	if is_instance_valid(self): queue_free()
+
+# ─── Düşüş gölgesi — küçük başlayıp çarpma anına kadar büyüyen elips ──────────
+# Kutunun kendisi hareket ederken gölge YERDE (land_pos'ta) sabit kalmalı, bu yüzden
+# kutunun child'ı değil, kutuyla aynı parent'a (game_scene) ekleniyor.
+func _setup_fall_shadow(land_pos: Vector2) -> void:
+	_shadow = Polygon2D.new()
+	_shadow.color = Color(0.0, 0.0, 0.0, 0.42)
+	_shadow.z_index = -1
+	var pts := PackedVector2Array()
+	for i in 24:
+		var a := float(i) / 24.0 * TAU
+		pts.append(Vector2(cos(a) * 58.0, sin(a) * 20.0))
+	_shadow.polygon = pts
+	_shadow.scale = Vector2(0.15, 0.15)
+	_shadow.global_position = land_pos + Vector2(0.0, 62.0 * CRATE_SPRITE_SCALE)
+	get_parent().add_child(_shadow)
+	tree_exiting.connect(func():
+		if is_instance_valid(_shadow): _shadow.queue_free()
+	)
+
+func _update_fall_shadow(frame: int) -> void:
+	if _shadow == null: return
+	var t: float = clamp(float(frame) / float(IMPACT_FRAME), 0.0, 1.0)
+	var s: float = lerp(0.15, 1.0, t)
+	_shadow.scale = Vector2(s, s)
+
+# Eski procedural (elle _draw ile çizilen) sekans — sprite eksikse fallback.
+func _play_intro_fallback(land_pos: Vector2) -> void:
+	_use_fallback_draw = true
 	position = Vector2(land_pos.x, -160.0)
 	z_index  = 5
 
