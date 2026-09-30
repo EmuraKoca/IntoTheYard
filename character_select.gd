@@ -29,6 +29,7 @@ func _ready() -> void:
 	$Button.pressed.connect(_on_back)
 	$Button2.set_meta("sfx_click", "characterSelect")
 	$Button2.pressed.connect(_on_confirm)
+	$Label.text = Lang.t("cs_title")
 
 	_build_ui()
 	_refresh()
@@ -459,7 +460,7 @@ func _milestone_display(key: String) -> Dictionary:
 		label = "Calamity slotunu %s kez doldur" % key.split("_")[2]
 	return {"label": label, "reward": reward}
 
-func _open_achievements() -> void:
+func _open_achievements(restore_scroll: int = 0) -> void:
 	var canvas := CanvasLayer.new()
 	canvas.layer = 90
 	add_child(canvas)
@@ -581,10 +582,12 @@ func _open_achievements() -> void:
 				collect_btn.set_meta("sfx_click", "chipCollect")
 				collect_btn.add_theme_color_override("font_color", Color(0.0, 1.0, 0.7))
 				var k: String = key
+				var scroll_ref := scroll
 				collect_btn.pressed.connect(func():
+					var pos: int = scroll_ref.scroll_vertical
 					GameData.claim_milestone(k)
 					canvas.queue_free()
-					_open_achievements()
+					_open_achievements(pos)
 					_refresh_header_buttons()
 				)
 			else:
@@ -602,6 +605,10 @@ func _open_achievements() -> void:
 	close_btn.position = Vector2(860, 940)
 	close_btn.pressed.connect(func(): canvas.queue_free(); _refresh_header_buttons())
 	canvas.add_child(close_btn)
+
+	if restore_scroll > 0:
+		scroll.scroll_vertical = restore_scroll
+		scroll.call_deferred("set", "scroll_vertical", restore_scroll)
 
 func _refresh_header_buttons() -> void:
 	var ab := $InfoPanel.get_node_or_null("AchievBtn")

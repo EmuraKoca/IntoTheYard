@@ -523,7 +523,7 @@ func _build_display_tab(parent: Control, rect: Rect2) -> Control:
 	parent.add_child(cont)
 
 	# ── Çözünürlük ────────────────────────────────────────────────────────────
-	_add_label(cont, "Çözünürlük", Vector2(0, 20), 16, Color(0.82, 0.92, 1, 0.9), _font_bold)
+	_add_label(cont, Lang.t("set_display_resolution"), Vector2(0, 20), 16, Color(0.82, 0.92, 1, 0.9), _font_bold)
 
 	var res_btns: Array = []
 	for i in RESOLUTIONS.size():

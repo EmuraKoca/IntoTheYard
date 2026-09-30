@@ -3,6 +3,40 @@
 Bu dosya, farklı bilgisayarlardaki (ev / işyeri) Claude Code oturumları arasında bağlam
 köprüsü olarak kullanılır. Her oturum başında oku, her oturum sonunda güncelle.
 
+## Küçük dil/UX bug fix turu (2026-09-29, aynı gün devamı) — oyunda denenmedi
+
+Kullanıcı 3 sorun bildirdi:
+- **Ayarlar → Display'de "Çözünürlük" iki dilde de aynıydı**: `main_menu.gd`'de
+  `Lang.t(...)` yerine düz string ("Çözünürlük") yazılmıştı — tek yerdeki tek istisnaydı,
+  aynı ekrandaki diğer tüm etiketler (`set_display_fs` vb.) zaten doğru kullanıyordu.
+  `lang.gd`'ye `set_display_resolution` (TR: "ÇÖZÜNÜRLÜK", EN: "RESOLUTION") eklendi,
+  `main_menu.gd:526` buna bağlandı. **Yan bulgu**: `set_display_note`'un metni de
+  ("* Çözünürlük ayarı ileriki güncellemede eklenecek." / "Resolution settings coming in
+  a future update.") eskiydi — çözünürlük seçimi zaten uzun süredir çalışıyor (bkz.
+  `güncelleme notları.txt`), not güncellenmedi kalmıştı. "* Tam ekran açıkken çözünürlük
+  değiştirilemez." / "* Resolution cannot be changed while fullscreen is on." olarak
+  düzeltildi (gerçek kısıtlamayı — `_apply_resolution` fullscreen'de çalışmıyor — anlatan
+  daha doğru bir not).
+- **Karakter seçim ekranı "SELECT YOUR CHARACTER" iki dilde de aynıydı**: başlık
+  `character_select.tscn`'de (`Label` node, satır 218) doğrudan sabit metin olarak
+  yazılmıştı, hiç `Lang.t()`'e bağlı değildi. `lang.gd`'ye `cs_title` eklendi (TR:
+  "KARAKTERİNİ SEÇ", EN: "SELECT YOUR CHARACTER"), `character_select.gd::_ready()`'ye
+  `$Label.text = Lang.t("cs_title")` eklendi.
+  **Kontrol edilip bug OLMADIĞI doğrulanan**: kullanıcının işaret ettiği "sıradaki ödül"
+  metni (`cs_next_unlock` + `GameData.get_unlock_for_level()`'den gelen "Piercing Ball"/
+  "Crusher Fusion" gibi isimler) — bunlar kart/core isimleri, proje kuralı gereği
+  ("kart isimleri her zaman İngilizce kalır") bilerek her iki dilde de İngilizce kalıyor,
+  düzeltme gerekmiyor.
+- **Başarımlar ekranında Collect'e basınca scroll en üste sıçrıyordu**:
+  `character_select.gd::_open_achievements()` her Collect tıklamasında TÜM ekranı
+  (`canvas.queue_free()` + yeniden `_open_achievements()` çağrısı) sıfırdan inşa ediyordu
+  — yeni `ScrollContainer` her zaman `scroll_vertical=0`'dan başlıyordu. Fix:
+  `_open_achievements(restore_scroll: int = 0)` parametresi eklendi, Collect butonunun
+  callback'i tıklama anındaki `scroll.scroll_vertical` değerini yakalayıp yeniden
+  açılışta bu değeri geri veriyor (`call_deferred` ile — `ScrollContainer` layout'u bir
+  frame sonra kesinleştiği için anlık set tek başına yetmeyebilir, ikisi birden
+  uygulandı).
+
 ## Herkese Açık (Ortak) Kartlar — Review TAMAMLANDI (2026-09-23)
 
 Kullanıcı xlsx üretimi sonrası "bu genel kartlara baktık mı?" diye sordu — `"chars": []`

@@ -72,8 +72,9 @@ const _TR := {
 	"set_audio_master":    "ANA SES",
 	"set_audio_music":     "MÜZİK SESİ",
 	"set_audio_sfx":       "SES EFEKTLERİ",
+	"set_display_resolution": "ÇÖZÜNÜRLÜK",
 	"set_display_fs":      "TAM EKRAN",
-	"set_display_note":    "* Çözünürlük ayarı ileriki güncellemede eklenecek.",
+	"set_display_note":    "* Tam ekran açıkken çözünürlük değiştirilemez.",
 	"set_lang_title":      "DİL SEÇİMİ",
 	"set_lang_note":       "* Kart isimleri ve türleri her zaman İngilizce kalır.",
 
@@ -128,6 +129,7 @@ const _TR := {
 	"ui_back":             "Geri",
 
 	# ── Karakter Seçim ────────────────────────────────────────────────────────
+	"cs_title":            "KARAKTERİNİ SEÇ",
 	"cs_name":             "İsim: ",
 	"cs_locked":           "Bu karakter henüz kilitli.",
 	"cs_theme_vector":   "Kinetik",
@@ -190,8 +192,9 @@ const _EN := {
 	"set_audio_master":    "MASTER VOLUME",
 	"set_audio_music":     "MUSIC VOLUME",
 	"set_audio_sfx":       "SFX VOLUME",
+	"set_display_resolution": "RESOLUTION",
 	"set_display_fs":      "FULLSCREEN",
-	"set_display_note":    "* Resolution settings coming in a future update.",
+	"set_display_note":    "* Resolution cannot be changed while fullscreen is on.",
 	"set_lang_title":      "LANGUAGE",
 	"set_lang_note":       "* Card names and types always remain in English.",
 
@@ -246,6 +249,7 @@ const _EN := {
 	"ui_back":             "Back",
 
 	# ── Karakter Seçim ────────────────────────────────────────────────────────
+	"cs_title":            "SELECT YOUR CHARACTER",
 	"cs_name":             "Name: ",
 	"cs_locked":           "This character is not yet unlocked.",
 	"cs_theme_vector":   "Kinetic",
