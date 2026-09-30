@@ -1200,10 +1200,10 @@ func _ready() -> void:
 		for _ci in range(min(_cal_start, max_calamity_slots)):
 			calamity_slots.append(_cal_pool[_ci])
 
-	# DEBUG: Leila'nın kalan 2 Calamity'si (Thunderstorm / Wildfire) test için otomatik
-	# slota ekleniyor. Test bitince bu blok kaldırılmalı.
+	# DEBUG: Cyclone'un ilk 3 Calamity'si (Data Storm / Backdoor / Bounce Barrage) SFX
+	# testi için otomatik slota ekleniyor. Test bitince bu blok kaldırılmalı.
 	calamity_slots.clear()
-	for _dbg_cal in ["⛈️", "🔥💥"]:
+	for _dbg_cal in ["💾", "👾", "🎱"]:
 		if calamity_slots.size() < max_calamity_slots:
 			calamity_slots.append(_dbg_cal)
 
@@ -2936,7 +2936,7 @@ func _build_all_upgrades() -> void:
 	# Calamity
 	{"name": "Data Storm",           "category": "Calamity",      "color": Color(0.7, 0.0, 0.8),  "desc": "All [b]Glitched[/b] enemies in the Yard are hit\nby a corruption burst for 10 dmg, clearing Glitch",             "index": 129, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 3, "requires_any": [16, 192, 197, 214]},
 	{"name": "Backdoor",             "category": "Calamity",      "color": Color(0.6, 0.0, 0.7),  "desc": "All enemies in the Yard\nbecome [b]Glitched[/b] for 3s",                  "index": 130, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
-	{"name": "Bounce Barrage",       "category": "Calamity",      "color": Color(0.35, 0.0, 0.9),  "desc": "Core Speed ×3 for 5s",                                   "index": 138, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
+	{"name": "Bounce Barrage",       "category": "Calamity",      "color": Color(0.35, 0.0, 0.9),  "desc": "Core Speed ×3 for 10s",                                   "index": 138, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
 	{"name": "Mirror Image",         "category": "Calamity",      "color": Color(0.2, 0.65, 0.9),  "desc": "Grants 2 bonus cores.\nVanish after 25s if not fired",                          "index": 144, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
 	{"name": "Systemic Failure",     "category": "Calamity",      "color": Color(0.0, 0.7, 0.35),  "desc": "All enemies in the Yard\nget max [b]Virus[/b] stacks",        "index": 156, "weight": 2,  "rarity": "legendary", "chars": ["cyclone"], "min_level": 4},
 	# ── Cyclone Connected Cores (iç yörünge) ─────────────────────────────────
@@ -3601,6 +3601,7 @@ func _activate_emp() -> void:
 	_screen_shake_small()
 
 func _activate_data_storm() -> void:
+	Sfx.play_path("res://assets/sfx/calamitys/cyclone/dataStorm.ogg")
 	var _is_glitched := func(e) -> bool:
 		return e.get("is_glitched") == true
 	_vfx_yard_engine(_vfx_data_storm_burst, Color(0.7, 0.0, 0.8, 1.0), Color(0.7, 0.0, 0.8, 0.4), _is_glitched)
@@ -3652,6 +3653,7 @@ func _vfx_data_storm_burst(subject: Node) -> void:
 	subject.set("is_glitched", false)
 
 func _activate_backdoor() -> void:
+	Sfx.play_path("res://assets/sfx/calamitys/cyclone/backdoor.ogg")
 	var _apply := func(subject):
 		if subject.has_method("apply_glitch"):
 			subject.apply_glitch(3.0)
@@ -3817,6 +3819,7 @@ func _vfx_engine_bolt(from_pos: Vector2, to_pos: Vector2, color: Color) -> void:
 	btw.tween_callback(bolt.queue_free)
 
 func _activate_systemic_failure() -> void:
+	Sfx.play_path("res://assets/sfx/calamitys/cyclone/systemicFailure.ogg")
 	var p := get_node_or_null("Player")
 	var _cap: int = 3 + (p.stack_overflow_level if (p and p.get("stack_overflow_level")) else 0)
 	var _apply := func(subject):
@@ -3825,17 +3828,19 @@ func _activate_systemic_failure() -> void:
 	_vfx_yard_engine(_apply, Color(0.1, 0.9, 0.4, 1.0), Color(0.05, 0.9, 0.35, 0.45))
 
 func _activate_bounce_barrage() -> void:
+	Sfx.play_path("res://assets/sfx/calamitys/cyclone/bounceBarrage.ogg")
 	var p := get_node_or_null("Player")
 	if p == null: return
-	p.bounce_barrage_timer = 5.0
+	p.bounce_barrage_timer = 10.0
 	if $BallLauncher.has_method("electrify_weapon"):
-		$BallLauncher.electrify_weapon(5.0)
+		$BallLauncher.electrify_weapon(10.0)
 	if $BallLauncher.has_method("play_weapon_burst"):
 		$BallLauncher.play_weapon_burst()
 
 var _mirror_image_balls: Array = []
 
 func _activate_mirror_image() -> void:
+	Sfx.play_path("res://assets/sfx/calamitys/cyclone/mirrorImage.ogg")
 	var p := get_node_or_null("Player")
 	var launcher := get_node_or_null("BallLauncher")
 	if p == null or launcher == null: return
@@ -4324,6 +4329,7 @@ func _yard_subjects() -> Array:
 	)
 
 func _activate_glitch_bomb(pos: Vector2) -> void:
+	Sfx.play_path("res://assets/sfx/calamitys/cyclone/glitchField.ogg")
 	# Flame Zone deseni: yerde kaldığı sürece (~3sn) üstünden geçen düşmana Glitch uygular
 	_vfx_glitch_bomb(pos)
 	var ticks := 6
@@ -4360,6 +4366,7 @@ func _vfx_glitch_bomb(pos: Vector2) -> void:
 	if is_instance_valid(z): z.queue_free()
 
 func _activate_system_crash() -> void:
+	Sfx.play_path("res://assets/sfx/calamitys/cyclone/systemChrash.ogg")
 	# Boss'lar Glitch'e bağışık (is_glitched hiç true olmaz) → otomatik etkilenmez
 	var _is_glitched := func(e) -> bool:
 		return e.get("is_glitched") == true
@@ -4372,6 +4379,7 @@ func _activate_system_crash() -> void:
 	_vfx_yard_engine(_apply, Color(0.85, 0.1, 0.65, 1.0), Color(0.8, 0.1, 0.6, 0.25), _is_glitched, true)
 
 func _activate_decay_field(pos: Vector2) -> void:
+	Sfx.play_path("res://assets/sfx/calamitys/cyclone/decayField.ogg")
 	var field_duration := 5.0
 	var field_radius := 84.0  # sprite'ın gerçek boyutuna eşitlendi (168px sprite / 2)
 	# Canlı düşmanların (2-3) VE cesetlerin (0) altında kalsın (z_index=-1)

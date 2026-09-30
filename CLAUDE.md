@@ -3,6 +3,47 @@
 Bu dosya, farklı bilgisayarlardaki (ev / işyeri) Claude Code oturumları arasında bağlam
 köprüsü olarak kullanılır. Her oturum başında oku, her oturum sonunda güncelle.
 
+## Cyclone Calamity sesleri bağlandı (2026-09-30, oyunda denenmedi)
+
+Kullanıcı `assets/sfx/calamitys/cyclone/` altına Cyclone'un 8 Calamity'sinin hepsi için
+ses ekledi (Data Storm, Backdoor, Bounce Barrage, Mirror Image, Systemic Failure,
+Glitch Field, System Crash — dosya adı `systemChrash.ogg` yazım farkıyla, sorun değil —
+Decay Field). Python `soundfile` ile hepsinin gerçek Ogg Vorbis olduğu doğrulandı (Convertio
+dışındaki sitelerden yapılanlar dahil, hiçbiri FLAC çıkmadı — çevirmeye gerek kalmadı).
+Süreler mekaniklerle uyumlu (Decay Field 5.08sn ≈ 5sn'lik alan süresi, diğerleri anlık
+tetiklenen kartlar oldukları için tek seferlik çalıyor, süre tam eşleşmesi gerekmiyor).
+
+Vector/Leila Calamity'leriyle aynı desen — her `_activate_X()` fonksiyonunun başında
+`Sfx.play_path("res://assets/sfx/calamitys/cyclone/<dosya>.ogg")`:
+- `_activate_data_storm()` → `dataStorm.ogg`
+- `_activate_backdoor()` → `backdoor.ogg`
+- `_activate_systemic_failure()` → `systemicFailure.ogg`
+- `_activate_bounce_barrage()` → `bounceBarrage.ogg` (10sn — kartın 5sn'lik buff'ından
+  uzun, ama tek seferlik çaldığı için sorun değil, sonradan kısaltılabilir)
+- `_activate_mirror_image()` → `mirrorImage.ogg`
+- `_activate_glitch_bomb(pos)` → `glitchField.ogg`
+- `_activate_system_crash()` → `systemChrash.ogg`
+- `_activate_decay_field(pos)` → `decayField.ogg`
+
+Data Storm/Backdoor/Systemic Failure/System Crash "The Yard Engine" ortak makinesini
+kullanıyor ama sesleri ayrı ayrı (fonksiyon başında) çalınıyor — makinenin kendi ateşleme
+sesi (`yardEngineImpact.ogg`) zaten `_vfx_yard_engine()`'in içinde ayrıca çalıyordu,
+bu ikisi üst üste biniyor (Vector'daki desenle aynı, sorun değil).
+
+**DEBUG**: test için Cyclone'un ilk 3 Calamity'si (💾 Data Storm / 👾 Backdoor / 🎱 Bounce
+Barrage) `_ready()`'de otomatik slota ekleniyor (eski Leila Thunderstorm/Wildfire debug
+bloğunun yerine geçti). **Test bitince bu blok kaldırılmalı.**
+
+### Bounce Barrage (138, Cyclone) süresi 5sn → 10sn (kullanıcı kararı, 2026-09-30)
+`bounceBarrage.ogg` aslında Vector'dan alınmış bir ses (kullanıcının kendi ifadesiyle) —
+Vector'da bu ses Momentum Burst'ün 10sn'lik `electrify_weapon(10.0)` süresine göre
+seçilmişti, ses dosyasının kendisi de 10.02sn. Cyclone'un Bounce Barrage'ı ise 5sn'de
+kalmıştı — ses dosyasının yarısında kesiliyordu. Kullanıcı: "5 saniye az olmuş, Vector
+gibi 10 saniye yapalım" — `_activate_bounce_barrage()`'daki `p.bounce_barrage_timer` ve
+`$BallLauncher.electrify_weapon()` ikisi de 5.0 → 10.0 yapıldı, kart açıklaması (EN
+`upgrades` dizisi + TR `lang.gd` index 138) "5s" → "10s" olarak güncellendi. Mekanik
+(top hızı ×3) değişmedi, sadece süre uzadı.
+
 ## Küçük dil/UX bug fix turu (2026-09-29, aynı gün devamı) — oyunda denenmedi
 
 Kullanıcı 3 sorun bildirdi:

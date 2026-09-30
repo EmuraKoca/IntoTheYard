@@ -360,7 +360,7 @@ const _DESC_TR: Dictionary = {
 	98: "İlk 1sn sakin, ardından 4sn boyunca her saniye\nrastgele 2 düşmana 5 hasar verir ve [b]Electrified[/b] uygular",
 	129: "Avlu'daki tüm [b]Glitched[/b] düşmanlar bozulma\npatlamasıyla 10 hasar alır, Glitch'leri temizlenir",
 	130: "Avlu'daki tüm düşmanlar 3sn boyunca\n[b]Glitched[/b] olur",
-	138: "5sn boyunca Core Hızı ×3 olur",
+	138: "10sn boyunca Core Hızı ×3 olur",
 	144: "2 bonus core kazandırır.\nAteşlenmezse 25sn sonra kaybolur",
 	156: "Avlu'daki tüm düşmanlar maksimum\n[b]Virus[/b] stack'i alır",
 	215: "Yerde bir alan bırakır.\nÜstünden geçen düşmanlar\n[b]Glitched[/b] olur",

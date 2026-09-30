@@ -88,16 +88,16 @@ Aşağıdakilerin hiçbirinin sesi henüz yok. Arama anahtar kelimeleri (freesou
 
 ## 7. CALAMITY — CYCLONE (8)
 
-| # | Kart | Ses ihtiyacı | Arama |
-|---|---|---|---|
-| 52 | Data Storm | Glitchli düşmanlarda dijital bozulma patlaması (her düşmanda) | glitch burst, digital corruption |
-| 53 | Backdoor | Sisteme sızma + herkes Glitch | hack, system breach |
-| 54 | Bounce Barrage | Silah elektriklenmesi + 5sn hız loop'u | electric charge, overdrive |
-| 55 | Mirror Image | 2 bonus core belirişi (kopyalanma) | clone, mirror shimmer |
-| 56 | Systemic Failure | Herkese max Virus (yeşil) | virus infect, toxic |
-| 57 | Glitch Field | Glitch alanı açılış + 3sn loop | glitch field, static hum |
-| 58 | System Crash | Glitchli düşmanlardan makineye akış + çöküş | system crash, error |
-| 59 | Decay Field | Çürüme alanı 5sn loop + Decay patlaması (ölümde) | decay, rot, corrosion |
+| #   | Kart             | Ses ihtiyacı                                                  | Arama                            |
+| --- | ---------------- | ------------------------------------------------------------- | -------------------------------- |
+| 52  | Data Storm       | Glitchli düşmanlarda dijital bozulma patlaması (her düşmanda) | glitch burst, digital corruption |
+| 53  | Backdoor         | Sisteme sızma + herkes Glitch                                 | hack, system breach              |
+| 54  | Bounce Barrage   | Silah elektriklenmesi + 5sn hız loop'u                        | electric charge, overdrive       |
+| 55  | Mirror Image     | 2 bonus core belirişi (kopyalanma)                            | clone, mirror shimmer            |
+| 56  | Systemic Failure | Herkese max Virus (yeşil)                                     | virus infect, toxic              |
+| 57  | Glitch Field     | Glitch alanı açılış + 3sn loop                                | glitch field, static hum         |
+| 58  | System Crash     | Glitchli düşmanlardan makineye akış + çöküş                   | system crash, error              |
+| 59  | Decay Field      | Çürüme alanı 5sn loop + Decay patlaması (ölümde)              | decay, rot, corrosion            |
 
 ## 8. TOP (CORE) SESLERİ
 
