@@ -78,6 +78,40 @@ olması (~-5px dünya) nedeniyle `CollisionShape2D.position = Vector2(0, -5)` ek
 `2.43`), bu collision shape boyutu da orantılı olarak yeniden hesaplanmalı — formül:
 `local_size = (local_bbox_px × sprite.scale) / root_scale`.
 
+## Leila/Cyclone de yeni HealthBar2'ye taşındı (2026-10-01, oyunda denenmedi)
+Kullanıcı `assets/hudBars/leila/` ve `assets/hudBars/cyclone/` altına Vector'unkiyle
+BİREBİR aynı boyutta (161×28, aynı iç dolgu koordinatları: x:5-155 y:11-22) kendi
+`health_bar_frame.png`'lerini ekledi (Leila magenta/mor tonlu, Cyclone yeşil tonlu).
+
+Eskiden sadece Vector `$UI/HealthBar2`'yi kullanıyordu, diğer karakterler sağ-alt köşedeki
+eski `$UI/IntegrityBar`'da kalıyordu (`char_type == "vector"` dallanması). Artık **her
+üç karakter de HealthBar2'yi kullanıyor**, `IntegrityBar` tamamen gizlendi (değerleri hâlâ
+arka planda senkron tutuluyor ama hiç görünmüyor — kod sadeliği için silinmedi, zararsız).
+- `game_scene.gd` (karakter seçimi bloğu): `$UI/HealthBar2.visible=true` artık KOŞULSUZ,
+  `$UI/MomentumBar.visible` sadece Vector'da true kalıyor (Momentum hâlâ Vector'a özel).
+  Karaktere göre `$UI/HealthBar2/Frame.texture` dinamik `load()` ediliyor
+  (`assets/hudBars/<char>/health_bar_frame.png`), `Fill`'in rengi de yeni bir
+  `StyleBoxFlat` ile karaktere göre değiştiriliyor: Vector cyan (değişmedi), **Leila
+  `Color(0.87,0.2,0.89)`** (frame'in kendi en parlak piksel rengi `rgb(222,50,226)`'dan
+  örneklendi), **Cyclone `Color(0.48,0.72,0.2)`** (frame'den `rgb(122,183,51)`).
+- `_get_hp_bar_rect()`: artık "vector" kontrolü olmadan HER ZAMAN `HealthBar2/Fill`'i
+  döndürüyor (Armor overlay sistemi — şu an sadece Vector kullanıyor ama genel kaldı).
+- `_setup_frost_barrier_ui()`/`_update_frost_barrier_ui()` (Leila'ya özel "Frost Barrier"
+  kartı, 204): eskiden doğrudan `$UI/IntegrityBar`'a (artık gizli) bağlıydı — Armor
+  overlay'in kullandığı `_get_hp_bar_rect()` helper'ına taşındı, artık HealthBar2'nin
+  üzerinde doğru konumda görünüyor.
+**Test edilmesi gereken**: Leila/Cyclone ile oyun açılıp sol üstteki yeni bar'ın doğru
+renk/texture ile göründüğü, Leila'nın Frost Barrier overlay'inin (varsa) doğru pozisyonda
+çıktığı doğrulanmalı.
+
+**Renkler kullanıcının verdiği kesin hex'lere güncellendi (aynı gün devamı)**: ilk turda
+tahmini renkler (Vector cyan, Leila magenta, Cyclone yeşil — frame'den örneklenmişti)
+kullanılmıştı, kullanıcı kesin hex değerler verdi: **Vector can=`#182236`** (koyu lacivert,
+`HealthBar2/Fill`), **Vector zırh=`#575859`** (gri, `ArmorOverlay`, `_setup_armor_bar()`),
+**Cyclone=`#084518`** (koyu yeşil), **Leila=`#3d233c`** (koyu mor/bordo). Hepsi `0xRR/255.0`
+şeklinde doğrudan hex'ten çevrildi (yuvarlama hatası riski olmasın diye elle ondalık
+hesaplanmadı). Boss barının (Cyber-404) renkleri bu değişiklikten etkilenmedi, ayrı kaldı.
+
 ## KRİTİK BUG FIX: Boss/Vector HP barlarının dikişinden düşmanlar görünüyordu (2026-10-01)
 Kullanıcı ekran görüntüsüyle gösterdi: hem boss barında hem Vector'un kendi can barında,
 dolgunun (can/zırh) alt/sağ kenarında **düşmanlar (küçük figürler) barın içinden/üstünden

@@ -1175,14 +1175,26 @@ func _ready() -> void:
 			player_hp     += _shop_hp
 			player_max_hp += _shop_hp
 
-	# Yeni sol üst HUD bar'ları şimdilik sadece Vector'da hazır
-	if char_type == "vector":
-		$UI/IntegrityBar.visible = false
-		$UI/HealthBar2.visible = true
-	else:
-		$UI/IntegrityBar.visible = true
-		$UI/HealthBar2.visible = false
-		$UI/MomentumBar.visible = false
+	# Yeni sol üst HUD bar'ı artık her karakterde kullanılıyor (assets/hudBars/<char>/
+	# health_bar_frame.png — Vector cyan, Leila magenta, Cyclone yeşil, hepsi aynı
+	# 161×28 şablon) — eski sağ-alt IntegrityBar artık hiçbir karakterde görünmüyor.
+	$UI/IntegrityBar.visible = false
+	$UI/HealthBar2.visible = true
+	$UI/MomentumBar.visible = (char_type == "vector")  # Momentum sadece Vector'a özel
+
+	var _hp_frame_path := "res://assets/hudBars/%s/health_bar_frame.png" % char_type
+	if ResourceLoader.exists(_hp_frame_path):
+		$UI/HealthBar2/Frame.texture = load(_hp_frame_path)
+	# Kullanıcının verdiği kesin hex renkler: Vector can=#182236/zırh=#575859,
+	# Cyclone=#084518, Leila=#3d233c.
+	var _hp_fill_colors := {
+		"vector":  Color(0x18 / 255.0, 0x22 / 255.0, 0x36 / 255.0, 1.0),
+		"leila":   Color(0x3d / 255.0, 0x23 / 255.0, 0x3c / 255.0, 1.0),
+		"cyclone": Color(0x08 / 255.0, 0x45 / 255.0, 0x18 / 255.0, 1.0),
+	}
+	var _hp_fill_style := StyleBoxFlat.new()
+	_hp_fill_style.bg_color = _hp_fill_colors.get(char_type, Color(0.0, 0.85, 1.0, 1.0))
+	$UI/HealthBar2/Fill.add_theme_stylebox_override("fill", _hp_fill_style)
 
 	$UI/BtnPause.pressed.connect(_show_pause_menu)
 	$UI/FusionEnergyBar.max_value = 50
@@ -1323,20 +1335,17 @@ func subject_died(xp_reward: int = 1, death_pos: Vector2 = Vector2.ZERO, etype: 
 	_spawn_data_particles(death_pos, float(xp_reward) * 10.0 * 8.0, particle_count)  # DEBUG: hızlı upgrade testi, test bitince ×8.0 kaldırılmalı
 
 func _get_hp_bar_rect() -> Rect2:
-	# Vector: yeni sol üst Health bar'ın iç dolgu alanı (UI CanvasLayer'a göre mutlak)
-	if get_node("Player").character_type == "vector":
-		var _fill: Control = $UI/HealthBar2/Fill
-		return Rect2($UI/HealthBar2.position + _fill.position, _fill.size)
-	# Diğer karakterler: eski sağ panel bar'ı
-	var integrity_bar: ProgressBar = $UI/IntegrityBar
-	return Rect2(integrity_bar.position, integrity_bar.size)
+	# Artık her karakter HealthBar2'yi kullanıyor (sol üst, iç dolgu alanı, UI
+	# CanvasLayer'a göre mutlak) — eski IntegrityBar fallback'i kaldırıldı.
+	var _fill: Control = $UI/HealthBar2/Fill
+	return Rect2($UI/HealthBar2.position + _fill.position, _fill.size)
 
 func _setup_armor_bar() -> void:
 	# Can barının üzerine binen gri zırh overlay'i (Armor, canın üzerinde gri katman)
 	var _hp_rect := _get_hp_bar_rect()
 	var ab := ColorRect.new()
 	ab.name = "ArmorOverlay"
-	ab.color = Color(0.55, 0.55, 0.6, 0.88)
+	ab.color = Color(0x57 / 255.0, 0x58 / 255.0, 0x59 / 255.0, 0.88)  # #575859 (kullanıcı hex'i)
 	ab.size = Vector2(0.0, _hp_rect.size.y)
 	ab.position = _hp_rect.position  # sola hizalı, genişlik 0 başlangıçta
 	ab.visible = false
@@ -1362,21 +1371,23 @@ func _setup_armor_bar() -> void:
 	_armor_label = lbl
 
 func _setup_frost_barrier_ui() -> void:
-	var integrity_bar: ProgressBar = $UI/IntegrityBar
+	# Leila'ya özel (eski IntegrityBar'a bağlıydı, artık her karakter HealthBar2
+	# kullandığı için oraya taşındı — bkz. _get_hp_bar_rect()).
+	var _hp_rect := _get_hp_bar_rect()
 	var fb := ColorRect.new()
 	fb.name = "FrostBarrierOverlay"
 	fb.color = Color(0.4, 0.85, 1.0, 0.75)
-	fb.size = Vector2(0.0, integrity_bar.size.y)
-	fb.position = integrity_bar.position
+	fb.size = Vector2(0.0, _hp_rect.size.y)
+	fb.position = _hp_rect.position
 	fb.visible = false
 	fb.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	fb.z_index = integrity_bar.z_index + 2
+	fb.z_index = 6
 	$UI.add_child(fb)
 	_frost_barrier_bar = fb
 	var lbl2 := Label.new()
 	lbl2.name = "LabelFrostBarrier"
-	lbl2.size = Vector2(integrity_bar.size.x, integrity_bar.size.y)
-	lbl2.position = integrity_bar.position
+	lbl2.size = _hp_rect.size
+	lbl2.position = _hp_rect.position
 	lbl2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl2.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	lbl2.add_theme_font_override("font", _font_bold)
@@ -1396,12 +1407,10 @@ func _update_frost_barrier_ui() -> void:
 		_frost_barrier_bar.visible = false
 		_frost_barrier_label.visible = false
 		return
-	var integrity_bar: ProgressBar = $UI/IntegrityBar
-	var bar_w: float = integrity_bar.size.x
-	var bar_h: float = integrity_bar.size.y
+	var _hp_rect := _get_hp_bar_rect()
 	var ratio: float = clampf(float(hp) / 20.0, 0.0, 1.0)
-	_frost_barrier_bar.size = Vector2(bar_w * ratio, bar_h)
-	_frost_barrier_bar.position = integrity_bar.position
+	_frost_barrier_bar.size = Vector2(_hp_rect.size.x * ratio, _hp_rect.size.y)
+	_frost_barrier_bar.position = _hp_rect.position
 	_frost_barrier_bar.visible = true
 	_frost_barrier_label.visible = false
 
