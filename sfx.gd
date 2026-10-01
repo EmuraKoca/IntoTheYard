@@ -60,6 +60,14 @@ func play_path(path: String, volume_db: float = 0.0, pitch_scale: float = 1.0) -
 		_route_gameplay_bus()
 	_play_stream(_cache[path], volume_db, pitch_scale, "GameplaySFX")
 
+# Bir sesi henüz ÇALMADAN önbelleğe yükler — ilk kez `play_path()` ile çağrılan bir ses
+# `load()`'u o anda senkron yapar, bu da tam bir frame'e kilitlenmesi gereken bir tetikleme
+# (örn. Boss Crate'in kırılma sesi) için küçük bir hitch'e/gecikmeye sebep olabilir. Zamanı
+# kritik olmayan bir noktada (örn. birkaç saniye önceden) bunu çağırmak o riski ortadan kaldırır.
+func preload_sound(path: String) -> void:
+	if not _cache.has(path):
+		_cache[path] = load(path) if ResourceLoader.exists(path) else null
+
 # BUG FIX (2026-09-29): eskiden play_path() HER çağrıda set_bus_send() ile "GameplaySFX"
 # bus'ının hedefini yeniden ayarlıyordu — Godot bunu bus'ı yeniden bağlama gibi işleyip
 # o an o bus'ta çalmakta olan başka bir sesi (örn. Thunderstorm'un fon sesi, ilk Lightning

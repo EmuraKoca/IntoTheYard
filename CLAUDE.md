@@ -3,6 +3,306 @@
 Bu dosya, farklı bilgisayarlardaki (ev / işyeri) Claude Code oturumları arasında bağlam
 köprüsü olarak kullanılır. Her oturum başında oku, her oturum sonunda güncelle.
 
+## Boss HP barı yeniden tasarlandı — tek frame + iki katman dolgu (2026-10-01, oyunda denenmedi)
+Kullanıcı eski boss can/zırh barını (iki ayrı `ColorRect` çifti, çirkin duruyordu — bkz.
+ekran görüntüsü) Vector'un `HealthBar2` mimarisiyle aynı mantığa çevirmemizi istedi: tek
+bir frame grafiği + üstünde gri zırh dolgusu, azalınca/bitince altındaki kırmızı can
+dolgusu görünür. Önce kullanıcıya Pixellab için jenerik (tüm boss'larda kullanılabilecek)
+bir prompt yazıldı, kullanıcı ürettirip `assets/ui/bossesHealthBar.png`'ye ekledi
+(256×25px, koyu metal çerçeve + üstte kırmızı/turuncu hazard-stripe aksanı, iç kısmı
+TAMAMEN şeffaf — Python ile tarandı: iç dolgu alanı x:9-246 y:6-19, yani 237×13px).
+
+`game_scene.gd::show_boss_bar()`/`update_boss_bar()` komple yeniden yazıldı:
+- `BOSS_BAR_SCALE=1.8` ile frame ~460×45px'e büyütülüyor (eski 400×20'lik ColorRect'e
+  yakın görünür genişlik).
+- Katman sırası (arkadan öne): koyu interior arkaplan (`InteriorBG`) → kırmızı can dolgusu
+  (`HealthBar`, her zaman güncel can oranına göre boyutlanıyor) → gri zırh dolgusu
+  (`ArmorBar`, zırh oranına göre boyutlanıyor, `armor <= 0` olunca `visible=false` ile
+  altındaki can barını açığa çıkarıyor) → en üstte frame PNG'si (`Frame`, `TEXTURE_FILTER_
+  NEAREST`, pixel-art keskinliği için).
+- `update_boss_bar(armor, health, max_armor, max_health)` imzası DEĞİŞMEDİ — `cyber_404.gd`
+  tarafında hiçbir güncelleme gerekmedi, çağrı noktaları aynen çalışıyor.
+- Şu an sadece Cyber-404 kullanıyor ama fonksiyonlar karaktere özel bir şey içermiyor —
+  Smiler/Nyx de `show_boss_bar(self, "İSİM")` çağırırsa aynı barı otomatik kullanır.
+- Kırmızı dolgu rengi kullanıcı isteğiyle yumuşatıldı: `Color(0.8,0.1,0.1)` (canlı/neon
+  kırmızı) → `Color(0.58,0.21,0.16)` (frame'in kendi pas/hazard-stripe renginden,
+  `rgb(146,74,55)`, Python ile örneklenerek seçildi — oyunun paletine daha uyumlu).
+
+## Cyber-404 boyutu büyütüldü + giriş animasyonundaki "zıplama" kaldırıldı (2026-10-01, oyunda denenmedi)
+Kullanıcı "Cyber404'ün boyunu büyütelim" dedi — ilk denemede `cyber_404.gd::_ready()`'deki
+`scale = Vector2(0.1,0.1)`'i `0.13`'e çıkarmak **hiçbir görsel etki yaratmadı**: kök sebep
+`game_scene.gd::_spawn_boss_at()`'teki giriş tween'i, boss'un scale'ini (ne olursa olsun)
+SABİT bir hedefe (`Vector2(1.8,1.8)`) tweenliyormuş — `cyber_404.gd`'deki değer tamamen
+eziliyordu. `cyber_404.gd`'deki değişiklik geri alındı (etkisizdi), asıl büyütme
+`_spawn_boss_at()`'teki hedef değerde yapıldı: `1.8` → `2.3` (%28) → kullanıcı isteğiyle
+**`2.43`** (%35) oldu.
+
+**İkinci düzeltme**: kullanıcı "kutudan çıkarken zıplıyor gibi yapıyor, olduğu yerde kalsın,
+hiçbir hareket yapmasın" dedi — kök sebep: aynı tween'de `position`'ı spawn_pos'tan SABİT
+bir hedefe (`Vector2(995,400)`, spawn_pos'tan ~170px yukarı) kaydıran paralel bir ikinci
+tween vardı, bu "zıplama" hissini veriyordu. **Pozisyon tween'i komple kaldırıldı** — boss
+artık spawn edildiği yerde (`spawn_pos`, crate'in kaldığı nokta) sabit kalıyor.
+
+**Üçüncü düzeltme (aynı gün devamı)**: kullanıcı "küçükten büyüğe doğru efekti kaldıralım"
+dedi — büyüme (scale) tween'i de TAMAMEN kaldırıldı, `b.scale = Vector2(2.43, 2.43)`
+doğrudan `add_child()`'dan ÖNCE set ediliyor. Artık `_spawn_boss_at()`'te hiçbir animasyon
+yok — boss kutunun kaldığı yerde, doğrudan nihai boyutunda (2.43, kutudan ÖNCE 1.8'di,
+%35 büyütüldü) beliriyor. `_screen_shake()` + collision shape enable + `_landing_wave()`
+artık `await tw.finished` beklemeden hemen aynı frame'de çalışıyor (tween kalmadığı için).
+**Kutu da aynı %35 oranda büyütüldü**: `crate_intro.gd::CRATE_SPRITE_SCALE` 1.3 → **1.76**
+(1.3 × 1.35).
+
+**BUG FIX (kullanıcı fark etti, aynı gün devamı)**: "boss minicik kalmış" — `b.scale =
+Vector2(2.43,2.43)` `add_child(b)`'DEN ÖNCE set edilmişti, ama `cyber_404.gd::_ready()`
+kendi `scale = Vector2(0.1,0.1)` satırını tam `add_child()` çağrıldığı anda (node tree'ye
+girince `_ready` tetiklenir) çalıştırıyor — SONRADAN çalıştığı için 2.43'ün üzerine yazıp
+boss'u 0.1'e (minicik) düşürüyordu. Eskiden tween yaklaşımında bu sorun yoktu çünkü tween
+`add_child()`'dan SONRA başlatılıyordu, `_ready()`'nin 0.1'i çoktan uygulanmış oluyordu,
+tween onun üzerine doğru şekilde büyütüyordu. **Fix**: `b.scale = Vector2(2.43,2.43)`
+satırı `add_child(b)`'DEN SONRAYA taşındı.
+
+## Cyber-404 collision shape görsel gövdeye göre küçültüldü (2026-10-01, oyunda denenmedi)
+Kullanıcı "core'lar direkt boss'a vurmuyor gibi, belli bir karenin içine girmiyorlar"
+dedi — Python ile `cyber404_walk_S.png`'nin ilk karesi (252×252) içindeki gerçek karakter
+siluetinin alpha bbox'ı ölçüldü: (70,65)-(182,172), yani 112×107px. Bunu sprite'ın kendi
+scale'i (0.7) ve root node scale'iyle (2.43, bu session'da büyütülmüştü) çarpınca gerçek
+görünen gövde ~190×182 dünya pikseli çıkıyor. Eski collision shape (`RectangleShape2D`,
+100×80 — root scale'den ETKİLENİYOR ama sprite'ın 0.7'lik ek scale'inden etkilenmiyor,
+yani dünya boyutu 100×2.43=243 × 80×2.43=194) **görünen gövdeden daha büyüktü** — core'lar
+gerçek vücuda değmeden, görünmez/boş bir sınıra çarpıp sekiyordu, "vücuda vurmuyor gibi"
+hissi buradan geliyordu. **Fix**: `cyber_404.tscn`'deki `RectangleShape2D` boyutu 100×80 →
+**78×75** (190/2.43≈78.4, 182/2.43≈74.9 — gerçek görünen gövdeye denk gelecek şekilde
+geriye hesaplandı), ayrıca siluetin dikey merkezinin frame merkezinden hafif yukarıda
+olması (~-5px dünya) nedeniyle `CollisionShape2D.position = Vector2(0, -5)` eklendi.
+**Not**: Cyber-404'ün scale'i ileride tekrar değişirse (`game_scene.gd::_spawn_boss_at()`'teki
+`2.43`), bu collision shape boyutu da orantılı olarak yeniden hesaplanmalı — formül:
+`local_size = (local_bbox_px × sprite.scale) / root_scale`.
+
+## KRİTİK BUG FIX: Boss/Vector HP barlarının dikişinden düşmanlar görünüyordu (2026-10-01)
+Kullanıcı ekran görüntüsüyle gösterdi: hem boss barında hem Vector'un kendi can barında,
+dolgunun (can/zırh) alt/sağ kenarında **düşmanlar (küçük figürler) barın içinden/üstünden
+görünüyordu** — ilk bakışta CanvasLayer sıralama sorunu gibi göründü ama piksel piksel
+inceleyince (Python ile ekran görüntüsünün kendisinden renk örnekleme) gerçek sebep çok
+daha basit çıktı: **dolgu `ProgressBar`/`ColorRect`'leri, PNG'nin gerçek şeffaf iç alanından
+TAM 1 texture-pikseli KISA bırakılmıştı** (texture ölçümünde `(son_opak_satır - ilk_şeffaf_
+satır)` yerine yanlışlıkla 1 eksik hesaplanmış — "inclusive range" hatası, hem `health_bar_
+frame.png` hem `momentum_bar_frame.png` hem yeni `bossesHealthBar.png`'de aynı kalıpta).
+Bu 1 pikseli (2x/1.8x ölçekte ~2px dünya pikseli) **hiçbir şey kapatmıyordu** — ne dolgu
+(kısa kaldığı için), ne de çerçeve (gerçek interior'ın İÇİNDE kaldığı için, border değil) —
+yani UI'da gerçekten BOŞ/şeffaf bir dikiş vardı, arkadaki oyun dünyası (ve o an o pikselde
+duran düşmanlar) oradan görünüyordu. CanvasLayer'ların kendisiyle hiç ilgisi yoktu.
+
+**Fix — 3 bar da gerçek ölçülen interior + 1px güvenlik payıyla (opak çerçevenin içine
+hafifçe taşacak şekilde, zararsız) büyütüldü**:
+- `game_scene.tscn::UI/HealthBar2/Fill`: offset (10,22)-(310,44) → **(9,21)-(313,47)**
+- `game_scene.tscn::UI/MomentumBar/Fill`: offset (72,12)-(286,22) → **(73,11)-(289,25)**
+- `game_scene.gd::BOSS_BAR_INTERIOR_OFS/SIZE`: (9,6)/(237,13) → **(8,5)/(240,16)**
+**Genel kural**: bundan sonra yeni bir bar frame'i eklenirken, Python ile ölçülen interior
+sınırlarına MUTLAKA +1px güvenlik payı eklensin (border opak olduğu için taşma görünmez,
+ama eksik kalırsa arkadaki dünya dikişten sızar) — "tahmin" yerine ölçüm + pay standart hale
+getirilmeli.
+
+### SONUÇ: Boss Crate kırılma sesi — KÖK SEBEP BULUNDU, çözüldü (2026-10-01)
+Aşağıdaki tüm "kırılma sesi takılıyor" bölümleri (2026-09-30) bu notla kapandı. **Ses
+dosyasında/formatta/decoder'da/pool'da HİÇBİR sorun yoktu** — gerçek sebep basitti:
+`_smash_player`, kutunun (`self`) child'ı olarak ekleniyordu, kutu da kendi animasyonu
+bitince (`_pre_delay` + animasyon süresi ≈ 5sn) kendini `queue_free()` ediyordu — child
+olan ses node'u da TAM O ANDA/ondan kısa süre önce siliniyor, bu da "takılmış/üst üste
+binmiş/tekrar başlatılıyormuş gibi" duyulan sese sebep oluyordu. **Doğrulama**: sabit
+5sn'lik bir zamanlayıcı testinde ses `_smash_player` kutudan bağımsız bir parent'a
+(`get_parent()`, gölgedeki desenin aynısı) bağlanınca TERTEMİZ çaldı — hem format (Ogg/WAV)
+hem tetikleme yöntemi (frame-based/plain timer/pooled/dedicated) testleri YANLIŞ YÖNE
+odaklanmıştı, hiçbiri gerçek sebebi (node lifecycle/parenting) test etmiyordu.
+
+**Kalıcı Fix**: `_smash_player` artık `self` (kutu) yerine `get_parent()`'a (`game_scene`,
+gölge node'uyla aynı parent) ekleniyor — kutu ne zaman silinirse silinsin ses node'u
+etkilenmiyor, `finished` sinyaliyle kendi kendini `queue_free()` ediyor. Tetikleme tekrar
+`frame_changed`'e bağlandı: `IMPACT_FRAME` (10. kare, çarpma anıyla AYNI kare — artık ekran
+sarsıntısı ile kırılma sesi birlikte tetikleniyor) olunca bir kez çalıyor (`_smash_fired`
+guard'ı, `_landed_fired`/`_visible_fired` ile aynı desen).
+**Genel öğrenilen ders**: bir ses "takılmış/bozuk" çalıyorsa ve dosya/format/pool/decoder
+testleri hiçbir şey bulamıyorsa, **ses node'unun parent'ının ömrü/lifecycle'ı** da şüpheli
+listesine eklenmeli — özellikle parent kendi kendini kısa süre içinde `queue_free()` eden
+geçici bir node'sa (bu projede "intro"/"VFX" gibi tek seferlik sahne nesneleri).
+
+### 2. BUG — frame_changed BEKLENENDEN FAZLA ateşleniyordu, bool bayrak yetersiz kaldı (aynı gün devamı)
+Yukarıdaki parenting fix'i sonrası ses artık ÇALIYORDU ama kullanıcı "sesin başlangıcı
+7-8 kere taramalı tüfek gibi tekrarlıyor, her defasında bir öncekini durdurup üst üste
+biniyor, en son çalınan temiz oynuyor" dedi — bu **birden fazla `.play()` çağrısının AYNI
+AudioStreamPlayer'da art arda yapıldığının** klasik belirtisi (Godot'ta `play()` zaten
+çalan bir player'da çağrılırsa önceki çalmayı kesip baştan başlatıyor). `_landed_fired`/
+`_visible_fired` ile aynı desendeki bool bayrak (`_smash_fired`) teorik olarak bunu
+önlemesi gerekirken, `frame_changed`'in (muhtemelen o anki sahne yoğunluğu/hitch'ten
+dolayı frame'in ileri-geri salınması veya aynı frame için sinyalin beklenenden fazla
+ateşlenmesi yüzünden) umulandan fazla tetiklenmesi bir şekilde ikinci bir `.play()`
+çağrısına izin veriyordu.
+**Fix (ilk deneme — crash verdi)**: kırılma sesi `_landed_fired`/`_visible_fired`'ın
+paylaştığı ortak closure'dan AYRILDI, kendi self-disconnecting özel bir `frame_changed`
+dinleyicisine taşındı — `var _smash_cb: Callable; _smash_cb = func(): ...
+disconnect(_smash_cb)` şeklinde, lambda'nın KENDİ KENDİNE referans verdiği bir yapı
+denendi. **Çalışmadı**: `E ... Cannot disconnect from 'frame_changed': the provided
+callable is null` hatası verdi. **Gerçek sebep**: GDScript'teki closure'lar dış
+değişkenleri (`_landed_fired` gibi bool bayraklar için sorunsuz çalışan) normalde
+referans gibi paylaşıyor AMA bir lambda kendi atandığı değişkene KENDİ GÖVDESİ İÇİNDE
+referans verirse, o değişkeni "capture" ettiği an (lambda'nın `func(): ...` ifadesi
+değerlendirildiği sırada, ATAMA TAMAMLANMADAN ÖNCE) hâlâ `null` (Callable'ın varsayılan
+değeri) olan ESKİ değeri yakalıyor — atama tamamlandıktan sonra bile lambda içindeki
+referans o eski null'a sabit kalıyor. Yani **self-reference içeren lambda'lar GDScript'te
+güvenilir değil**, sadece dışarıdan/önceden tanımlanmış DEĞİŞKENLERİ okuyup yazan
+lambda'lar (bool bayrak deseni gibi) güvenli.
+**Gerçek Fix**: self-reference'ı tamamen ortadan kaldıran, **adlı (named) bir fonksiyon**
+(`_on_smash_frame_check()`) + 2 instance değişkeni (`_smash_check_sprite`,
+`_smash_check_player`) kullanan bir yapıya geçildi — `spr.frame_changed.connect(
+_on_smash_frame_check)` ile bağlanıyor, fonksiyonun kendisi `is_connected()` kontrolüyle
+güvenli şekilde `disconnect(_on_smash_frame_check)` çağırabiliyor (self-reference yok,
+Callable her zaman geçerli çünkü adlı fonksiyonlar `Callable(self, "ad")` olarak her an
+yeniden oluşturulabilir, lambda'nın "capture anındaki anlık değer" sorunu burada yok).
+**Not**: `_landed_fired`/`_visible_fired` için aynı potansiyel risk hâlâ teorik olarak
+var ama onların efektleri (ekran sarsıntısı, boss spawn) başka bayraklarla da korunuyor
+(`_boss_spawned` vb.) ve tekrarlı tetiklenseler bile kullanıcı tarafında fark edilecek
+kadar belirgin bir semptom vermiyorlardı — bu yüzden şimdilik dokunulmadı, sadece ses
+(tekrarlanması EN BELİRGİN şekilde duyulan efekt) için bu daha sağlam deseni kullanıyoruz.
+Benzer bir sorun fark edilirse aynı self-disconnecting desen oraya da uygulanabilir.
+
+**Denenen ve SIRASIYLA ELENEN tüm ihtimaller** (hepsi aynı "takılmış/üst üste binmiş"
+semptomunu verdi):
+1. Paylaşımlı `Sfx` havuzu yerine özel/dedicated `AudioStreamPlayer` (Freezing Cold'daki
+   `storm_audio` deseni) — **elendi**.
+2. `Sfx.preload_sound()` ile önceden cache'leme (senkron `load()` hitch'i ihtimali) —
+   **elendi**.
+3. Dosyayı Python `soundfile` ile PCM'e tam decode edip sıfırdan temiz Vorbis olarak
+   yeniden kodlama (nonstandard Ogg container şüphesi) — **elendi**.
+4. Kullanıcının **tamamen farklı, güvenilir bir siteden** yeniden indirdiği ikinci bir
+   `woodSmash.ogg` dosyası — **aynı sonuç, elendi** (dosyanın kendisi şüpheden kurtuldu).
+5. **Kesin tanı testi**: kutunun `frame_changed`/animasyon mantığından TAMAMEN bağımsız,
+   sıfırdan yeni bir `AudioStreamPlayer` ile sabit bir `create_timer(12.0)` üzerinden
+   çalma — **aynı sonuç** → frame-tetikleme zincirinin (`_crack_fired` guard'ı vb.) suçlu
+   olmadığı kesinleşti.
+6. **Format testi**: aynı dosyanın Ogg Vorbis hali ile Python `soundfile` ile üretilen
+   PCM16 WAV hali (decode gerektirmeyen ham format) aynı anda, ayrı `AudioStreamPlayer`'larla
+   çalındı — **ikisi de aynı şekilde takıldı** → Godot'un Ogg Vorbis decoder'ı da elendi.
+
+**Sonuç**: format, dosya kaynağı, tetikleme yöntemi (frame-based / plain timer / pooled /
+dedicated player) — denenen HİÇBİR değişken sonucu değiştirmedi. Kullanıcının "şimdiye
+kadar yaptığımız hiçbir seste sorun yokken bunda olması garip" gözlemiyle birlikte en
+olası açıklama: sorun ses dosyasında/Godot'un ses sisteminde değil, **o anki sahne
+yoğunluğunda** (kutu aynı anda düşüyor, tween'ler/gölge/shake çalışıyor, yeni node'lar
+`add_child` ediliyor) oluşan genel bir frame hıçkırığı/hitch'in o an çalan HERHANGİ bir
+sesi etkilemesi — ama bu da doğrulanmadı, sadece eleme sonrası kalan en makul ihtimal.
+
+**Ara adım (geri alındı)**: önce kırılma sesi komple kaldırılmıştı (`_smash_player` +
+`_crack_fired` bloğu silinmiş, `woodSmash.ogg`/`.import` + geçici `woodSmash.wav`
+dosyaları silinmişti) — kullanıcı "yanlış anlattım, sesi kaldır değil SABİT 5. saniyeye
+koy demek istedim" diye düzeltti. **Dosya hiç commit edilmemişti (git'te untracked'tı),
+silinince geri getirilemedi — kullanıcının `assets/sfx/cyber404BossCrate/woodSmash.ogg`'u
+tekrar eklemesi gerekiyor.**
+
+**Güncel Fix**: `crate_intro.gd::_play_intro_sprite()`'da kırılma sesi artık `frame_changed`'e
+hiç bağlı değil — fonksiyon başlar başlamaz sıfırdan bir `AudioStreamPlayer` (`_smash_player`,
+dedicated, pooled değil) oluşturuluyor, `get_tree().create_timer(SMASH_FIXED_TIME=5.0, false)`
+ile **sabit 5sn'de** bir kez çalıyor (frame/animasyon ilerlemesinden tamamen bağımsız, saf
+zaman bazlı — tıpkı tanı testindeki 12sn'lik deneme gibi). `CRACK_FRAME` sabiti hâlâ SADECE
+düşüş sesinin bitiş zamanlamasını (`_pre_delay`) hesaplamak için kullanılıyor, kırılma
+sesiyle artık hiç ilgisi yok. `game_scene.gd::_start_boss_intro()`'daki eski tanı/debug test
+blokları kaldırıldı (gerek kalmadı, mekanik zaten kalıcı hale geldi).
+**UYARI**: tanı testlerinde bu dosya (hangi formatta/kaynaktan olursa olsun) HER tetikleme
+yönteminde (frame-based, pooled, dedicated, plain timer) aynı "takılma" sorununu vermişti —
+5sn'lik sabit zamanlayıcı da aynı mekanizmayı kullanıyor, yani **sorunun tekrar etme
+ihtimali yüksek**, kullanıcı test edip onaylamalı. Tekrar ederse kaynağı WAV olarak baştan
+tasarlamak (`AudioStreamWAV`, Vorbis import'suz) veya sesi kutunun diğer işlemlerinden
+(tween/gölge/node oluşturma) tamamen izole bir ortamda test etmek gündeme gelebilir.
+
+### Boss Crate sesleri bağlandı (2026-09-30, aynı gün, oyunda denenmedi)
+Kullanıcı `assets/sfx/cyber404BossCrate/` altına 2 dosya ekledi (ikisi de Vorbis,
+sorunsuz): `fallingdown.ogg` (3.5sn) ve `woodsmash.ogg` (1.44sn). İstek: düşüş sesi
+kutu daha görünmeden çalmaya başlasın, kırılma sesi ise gerçek kırılma anına
+(CRACK_FRAME=14) denk gelsin.
+- `_play_intro_sprite()`'ın en başına (pozisyon/z_index set edilmeden ÖNCE)
+  `Sfx.play_path(".../fallingdown.ogg")` eklendi — kutu henüz `add_child` bile
+  edilmemişken, animasyon/tween başlamadan hemen çalıyor.
+- `frame_changed` callback'ine yeni `_crack_fired` guard'ı eklendi: `spr.frame >=
+  CRACK_FRAME` (14) olunca bir kez `woodsmash.ogg` çalıyor — daha önce sadece bilgi
+  amaçlı duran `CRACK_FRAME` sabiti artık gerçek bir tetikleyici.
+
+### Düzeltme: kırılma sesi HÂLÂ tekrar tekrar takılıyor — dosya temiz Vorbis'e yeniden kodlandı (aynı gün devamı)
+Kullanıcı özel AudioStreamPlayer'dan sonra bile ısrarla "tekrar tekrar başlatılıyor
+gibi, 3 kare boyunca sıkışıyor" dedi. **Kod tarafı tekrar didik didik kontrol edildi**:
+`_crack_fired` guard'ı `_landed_fired`/`_visible_fired` ile BİREBİR aynı, kanıtlanmış
+desen (proje genelinde `_vfx_yard_engine`'in `_bolts_fired`'ı dahil onlarca yerde
+kullanılıyor, hiçbirinde tekrar tetikleme sorunu yok) — GDScript lambda'ları local
+değişkenleri referans gibi tutuyor, `_play_intro_sprite()` da tek bir kez çağrılıyor
+(`_start_boss_intro()`'un iki çağrı noktası — normal 10dk akışı ve debug 10sn akışı —
+birbirini `_boss_spawned`/`_crate_node` bayraklarıyla karşılıklı dışlıyor, aynı anda
+ikisi asla tetiklenemez). Yani **kod tarafında gerçek bir "3 kerede tekrar başlatma"
+bug'ı YOK** — sinyal sadece bir kez ateşleniyor, `.play()` de sadece bir kez çağrılıyor.
+
+Geriye kalan tek açıklama: `woodsmash.ogg`'un **Ogg konteyner/header'ının** kendisi
+— genel dalga formu (amplitude) temiz çıksa da, dosyanın orijinal kaynağından
+(muhtemelen bir online converter) standart dışı bir Ogg sayfa yapısıyla gelmiş olması,
+`soundfile`/libsndfile'ın tolere edip sorunsuz okuduğu ama **Godot'un kendi Ogg Vorbis
+decoder'ının** stutter/pop ile tepki verdiği bir senaryo (projenin önceki FLAC-in-Ogg
+sorunuyla aynı aileden, farklı bir belirti). **Fix**: dosya PCM'e (ham ses verisine)
+tam decode edilip `soundfile` ile SIFIRDAN temiz bir Vorbis dosyası olarak yeniden
+kodlandı (`format='OGG', subtype='VORBIS'`) — içerik/dalga formu birebir aynı, sadece
+konteyner standart bir encoder'dan geçmiş oluyor. Henüz test edilmedi, kullanıcıdan
+tekrar doğrulama bekleniyor; hâlâ sorun olursa kaynağı farklı bir siteden indirip
+tekrar denemek gerekebilir (dosyanın kendisinde bir sorun olduğu ihtimali güçlendi).
+
+### Düzeltme: kırılma sesi hâlâ "sıkışmış" çalıyordu — Sfx havuzu yerine özel AudioStreamPlayer (aynı gün devamı)
+`Sfx.preload_sound()` ile hitch riskini ortadan kaldırmak yetmedi, kullanıcı hâlâ
+"sıkışmış/bugged" olduğunu bildirdi. `woodsmash.ogg`'un dalga formu Python'da tekrar
+ayrıntılı incelendi (clipping yok, mid-dosya sessizlik/kopukluk yok, zarf eğrisi
+tamamen normal bir çarpma-sönümü) — dosyanın kendisinde bir bozukluk YOK. Kalan tek
+şüpheli: `Sfx.play_path()`'in paylaşımlı 8'lik havuzu (`_players`, `_next` ile dönen) —
+kırılma anında havuzdaki aynı slotun başka bir sesle (örn. UI hover/click, Yard Engine
+sesi vb.) çakışması/yeniden yönlendirilmesi ihtimali. **Fix**: kırılma sesi artık
+paylaşımlı havuzu hiç kullanmıyor — Freezing Cold'un `storm_audio`'suyla birebir aynı
+desende KENDİNE AİT, özel bir `AudioStreamPlayer` (`_smash_player`, kutunun child'ı,
+`GameplaySFX` bus'ında, `process_mode=ALWAYS`) oluşturuldu. Stream düşüş sesiyle aynı
+anda yükleniyor (hitch riski hâlâ ortadan kalkmış durumda), tam kırılma karesinde
+sadece `.play()` çağrılıyor — başka hiçbir sesle slot paylaşmıyor, kesintiye/yeniden
+tetiklenmeye açık değil. `Sfx.preload_sound()` genel bir yardımcı fonksiyon olarak
+`sfx.gd`'de kaldı (ileride benzer kare-kilitli sesler için kullanılabilir).
+
+### 2 BUG FIX — kırılma sesi geç kalıyordu + "takılmış/bugged" çalıyordu (2026-10-01)
+Kullanıcı test etti: "(1) tam kırılma anında smash çalışmıyor, biraz geç başlıyor,
+(2) smash SFX'i garip çalıyor, sıkışmış/bugged gibi".
+
+**Bug 1 — gecikme hesabı**: Python `soundfile` ile analiz edilince `fallingdown.ogg`'un
+dosya süresi 3.5sn olmasına rağmen gerçek sesin **~3.17sn'de bittiği, kalan ~0.33sn'nin
+sessizlik** olduğu görüldü — `_fall_stream.get_length()` tam 3.5sn döndürdüğü için
+hesaplanan `_pre_delay` de bu sessizliği hesaba katıyordu, sonuçta smash her zaman
+sesin gerçek (duyulabilir) bitişinden ~0.3sn SONRA tetikleniyordu ("geç başlıyor"
+hissi tam buradan geliyordu). **Fix**: `fallingdown.ogg` Python'da analiz edilip
+(RMS eşiği ile son anlamlı örnek bulunup) **3.20sn'ye trimlendi** (gerçek Vorbis,
+format='OGG' subtype='VORBIS' ile yeniden yazıldı) — artık dosyanın `get_length()`'i
+gerçek duyulabilir süreyle (küçük bir güvenlik payıyla) eşleşiyor, `_pre_delay` hesabı
+otomatik doğru çıkıyor, ek bir kod değişikliği gerekmedi (sadece asset düzeltmesi).
+
+**Bug 2 — "takılmış/bugged" çalma**: `woodsmash.ogg`'un dalga formu Python'da analiz
+edildi (clipping yok, ani sessizlik/kopukluk yok, dosyanın kendisi temiz) — asıl sebep
+muhtemelen `Sfx.play_path()`'in İLK çağrıldığı anda yaptığı **senkron `load()`**
+işlemiydi: kırılma sesi tam bir animasyon karesine kilitlenmesi gereken bir tetikleme
+olduğu için, o anda ilk kez diskten yüklenmesi (küçük de olsa) bir hitch/gecikme
+yaratıp sesin "takılmış" gibi başlamasına sebep olabiliyordu. **Fix**: `sfx.gd`'ye
+yeni `preload_sound(path)` fonksiyonu eklendi (sadece `_cache`'e önceden yüklüyor,
+çalmıyor) — `crate_intro.gd` artık `woodsmash.ogg`'u düşüş sesiyle AYNI anda (kırılmadan
+~2.5sn önce) önbelleğe alıyor, gerçek tetiklenme anında `_cache`'ten doğrudan okunuyor,
+hiç senkron disk I/O'su olmuyor.
+
+### Düzeltme: Düşüş sesi çok daha erken başlıyor, sonu tam kırılmaya denk geliyor (aynı gün)
+Kullanıcı: "İç içe oturmuş, falling'in sonunu tam smash'e denk getir" — `fallingdown.ogg`
+(3.5sn) çok uzun ama `CRACK_FRAME` (14. kare, ~1.0sn) çok erken geliyordu, yani ses
+kırılma anında daha yeni başlamış oluyordu, "iç içe" hissi buradan geliyordu.
+**Fix**: `_pre_delay = fall_dur - crack_time` (`AudioStream.get_length()` ile dosyanın
+gerçek süresi okunup dinamik hesaplanıyor, sabit sayı değil — dosya değişirse otomatik
+uyarlanır) kadar bir bekleme eklendi. Ses ÖNCE çalıyor, sonra bu gecikme kadar (şu an
+~2.5sn) kutu hiç görünmeden bekleniyor (henüz hiçbir sprite/tween kurulmamış), gecikme
+bitince kutunun görsel sekansı (düşüş+animasyon) başlıyor — kırılma sesi (CRACK_FRAME)
+tam düşüş sesinin bittiği ana denk geliyor. Toplam "boss geliyor" hissi artık ses
+başladığı andan itibaren ~1sn daha uzun sürüyor (önceki 10sn'lik debug tetiklemesi
+bundan etkilenmiyor, sadece görsel gecikmeye giriyor).
+
 ### BUG FIX: Kalan kareler (26-36) hiç oynamıyordu (kullanıcı fark etti, aynı gün)
 Kullanıcı: "frame'lerin hepsi oynamıyor". Kök sebep: `game_scene.gd::_on_boss_emerged()`
 `boss_emerged` sinyali gelir gelmez (25. kare) kutuyu **0.3sn'de** soldurup

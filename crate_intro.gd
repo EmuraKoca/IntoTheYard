@@ -36,8 +36,16 @@ var _use_fallback_draw : bool = false
 var _shadow : Polygon2D = null
 var _owns_cleanup : bool = false  # true ise game_scene.gd kutuyu erken silmez
 
+# Kırılma sesi için self-disconnecting dinleyici — adlı (named) fonksiyon + instance
+# değişkenleri kullanıyor (bkz. _on_smash_frame_check). Lambda içinde kendi kendine
+# referans veren bir Callable denenmişti ama GDScript'te closure, dış değişkeni atama
+# TAMAMLANMADAN ÖNCEKİ (null) hâliyle yakalıyor — disconnect() "callable is null" hatası
+# veriyordu, guard devre dışı kalıp ses art arda birden fazla kez tetikleniyordu.
+var _smash_check_sprite : AnimatedSprite2D = null
+var _smash_check_player : AudioStreamPlayer = null
+
 # Sprite animasyonunda kutu görsel olarak küçük kaldığı için büyütme çarpanı
-const CRATE_SPRITE_SCALE := 1.3
+const CRATE_SPRITE_SCALE := 1.76  # 1.3 × 1.35 (boss büyümesiyle aynı %35 oran)
 
 # ─────────────────────────────────────────────────────────────────────────────
 func _process(delta: float) -> void:
@@ -211,13 +219,50 @@ func play_intro(land_pos: Vector2) -> void:
 # Kutunun kendisi düşme boyunca sabit dünya pozisyonunda kalıyor (Y ekseninde
 # tween'lenmiyor — düşüş hareketi animasyonun kendi kareleri içinde).
 const IMPACT_FRAME  := 10
-const CRACK_FRAME   := 14  # şu an bilgi amaçlı, ayrı bir tetikleme yok
+const CRACK_FRAME   := 14  # sadece düşüş sesinin bitişini senkronlamak için (_pre_delay), kırılma sesi kaldırıldı
 const VISIBLE_FRAME := 25  # boss bu kareden itibaren deliklerden görünüyor → spawn edilir
 
 const FALL_FPS := 14.0
 const FALL_START_OFFSET := 700.0  # ekran dışı yukarıdan düşüş mesafesi
 
 func _play_intro_sprite(land_pos: Vector2) -> void:
+	# Düşüş sesi (3.5sn) çok daha ERKEN başlıyor — sesin SONU tam çarpma anına
+	# (IMPACT_FRAME) denk gelecek şekilde geriye doğru hesaplanmış bir gecikmeyle.
+	# Kullanıcı: "falling'in sonunu tam smash'e denk getir" — kutu bu bekleme süresi
+	# boyunca henüz görünmüyor (hiç sprite/tween kurulmadı), sadece ses çalıyor.
+	# NOT (2026-10-01): KÖK SEBEP BULUNDU — kırılma sesi hiç bozuk/takılı DEĞİLDİ, sorun
+	# _smash_player'ın kutunun (self) child'ı olmasıydı: kutu ~5sn civarında kendini
+	# queue_free() ediyor, child olan ses node'u da onunla birlikte siliniyor/kesiliyor —
+	# "takılmış/üst üste binmiş" gibi duyulan şey buydu. Sabit 5sn'lik zamanlayıcı testinde
+	# ses TERTEMİZ çaldı (kutuyla aynı parent'a bağlanınca) — artık tekrar frame'e (10,
+	# IMPACT_FRAME — çarpma anıyla aynı kare) bağlanıyor, SADECE kutudan bağımsız bir
+	# parent'a (gölgedeki desenin aynısı) eklenerek.
+	const FALL_SFX_PATH  := "res://assets/sfx/cyber404BossCrate/fallingdown.ogg"
+	const SMASH_SFX_PATH := "res://assets/sfx/cyber404BossCrate/woodSmash.ogg"
+	var _fall_stream: AudioStream = load(FALL_SFX_PATH)
+	var _fall_dur: float = _fall_stream.get_length() if _fall_stream else 3.2
+	var _crack_time: float = float(CRACK_FRAME) / FALL_FPS
+	var _pre_delay: float = max(0.0, _fall_dur - _crack_time)
+
+	Sfx.play_path(FALL_SFX_PATH)
+
+	# Kutunun (self) child'ı DEĞİL — kutuyla aynı parent'a (gölgedeki desenin aynısı)
+	# bağlanıyor, kutu kendini queue_free() etse bile bu node hayatta kalıyor.
+	var _smash_player := AudioStreamPlayer.new()
+	_smash_player.stream = load(SMASH_SFX_PATH) if ResourceLoader.exists(SMASH_SFX_PATH) else null
+	_smash_player.bus = "GameplaySFX" if AudioServer.get_bus_index("GameplaySFX") >= 0 else "Master"
+	_smash_player.process_mode = Node.PROCESS_MODE_ALWAYS
+	# Dosya kısa kalıyordu (1.44sn) — pitch_scale ile (Gravitational Force/WormHole'deki
+	# aynı yöntem) dosyaya dokunmadan ~2.1sn'ye uzatılıyor (kullanıcı: "2, 2.3sn gibi").
+	_smash_player.pitch_scale = 0.68
+	get_parent().add_child(_smash_player)
+	_smash_player.finished.connect(func():
+		if is_instance_valid(_smash_player): _smash_player.queue_free()
+	)
+
+	if _pre_delay > 0.0:
+		await get_tree().create_timer(_pre_delay, false).timeout
+
 	# Ekran dışı yukarıdan başlayıp land_pos'a düşüyor — sprite'ın kendi kareleri
 	# görsel olarak yeterli düşüş hissi vermiyordu (kullanıcı: "bir anda beliriyor"),
 	# gerçek bir Y-tween eklendi. Tween süresi çarpma karesiyle (IMPACT_FRAME) senkron.
@@ -262,11 +307,34 @@ func _play_intro_sprite(land_pos: Vector2) -> void:
 			emit_signal("boss_emerged")
 	)
 
+	# Kırılma sesi AYRI, kendi kendine bağlantıyı kesen (self-disconnecting) bir
+	# tetikleyiciyle çalıyor — bool bayrak (`_landed_fired` deseni) `frame_changed`
+	# beklenenden fazla ateşlendiğinde (sahne yoğunluğu/hitch şüphesi) yine de ikinci bir
+	# `.play()` çağrısına açık kalabiliyordu ("7-8 kere taramalı tüfek gibi" — her çağrı
+	# öncekini kesiyordu). Self-reference içeren bir lambda (`_smash_cb = func(): ...
+	# disconnect(_smash_cb)`) denenmişti ama GDScript closure'ı dış değişkeni ATAMA
+	# TAMAMLANMADAN ÖNCEKİ (null) hâliyle yakalıyor — disconnect() "callable is null"
+	# hatası verip guard'ı devre dışı bırakıyordu. Adlı (named) bir fonksiyon + instance
+	# değişkeni kullanınca bu sorun ortadan kalkıyor (self-reference yok, Callable hep geçerli).
+	_smash_check_sprite = spr
+	_smash_check_player = _smash_player
+	spr.frame_changed.connect(_on_smash_frame_check)
+
 	await spr.animation_finished
 	var fade_tw := create_tween()
 	fade_tw.tween_property(self, "modulate:a", 0.0, 0.3)
 	await fade_tw.finished
 	if is_instance_valid(self): queue_free()
+
+func _on_smash_frame_check() -> void:
+	if not is_instance_valid(_smash_check_sprite) or _smash_check_sprite.frame < IMPACT_FRAME:
+		return
+	if _smash_check_sprite.frame_changed.is_connected(_on_smash_frame_check):
+		_smash_check_sprite.frame_changed.disconnect(_on_smash_frame_check)
+	if is_instance_valid(_smash_check_player) and _smash_check_player.stream:
+		_smash_check_player.play()
+	elif is_instance_valid(_smash_check_player):
+		_smash_check_player.queue_free()
 
 # ─── Düşüş gölgesi — küçük başlayıp çarpma anına kadar büyüyen elips ──────────
 # Kutunun kendisi hareket ederken gölge YERDE (land_pos'ta) sabit kalmalı, bu yüzden

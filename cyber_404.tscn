@@ -3,12 +3,13 @@
 [ext_resource type="Script" uid="uid://dr63nxp7gxir7" path="res://cyber_404.gd" id="1_2s2ma"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_3ketf"]
-size = Vector2(100, 80)
+size = Vector2(78, 75)
 
 [node name="Cyber404" type="CharacterBody2D" unique_id=502544825]
 script = ExtResource("1_2s2ma")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1122698052]
+position = Vector2(0, -5)
 shape = SubResource("RectangleShape2D_3ketf")
 
 [node name="Boss404Sprite" type="AnimatedSprite2D" parent="." unique_id=251852818]

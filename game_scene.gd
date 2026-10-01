@@ -363,19 +363,18 @@ func _on_boss_emerged() -> void:
 func _spawn_boss_at(spawn_pos: Vector2) -> void:
 	var b = cyber_404_scene.instantiate()
 	b.position = spawn_pos
-	b.scale    = Vector2(0.4, 0.4)
 	add_child(b)
+	# Pozisyon VE büyüme (scale) tween'leri kaldırıldı (kullanıcı: "zıplıyor gibi yapıyor,
+	# olduğu yerde kalsın, hiçbir hareket yapmasın" + "küçükten büyüğe doğru efekti
+	# kaldıralım") — boss artık spawn_pos'ta, doğrudan nihai boyutunda (2.43) beliriyor,
+	# hiçbir animasyon oynamıyor. NOT: `add_child()`'dan SONRA set ediliyor — `cyber_404.gd::
+	# _ready()` kendi `scale = Vector2(0.1,0.1)` satırını `add_child()` sırasında (node
+	# tree'ye girince _ready tetiklenir) çalıştırıyor, ÖNCE set edilirse onun üzerine
+	# yazılıp boss minicik kalıyordu (kullanıcı fark etti).
+	b.scale = Vector2(2.43, 2.43)
 	boss = b
 	_cyber404_node = b
 	b.get_node("CollisionShape2D").disabled = true
-
-	var tw := create_tween()
-	tw.set_parallel(true)
-	tw.tween_property(b, "position", Vector2(995, 400), 0.75)\
-		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN_OUT)
-	tw.tween_property(b, "scale", Vector2(1.8, 1.8), 0.75)\
-		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	await tw.finished
 
 	_screen_shake()
 	if is_instance_valid(b):
@@ -417,6 +416,19 @@ func _screen_shake_small() -> void:
 		tween.tween_property(camera, "offset", Vector2(randf_range(-1, 1), randf_range(-1, 1)), 0.04)
 	tween.tween_property(camera, "offset", original_pos, 0.04)
 
+# Boss HP bar — tek bir frame grafiği (assets/ui/bossesHealthBar.png, 256×25,
+# iç dolgu alanı x:9-246 y:6-19) üzerine iki katman dolgu: gri zırh barı ÖNDE,
+# azaldıkça/bitince altındaki kırmızı can barı görünür hale geliyor (Vector'un
+# HealthBar2 mimarisiyle aynı mantık). Frame'in ölçeği (BAR_SCALE) native boyutu
+# eski 400×20'lik ColorRect'e yakın bir görünür genişliğe büyütüyor.
+const BOSS_BAR_SCALE := 1.8
+const BOSS_BAR_TEX_SIZE := Vector2(256, 25)
+# Ölçülen gerçek iç boşluk x:9-247 y:6-20 idi — 1px güvenlik payıyla (opak çerçevenin
+# içine hafifçe taşacak şekilde) büyütüldü, aradaki dikişten dünya/düşmanların
+# görünmesini önlemek için (bkz. CLAUDE.md, "düşman barın içinden görünüyordu" fix'i).
+const BOSS_BAR_INTERIOR_OFS  := Vector2(8, 5)
+const BOSS_BAR_INTERIOR_SIZE := Vector2(240, 16)
+
 func show_boss_bar(boss_node: Node2D, boss_name: String = "CYBER 404") -> void:
 	boss = boss_node
 	boss_bar_canvas = CanvasLayer.new()
@@ -431,51 +443,54 @@ func show_boss_bar(boss_node: Node2D, boss_name: String = "CYBER 404") -> void:
 	name_label.add_theme_font_override("font", _font_bold)
 	name_label.modulate = Color(1, 0.3, 0.3)
 	boss_bar_canvas.add_child(name_label)
-	
-	# Armor bar
-	var armor_bg = ColorRect.new()
-	armor_bg.name = "ArmorBG"
-	armor_bg.size = Vector2(400, 20)
-	armor_bg.position = Vector2(760, 50)
-	armor_bg.color = Color(0.2, 0.2, 0.2)
-	boss_bar_canvas.add_child(armor_bg)
-	
-	var armor_bar = ColorRect.new()
-	armor_bar.name = "ArmorBar"
-	armor_bar.size = Vector2(400, 20)
-	armor_bar.position = Vector2(760, 50)
-	armor_bar.color = Color(0.6, 0.6, 0.6)
-	boss_bar_canvas.add_child(armor_bar)
-	
-	# Health bar
-	var health_bg = ColorRect.new()
-	health_bg.name = "HealthBG"
-	health_bg.size = Vector2(400, 20)
-	health_bg.position = Vector2(760, 75)
-	health_bg.color = Color(0.2, 0.2, 0.2)
-	boss_bar_canvas.add_child(health_bg)
-	
+
+	var bar_pos := Vector2(760, 55)
+	var interior_pos  := bar_pos + BOSS_BAR_INTERIOR_OFS * BOSS_BAR_SCALE
+	var interior_size := BOSS_BAR_INTERIOR_SIZE * BOSS_BAR_SCALE
+
+	var interior_bg = ColorRect.new()
+	interior_bg.name = "InteriorBG"
+	interior_bg.position = interior_pos
+	interior_bg.size = interior_size
+	interior_bg.color = Color(0.1, 0.1, 0.1)
+	boss_bar_canvas.add_child(interior_bg)
+
 	var health_bar = ColorRect.new()
 	health_bar.name = "HealthBar"
-	health_bar.size = Vector2(400, 20)
-	health_bar.position = Vector2(760, 75)
-	health_bar.color = Color(0.8, 0.1, 0.1)
-	health_bar.visible = false  # Hidden at start
+	health_bar.position = interior_pos
+	health_bar.size = interior_size
+	health_bar.color = Color(0.58, 0.21, 0.16)  # frame'in pas/hazard-stripe tonuna uyumlu, daha az canlı
 	boss_bar_canvas.add_child(health_bar)
+
+	var armor_bar = ColorRect.new()
+	armor_bar.name = "ArmorBar"
+	armor_bar.position = interior_pos
+	armor_bar.size = interior_size
+	armor_bar.color = Color(0.65, 0.65, 0.68)
+	boss_bar_canvas.add_child(armor_bar)
+
+	var frame_tex = TextureRect.new()
+	frame_tex.name = "Frame"
+	frame_tex.texture = load("res://assets/ui/bossesHealthBar.png")
+	frame_tex.position = bar_pos
+	frame_tex.size = BOSS_BAR_TEX_SIZE * BOSS_BAR_SCALE
+	frame_tex.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	boss_bar_canvas.add_child(frame_tex)
 
 func update_boss_bar(armor: int, health: int, max_armor: int, max_health: int) -> void:
 	if boss_bar_canvas == null:
 		return
 	var armor_bar = boss_bar_canvas.get_node("ArmorBar")
 	var health_bar = boss_bar_canvas.get_node("HealthBar")
+	var full_w: float = (BOSS_BAR_INTERIOR_SIZE * BOSS_BAR_SCALE).x
+
+	if max_health > 0:
+		health_bar.size.x = full_w * (float(health) / float(max_health))
 
 	if max_armor > 0:
-		armor_bar.size.x = 400 * (float(armor) / float(max_armor))
+		armor_bar.size.x = full_w * (float(armor) / float(max_armor))
 
-	if armor <= 0 or max_armor == 0:
-		armor_bar.visible = false
-		health_bar.visible = true
-		health_bar.size.x = 400 * (float(health) / float(max_health))
+	armor_bar.visible = armor > 0 and max_armor > 0
 
 func hide_boss_bar() -> void:
 	boss_defeated = true

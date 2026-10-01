@@ -3868,10 +3868,10 @@ mouse_filter = 2
 
 [node name="Fill" type="ProgressBar" parent="UI/HealthBar2" unique_id=1084543954]
 layout_mode = 0
-offset_left = 10.0
-offset_top = 22.0
-offset_right = 310.0
-offset_bottom = 44.0
+offset_left = 9.0
+offset_top = 21.0
+offset_right = 313.0
+offset_bottom = 47.0
 mouse_filter = 2
 theme_override_styles/background = SubResource("UI_hud_bar_bg_transparent")
 theme_override_styles/fill = SubResource("UI_hp2_fill")
@@ -3909,10 +3909,10 @@ mouse_filter = 2
 
 [node name="Fill" type="ProgressBar" parent="UI/MomentumBar" unique_id=880487613]
 layout_mode = 0
-offset_left = 72.0
-offset_top = 12.0
-offset_right = 286.0
-offset_bottom = 22.0
+offset_left = 73.0
+offset_top = 11.0
+offset_right = 289.0
+offset_bottom = 25.0
 mouse_filter = 2
 theme_override_styles/background = SubResource("UI_hud_bar_bg_transparent")
 theme_override_styles/fill = SubResource("UI_momentum_fill")
