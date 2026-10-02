@@ -3926,8 +3926,10 @@ func _activate_shockwave() -> void:
 	_react_flash_screen(Color(0.6, 0.6, 1.0, 0.5))
 	_vfx_shockwave()
 
-func _vfx_shockwave() -> void:
-	var pos: Vector2 = _player_node.global_position if is_instance_valid(_player_node) else get_node("Player").global_position
+func _vfx_shockwave(at: Vector2 = Vector2.INF, final_scale: float = 7.0, dur: float = 0.7) -> void:
+	var pos: Vector2 = at
+	if at == Vector2.INF:
+		pos = _player_node.global_position if is_instance_valid(_player_node) else get_node("Player").global_position
 
 	# Yard dışına (cadde/tribün tarafına) taşmasın diye kırpma alanı
 	# Saha sınırı: x 385→1920, y 0→1080 (diğer alan-efektleriyle aynı sınır)
@@ -3943,10 +3945,11 @@ func _vfx_shockwave() -> void:
 	clip.add_child(mask)
 	clip.clip_children = CanvasItem.CLIP_CHILDREN_ONLY
 
+	# Merkezde sabit boyutlu sprite parlaması (büyütülmüyor)
 	var burst := AnimatedSprite2D.new()
 	burst.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	burst.position = pos
-	burst.scale = Vector2(0.6, 0.6)
+	burst.scale = Vector2(0.8, 0.8)
 	var sf := SpriteFrames.new()
 	if sf.has_animation("default"): sf.remove_animation("default")
 	sf.add_animation("burst")
@@ -3957,12 +3960,33 @@ func _vfx_shockwave() -> void:
 	burst.sprite_frames = sf
 	clip.add_child(burst)
 	burst.play("burst")
-	var burst_tw := create_tween()
-	burst_tw.tween_property(burst, "scale", Vector2(7.0, 7.0), 0.7)\
-		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	burst.animation_finished.connect(func():
-		if is_instance_valid(clip): clip.queue_free()
-	)
+
+	# Sabit kalınlıklı genişleyen halka (kalınlık yarıçaptan bağımsız)
+	var ring: Node2D = load("res://shockwave_ring.gd").new()
+	ring.position = pos
+	clip.add_child(ring)
+	var max_r: float = final_scale * 105.0
+	var ring_tw := create_tween().set_parallel(true)
+	ring_tw.tween_property(ring, "radius", max_r, dur).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	ring_tw.tween_property(ring, "alpha", 0.0, dur).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	ring_tw.chain().tween_callback(clip.queue_free)
+
+# Cyber-404 shockwave dalgası: Vector'un Shockwave sprite'ı boss'tan dışa genişler; dalga cephesi
+# oyuncuya ulaştığında (oyuncu max yarıçap içindeyse) bir kez hasar verir. Sprite yarıçapı ≈105px×scale.
+func boss_shockwave(pos: Vector2, radius: float) -> void:
+	Sfx.play_path("res://assets/sfx/calamitys/vector/shockwave.ogg", -4.0)
+	var dur := 0.7
+	_vfx_shockwave(pos, radius / 105.0, dur)
+	screen_shake_heavy()
+	var player := get_node_or_null("Player")
+	if player == null: return
+	var hit := [false]
+	var tw := create_tween()
+	tw.tween_method(func(r: float):
+		if hit[0] or not is_instance_valid(player): return
+		if player.global_position.distance_to(pos) <= r:
+			hit[0] = true
+			player.take_damage(2), 0.0, radius, dur).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 
 func _activate_full_breach() -> void:
 	var p := get_node_or_null("Player")

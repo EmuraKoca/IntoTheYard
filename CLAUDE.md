@@ -30,8 +30,11 @@ Sesler 0 dB; yüksek/kısık gelirse `volume_db` ayarlanacak.
 animasyonunu dinamik yüklüyor (8fps ≈ 0.5sn); `_launch_missile()` animasyonu oynatıp
 `MISSILE_FIRE_FRAME=2` (parlama karesi, 0.25sn) gelince füzeyi spawn ediyor, animasyon bitince
 "walk"a dönüyor (ölmüşse/oyuncu yoksa füze çıkmaz).
-**Hâlâ açık**: `game_scene.gd::boss_shockwave()` hiç tanımlı değil → Cyber-404 shockwave'i
-(30sn) sadece boss'u sersemletiyor, dalga çıkmıyor.
+**Shockwave (2026-10-02, oyunda denenmedi)**: `game_scene.gd::boss_shockwave(pos, radius)` yazıldı —
+Vector'un Shockwave sprite'ını (`assets/VFX/calamitys/shockwave/`, `_vfx_shockwave(at, final_scale, dur)`
+artık parametreli) boss'tan dışa 0.7sn'de genişletiyor (Avlu'ya kırpılı, ölçek = radius/105), aynı ses
+(-4dB) + `screen_shake_heavy`. Dalga cephesi oyuncuya ulaşınca (oyuncu max yarıçap içindeyse) BİR KEZ 2 hasar.
+`cyber_404.gd::_shockwave()` 3 dalga (1.5sn arayla, boss ~4.5sn sersem) yarıçaplar 300/450/600 (eskiden 150/300/450).
 
 ## Cyber-404 "Shotgun burst" → "Ring attack" (2026-10-02, oyunda denenmedi)
 Kullanıcı "shotgun burst" ismini mantıksız buldu (her yana mermi atıyor) ve
@@ -3953,3 +3956,10 @@ wave=1: +1s (top) → vur → +1s (bottom) = tur başına 2sn. Sonuç: gerçek v
 8. saniyelerde, toplam 9sn — kullanıcının kronometreyle ölçtüğü BİREBİR eşleşiyor.
 **Fix**: döngü sonundaki fazladan `await` satırı silindi. Artık tek await/tur, vuruşlar
 gerçekten 1, 2, 3, 4. saniyelerde (0. tur sakin), toplam 5sn.
+
+## Shockwave halkası inceltildi — sabit kalınlık (2026-10-02, oyunda denenmedi)
+Sprite ×7 büyütülünce halkanın kalınlığı da büyüyordu (Vector'da da, boss'ta da). Artık `_vfx_shockwave()`:
+merkezde sabit boyutlu (0.8) sprite parlaması + yeni `shockwave_ring.gd` ile `draw_arc` halka (kalınlık
+`thickness=5` px, yarıçaptan bağımsız; geniş soluk glow + ince çekirdek, yarıçap 0→final_scale×105, alfa söner).
+Kalınlık için `shockwave_ring.gd::thickness`, hız için `dur` ayarlanır. Vector Shockwave ve Cyber-404 ikisi de kullanır.
+Halka dalgalı yapıldı: kenar açıya göre iki sinüsle dalgalanıyor, dalgalar zamanla kayıyor (`wave_amp=12`px, `wave_count=9` — `shockwave_ring.gd`'den ayarlanır; 0 yapılırsa düz halka).

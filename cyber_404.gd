@@ -222,7 +222,7 @@ func _shockwave() -> void:
 		await get_tree().create_timer(1.5).timeout
 		var game = get_parent()
 		if game.has_method("boss_shockwave"):
-			game.boss_shockwave(global_position, (i + 1) * 150)
+			game.boss_shockwave(global_position, 300.0 + i * 150.0)
 	is_stunned = false
 
 func _random_weapon(player: Node2D) -> void:
