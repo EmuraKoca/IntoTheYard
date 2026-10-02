@@ -3,6 +3,16 @@
 Bu dosya, farklı bilgisayarlardaki (ev / işyeri) Claude Code oturumları arasında bağlam
 köprüsü olarak kullanılır. Her oturum başında oku, her oturum sonunda güncelle.
 
+## Cyber-404 "Shotgun burst" → "Ring attack" (2026-10-02, oyunda denenmedi)
+Kullanıcı "shotgun burst" ismini mantıksız buldu (her yana mermi atıyor) ve
+`assets/enemys/cyber404/animations/ringAttack/frame_000-024.png` (25 kare, 252×252, kare 0-2
+hazırlık, 3-24 ateş efekti) ekledi. `cyber_404.gd`: `_shotgun_burst`→`_ring_attack`,
+`shotgun_timer`→`ring_timer` (9sn aralık, mermi sayıları aynı; mermi `bullet_type` hâlâ
+"shotgun"). `_setup_sprite()` "ringAttack" animasyonunu dinamik yüklüyor (14fps ≈ 1.8sn,
+non-loop); saldırı başlayınca animasyon oynuyor, 3 kare (≈0.21sn) hazırlıktan SONRA 5 dalga
+başlıyor (0.3sn arayla, artık pause-safe `create_timer(…, false)`), animasyon bitince
+"walk"a dönülüyor (ölmüşse dönmez). Ölürse dalgalar duruyor (`is_dead` kontrolü).
+
 ## Cyber-404 boss teması bağlandı (2026-10-02, oyunda denenmedi)
 Kullanıcı `assets/sfx/bosses/cyber404/cyber404inthefield.ogg` ekledi (Vorbis, 156.6sn, sorunsuz
 import). `cyber_404.gd::_start_theme()` (`_ready()`'den çağrılıyor — boss kutudan çıkıp

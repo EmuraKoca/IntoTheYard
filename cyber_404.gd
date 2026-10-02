@@ -16,7 +16,7 @@ var speed = 120.0
 var keep_distance = 500.0
 var chain_anchor = Vector2(995, 560)   # yeni (genişletilmiş) oyun alanının merkezi (x:360-1630)
 var chain_length = 450.0
-var shotgun_timer = 0.0
+var ring_timer = 0.0
 var missile_timer = 0.0
 var shockwave_timer = 0.0
 var random_weapon_timer = 0.0
@@ -87,6 +87,16 @@ func _setup_sprite() -> void:
 		var t: Texture2D = load(death_base + "frame_%03d.png" % i)
 		frames.add_frame("death", t)
 
+	# Halka saldırısı: kare 0-2 hazırlık, 3-24 ateş (RING_WINDUP_FRAMES)
+	var ring_base := "res://assets/enemys/cyber404/animations/ringAttack/"
+	frames.add_animation("ringAttack")
+	frames.set_animation_speed("ringAttack", RING_FPS)
+	frames.set_animation_loop("ringAttack", false)
+	var ring_i := 0
+	while ResourceLoader.exists(ring_base + "frame_%03d.png" % ring_i):
+		frames.add_frame("ringAttack", load(ring_base + "frame_%03d.png" % ring_i))
+		ring_i += 1
+
 	sprite.sprite_frames  = frames
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	sprite.scale          = Vector2(0.7, 0.7)
@@ -131,14 +141,14 @@ func _physics_process(delta: float) -> void:
 		var dir_to_anchor = (chain_anchor - global_position).normalized()
 		global_position = chain_anchor - dir_to_anchor * chain_length
 
-	shotgun_timer += delta
+	ring_timer += delta
 	missile_timer += delta
 	shockwave_timer += delta
 	random_weapon_timer += delta
 
-	if shotgun_timer >= 9.0:
-		shotgun_timer = 0.0
-		_shotgun_burst(player)
+	if ring_timer >= 9.0:
+		ring_timer = 0.0
+		_ring_attack(player)
 
 	if missile_timer >= 15.0:
 		missile_timer = 0.0
@@ -152,8 +162,20 @@ func _physics_process(delta: float) -> void:
 		random_weapon_timer = 0.0
 		_random_weapon(player)
 
-func _shotgun_burst(_player: Node2D) -> void:
+const RING_FPS := 14.0
+const RING_WINDUP_FRAMES := 3
+
+# Her yana mermi (8 yön × 3'lü saçma × 5 dalga) — ringAttack animasyonu eşliğinde.
+func _ring_attack(_player: Node2D) -> void:
+	var spr: AnimatedSprite2D = $Boss404Sprite
+	if spr.sprite_frames.has_animation("ringAttack"):
+		spr.play("ringAttack")
+		spr.animation_finished.connect(func():
+			if not is_dead:
+				spr.play("walk"), CONNECT_ONE_SHOT)
+		await get_tree().create_timer(RING_WINDUP_FRAMES / RING_FPS, false).timeout
 	for burst in range(5):
+		if is_dead: return
 		for i in range(8):
 			var angle = i * TAU / 8
 			var base_dir = Vector2(cos(angle), sin(angle))
@@ -164,7 +186,7 @@ func _shotgun_burst(_player: Node2D) -> void:
 				var spread = deg_to_rad(-10 + j * 10)
 				get_parent().add_child(bullet)
 				bullet.launch(base_dir.rotated(spread))
-		await get_tree().create_timer(0.3).timeout
+		await get_tree().create_timer(0.3, false).timeout
 
 func _launch_missile(player: Node2D) -> void:
 	var missile = missile_scene.instantiate()
