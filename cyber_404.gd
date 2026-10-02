@@ -30,10 +30,35 @@ func _ready() -> void:
 	add_to_group("subjects")
 	scale = Vector2(0.1, 0.1)
 	_setup_sprite()
+	_start_theme()
 	await get_tree().process_frame
 	var game = get_parent()
 	if game.has_method("show_boss_bar"):
 		game.show_boss_bar(self)
+
+const THEME_PATH := "res://assets/sfx/bosses/cyber404/cyber404inthefield.ogg"
+var _theme_player: AudioStreamPlayer = null
+
+# Boss kutudan çıktığı an (_ready, add_child ile tetiklenir) başlar, ölene kadar döngüde çalar.
+func _start_theme() -> void:
+	if not ResourceLoader.exists(THEME_PATH):
+		return
+	var stream: AudioStream = load(THEME_PATH)
+	if "loop" in stream:
+		stream.loop = true
+	_theme_player = AudioStreamPlayer.new()
+	_theme_player.stream = stream
+	_theme_player.bus = "GameplaySFX" if AudioServer.get_bus_index("GameplaySFX") >= 0 else "Master"
+	_theme_player.volume_db = linear_to_db(0.455)  # 0.65 × 0.7 (önce %35, sonra üstüne %30 kısıldı)
+	add_child(_theme_player)
+	_theme_player.play()
+
+func _stop_theme() -> void:
+	if not is_instance_valid(_theme_player):
+		return
+	var tw := create_tween()
+	tw.tween_property(_theme_player, "volume_db", -40.0, 1.5)
+	tw.tween_callback(_theme_player.stop)
 
 func _setup_sprite() -> void:
 	var sprite: AnimatedSprite2D = $Boss404Sprite
@@ -209,6 +234,7 @@ func _armor_break() -> void:
 func die() -> void:
 	is_dead = true
 	set_physics_process(false)
+	_stop_theme()
 	$CollisionShape2D.set_deferred("disabled", true)
 	var game = get_parent()
 	if game.has_method("subject_died"):

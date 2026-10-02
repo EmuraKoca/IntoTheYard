@@ -3,6 +3,19 @@
 Bu dosya, farklı bilgisayarlardaki (ev / işyeri) Claude Code oturumları arasında bağlam
 köprüsü olarak kullanılır. Her oturum başında oku, her oturum sonunda güncelle.
 
+## Cyber-404 boss teması bağlandı (2026-10-02, oyunda denenmedi)
+Kullanıcı `assets/sfx/bosses/cyber404/cyber404inthefield.ogg` ekledi (Vorbis, 156.6sn, sorunsuz
+import). `cyber_404.gd::_start_theme()` (`_ready()`'den çağrılıyor — boss kutudan çıkıp
+`add_child` edildiği an) boss'un child'ı olan bir `AudioStreamPlayer`'la ("GameplaySFX" bus,
+yani level-up/pause'da mute + oyun duraklayınca ses de duruyor) **döngüde** (`stream.loop=true`)
+çalıyor; `die()` içinde `_stop_theme()` 1.5sn fade-out ile susturuyor. Ses seviyesi kullanıcı
+isteğiyle iki kez kısıldı: önce %35 (0.65), sonra mevcut sesin %30'u daha (0.65×0.7) →
+`volume_db = linear_to_db(0.455)` (≈ -6.8 dB). Not: müzik değil SFX
+bus'ında; ayrı bir boss-müziği mantığı kurulursa (normal gameplay müziğini kısma vb.) buraya
+bakılmalı — şu an gameplay müziği boss temasıyla BİRLİKTE çalmaya devam ediyor.
+Boss saldırı zamanlamaları (kullanıcıyla sırayla gözden geçirilecek): shotgun burst 9sn,
+füze 15sn, shockwave 30sn (zırh>0), rastgele silah 4-8sn.
+
 ## Eski (küçük) oyun alanı sınırları düzeltildi (2026-10-02, oyunda denenmedi)
 Kullanıcı: sol tarafa giden mermiler bir yerden sonra yok oluyor. Gerçek arena duvarları
 x:360-1630, y:240-1080 (`game_scene.tscn` WallLeft/WallRight/WallBottom) ama eski, daha dar
