@@ -3,6 +3,26 @@
 Bu dosya, farklı bilgisayarlardaki (ev / işyeri) Claude Code oturumları arasında bağlam
 köprüsü olarak kullanılır. Her oturum başında oku, her oturum sonunda güncelle.
 
+## Cyber-404 füzesi düzeltildi — takip eden, dash ile atlatılan (2026-10-02, oyunda denenmedi)
+Kullanıcı 15sn'lik füzeyi oyunda hiç göremedi. Kök sebepler: `missile.gd` `max_range=400`
+iken boss oyuncudan 450-550px uzakta durduğu için (`keep_distance=500`) füze hep boşlukta
+patlıyordu + görsel 12×12'lik turuncu `ColorRect`'ti, patlama efekti yoktu. Ayrıca füze
+fırlatıldığı yöne DÜZ gidiyordu — oysa tasarım takip eden füzeydi, sadece dash ile kaçılmalı.
+`missile.gd` baştan yazıldı: **takip eder** (`turn_rate=2.2 rad/sn`, hız 300) ama oyuncuya
+`ARM_RADIUS=110px` yaklaşınca **kurulur**: takibi bırakıp düz gider, `ARM_DELAY=0.35sn` sonra
+patlar (`blast_radius=70`, hasar 3, temasta hemen patlar) — bu aralıkta dash (120px/0.12sn,
+i-frame yok, sadece konum) atan oyuncu yarıçapın dışına çıkar, hasar yemez ve füze patlamış
+olur. Süre (`lifetime=7sn`) dolunca da patlar. İlk denemede Smiler'ın `skillMissile/VFX/`
+sprite'ı kullanılmıştı ama kullanıcı "uyumsuz oldu" dedi; yer tutucuya dönüldü, sonra kullanıcı
+kendi sprite'ını ekledi: **`assets/VFX/homingMissile/`** (24 kare, 32×32, burnu AŞAĞI/south
+bakıyor; 0-18 uçuş, 19-23 patlama). `missile.gd` kareleri dinamik yüklüyor
+(`EXPLODE_FROM=19`), tek yönlü olduğu için `rotation = direction.angle() - PI/2` ile hareket
+yönüne döndürüyor (ölçek 1.25 — önce 2.5 idi, kullanıcı isteğiyle %50 küçültüldü); kurulunca beyaz yanıp söner; patlamada 5 kare
+`blast_radius*2/32` ölçeğinde oynuyor. `missile.tscn`'den `ColorRect` silindi,
+çarpışma yarıçapı 8→14.
+**Hâlâ açık**: `game_scene.gd::boss_shockwave()` hiç tanımlı değil → Cyber-404 shockwave'i
+(30sn) sadece boss'u sersemletiyor, dalga çıkmıyor.
+
 ## Cyber-404 "Shotgun burst" → "Ring attack" (2026-10-02, oyunda denenmedi)
 Kullanıcı "shotgun burst" ismini mantıksız buldu (her yana mermi atıyor) ve
 `assets/enemys/cyber404/animations/ringAttack/frame_000-024.png` (25 kare, 252×252, kare 0-2
