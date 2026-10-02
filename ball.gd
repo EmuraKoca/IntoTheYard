@@ -136,12 +136,6 @@ var _sprite: AnimatedSprite2D = null
 var _kinetic_vfx: Sprite2D = null
 var _momentum_trail: CPUParticles2D = null
 var _full_breach_aura: CPUParticles2D = null
-var _hit_sfx: AudioStreamPlayer2D = null
-
-static var _sfx_classic:  AudioStream = null
-static var _sfx_elemental: AudioStream = null
-static var _sfx_heavy:    AudioStream = null
-
 func _ready() -> void:
 	z_index = 5
 	$CollisionShape2D.disabled = false
@@ -152,21 +146,11 @@ func _ready() -> void:
 	_cached_player = get_tree().get_first_node_in_group("player")
 	collision_layer = 2
 	collision_mask  = 1
-	_setup_hit_sfx()
 
-func _setup_hit_sfx() -> void:
-	if _sfx_classic  == null: _sfx_classic  = load("res://assets/sfx/hitBalls/hitClassic.ogg")
-	if _sfx_elemental == null: _sfx_elemental = load("res://assets/sfx/hitBalls/hitElemental.ogg")
-	if _sfx_heavy    == null: _sfx_heavy    = load("res://assets/sfx/hitBalls/hitHeavy.ogg")
-	_hit_sfx = AudioStreamPlayer2D.new()
-	_hit_sfx.volume_db = 0.0
-	_hit_sfx.bus       = "SFX"
-	add_child(_hit_sfx)
-
+# Konuma bağlı AudioStreamPlayer2D yerine paylaşımlı Sfx havuzu (calamity/UI sesleriyle aynı,
+# çalıştığı doğrulanmış yol) — kullanıcı vuruş seslerinin hiç gelmediğini bildirdi.
 func _play_hit_sfx() -> void:
-	if not _hit_sfx: return
-	_hit_sfx.stream = _sfx_classic
-	_hit_sfx.play()
+	Sfx.play_path("res://assets/sfx/hitBalls/hitClassic.ogg", -4.0)
 
 func _setup_ball_sprite() -> void:
 	var folder: String

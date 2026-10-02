@@ -3,6 +3,16 @@
 Bu dosya, farklı bilgisayarlardaki (ev / işyeri) Claude Code oturumları arasında bağlam
 köprüsü olarak kullanılır. Her oturum başında oku, her oturum sonunda güncelle.
 
+## Vuruş sesi Sfx havuzuna taşındı (2026-10-02, oyunda denenmedi)
+Kullanıcı düşmana/duvara vurunca ses gelmediğini bildirdi. Kodda net bir hata bulunamadı
+(dosyalar sağlam/import'lu, çağrı `_hit_subject()` ve duvar sekmesinde duruyordu, v0.1.0.3'ten
+beri değişmemişti) — şüpheli konuma bağlı `AudioStreamPlayer2D` + "SFX" bus'ıydı.
+`ball.gd::_play_hit_sfx()` artık `Sfx.play_path("res://assets/sfx/hitBalls/hitClassic.ogg", -4.0)`
+çağırıyor (calamity seslerinin kullandığı, çalıştığı doğrulanmış yol); `_hit_sfx` node'u ve
+statik stream değişkenleri silindi. Yan etki: level-up/pause'da gameplay mute'una dahil oldu.
+Not: `hitElemental.ogg`/`hitHeavy.ogg` eskiden de hiç çalınmıyordu (sadece Classic), hâlâ
+kullanılmıyor. Düzelmediyse asıl sebep ayarlardaki SFX/Master sürgüsü ya da bus olabilir.
+
 ## Boss HP barı yeniden tasarlandı — tek frame + iki katman dolgu (2026-10-01, oyunda denenmedi)
 Kullanıcı eski boss can/zırh barını (iki ayrı `ColorRect` çifti, çirkin duruyordu — bkz.
 ekran görüntüsü) Vector'un `HealthBar2` mimarisiyle aynı mantığa çevirmemizi istedi: tek
