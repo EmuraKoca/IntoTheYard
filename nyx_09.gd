@@ -294,7 +294,7 @@ func _start_teleport() -> void:
 		# Hedef: player'in anlık X pozisyonu
 		var pl := get_tree().get_first_node_in_group("player")
 		_tele_pos = Vector2(
-			clamp(pl.global_position.x if is_instance_valid(pl) else global_position.x, 950.0, 1540.0),
+			clamp(pl.global_position.x if is_instance_valid(pl) else global_position.x, 420.0, 1570.0),
 			_fixed_y
 		)
 
@@ -444,9 +444,9 @@ func _generate_bolt() -> void:
 func _laser_clip_length(dir: Vector2) -> float:
 	var max_len : float = LASER_LENGTH
 	if dir.x < -0.001:
-		max_len = min(max_len, (global_position.x - 910.0)  / abs(dir.x))
+		max_len = min(max_len, (global_position.x - 360.0)  / abs(dir.x))
 	if dir.x >  0.001:
-		max_len = min(max_len, (1580.0 - global_position.x) /     dir.x)
+		max_len = min(max_len, (1630.0 - global_position.x) /     dir.x)
 	if dir.y < -0.001:
 		max_len = min(max_len, (global_position.y - 260.0)  / abs(dir.y))
 	if dir.y >  0.001:

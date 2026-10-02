@@ -51,7 +51,7 @@ func _draw() -> void:
 func _physics_process(delta: float) -> void:
 	global_position += direction * speed * delta
 
-	if global_position.x <= 840:  queue_free()
+	if global_position.x <= 330:  queue_free()
 	if global_position.x >= 1640: queue_free()
 	if global_position.y <= -60:  queue_free()
 	if global_position.y >= 1100: queue_free()

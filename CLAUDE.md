@@ -3,6 +3,18 @@
 Bu dosya, farklı bilgisayarlardaki (ev / işyeri) Claude Code oturumları arasında bağlam
 köprüsü olarak kullanılır. Her oturum başında oku, her oturum sonunda güncelle.
 
+## Eski (küçük) oyun alanı sınırları düzeltildi (2026-10-02, oyunda denenmedi)
+Kullanıcı: sol tarafa giden mermiler bir yerden sonra yok oluyor. Gerçek arena duvarları
+x:360-1630, y:240-1080 (`game_scene.tscn` WallLeft/WallRight/WallBottom) ama eski, daha dar
+arenadan (x≈840-1640) kalma sabitler vardı — tarama sonucu bulunan hepsi düzeltildi:
+- `bullet.gd`: sol sınır `x <= 840` → **330** (düşman mermileri 840'ta siliniyordu).
+- `nyx_09.gd`: ışınlanma X clamp'i 950-1540 → **420-1570**; lazer kırpma sınırları
+  910/1580 → **360/1630** (`_laser_clip_length`; y sınırları 260/1040 zaten uyumluydu).
+- `cyber_404.gd`: zincir çapası `(1240,500)`/uzunluk 300 (boss yalnızca x≈940-1540'ta
+  gezebiliyordu) → **`(995,560)`/450** (arena merkezi, aynı oran).
+Diğer düşmanlarda/Smiler'da (`s_miler_79`, subject/ranged/cyber_* scriptleri) eski sabit
+bulunamadı; `base_enemy.SURGERY_EXIT` hiçbir yerde kullanılmıyor.
+
 ## Vuruş sesi Sfx havuzuna taşındı (2026-10-02, oyunda denenmedi)
 Kullanıcı düşmana/duvara vurunca ses gelmediğini bildirdi. Kodda net bir hata bulunamadı
 (dosyalar sağlam/import'lu, çağrı `_hit_subject()` ve duvar sekmesinde duruyordu, v0.1.0.3'ten
