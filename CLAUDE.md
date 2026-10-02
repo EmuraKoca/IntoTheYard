@@ -25,6 +25,11 @@ doğduğu an füzenin child'ı olan `AudioStreamPlayer`'da çalıyor (GameplaySF
 0.15sn'de kısılıp duruyor; `homingMissileExplosion.ogg` (1.56sn) füze silinince kesilmesin
 diye `Sfx.play_path` (autoload havuzu) ile çalıyor — parent ömrü dersi (bkz. kırılma sesi).
 Sesler 0 dB; yüksek/kısık gelirse `volume_db` ayarlanacak.
+**Fırlatma animasyonu (aynı gün)**: `assets/enemys/cyber404/animations/launchMissile/` (4 kare,
+252×252: hazır, şarj, parlama, toparlanma) — `cyber_404.gd::_setup_sprite()` "launchMissile"
+animasyonunu dinamik yüklüyor (8fps ≈ 0.5sn); `_launch_missile()` animasyonu oynatıp
+`MISSILE_FIRE_FRAME=2` (parlama karesi, 0.25sn) gelince füzeyi spawn ediyor, animasyon bitince
+"walk"a dönüyor (ölmüşse/oyuncu yoksa füze çıkmaz).
 **Hâlâ açık**: `game_scene.gd::boss_shockwave()` hiç tanımlı değil → Cyber-404 shockwave'i
 (30sn) sadece boss'u sersemletiyor, dalga çıkmıyor.
 

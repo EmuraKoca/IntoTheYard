@@ -97,6 +97,16 @@ func _setup_sprite() -> void:
 		frames.add_frame("ringAttack", load(ring_base + "frame_%03d.png" % ring_i))
 		ring_i += 1
 
+	# Füze fırlatma: 4 kare (0 hazır, 1 şarj, 2 parlama = fırlatma anı, 3 toparlanma)
+	var lm_base := "res://assets/enemys/cyber404/animations/launchMissile/"
+	frames.add_animation("launchMissile")
+	frames.set_animation_speed("launchMissile", MISSILE_ANIM_FPS)
+	frames.set_animation_loop("launchMissile", false)
+	var lm_i := 0
+	while ResourceLoader.exists(lm_base + "frame_%03d.png" % lm_i):
+		frames.add_frame("launchMissile", load(lm_base + "frame_%03d.png" % lm_i))
+		lm_i += 1
+
 	sprite.sprite_frames  = frames
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	sprite.scale          = Vector2(0.7, 0.7)
@@ -188,7 +198,19 @@ func _ring_attack(_player: Node2D) -> void:
 				bullet.launch(base_dir.rotated(spread))
 		await get_tree().create_timer(0.3, false).timeout
 
+const MISSILE_ANIM_FPS := 8.0
+const MISSILE_FIRE_FRAME := 2   # parlama karesi — füze tam bu anda çıkar
+
 func _launch_missile(player: Node2D) -> void:
+	var spr: AnimatedSprite2D = $Boss404Sprite
+	if spr.sprite_frames.has_animation("launchMissile"):
+		spr.play("launchMissile")
+		spr.animation_finished.connect(func():
+			if not is_dead:
+				spr.play("walk"), CONNECT_ONE_SHOT)
+		await get_tree().create_timer(MISSILE_FIRE_FRAME / MISSILE_ANIM_FPS, false).timeout
+		if is_dead or not is_instance_valid(player):
+			return
 	var missile = missile_scene.instantiate()
 	missile.global_position = global_position
 	missile.target = player
