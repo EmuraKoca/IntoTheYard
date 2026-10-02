@@ -7,6 +7,8 @@ extends Area2D
 # 19-23 patlama. Tek yönlü olduğu için uçuşta hareket yönüne göre döndürülüyor.
 const BASE := "res://assets/VFX/homingMissile/"
 const EXPLODE_FROM := 19
+const SFX_LAUNCH  := "res://assets/sfx/bosses/cyber404/homingMissileLaunch.ogg"
+const SFX_EXPLODE := "res://assets/sfx/bosses/cyber404/homingMissileExplosion.ogg"
 const ARM_RADIUS := 110.0
 const ARM_DELAY  := 0.35
 
@@ -23,6 +25,7 @@ var _armed := false
 var _arm_timer := 0.0
 var _exploding := false
 var _sprite: AnimatedSprite2D
+var _launch_player: AudioStreamPlayer
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
@@ -48,6 +51,14 @@ func _ready() -> void:
 	if target != null and is_instance_valid(target):
 		direction = (target.global_position - global_position).normalized()
 	_sprite.rotation = direction.angle() - PI / 2.0
+	# Fırlatma sesi füzenin child'ı (patlayınca kesilebilsin diye); patlama sesi ise füze
+	# silinse de bitsin diye Sfx havuzundan çalıyor (aşağıda _explode).
+	if ResourceLoader.exists(SFX_LAUNCH):
+		_launch_player = AudioStreamPlayer.new()
+		_launch_player.stream = load(SFX_LAUNCH)
+		_launch_player.bus = "GameplaySFX" if AudioServer.get_bus_index("GameplaySFX") >= 0 else "Master"
+		add_child(_launch_player)
+		_launch_player.play()
 
 func _physics_process(delta: float) -> void:
 	if _exploding:
@@ -83,6 +94,11 @@ func _explode() -> void:
 	if _exploding:
 		return
 	_exploding = true
+	if is_instance_valid(_launch_player):
+		var ftw := create_tween()
+		ftw.tween_property(_launch_player, "volume_db", -40.0, 0.15)
+		ftw.tween_callback(_launch_player.stop)
+	Sfx.play_path(SFX_EXPLODE)
 	for body in get_tree().get_nodes_in_group("player"):
 		if global_position.distance_to(body.global_position) < blast_radius:
 			body.take_damage(damage)

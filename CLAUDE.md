@@ -20,6 +20,11 @@ bakıyor; 0-18 uçuş, 19-23 patlama). `missile.gd` kareleri dinamik yüklüyor
 yönüne döndürüyor (ölçek 1.25 — önce 2.5 idi, kullanıcı isteğiyle %50 küçültüldü); kurulunca beyaz yanıp söner; patlamada 5 kare
 `blast_radius*2/32` ölçeğinde oynuyor. `missile.tscn`'den `ColorRect` silindi,
 çarpışma yarıçapı 8→14.
+**Füze sesleri (aynı gün)**: `assets/sfx/bosses/cyber404/homingMissileLaunch.ogg` (3.44sn) füze
+doğduğu an füzenin child'ı olan `AudioStreamPlayer`'da çalıyor (GameplaySFX), patlayınca
+0.15sn'de kısılıp duruyor; `homingMissileExplosion.ogg` (1.56sn) füze silinince kesilmesin
+diye `Sfx.play_path` (autoload havuzu) ile çalıyor — parent ömrü dersi (bkz. kırılma sesi).
+Sesler 0 dB; yüksek/kısık gelirse `volume_db` ayarlanacak.
 **Hâlâ açık**: `game_scene.gd::boss_shockwave()` hiç tanımlı değil → Cyber-404 shockwave'i
 (30sn) sadece boss'u sersemletiyor, dalga çıkmıyor.
 
