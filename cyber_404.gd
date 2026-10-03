@@ -105,6 +105,16 @@ func _setup_sprite() -> void:
 		frames.add_frame("launchMissile", load(lm_base + "frame_%03d.png" % lm_i))
 		lm_i += 1
 
+	# Rastgele atış: 7 kare (0 namlu kıvılcımı, 1 büyük parlama = ateş anı, 2-3 toparlanma, 4-6 ikinci tur)
+	var rs_base := "res://assets/enemys/cyber404/animations/randomShot/"
+	frames.add_animation("randomShot")
+	frames.set_animation_speed("randomShot", RANDOM_SHOT_FPS)
+	frames.set_animation_loop("randomShot", false)
+	var rs_i := 0
+	while ResourceLoader.exists(rs_base + "frame_%03d.png" % rs_i):
+		frames.add_frame("randomShot", load(rs_base + "frame_%03d.png" % rs_i))
+		rs_i += 1
+
 	sprite.sprite_frames  = frames
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	sprite.scale          = Vector2(0.7, 0.7)
@@ -170,7 +180,14 @@ func _physics_process(delta: float) -> void:
 		random_weapon_timer = 0.0
 		_random_weapon(player)
 
+const SFX_DIR := "res://assets/sfx/bosses/cyber404/"
+const SFX_MACHINEGUN := SFX_DIR + "machineGun.ogg"   # ring attack + sıralı smg serisi
+const SFX_SHOTGUN    := SFX_DIR + "shotgun.ogg"      # 7'li saçma
+const SFX_SINGLESHOT := SFX_DIR + "singleShot.ogg"   # tek smg
+
 const RING_FPS := 14.0
+# ring animasyonu: 25 kare @14fps, 3 kare hazırlık sonrası ses başlar → ateş kısmı ≈1.57sn; ses ~1.5sn (kuyruk dahil)
+const RING_SFX_PITCH := 0.95
 const RING_WINDUP_FRAMES := 3
 
 # Her yana mermi (8 yön × 3'lü saçma × 5 dalga) — ringAttack animasyonu eşliğinde.
@@ -182,6 +199,8 @@ func _ring_attack(_player: Node2D) -> void:
 			if not is_dead:
 				spr.play("walk"), CONNECT_ONE_SHOT)
 		await get_tree().create_timer(RING_WINDUP_FRAMES / RING_FPS, false).timeout
+	if is_dead: return
+	Sfx.play_path_dedicated(SFX_MACHINEGUN, 0.0, RING_SFX_PITCH)   # animasyonun ateş kısmıyla (~1.57sn) bitsin
 	for burst in range(5):
 		if is_dead: return
 		for i in range(8):
@@ -225,32 +244,74 @@ func _shockwave() -> void:
 			game.boss_shockwave(global_position, 300.0 + i * 150.0)
 	is_stunned = false
 
+const RANDOM_SHOT_FPS := 12.0
+const RANDOM_SHOT_FIRE_FRAME := 1   # büyük parlama karesi — mermiler tam bu anda çıkar
+const SERIES_SHOT_INTERVAL := 0.15  # sıralı smg serisi: mermi aralığı = animasyonun bir tur süresi
+
 func _random_weapon(player: Node2D) -> void:
+	var spr: AnimatedSprite2D = $Boss404Sprite
+	var has_anim: bool = spr.sprite_frames.has_animation("randomShot")
+	var choice := randi() % 3
+	if choice == 2:
+		await _random_series(player, spr, has_anim)
+		return
+	if has_anim:
+		spr.speed_scale = 1.0
+		spr.play("randomShot")
+		spr.animation_finished.connect(func():
+			if not is_dead:
+				spr.play("walk"), CONNECT_ONE_SHOT)
+		await get_tree().create_timer(RANDOM_SHOT_FIRE_FRAME / RANDOM_SHOT_FPS, false).timeout
+	if is_dead or not is_instance_valid(player):
+		return
 	var dir = (player.global_position - global_position).normalized()
-	var choice = randi() % 3
-	match choice:
-		0:
+	if choice == 0:
+		Sfx.play_path(SFX_SINGLESHOT)
+		var bullet = bullet_scene.instantiate()
+		bullet.global_position = global_position
+		bullet.bullet_type = "smg"
+		get_parent().add_child(bullet)
+		bullet.launch(dir)
+	else:
+		Sfx.play_path(SFX_SHOTGUN)
+		for i in range(7):
 			var bullet = bullet_scene.instantiate()
 			bullet.global_position = global_position
-			bullet.bullet_type = "smg"
+			bullet.bullet_type = "shotgun"
+			var angle = deg_to_rad(-30 + i * 10)
 			get_parent().add_child(bullet)
-			bullet.launch(dir)
-		1:
-			for i in range(7):
-				var bullet = bullet_scene.instantiate()
-				bullet.global_position = global_position
-				bullet.bullet_type = "shotgun"
-				var angle = deg_to_rad(-30 + i * 10)
-				get_parent().add_child(bullet)
-				bullet.launch(dir.rotated(angle))
-		2:
-			for i in range(5):
-				var bullet = bullet_scene.instantiate()
-				bullet.global_position = global_position
-				bullet.bullet_type = "smg"
-				get_parent().add_child(bullet)
-				bullet.launch(dir)
-				await get_tree().create_timer(0.15).timeout
+			bullet.launch(dir.rotated(angle))
+
+# 5'li sıralı smg: randomShot animasyonu her mermide baştan oynar (bir tur = SERIES_SHOT_INTERVAL),
+# machineGun sesi seri bitince kısa bir fade ile susar (ses 1.5sn, seri 0.75sn).
+func _random_series(player: Node2D, spr: AnimatedSprite2D, has_anim: bool) -> void:
+	var frame_count: int = spr.sprite_frames.get_frame_count("randomShot") if has_anim else 1
+	var fire_t: float = SERIES_SHOT_INTERVAL * float(RANDOM_SHOT_FIRE_FRAME) / float(maxi(frame_count, 1))
+	var snd := Sfx.play_path_dedicated(SFX_MACHINEGUN)
+	for i in range(5):
+		if is_dead or not is_instance_valid(player):
+			break
+		if has_anim:
+			spr.speed_scale = (float(frame_count) / RANDOM_SHOT_FPS) / SERIES_SHOT_INTERVAL
+			spr.play("randomShot")
+		await get_tree().create_timer(fire_t, false).timeout
+		if is_dead or not is_instance_valid(player):
+			break
+		var dir = (player.global_position - global_position).normalized()
+		var bullet = bullet_scene.instantiate()
+		bullet.global_position = global_position
+		bullet.bullet_type = "smg"
+		get_parent().add_child(bullet)
+		bullet.launch(dir)
+		await get_tree().create_timer(SERIES_SHOT_INTERVAL - fire_t, false).timeout
+	if is_instance_valid(snd):
+		var tw := snd.create_tween()
+		tw.tween_property(snd, "volume_db", -40.0, 0.12)
+		tw.tween_callback(snd.stop)
+	if has_anim:
+		spr.speed_scale = 1.0
+		if not is_dead:
+			spr.play("walk")
 
 func take_damage(amount, from_ally: bool = false, kill_cause: String = "normal", physical: bool = false) -> void:
 	if physical: _physical_flash()

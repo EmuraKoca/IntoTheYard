@@ -19,6 +19,7 @@ var _cache: Dictionary = {}
 var _players: Array[AudioStreamPlayer] = []
 var _next: int = 0
 var _gameplay_bus_linked: bool = false
+var _gameplay_muted: bool = false
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -60,6 +61,27 @@ func play_path(path: String, volume_db: float = 0.0, pitch_scale: float = 1.0) -
 		_route_gameplay_bus()
 	_play_stream(_cache[path], volume_db, pitch_scale, "GameplaySFX")
 
+# Uzun/kesilmemesi gereken sesler için (örn. boss makineli tüfek): paylaşımlı 8'lik havuz yerine
+# bu sese ÖZEL, geçici bir player açar. Havuz sırayla döndüğü için sık çalan sesler (top
+# vuruşları vb.) uzun bir sesi 8 çağrı sonra kesebiliyordu. Bitince kendini siler.
+func play_path_dedicated(path: String, volume_db: float = 0.0, pitch_scale: float = 1.0) -> AudioStreamPlayer:
+	if not _cache.has(path):
+		_cache[path] = load(path) if ResourceLoader.exists(path) else null
+	if _cache[path] == null:
+		return null
+	if not _gameplay_bus_linked:
+		_route_gameplay_bus()
+	var p := AudioStreamPlayer.new()
+	p.process_mode = Node.PROCESS_MODE_ALWAYS
+	p.bus = "GameplaySFX" if AudioServer.get_bus_index("GameplaySFX") >= 0 else "Master"
+	p.stream = _cache[path]
+	p.volume_db = volume_db
+	p.pitch_scale = pitch_scale
+	add_child(p)
+	p.finished.connect(p.queue_free)
+	p.play()
+	return p
+
 # Bir sesi henüz ÇALMADAN önbelleğe yükler — ilk kez `play_path()` ile çağrılan bir ses
 # `load()`'u o anda senkron yapar, bu da tam bir frame'e kilitlenmesi gereken bir tetikleme
 # (örn. Boss Crate'in kırılma sesi) için küçük bir hitch'e/gecikmeye sebep olabilir. Zamanı
@@ -83,9 +105,15 @@ func _route_gameplay_bus() -> void:
 # Level-up/iskarta gibi duraklama menüleri açılınca/kapanınca çağrılır — sadece oyun-içi
 # tek seferlik sesleri (calamity, ölüm) susturur, UI hover/click sesleri etkilenmez.
 func set_gameplay_muted(muted: bool) -> void:
+	_gameplay_muted = muted
 	var idx := AudioServer.get_bus_index("GameplaySFX")
 	if idx >= 0:
 		AudioServer.set_bus_mute(idx, muted)
+	# Mute tek başına sesi susturur ama player çalmaya devam eder (pause'da süre akar, menü
+	# kapanınca ses bitmiş olur). Oyun-içi sesleri DURAKLAT: kaldığı yerden devam etsin.
+	for c in get_children():
+		if c is AudioStreamPlayer and c.bus == "GameplaySFX":
+			c.stream_paused = muted
 
 func _play_stream(stream: AudioStream, volume_db: float, pitch_scale: float = 1.0, bus: String = "SFX") -> void:
 	if stream == null:
@@ -96,6 +124,7 @@ func _play_stream(stream: AudioStream, volume_db: float, pitch_scale: float = 1.
 	p.stream = stream
 	p.volume_db = volume_db
 	p.pitch_scale = pitch_scale
+	p.stream_paused = false
 	p.play()
 
 func _on_node_added(node: Node) -> void:
