@@ -264,23 +264,34 @@ func _random_weapon(player: Node2D) -> void:
 		await get_tree().create_timer(RANDOM_SHOT_FIRE_FRAME / RANDOM_SHOT_FPS, false).timeout
 	if is_dead or not is_instance_valid(player):
 		return
-	var dir = (player.global_position - global_position).normalized()
 	if choice == 0:
 		Sfx.play_path(SFX_SINGLESHOT)
-		var bullet = bullet_scene.instantiate()
-		bullet.global_position = global_position
-		bullet.bullet_type = "smg"
-		get_parent().add_child(bullet)
-		bullet.launch(dir)
+		_fire_from_hands(player, "smg", [0.0])
 	else:
 		Sfx.play_path(SFX_SHOTGUN)
-		for i in range(7):
+		_fire_from_hands(player, "shotgun", [-12.0, 0.0, 12.0])
+
+# randomShot karesindeki iki silahın namlu noktaları (252×252 karede sol ≈(94,133), sağ ≈(160,133);
+# merkez 126,126). Dünya konumu sprite'ın gerçek ölçeğinden hesaplanır (boss ölçeği değişirse uyar).
+const MUZZLE_OFFSETS := [Vector2(-32.0, 7.0), Vector2(34.0, 7.0)]
+
+func _muzzle_positions() -> Array:
+	var spr: AnimatedSprite2D = $Boss404Sprite
+	var out := []
+	for o in MUZZLE_OFFSETS:
+		out.append(spr.global_position + o * spr.global_scale)
+	return out
+
+# Her iki eldeki silahtan, oyuncuya doğru; spread_degs her elden çıkan mermilerin açı sapmaları (huni).
+func _fire_from_hands(player: Node2D, btype: String, spread_degs: Array) -> void:
+	for m in _muzzle_positions():
+		var dir: Vector2 = (player.global_position - m).normalized()
+		for deg in spread_degs:
 			var bullet = bullet_scene.instantiate()
-			bullet.global_position = global_position
-			bullet.bullet_type = "shotgun"
-			var angle = deg_to_rad(-30 + i * 10)
+			bullet.global_position = m
+			bullet.bullet_type = btype
 			get_parent().add_child(bullet)
-			bullet.launch(dir.rotated(angle))
+			bullet.launch(dir.rotated(deg_to_rad(deg)))
 
 # 5'li sıralı smg: randomShot animasyonu her mermide baştan oynar (bir tur = SERIES_SHOT_INTERVAL),
 # machineGun sesi seri bitince kısa bir fade ile susar (ses 1.5sn, seri 0.75sn).
@@ -297,12 +308,7 @@ func _random_series(player: Node2D, spr: AnimatedSprite2D, has_anim: bool) -> vo
 		await get_tree().create_timer(fire_t, false).timeout
 		if is_dead or not is_instance_valid(player):
 			break
-		var dir = (player.global_position - global_position).normalized()
-		var bullet = bullet_scene.instantiate()
-		bullet.global_position = global_position
-		bullet.bullet_type = "smg"
-		get_parent().add_child(bullet)
-		bullet.launch(dir)
+		_fire_from_hands(player, "smg", [0.0])
 		await get_tree().create_timer(SERIES_SHOT_INTERVAL - fire_t, false).timeout
 	if is_instance_valid(snd):
 		var tw := snd.create_tween()
