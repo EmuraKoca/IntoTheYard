@@ -164,21 +164,34 @@ func _physics_process(delta: float) -> void:
 	shockwave_timer += delta
 	random_weapon_timer += delta
 
-	if ring_timer >= 9.0:
-		ring_timer = 0.0
-		_ring_attack(player)
-
-	if missile_timer >= 15.0:
-		missile_timer = 0.0
-		_launch_missile(player)
-
+	# Saldırılar çakışmaz: aynı anda tek saldırı. Birden fazlası hazırsa öncelik sırası
+	# shockwave > füze > ring > rastgele atış; hazır olup bekleyen saldırının sayacı sıfırlanmaz,
+	# boss serbest kalınca (+ATTACK_GAP) sıradaki başlar.
+	if _attacking:
+		return
 	if shockwave_timer >= 30.0 and armor > 0:
 		shockwave_timer = 0.0
-		_shockwave()
-
-	if random_weapon_timer >= randf_range(4.0, 8.0):
+		_run_attack(_shockwave)
+	elif missile_timer >= 15.0:
+		missile_timer = 0.0
+		_run_attack(_launch_missile.bind(player))
+	elif ring_timer >= 9.0:
+		ring_timer = 0.0
+		_run_attack(_ring_attack.bind(player))
+	elif random_weapon_timer >= _random_next:
 		random_weapon_timer = 0.0
-		_random_weapon(player)
+		_random_next = randf_range(4.0, 8.0)
+		_run_attack(_random_weapon.bind(player))
+
+const ATTACK_GAP := 0.6   # bir saldırı bitince sonrakine kadar bekleme (animasyon toparlanması)
+var _attacking := false
+var _random_next := randf_range(4.0, 8.0)
+
+func _run_attack(fn: Callable) -> void:
+	_attacking = true
+	await fn.call()
+	await get_tree().create_timer(ATTACK_GAP, false).timeout
+	_attacking = false
 
 const SFX_DIR := "res://assets/sfx/bosses/cyber404/"
 const SFX_MACHINEGUN := SFX_DIR + "machineGun.ogg"   # ring attack + sıralı smg serisi
