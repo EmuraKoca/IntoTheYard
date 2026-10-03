@@ -3963,3 +3963,9 @@ merkezde sabit boyutlu (0.8) sprite parlaması + yeni `shockwave_ring.gd` ile `d
 `thickness=5` px, yarıçaptan bağımsız; geniş soluk glow + ince çekirdek, yarıçap 0→final_scale×105, alfa söner).
 Kalınlık için `shockwave_ring.gd::thickness`, hız için `dur` ayarlanır. Vector Shockwave ve Cyber-404 ikisi de kullanır.
 Halka dalgalı yapıldı: kenar açıya göre iki sinüsle dalgalanıyor, dalgalar zamanla kayıyor (`wave_amp=12`px, `wave_count=9` — `shockwave_ring.gd`'den ayarlanır; 0 yapılırsa düz halka).
+
+## Cyber-404 yürüme animasyonu kaynağı değişti (2026-10-03, oyunda denenmedi)
+Kullanıcı `assets/enemys/cyber404/animations/animation-3e031936/south/` karelerini Aseprite'te düzenledi ama oyun hâlâ eski görseli gösteriyordu: `_setup_sprite()` "walk"u `sheets/cyber404_walk_S.png` sheet'inden (Haziran'dan beri değişmemiş) kesiyordu. Artık "walk" bu klasörden dinamik yükleniyor (`frame_000..`, 6 kare 252×252, 8fps). `sheets/cyber404_walk_S.png` artık kullanılmıyor (silinebilir). Kare düzenlerken Godot'un yeniden import etmesi için editör açık olmalı.
+
+## BUG FIX: Cyber-404 shockwave pause/level-up'ta akmaya devam ediyordu (2026-10-03, oyunda denenmedi)
+`cyber_404.gd::_shockwave()` dalgalar arası `create_timer(1.5)` kullanıyordu (varsayılan `process_always=true`) — pause/level-up ekranında sayaç akıyor, dalga duraklamış sahnede tetikleniyor, menü kapanınca iki dalga üst üste biniyordu. `, false` eklendi (pause-safe) + her dalga öncesi `is_dead` kontrolü. Dalga görselleri/hasar tween'i zaten oyunla birlikte duruyor.

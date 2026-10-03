@@ -66,17 +66,15 @@ func _setup_sprite() -> void:
 	if frames.has_animation("default"):
 		frames.remove_animation("default")
 
-	# Walk animasyonu (sheet'ten)
-	var base := "res://assets/enemys/cyber404/sheets/"
-	var tex: Texture2D = load(base + "cyber404_walk_S.png")
+	# Walk animasyonu (tek tek frame'ler — kullanıcı bu klasörde düzenliyor)
+	var walk_base := "res://assets/enemys/cyber404/animations/animation-3e031936/south/"
 	frames.add_animation("walk")
 	frames.set_animation_speed("walk", 8.0)
 	frames.set_animation_loop("walk", true)
-	for i in range(6):
-		var atlas := AtlasTexture.new()
-		atlas.atlas  = tex
-		atlas.region = Rect2(i * 252, 0, 252, 252)
-		frames.add_frame("walk", atlas)
+	var wi := 0
+	while ResourceLoader.exists(walk_base + "frame_%03d.png" % wi):
+		frames.add_frame("walk", load(walk_base + "frame_%03d.png" % wi))
+		wi += 1
 
 	# Death animasyonu (tek tek frame'ler)
 	var death_base := "res://assets/enemys/cyber404/animations/death/"
@@ -219,7 +217,9 @@ func _launch_missile(player: Node2D) -> void:
 func _shockwave() -> void:
 	is_stunned = true
 	for i in range(3):
-		await get_tree().create_timer(1.5).timeout
+		await get_tree().create_timer(1.5, false).timeout
+		if is_dead:
+			return
 		var game = get_parent()
 		if game.has_method("boss_shockwave"):
 			game.boss_shockwave(global_position, 300.0 + i * 150.0)
