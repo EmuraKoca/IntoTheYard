@@ -132,6 +132,7 @@ func _on_lethal_damage(_from_ally: bool) -> void:
 func _ready() -> void:
 	z_index = 2
 	_setup_sprite()
+	preload("res://blob_shadow.gd").attach(self, get_sprite())
 	_chip_node = Node2D.new()
 	_chip_node.z_as_relative = false
 	_chip_node.z_index = 10

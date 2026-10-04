@@ -31,6 +31,7 @@ func _ready() -> void:
 	scale = Vector2(0.1, 0.1)
 	_setup_sprite()
 	_setup_armor_look()
+	preload("res://blob_shadow.gd").attach(self, $Boss404Sprite, 1.4, 15.0)   # geniş + biraz yukarıda (gövdenin arkasında)
 	_start_theme()
 	await get_tree().process_frame
 	var game = get_parent()

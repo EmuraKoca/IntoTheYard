@@ -346,13 +346,13 @@ func _setup_fall_shadow(land_pos: Vector2) -> void:
 	_shadow = Polygon2D.new()
 	_shadow.color = Color(0.0, 0.0, 0.0, 0.42)
 	_shadow.z_index = -1
-	var pts := PackedVector2Array()
-	for i in 24:
-		var a := float(i) / 24.0 * TAU
-		pts.append(Vector2(cos(a) * 58.0, sin(a) * 20.0))
-	_shadow.polygon = pts
+	# Sandık izometrik küp → yerdeki izi 45° döndürülmüş kare (eşkenar dörtgen, 2:1). Düşerken küçükten
+	# büyür, çarpınca kaybolur. Boyut sprite'ın taban ayak izinden (≈142px × CRATE_SPRITE_SCALE) ölçüldü.
+	var hx := 118.0
+	var hy := 60.0
+	_shadow.polygon = PackedVector2Array([Vector2(0, -hy), Vector2(hx, 0), Vector2(0, hy), Vector2(-hx, 0)])
 	_shadow.scale = Vector2(0.15, 0.15)
-	_shadow.global_position = land_pos + Vector2(0.0, 62.0 * CRATE_SPRITE_SCALE)
+	_shadow.global_position = land_pos + Vector2(0.0, 80.0)   # taban ayak izinin merkezi
 	get_parent().add_child(_shadow)
 	tree_exiting.connect(func():
 		if is_instance_valid(_shadow): _shadow.queue_free()
@@ -360,6 +360,11 @@ func _setup_fall_shadow(land_pos: Vector2) -> void:
 
 func _update_fall_shadow(frame: int) -> void:
 	if _shadow == null: return
+	if frame >= IMPACT_FRAME:
+		# Sandık yere değdiği an gölge yok olur (artık yerde duran bir şey yok, kırılıyor)
+		_shadow.queue_free()
+		_shadow = null
+		return
 	var t: float = clamp(float(frame) / float(IMPACT_FRAME), 0.0, 1.0)
 	var s: float = lerp(0.15, 1.0, t)
 	_shadow.scale = Vector2(s, s)

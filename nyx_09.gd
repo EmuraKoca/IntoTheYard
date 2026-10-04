@@ -85,6 +85,7 @@ var _sprite: AnimatedSprite2D = null
 func _ready() -> void:
 	z_index = 3
 	add_to_group("subjects")
+	call_deferred("_attach_shadow")
 
 	var col := CollisionShape2D.new()
 	col.name = "CollisionShape2D"
@@ -714,3 +715,6 @@ func _physical_flash() -> void:
 	await get_tree().create_timer(0.08, false).timeout
 	if is_instance_valid(self):
 		modulate = Color(1, 1, 1, 1)
+
+func _attach_shadow() -> void:
+	preload("res://blob_shadow.gd").attach(self, _sprite)
