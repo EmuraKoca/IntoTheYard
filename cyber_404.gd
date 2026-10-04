@@ -1,9 +1,13 @@
 extends CharacterBody2D
 
-var armor = 90
-var health = 45
-var max_armor = 90
-var max_health = 45
+# ── Boss dengesi (kullanıcı kararı): ilk run'da yenmek neredeyse imkânsız olmalı ──
+const BOSS_ARMOR := 150
+const BOSS_HEALTH := 150
+const BOSS_BULLET_DAMAGE := 9     # boss'un attığı HER mermi (ring, tek/pompalı/taramalı)
+var armor = BOSS_ARMOR
+var health = BOSS_HEALTH
+var max_armor = BOSS_ARMOR
+var max_health = BOSS_HEALTH
 var is_dead = false
 var is_frozen = false
 var is_slowed = false
@@ -259,6 +263,7 @@ func _ring_attack(_player: Node2D) -> void:
 				var bullet = bullet_scene.instantiate()
 				bullet.global_position = global_position
 				bullet.bullet_type = "shotgun"
+				bullet.damage = BOSS_BULLET_DAMAGE
 				var spread = deg_to_rad(-10 + j * 10)
 				get_parent().add_child(bullet)
 				bullet.launch(base_dir.rotated(spread))
@@ -371,6 +376,7 @@ func _fire_from_hands(player: Node2D, btype: String, spread_degs: Array) -> void
 			var bullet = bullet_scene.instantiate()
 			bullet.global_position = m
 			bullet.bullet_type = btype
+			bullet.damage = BOSS_BULLET_DAMAGE
 			get_parent().add_child(bullet)
 			bullet.launch(dir.rotated(deg_to_rad(deg)))
 

@@ -22,6 +22,7 @@ var dash_recharge_timer = 0.0
 var dash_is_empty = false
 var dash_distance = 120.0
 var is_dashing = false
+var last_dash_msec: int = -100000   # son dash'in başladığı an (ms) — dalga/patlama kaçınma toleransı için
 var dash_velocity = Vector2.ZERO
 var dash_duration = 0.12
 var dash_timer = 0.0
@@ -576,6 +577,7 @@ func _dash() -> void:
 		return
 
 	is_dashing = true
+	last_dash_msec = Time.get_ticks_msec()
 	$CollisionShape2D.disabled = true
 	dash_velocity = dash_dir.normalized() * (dash_distance / dash_duration)
 	dash_timer = dash_duration

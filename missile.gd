@@ -14,7 +14,7 @@ const ARM_DELAY  := 0.35
 
 var speed     = 300.0
 var turn_rate = 2.2               # rad/sn — küçük = daha kolay kaçılır
-var damage    = 3
+var damage    = 15   # boss füzesi (kullanıcı kararı)
 var lifetime  = 7.0
 var blast_radius = 70.0
 var target    = null

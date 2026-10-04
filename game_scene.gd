@@ -351,6 +351,9 @@ func _start_boss_intro() -> void:
 # sınırlarından (alfa bbox) hesaplanır → görselle birebir örtüşür.
 const DUST_DIR := "res://assets/VFX/dustRing/"
 const DUST_SCALE := 5.0        # 256px kare büyütmesi (halka yarı-genişliği ≈ 100px × scale)
+const BOSS_SHOCKWAVE_DAMAGE := 15  # Cyber-404 shockwave: dalga başına hasar
+const DUST_PLAYER_DAMAGE := 15      # oyuncuya halkanın verdiği hasar (düşmanlar ölür, oyuncu hasar alır)
+const DUST_DODGE_GRACE_MS := 220    # dash süresi (~120ms) + ~100ms tolerans — bu pencerede dash = kaçınma
 const DUST_FPS := 30.0         # yüksek fps → genişleme daha akıcı (25 kare ≈ 0.83sn)
 
 func _on_crate_landed() -> void:
@@ -383,6 +386,7 @@ func _spawn_dust_ring(center: Vector2) -> void:
 	add_child(spr)
 	# Kareler arası sıçramayı yumuşatmak için ömür boyunca sürekli hafif büyüme (0.85 → 1.1)
 	create_tween().tween_property(spr, "scale", Vector2(DUST_SCALE * 1.1, DUST_SCALE * 1.1), float(tex.size()) / DUST_FPS)		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	var player_done := [false]   # oyuncu dalgadan bir kez etkilenir (lambda'da kalıcı olsun diye Array)
 	var reach := [Vector2.ZERO, Vector2.ZERO]   # [yarı-boyut (px), merkez ofseti] — en geniş kare kadar genişlemiş kalır
 	var kill_cb := func():
 		var r: Rect2i = rects[spr.frame]
@@ -400,6 +404,17 @@ func _spawn_dust_ring(center: Vector2) -> void:
 			var d: Vector2 = z.global_position - c
 			if reach[0].x > 0.0 and reach[0].y > 0.0 and pow(d.x / reach[0].x, 2.0) + pow(d.y / reach[0].y, 2.0) <= 1.0:
 				kill_without_rewards(z, "normal")
+		# Oyuncu: ölmez, HASAR alır — halka ilk kez üstüne geldiği anda bir kez. O anda dash atıyorsa
+		# (ya da hemen önce attıysa, ~100ms tolerans) dalgayı atlatır.
+		if not player_done[0] and reach[0].x > 0.0:
+			var pl := get_node_or_null("Player")
+			if pl and is_instance_valid(pl):
+				var pd: Vector2 = pl.global_position - c
+				if pow(pd.x / reach[0].x, 2.0) + pow(pd.y / reach[0].y, 2.0) <= 1.0:
+					player_done[0] = true
+					var dodged: bool = pl.is_dashing or (Time.get_ticks_msec() - pl.last_dash_msec) < DUST_DODGE_GRACE_MS
+					if not dodged:
+						pl.take_damage(DUST_PLAYER_DAMAGE)
 	spr.frame_changed.connect(kill_cb)
 	spr.animation_finished.connect(spr.queue_free)
 	spr.play("dust")
@@ -4116,7 +4131,7 @@ func boss_shockwave(pos: Vector2, radius: float) -> void:
 		if hit[0] or not is_instance_valid(player): return
 		if player.global_position.distance_to(pos) <= r:
 			hit[0] = true
-			player.take_damage(2), 0.0, radius, dur).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+			player.take_damage(BOSS_SHOCKWAVE_DAMAGE), 0.0, radius, dur).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 
 func _activate_full_breach() -> void:
 	var p := get_node_or_null("Player")
