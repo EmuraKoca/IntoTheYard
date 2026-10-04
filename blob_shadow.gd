@@ -15,6 +15,7 @@ static var _cache: Dictionary = {}   # "script|sprite_scale" → [center_x, feet
 var _owner: Node2D
 var _sprite: AnimatedSprite2D
 var _width_mult := 1.0   # boss gibi büyük gövdeler için gölgeyi genişletir
+var _ready_done := false
 var _up := 0.0           # gölgeyi sahip-yerel px kadar YUKARI (gövdenin arkasına) kaydırır
 
 static func attach(owner: Node2D, sprite: AnimatedSprite2D, width_mult: float = 1.0, up: float = 0.0) -> void:
@@ -37,7 +38,7 @@ func _ready() -> void:
 	if not is_instance_valid(_sprite) or _sprite.sprite_frames == null:
 		queue_free()
 		return
-	var key := "%s|%s" % [str(_owner.get_script().resource_path), str(_sprite.scale.x)]
+	var key := "%s|%s|%s" % [str(_owner.get_script().resource_path), str(_sprite.name), str(_sprite.scale.x)]
 	var p: Array
 	if _cache.has(key):
 		p = _cache[key]
@@ -55,7 +56,8 @@ func _ready() -> void:
 		pts.append(Vector2(cos(a) * rx, sin(a) * ry))
 	polygon = pts
 	position = Vector2(p[0], p[1] - ry * 0.35 - _up)   # gölge ayakların hemen altına/üstüne biner
-	visible = true
+	_ready_done = true
+	visible = _sprite.is_visible_in_tree()
 
 func _measure() -> Array:
 	var names := _sprite.sprite_frames.get_animation_names()
@@ -82,3 +84,6 @@ func _process(_delta: float) -> void:
 	# Sahip ölünce gölge de kaybolur (ceset gölgesiz kalır)
 	if not is_instance_valid(_owner) or _owner.get("is_dead"):
 		queue_free()
+		return
+	if _ready_done and is_instance_valid(_sprite):
+		visible = _sprite.is_visible_in_tree()   # sprite gizliyse (örn. henüz görünmeyen NPC) gölge de gizli

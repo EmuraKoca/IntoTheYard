@@ -459,6 +459,8 @@ func _ready() -> void:
 			$CycloneSprite.visible = true
 			_setup_cyclone_sprite()
 	_setup_pranga()
+	var _sh_sprite: AnimatedSprite2D = $VectorSprite if character_type == "vector" else ($LeilaSprite if character_type == "leila" else $CycloneSprite)
+	preload("res://blob_shadow.gd").attach(self, _sh_sprite)   # eski _draw gölgesi (ayaklar sprite'ın altında kalıyordu) yerine
 
 func _setup_pranga() -> void:
 	for d in _CHAIN_DIR_NAMES:
@@ -1110,15 +1112,7 @@ func _react_flash_physical() -> void:
 		modulate = Color(1, 1, 1, 1)
 
 func _draw() -> void:
-	# Karakter gölgesi — tüm karakterler için ayakların altında oval
-	var shadow_pts := PackedVector2Array()
-	var s_rx: float = 18.0; var s_ry: float = 7.0
-	var s_cy: float = 20.0  # ayak seviyesi
-	for i in range(32):
-		var a: float = (float(i) / 32.0) * TAU
-		shadow_pts.append(Vector2(cos(a) * s_rx, s_cy + sin(a) * s_ry))
-	draw_colored_polygon(shadow_pts, Color(0.0, 0.0, 0.0, 0.38))
-
+	# (Karakter gölgesi artık blob_shadow.gd — _ready'de takılıyor)
 	# ── Zincir elektrik efekti ───────────────────────────────────────────────
 	if _chain_positions.size() >= 2:
 		var t := Time.get_ticks_msec() * 0.001

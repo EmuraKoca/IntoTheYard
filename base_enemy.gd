@@ -972,11 +972,13 @@ func _notify_reaction(game: Node, player: Node) -> void:
 
 # ── Ceset yönetimi ───────────────────────────────────────────────────────────
 
+const CORPSE_STAY := 1.5   # ölümden sonra yerde kalma süresi (sn)
+const CORPSE_FADE := 0.6   # solma süresi (sn)
 func _register_corpse() -> void:
-	await get_tree().create_timer(15.0, false).timeout
+	await get_tree().create_timer(CORPSE_STAY, false).timeout
 	if not is_instance_valid(self): return
 	var tween := create_tween()
-	tween.tween_property(self, "modulate:a", 0.0, 1.5)
+	tween.tween_property(self, "modulate:a", 0.0, CORPSE_FADE)
 	await tween.finished
 	if is_instance_valid(self): queue_free()
 

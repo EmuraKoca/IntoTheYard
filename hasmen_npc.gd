@@ -24,6 +24,7 @@ func _ready() -> void:
 	add_child(_sprite)
 
 	_setup_frames()
+	preload("res://blob_shadow.gd").attach(self, _sprite)
 
 # ─────────────────────────────────────────────────────────────────────────────
 func _setup_frames() -> void:
