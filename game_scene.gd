@@ -1371,7 +1371,17 @@ func update_ui() -> void:
 	_update_calamity_cells()
 	_update_processor_btn()
 
+# Ödülsüz ölüm (örn. boss girişindeki toplu temizlik): ölüm animasyonu oynar ama XP/skor/kill sayacı/
+# veri parçacığı verilmez. die() subject_died()'ı eşzamanlı çağırdığı için bayrak yeterli.
+var _suppress_kill_rewards := false
+func kill_without_rewards(z: Node, cause: String = "brutal") -> void:
+	_suppress_kill_rewards = true
+	z.die(cause)
+	_suppress_kill_rewards = false
+
 func subject_died(xp_reward: int = 1, death_pos: Vector2 = Vector2.ZERO, etype: String = "subject") -> void:
+	if _suppress_kill_rewards:
+		return
 	subjects_killed += 1
 	total_subjects_killed += 1
 	var _xp := int(float(xp_reward) * GameData.get_shop_xp_mult())

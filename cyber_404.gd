@@ -157,11 +157,23 @@ func _setup_sprite() -> void:
 	sprite.scale          = Vector2(0.7, 0.7)
 	sprite.play("walk")
 
+# Boss kutudan çıkınca sahadaki düşmanlar yok olmak yerine ÖLÜR (brutal ölüm animasyonu);
+# ölüm boss'tan uzaklıkla kademelenir — dalga hissi. Zaten ölü olanlara (ceset) dokunulmaz.
+const LANDING_WAVE_SPEED := 1500.0   # px/sn
 func _landing_wave() -> void:
-	var subjects = get_tree().get_nodes_in_group("subjects")
-	for z in subjects:
-		if z != self and is_instance_valid(z):
-			z.queue_free()
+	for z in get_tree().get_nodes_in_group("subjects"):
+		if z == self or not is_instance_valid(z) or z.get("is_dead"):
+			continue
+		_kill_after(z, global_position.distance_to(z.global_position) / LANDING_WAVE_SPEED)
+
+func _kill_after(z: Node, delay: float) -> void:
+	await get_tree().create_timer(delay, false).timeout
+	if is_instance_valid(z) and not z.get("is_dead") and z.has_method("die"):
+		var game = get_parent()
+		if game and game.has_method("kill_without_rewards"):
+			game.kill_without_rewards(z, "brutal")   # animasyonlu ölüm, XP/skor yok
+		else:
+			z.die("brutal")
 
 func _physics_process(delta: float) -> void:
 	if is_frozen or is_stunned or is_dead:
@@ -245,6 +257,7 @@ const RING_WINDUP_FRAMES := 3
 
 # Her yana mermi (8 yön × 3'lü saçma × 5 dalga) — ringAttack animasyonu eşliğinde.
 func _ring_attack(_player: Node2D) -> void:
+	var my_id := _attack_id
 	var spr: AnimatedSprite2D = $Boss404Sprite
 	if spr.sprite_frames.has_animation("ringAttack"):
 		spr.play("ringAttack")
@@ -252,10 +265,10 @@ func _ring_attack(_player: Node2D) -> void:
 			if not is_dead:
 				spr.play("walk"), CONNECT_ONE_SHOT)
 		await get_tree().create_timer(RING_WINDUP_FRAMES / RING_FPS, false).timeout
-	if is_dead: return
-	Sfx.play_path_dedicated(SFX_MACHINEGUN, 0.0, RING_SFX_PITCH)   # animasyonun ateş kısmıyla (~1.57sn) bitsin
+	if is_dead or my_id != _attack_id: return
+	_gun_snd = Sfx.play_path_dedicated(SFX_MACHINEGUN, 0.0, RING_SFX_PITCH)   # animasyonun ateş kısmıyla (~1.57sn) bitsin
 	for burst in range(5):
-		if is_dead: return
+		if is_dead or my_id != _attack_id: return
 		for i in range(8):
 			var angle = i * TAU / 8
 			var base_dir = Vector2(cos(angle), sin(angle))
@@ -272,6 +285,7 @@ const MISSILE_ANIM_FPS := 8.0
 const MISSILE_FIRE_FRAME := 2   # parlama karesi — füze tam bu anda çıkar
 
 func _launch_missile(player: Node2D) -> void:
+	var my_id := _attack_id
 	var spr: AnimatedSprite2D = $Boss404Sprite
 	if spr.sprite_frames.has_animation("launchMissile"):
 		spr.play("launchMissile")
@@ -279,7 +293,7 @@ func _launch_missile(player: Node2D) -> void:
 			if not is_dead:
 				spr.play("walk"), CONNECT_ONE_SHOT)
 		await get_tree().create_timer(MISSILE_FIRE_FRAME / MISSILE_ANIM_FPS, false).timeout
-		if is_dead or not is_instance_valid(player):
+		if is_dead or my_id != _attack_id or not is_instance_valid(player):
 			return
 	var missile = missile_scene.instantiate()
 	missile.global_position = global_position
@@ -307,29 +321,32 @@ func _to_walk() -> void:
 
 # Shockwave: hazırlık → elektrik döngüsü (3 dalga bu sırada) → toparlanma. Dalga zamanlaması aynı (1.5sn arayla).
 func _shockwave() -> void:
+	var my_id := _attack_id
 	is_stunned = true
 	var has_anim := _play_if_exists("shockwaveWind")
 	if not has_anim:
 		$Boss404Sprite.pause()
 	else:
 		await get_tree().create_timer(float(SHOCK_WIND_FRAMES) / SHOCK_WIND_FPS, false).timeout
-		if is_dead: return
+		if is_dead or my_id != _attack_id: return
 		_play_if_exists("shockwaveLoop")
 	var wait_left := 1.5 - (float(SHOCK_WIND_FRAMES) / SHOCK_WIND_FPS if has_anim else 0.0)
 	for i in range(3):
 		await get_tree().create_timer(wait_left, false).timeout
 		wait_left = 1.5
-		if is_dead:
+		if is_dead or my_id != _attack_id:
 			return
 		var game = get_parent()
 		if game.has_method("boss_shockwave"):
 			game.boss_shockwave(global_position, 300.0 + i * 150.0)
 	if has_anim and _play_if_exists("shockwaveEnd"):
 		await get_tree().create_timer(0.3, false).timeout
+		if is_dead or my_id != _attack_id: return
 	is_stunned = false
 	_to_walk()
 
 func _random_weapon(player: Node2D) -> void:
+	var my_id := _attack_id
 	var spr: AnimatedSprite2D = $Boss404Sprite
 	var has_anim: bool = spr.sprite_frames.has_animation("randomShot")
 	var choice := randi() % 3
@@ -343,7 +360,7 @@ func _random_weapon(player: Node2D) -> void:
 			if not is_dead:
 				spr.play("walk"), CONNECT_ONE_SHOT)
 		await get_tree().create_timer(RANDOM_SHOT_FIRE_FRAME / RANDOM_SHOT_FPS, false).timeout
-	if is_dead or not is_instance_valid(player):
+	if is_dead or my_id != _attack_id or not is_instance_valid(player):
 		return
 	if choice == 0:
 		Sfx.play_path(SFX_SINGLESHOT)
@@ -377,17 +394,19 @@ func _fire_from_hands(player: Node2D, btype: String, spread_degs: Array) -> void
 # 5'li sıralı smg: randomShot animasyonu her mermide baştan oynar (bir tur = SERIES_SHOT_INTERVAL),
 # machineGun sesi seri bitince kısa bir fade ile susar (ses 1.5sn, seri 0.75sn).
 func _random_series(player: Node2D, spr: AnimatedSprite2D, has_anim: bool) -> void:
+	var my_id := _attack_id
 	var frame_count: int = spr.sprite_frames.get_frame_count("randomShot") if has_anim else 1
 	var fire_t: float = SERIES_SHOT_INTERVAL * float(RANDOM_SHOT_FIRE_FRAME) / float(maxi(frame_count, 1))
 	var snd := Sfx.play_path_dedicated(SFX_MACHINEGUN)
+	_gun_snd = snd
 	for i in range(5):
-		if is_dead or not is_instance_valid(player):
+		if is_dead or my_id != _attack_id or not is_instance_valid(player):
 			break
 		if has_anim:
 			spr.speed_scale = (float(frame_count) / RANDOM_SHOT_FPS) / SERIES_SHOT_INTERVAL
 			spr.play("randomShot")
 		await get_tree().create_timer(fire_t, false).timeout
-		if is_dead or not is_instance_valid(player):
+		if is_dead or my_id != _attack_id or not is_instance_valid(player):
 			break
 		_fire_from_hands(player, "smg", [0.0])
 		await get_tree().create_timer(SERIES_SHOT_INTERVAL - fire_t, false).timeout
@@ -395,6 +414,8 @@ func _random_series(player: Node2D, spr: AnimatedSprite2D, has_anim: bool) -> vo
 		var tw := snd.create_tween()
 		tw.tween_property(snd, "volume_db", -40.0, 0.12)
 		tw.tween_callback(snd.stop)
+	if my_id != _attack_id:
+		return   # zırh kırılması araya girdi — animasyon/hız sıfırlamasını _armor_break halletti
 	if has_anim:
 		spr.speed_scale = 1.0
 		if not is_dead:
@@ -450,7 +471,23 @@ func _set_armor_look(armored: bool) -> void:
 	_armor_mat.set_shader_parameter("tint", ARMOR_ON_TINT if armored else ARMOR_OFF_TINT)
 	_armor_mat.set_shader_parameter("saturation", ARMOR_ON_SAT if armored else ARMOR_OFF_SAT)
 
+# Zırh kırılınca devam eden TÜM saldırılar iptal olur: her saldırı başında kimliğini (_attack_id) alır,
+# her await'ten sonra kontrol eder; burada kimlik değişince yeni mermi/füze/dalga çıkmaz. Taramalı sesi kesilir.
+var _attack_id := 0
+var _gun_snd: AudioStreamPlayer = null
+
+func _interrupt_attacks() -> void:
+	_attack_id += 1
+	if is_instance_valid(_gun_snd):
+		var g := _gun_snd
+		_gun_snd = null
+		var tw := g.create_tween()
+		tw.tween_property(g, "volume_db", -40.0, 0.06)
+		tw.tween_callback(g.stop)
+	$Boss404Sprite.speed_scale = 1.0
+
 func _armor_break() -> void:
+	_interrupt_attacks()
 	is_stunned = true
 	if not _play_if_exists("stunned"):
 		$Boss404Sprite.pause()
