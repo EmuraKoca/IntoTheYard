@@ -6,13 +6,8 @@ var chain_anchor = Vector2(995, 1040)
 var chain_length = 355.0
 var invincible = false
 var _ghost_step_active: bool = false  # Ghost Step'in kendi bağışıklık penceresi — hit i-frame'inden bağımsız
-var ball_mastery = 0
-var pierce_bonus = 0
-var electric_bonus = 0
-var cryo_bonus = 0
-var hydro_bonus = 0
-var pyro_bonus = 0
-var split_bonus = 0
+var ball_mastery = 0          # özellikli (normal olmayan) core'lara bonus hasar — Black Market 3. alım
+var normal_core_bonus = 0     # normal core'a bonus hasar — Black Market 1-3. alım
 var has_mimic = false
 var dash_charges = 1
 var max_dash_charges = 1
@@ -448,6 +443,10 @@ func _ready() -> void:
 	process_priority = 1
 	z_index = 10
 	character_type = GameData.selected_character
+	# Black Market 'Çekirdek Güçlendirme': normal core +1/+2/+3 (alım sayısı), 3. alımda ayrıca diğer (özellikli) core'lara +1
+	var _cd: int = GameData.get_shop_core_damage()
+	normal_core_bonus = _cd
+	ball_mastery = 1 if _cd >= 3 else 0
 	# Each character shows its own visual; others remain hidden in tscn
 	match character_type:
 		"vector":

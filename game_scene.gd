@@ -218,13 +218,7 @@ const _CONNECTED_CORE_INDICES: Array = [
 const _UPGRADE_META: Dictionary = {
 	4:  {"name": "Speed Upgrade",       "category": "Individuality"},
 	5:  {"name": "Orbit +1",            "category": "Individuality"},
-	11: {"name": "Core Mastery",        "category": "Utility"},
-	13: {"name": "Electric Amp",        "category": "Utility"},
-	99: {"name": "Cryo Amp",           "category": "Utility"},
-	100: {"name": "Hydro Amp",         "category": "Utility"},
-	101: {"name": "Pyro Amp",          "category": "Utility"},
 	102: {"name": "Pyroblast",         "category": "Utility"},
-	14: {"name": "Split Amp",           "category": "Utility"},
 	20: {"name": "Medkit",              "category": "Individuality"},
 	21: {"name": "Max Health Up",       "category": "Individuality"},
 	30: {"name": "Blood for Steel",     "category": "Individuality"},
@@ -2993,10 +2987,6 @@ func _build_all_upgrades() -> void:
 	{"name": "Cryo Core",           "category": "Identity",      "color": Color(0.5, 0.8, 1.0), "desc": "Slows subject by 25%",                      "index": 15, "weight": 10, "rarity": "common", "chars": ["leila"], "min_level": 0},
 	{"name": "Hydro Core",          "category": "Identity",      "color": Color(0.0, 0.5, 1.0), "desc": "Applies wet to enemy",                   "index": 17, "weight": 10, "rarity": "common", "chars": ["leila"], "min_level": 0},
 	{"name": "Pyro Core",           "category": "Identity",      "color": Color(1.0, 0.3, 0.0), "desc": "Applies burn to subject",                   "index": 18, "weight": 10, "rarity": "common", "chars": ["leila"], "min_level": 0},
-	# Electric/Cryo/Hydro/Pyro Amp (13/99/100/101) — havuzdan kaldırıldı (2026-09-14,
-	# kullanıcı kararı). Kod (elif handler'lar, player.gd stat'ları, ball.gd/lang.gd
-	# dynamic desc formülleri) kasıtlı olarak silinmedi — ileride level-up/coin ile
-	# satın alınabilir bir sisteme dönüştürülebilir (bkz. "Fikirler / Değerlendirilecek").
 	{"name": "Conduction",         "category": "Utility",       "color": Color(0.3, 0.5, 1.0), "desc": "Electric spread range +30%\n(Plasma / Arc / Voltaic Core)",               "index": 66,  "weight": 8,  "rarity": "uncommon", "chars": ["leila"], "min_level": 0, "requires_any": [61, 63, 87]},
 	{"name": "Hydro Pressure",     "category": "Utility",       "color": Color(0.1, 0.5, 0.9), "desc": "Wet-applying cores are 25% faster\nLaunched: speed / Connected: orbit speed",  "index": 67,  "weight": 8,  "rarity": "uncommon", "chars": ["leila"], "min_level": 0, "requires_any": [17, 62, 65, 185]},
 	{"name": "Arc Amplifier",      "category": "Utility",       "color": Color(0.2, 0.4, 1.0), "desc": "Arc Core spreads to +1 more enemy",              "index": 68,  "weight": 8,  "rarity": "uncommon", "chars": ["leila"], "min_level": 0, "requires": [63]},
@@ -3127,7 +3117,6 @@ func _build_all_upgrades() -> void:
 	{"name": "Decay Amp",   "category": "Utility", "color": Color(0.55, 0.25, 0.0), "desc": "[b]Decay[/b] explosion damage (per stack)\nLv1: 3, Lv2: 5, Lv3: 7 (base 2)",  "index": 222, "weight": 7,  "rarity": "uncommon",  "chars": ["cyclone"], "min_level": 1, "requires": [161]},
 	{"name": "Chain Extension", "category": "Utility", "color": Color(0.7, 0.6, 0.3), "desc": "Chain extends by 5 links\n(movement radius grows)",                         "index": 224, "weight": 6,  "rarity": "uncommon",  "chars": [],           "min_level": 0},
 	# ── Herkese açık ─────────────────────────────────────────────────────────
-	{"name": "Core Mastery",        "category": "Utility",       "color": Color(0.2, 0.8, 0.2), "desc": "+1 damage to all cores",                    "index": 11, "weight": 10, "rarity": "common", "chars": [], "min_level": 0},
 	{"name": "Lightning",           "category": "Calamity",      "color": Color(1.0, 1.0, 0.0), "desc": "Strikes the target point for 13 damage\nand applies [b]Electrified[/b] to nearby enemies",          "index": 7,  "weight": 3,  "rarity": "epic",   "chars": ["leila"], "min_level": 2},
 	{"name": "Flame Zone",          "category": "Calamity",      "color": Color(1.0, 0.3, 0.0), "desc": "Deals 4 damage every 0.5s for 3s in the\ntargeted area and applies [b]Burning[/b]",        "index": 8,  "weight": 3,  "rarity": "epic",   "chars": ["leila"], "min_level": 2},
 ]
@@ -3135,7 +3124,6 @@ func _build_all_upgrades() -> void:
 	const TEST_ELEMENTAL: bool = false
 	if TEST_ELEMENTAL:
 		var _focus = ["Electric Core", "Cryo Core", "Hydro Core", "Pyro Core",
-					  "Electric Amp", "Cryo Amp", "Hydro Amp", "Pyro Amp",
 					  "Elemental Memory"]
 		for u in upgrades:
 			u["min_level"] = 0
@@ -4011,7 +3999,7 @@ func _activate_mirror_image() -> void:
 	if p == null or launcher == null: return
 	for i in range(2):
 		var ball = launcher.ball_scene.instantiate()
-		ball.max_damage = 4 + p.ball_mastery
+		ball.max_damage = 4 + p.normal_core_bonus
 		ball.is_normal_core = true
 		ball.global_position = p.global_position
 		ball.add_to_group("player_balls")
@@ -5552,24 +5540,6 @@ func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 		if calamity_slots.size() < max_calamity_slots:
 			calamity_slots.append("🌀")
 			update_ui()
-	elif index == 11:
-	# Ball Mastery - +1 to all balls
-		var balls_dmg = get_node("Player")
-		balls_dmg.ball_mastery += 1
-	elif index == 12:
-		var balls_dmg = get_node("Player")
-		balls_dmg.pierce_bonus += 2
-	elif index == 13:  # Electric Amp
-		get_node("Player").electric_bonus += 2
-	elif index == 99:  # Cryo Amp
-		get_node("Player").cryo_bonus += 2
-	elif index == 100:  # Hydro Amp
-		get_node("Player").hydro_bonus += 2
-	elif index == 101:  # Pyro Amp
-		get_node("Player").pyro_bonus += 2
-	elif index == 14:
-		var balls_dmg = get_node("Player")
-		balls_dmg.split_bonus += 2
 	elif index == 15:
 		$BallLauncher.queue_upgrade_ball("cryo")
 	elif index == 16:
@@ -6005,12 +5975,6 @@ func _pick_rarity_weighted_cards(pool: Array, current_level: int, count: int) ->
 func _apply_utility_level(index: int, level: int) -> void:
 	var p := get_node("Player")
 	match index:
-		11:  # Core Mastery — her seviye +1 ball_mastery (kümülatif, no-op here, handled in elif)
-			pass
-		13:  # Electric Amp — her seviye +2 electric_bonus (no-op, handled in elif)
-			pass
-		14:  # Split Amp — her seviye +2 split_bonus (no-op, handled in elif)
-			pass
 		35:  # Momentum Engine
 			match level:
 				1: p.momentum_speed_bonus = 0.03; p.momentum_max = 20; p.momentum_gen_interval = 4.0

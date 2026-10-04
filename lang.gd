@@ -530,7 +530,7 @@ func _dynamic_desc(index: int, player: Node) -> String:
 				return "Electrocute chains to [b]%d[/b] nearby\nenem%s for [b]%d[/b] damage" % [_aot, ("y" if _aot == 1 else "ies"), _aod]
 			return "Electrocute yakındaki [b]%d[/b] düşmana\n[b]%d[/b] hasarlık zincir yapar" % [_aot, _aod]
 		1:  # Electric Core
-			var _dmg1: int = 9 + _bm + (player.get("electric_bonus") if player.get("electric_bonus") != null else 0)
+			var _dmg1: int = 9 + _bm
 			if locale == "en":
 				return "[b]%d[/b] damage.\nApplies [b]Electrified[/b] to enemy" % _dmg1
 			return "[b]%d[/b] hasar.\nDüşmana [b]Electrified[/b] uygular" % _dmg1
@@ -590,17 +590,17 @@ func _dynamic_desc(index: int, player: Node) -> String:
 				return "[b]%d[/b] damage. Applies [b]Electrified[/b].\nDeals half damage to nearby [b]Electrified[/b] enemies" % _dmg61
 			return "[b]%d[/b] hasar. [b]Electrified[/b] uygular.\nYakındaki [b]Electrified[/b] düşmanlara yarım hasar sıçratır" % _dmg61
 		18:  # Pyro Core
-			var _dmg18: int = 6 + _bm + (player.get("pyro_bonus") if player.get("pyro_bonus") != null else 0)
+			var _dmg18: int = 6 + _bm
 			if locale == "en":
 				return "[b]%d[/b] damage.\nApplies [b]Burning[/b] to enemy" % _dmg18
 			return "[b]%d[/b] hasar.\nDüşmana [b]Burning[/b] uygular" % _dmg18
 		17:  # Hydro Core
-			var _dmg17: int = 3 + _bm + (player.get("hydro_bonus") if player.get("hydro_bonus") != null else 0)
+			var _dmg17: int = 3 + _bm
 			if locale == "en":
 				return "[b]%d[/b] damage.\nApplies [b]Wet[/b] to enemy" % _dmg17
 			return "[b]%d[/b] hasar.\nDüşmana [b]Wet[/b] uygular" % _dmg17
 		15:  # Cryo Core
-			var _dmg15: int = 4 + _bm + (player.get("cryo_bonus") if player.get("cryo_bonus") != null else 0)
+			var _dmg15: int = 4 + _bm
 			if locale == "en":
 				return "[b]%d[/b] damage.\nSlows enemy by 25%%. Freezes instead if\nenemy is already [b]Wet[/b]" % _dmg15
 			return "[b]%d[/b] hasar.\nDüşmanı %%25 yavaşlatır. Düşman zaten\n[b]Wet[/b]se onun yerine dondurur" % _dmg15

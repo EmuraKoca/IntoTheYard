@@ -1,7 +1,7 @@
 extends CharacterBody2D
 
 # ── Boss dengesi (kullanıcı kararı): ilk run'da yenmek neredeyse imkânsız olmalı ──
-const BOSS_ARMOR := 150
+const BOSS_ARMOR := 350
 const BOSS_HEALTH := 150
 const BOSS_BULLET_DAMAGE := 9     # boss'un attığı HER mermi (ring, tek/pompalı/taramalı)
 var armor = BOSS_ARMOR

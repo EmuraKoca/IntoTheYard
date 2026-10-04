@@ -87,6 +87,8 @@ const SHOP_ITEMS: Array = [
 	{"id": "xp_up",        "name": "Veri Emici",                "desc": "Düşmanlar +%10 XP verir",    "base_cost": 70,  "cost_inc": 10, "max_stack": 3, "chars": [],           "color": Color(0.8, 0.4, 1.0)},
 	{"id": "cal_slot",     "name": "Ek Calamity Yuvası",        "desc": "Maksimum Calamity Slotu +1",  "base_cost": 80,  "cost_inc": 15, "max_stack": 2, "chars": [],           "color": Color(1.0, 0.4, 0.0)},
 	{"id": "cal_start",    "name": "Hızlı Başlangıç",           "desc": "Run başında +1 rastgele Calamity", "base_cost": 90, "cost_inc": 15, "max_stack": 2, "chars": [],      "color": Color(1.0, 0.6, 0.0)},
+	{"id": "core_dmg_up",  "name": "Çekirdek Güçlendirme",    "desc": "1-2. alım: Normal core +1 hasar
+3. alım: Normal core +1, diğer core'lar +1",      "base_cost": 100, "cost_inc": 50, "max_stack": 3, "chars": [],           "color": Color(1.0, 0.35, 0.35)},
 	{"id": "dash_up",      "name": "Kinetik Atlama",            "desc": "Dash hakkı +1",               "base_cost": 80,  "cost_inc": 0,  "max_stack": 1, "chars": [],           "color": Color(0.9, 0.5, 1.0)},
 	{"id": "armor_up",     "name": "Titanyum Tabaka",           "desc": "Başlangıç Armor +5",          "base_cost": 40,  "cost_inc": 10, "max_stack": 3, "chars": ["vector"],   "color": Color(0.5, 0.8, 1.0)},
 ]
@@ -128,6 +130,10 @@ func get_shop_armor_bonus() -> int:
 
 func get_shop_core_bonus() -> int:
 	return shop_stack("core_up")
+
+# Tüm core'lara kalıcı +hasar (Black Market) — oyun içi Core Mastery/Amp kartlarının yerini aldı
+func get_shop_core_damage() -> int:
+	return shop_stack("core_dmg_up")
 
 func get_shop_speed_mult() -> float:
 	return 1.0 + shop_stack("speed_up") * 0.05

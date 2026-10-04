@@ -245,32 +245,32 @@ func _launch_typed_ball(ball_type: String) -> void:
 			return
 
 	var ball = ball_scene.instantiate()
-	ball.max_damage = 5 + player_node.ball_mastery
+	ball.max_damage = 5 + (player_node.normal_core_bonus if ball_type == "" else player_node.ball_mastery)
 	# Başlangıç sekansında fırlatılan normal toplar küçük, özellikli core'lar büyük
 	ball.is_normal_core = _startup_active and ball_type == ""
 
 	match ball_type:
 		"split":
 			ball.can_split    = true
-			ball.max_damage   = 7 + player_node.split_bonus + player_node.ball_mastery
+			ball.max_damage   = 7 + player_node.ball_mastery
 		"electric":
 			ball.can_electric = true
-			ball.max_damage   = 9 + player_node.electric_bonus + player_node.ball_mastery
+			ball.max_damage   = 9 + player_node.ball_mastery
 		"pierce":
 			ball.can_pierce   = true
-			ball.max_damage   = 5 + player_node.pierce_bonus + player_node.ball_mastery
+			ball.max_damage   = 5 + player_node.ball_mastery
 		"cryo":
 			ball.can_cryo     = true
-			ball.max_damage   = 4 + player_node.cryo_bonus + player_node.ball_mastery
+			ball.max_damage   = 4 + player_node.ball_mastery
 		"glitch":
 			ball.can_glitch   = true
 			ball.max_damage   = 4 + player_node.ball_mastery
 		"water":
 			ball.can_water    = true
-			ball.max_damage   = 3 + player_node.hydro_bonus + player_node.ball_mastery
+			ball.max_damage   = 3 + player_node.ball_mastery
 		"fire":
 			ball.can_fire     = true
-			ball.max_damage   = 6 + player_node.pyro_bonus + player_node.ball_mastery
+			ball.max_damage   = 6 + player_node.ball_mastery
 		"leech":
 			ball.can_leech    = true
 			ball.max_damage   = 2
