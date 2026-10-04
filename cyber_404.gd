@@ -30,6 +30,7 @@ func _ready() -> void:
 	add_to_group("subjects")
 	scale = Vector2(0.1, 0.1)
 	_setup_sprite()
+	_setup_armor_look()
 	_start_theme()
 	await get_tree().process_frame
 	var game = get_parent()
@@ -114,6 +115,42 @@ func _setup_sprite() -> void:
 	while ResourceLoader.exists(rs_base + "frame_%03d.png" % rs_i):
 		frames.add_frame("randomShot", load(rs_base + "frame_%03d.png" % rs_i))
 		rs_i += 1
+
+	# Shockwave (13 kare): 0-2 hazırlık, 3-11 elektrik döngüsü, 12 toparlanma
+	var sw_base := "res://assets/enemys/cyber404/animations/shockwave/"
+	var sw_tex: Array = []
+	var sw_i := 0
+	while ResourceLoader.exists(sw_base + "frame_%03d.png" % sw_i):
+		sw_tex.append(load(sw_base + "frame_%03d.png" % sw_i))
+		sw_i += 1
+	if sw_tex.size() >= 3:
+		var wind_end: int = mini(SHOCK_WIND_FRAMES, sw_tex.size() - 1)
+		var loop_end: int = maxi(wind_end + 1, sw_tex.size() - 1)   # son kare toparlanma
+		frames.add_animation("shockwaveWind")
+		frames.set_animation_speed("shockwaveWind", SHOCK_WIND_FPS)
+		frames.set_animation_loop("shockwaveWind", false)
+		for k in range(0, wind_end):
+			frames.add_frame("shockwaveWind", sw_tex[k])
+		frames.add_animation("shockwaveLoop")
+		frames.set_animation_speed("shockwaveLoop", 14.0)
+		frames.set_animation_loop("shockwaveLoop", true)
+		for k in range(wind_end, loop_end):
+			frames.add_frame("shockwaveLoop", sw_tex[k])
+		frames.add_animation("shockwaveEnd")
+		frames.set_animation_speed("shockwaveEnd", 8.0)
+		frames.set_animation_loop("shockwaveEnd", false)
+		for k in range(loop_end, sw_tex.size()):
+			frames.add_frame("shockwaveEnd", sw_tex[k])
+
+	# Sersemlemiş (zırh kırılınca, 37 kare): süre = ARMOR_STUN_TIME, döngülü
+	var st_base := "res://assets/enemys/cyber404/animations/stunned/"
+	var st_n := 0
+	frames.add_animation("stunned")
+	frames.set_animation_loop("stunned", true)
+	while ResourceLoader.exists(st_base + "frame_%03d.png" % st_n):
+		frames.add_frame("stunned", load(st_base + "frame_%03d.png" % st_n))
+		st_n += 1
+	frames.set_animation_speed("stunned", maxf(float(st_n), 1.0) / ARMOR_STUN_TIME)
 
 	sprite.sprite_frames  = frames
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -246,20 +283,48 @@ func _launch_missile(player: Node2D) -> void:
 	missile.target = player
 	get_parent().add_child(missile)
 
+const RANDOM_SHOT_FPS := 12.0
+const RANDOM_SHOT_FIRE_FRAME := 1   # büyük parlama karesi — mermiler tam bu anda çıkar
+const SERIES_SHOT_INTERVAL := 0.15  # sıralı smg serisi: mermi aralığı = animasyonun bir tur süresi
+const SHOCK_WIND_FRAMES := 3
+const SHOCK_WIND_FPS := 8.0
+
+# Animasyon yoksa (dosya eksikse) sessizce yürüme karesinde donar.
+func _play_if_exists(anim: String) -> bool:
+	var spr: AnimatedSprite2D = $Boss404Sprite
+	if spr.sprite_frames.has_animation(anim) and spr.sprite_frames.get_frame_count(anim) > 0:
+		spr.play(anim)
+		return true
+	return false
+
+func _to_walk() -> void:
+	if is_dead: return
+	var spr: AnimatedSprite2D = $Boss404Sprite
+	spr.play("walk")
+
+# Shockwave: hazırlık → elektrik döngüsü (3 dalga bu sırada) → toparlanma. Dalga zamanlaması aynı (1.5sn arayla).
 func _shockwave() -> void:
 	is_stunned = true
+	var has_anim := _play_if_exists("shockwaveWind")
+	if not has_anim:
+		$Boss404Sprite.pause()
+	else:
+		await get_tree().create_timer(float(SHOCK_WIND_FRAMES) / SHOCK_WIND_FPS, false).timeout
+		if is_dead: return
+		_play_if_exists("shockwaveLoop")
+	var wait_left := 1.5 - (float(SHOCK_WIND_FRAMES) / SHOCK_WIND_FPS if has_anim else 0.0)
 	for i in range(3):
-		await get_tree().create_timer(1.5, false).timeout
+		await get_tree().create_timer(wait_left, false).timeout
+		wait_left = 1.5
 		if is_dead:
 			return
 		var game = get_parent()
 		if game.has_method("boss_shockwave"):
 			game.boss_shockwave(global_position, 300.0 + i * 150.0)
+	if has_anim and _play_if_exists("shockwaveEnd"):
+		await get_tree().create_timer(0.3, false).timeout
 	is_stunned = false
-
-const RANDOM_SHOT_FPS := 12.0
-const RANDOM_SHOT_FIRE_FRAME := 1   # büyük parlama karesi — mermiler tam bu anda çıkar
-const SERIES_SHOT_INTERVAL := 0.15  # sıralı smg serisi: mermi aralığı = animasyonun bir tur süresi
+	_to_walk()
 
 func _random_weapon(player: Node2D) -> void:
 	var spr: AnimatedSprite2D = $Boss404Sprite
@@ -347,13 +412,99 @@ func take_damage(amount, from_ally: bool = false, kill_cause: String = "normal",
 	if game.has_method("update_boss_bar"):
 		game.update_boss_bar(armor, health, max_armor, max_health)
 
+# ── Zırh görünümü ───────────────────────────────────────────────────────────────
+# Zırh varken sprite hafif çelik-mavi/parlak (metalik), zırh kırılınca solgun gri tonlara geçer
+# + parçalar dökülür. Sprite'ın kendi shader'ı: kökün modulate'ini kullanan vuruş flaşıyla çakışmaz.
+const ARMOR_SHADER := """
+shader_type canvas_item;
+uniform vec4 tint : source_color = vec4(1.0);
+uniform float saturation : hint_range(0.0, 1.5) = 1.0;
+void fragment() {
+	vec4 c = texture(TEXTURE, UV);
+	float l = dot(c.rgb, vec3(0.299, 0.587, 0.114));
+	c.rgb = mix(vec3(l), c.rgb, saturation) * tint.rgb;
+	COLOR = c;
+}
+"""
+const ARMOR_ON_TINT   := Color(0.58, 0.64, 0.74)   # zırhlı: koyu, metal kaplı hissi (soğuk çelik)
+const ARMOR_STUN_TIME := 3.0   # zırh kırılınca sersemleme süresi (durum kutusu da bunu kullanır)
+const ARMOR_ON_SAT    := 0.65
+const ARMOR_OFF_TINT  := Color(1.0, 1.0, 1.0)       # zırh kırık: sprite'ın orijinal rengi
+const ARMOR_OFF_SAT   := 1.0
+var _armor_mat: ShaderMaterial
+
+func _setup_armor_look() -> void:
+	var sh := Shader.new()
+	sh.code = ARMOR_SHADER
+	_armor_mat = ShaderMaterial.new()
+	_armor_mat.shader = sh
+	var spr: AnimatedSprite2D = $Boss404Sprite
+	spr.material = _armor_mat
+	_set_armor_look(armor > 0)
+
+func _set_armor_look(armored: bool) -> void:
+	if _armor_mat == null: return
+	_armor_mat.set_shader_parameter("tint", ARMOR_ON_TINT if armored else ARMOR_OFF_TINT)
+	_armor_mat.set_shader_parameter("saturation", ARMOR_ON_SAT if armored else ARMOR_OFF_SAT)
+
 func _armor_break() -> void:
 	is_stunned = true
-	var cr = get_node_or_null("ColorRect")
-	if cr:
-		cr.color = Color(0.8, 0.1, 0.1)
-	await get_tree().create_timer(3.0).timeout
+	if not _play_if_exists("stunned"):
+		$Boss404Sprite.pause()
+	_armor_break_fx()
+	var gm = get_parent()
+	if gm and gm.has_method("show_boss_status"):
+		gm.show_boss_status("stun", "res://assets/elemIndicators/stun.png", ARMOR_STUN_TIME,
+			Lang.t("boss_stun_title"), Lang.t("boss_stun_desc"))
+	await get_tree().create_timer(ARMOR_STUN_TIME, false).timeout
+	if is_dead: return
 	is_stunned = false
+	_to_walk()
+
+# Zırh kırılma efekti: beyaz parlama → soluk gri tona geçiş + dökülen metal parçaları.
+func _armor_break_fx() -> void:
+	if _armor_mat != null:
+		_armor_mat.set_shader_parameter("tint", Color(2.2, 2.2, 2.4))
+		_armor_mat.set_shader_parameter("saturation", 0.8)
+		var tw := create_tween()
+		tw.tween_method(func(t: float):
+			_armor_mat.set_shader_parameter("tint", Color(2.2, 2.2, 2.4).lerp(ARMOR_OFF_TINT, t))
+			_armor_mat.set_shader_parameter("saturation", lerpf(0.8, ARMOR_OFF_SAT, t)),
+			0.0, 1.0, 0.45)
+	_spawn_armor_debris()
+	var game = get_parent()
+	if game and game.has_method("screen_shake_heavy"):
+		game.screen_shake_heavy()
+
+func _spawn_armor_debris() -> void:
+	var game = get_parent()
+	if game == null: return
+	var p := CPUParticles2D.new()
+	p.global_position = global_position   # kök ölçeğini miras almasın diye boss'un değil sahnenin çocuğu
+	p.z_index = 4
+	p.one_shot = true
+	p.emitting = false
+	p.amount = 34
+	p.lifetime = 1.3
+	p.explosiveness = 1.0
+	p.direction = Vector2(0, -1)
+	p.spread = 150.0
+	p.initial_velocity_min = 90.0
+	p.initial_velocity_max = 280.0
+	p.gravity = Vector2(0, 520)
+	p.angular_velocity_min = -300.0
+	p.angular_velocity_max = 300.0
+	p.scale_amount_min = 3.0
+	p.scale_amount_max = 7.0
+	p.emission_shape = CPUParticles2D.EMISSION_SHAPE_SPHERE
+	p.emission_sphere_radius = 60.0
+	var grad := Gradient.new()
+	grad.colors = PackedColorArray([Color(0.75, 0.78, 0.85, 1.0), Color(0.42, 0.44, 0.48, 1.0), Color(0.25, 0.26, 0.28, 0.0)])
+	grad.offsets = PackedFloat32Array([0.0, 0.5, 1.0])
+	p.color_ramp = grad
+	game.add_child(p)
+	p.emitting = true
+	p.finished.connect(p.queue_free)
 
 func die() -> void:
 	is_dead = true

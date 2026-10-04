@@ -431,6 +431,7 @@ const BOSS_BAR_INTERIOR_SIZE := Vector2(240, 16)
 
 func show_boss_bar(boss_node: Node2D, boss_name: String = "CYBER 404") -> void:
 	boss = boss_node
+	_start_boss_music()
 	boss_bar_canvas = CanvasLayer.new()
 	boss_bar_canvas.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(boss_bar_canvas)
@@ -492,8 +493,65 @@ func update_boss_bar(armor: int, health: int, max_armor: int, max_health: int) -
 
 	armor_bar.visible = armor > 0 and max_armor > 0
 
+# ── Boss müziği: boss sahnesi boyunca oyun müziği yerine bossSceneTheme (döngülü) çalar ──────
+const BOSS_MUSIC_PATH := "res://assets/sfx/ui/bossSceneTheme.ogg"
+const MUSIC_DB := -8.0
+const MUSIC_FADE := 1.2
+
+func _start_boss_music() -> void:
+	if get_node_or_null("BossMusic") != null or not ResourceLoader.exists(BOSS_MUSIC_PATH):
+		return
+	var gm := get_node_or_null("GameplayMusic")
+	if gm:
+		var tw := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+		tw.tween_property(gm, "volume_db", -40.0, MUSIC_FADE)
+		tw.tween_callback(func():
+			if is_instance_valid(gm): gm.stream_paused = true)
+	var bm := AudioStreamPlayer.new()
+	bm.name = "BossMusic"
+	var st = load(BOSS_MUSIC_PATH).duplicate()
+	st.set("loop", true)
+	bm.stream = st
+	bm.bus = "Music"
+	bm.volume_db = -40.0
+	bm.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(bm)
+	bm.play()
+	create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS).tween_property(bm, "volume_db", MUSIC_DB, MUSIC_FADE)
+
+func _stop_boss_music() -> void:
+	var bm := get_node_or_null("BossMusic")
+	if bm:
+		bm.name = "BossMusic_old"
+		var tw := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+		tw.tween_property(bm, "volume_db", -40.0, MUSIC_FADE)
+		tw.tween_callback(bm.queue_free)
+	var gm := get_node_or_null("GameplayMusic")
+	if gm and gm.playing:
+		gm.stream_paused = false
+		create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS).tween_property(gm, "volume_db", MUSIC_DB, MUSIC_FADE)
+
+# Boss can barının altında durum etkisi kutusu (ikon + saat yönü süre göstergesi + hover açıklaması).
+# id aynı olan etki tekrar gelirse eskisi yenilenir. Etki süresi dolunca kutu kendini siler.
+func show_boss_status(id: String, icon_path: String, duration: float, title: String, desc: String) -> void:
+	if boss_bar_canvas == null:
+		return
+	var old: Node = boss_bar_canvas.get_node_or_null("Status_" + id)
+	if old: old.free()
+	var slot: Control = load("res://boss_status_icon.gd").new()
+	slot.name = "Status_" + id
+	# Element göstergesinin (x≈769) sağından başlar, can barının altında
+	var idx := 0
+	for c in boss_bar_canvas.get_children():
+		if str(c.name).begins_with("Status_"):
+			idx += 1
+	slot.position = Vector2(800 + idx * 46, 104)
+	boss_bar_canvas.add_child(slot)
+	slot.setup(icon_path, duration, title, desc)
+
 func hide_boss_bar() -> void:
 	boss_defeated = true
+	_stop_boss_music()
 	if boss_bar_canvas:
 		boss_bar_canvas.queue_free()
 		boss_bar_canvas = null
@@ -2550,6 +2608,9 @@ func player_damaged(amount: int = 1) -> void:
 		var _music := get_node_or_null("GameplayMusic")
 		if _music:
 			_music.stop()
+		var _bmusic := get_node_or_null("BossMusic")
+		if _bmusic:
+			_bmusic.stop()
 		Sfx.play_path("res://assets/sfx/characters/death.ogg")
 		get_tree().paused = true
 		show_game_over(_death_dur)

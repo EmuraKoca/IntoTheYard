@@ -129,6 +129,8 @@ const _TR := {
 	"ui_back":             "Geri",
 
 	# ── Karakter Seçim ────────────────────────────────────────────────────────
+	"boss_stun_title":     "Sersemledi",
+	"boss_stun_desc":      "Hareket edemez ve saldıramaz.",
 	"cs_title":            "KARAKTERİNİ SEÇ",
 	"cs_name":             "İsim: ",
 	"cs_locked":           "Bu karakter henüz kilitli.",
@@ -249,6 +251,8 @@ const _EN := {
 	"ui_back":             "Back",
 
 	# ── Karakter Seçim ────────────────────────────────────────────────────────
+	"boss_stun_title":     "Stunned",
+	"boss_stun_desc":      "Cannot move or attack.",
 	"cs_title":            "SELECT YOUR CHARACTER",
 	"cs_name":             "Name: ",
 	"cs_locked":           "This character is not yet unlocked.",
