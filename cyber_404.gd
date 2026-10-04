@@ -234,6 +234,9 @@ const SFX_DIR := "res://assets/sfx/bosses/cyber404/"
 const SFX_MACHINEGUN := SFX_DIR + "machineGun.ogg"   # ring attack + sıralı smg serisi
 const SFX_SHOTGUN    := SFX_DIR + "shotgun.ogg"      # 7'li saçma
 const SFX_SINGLESHOT := SFX_DIR + "singleShot.ogg"   # tek smg
+const SFX_STUNNED      := SFX_DIR + "stunned.ogg"             # zırh kırıldığı an (0.87sn)
+const ELEC_EARLY := 0.6   # stunnedElectrified, sersemleme bitmeden bu kadar önce kısılmaya başlar (büyük = daha erken biter)
+const SFX_STUNNED_ELEC := SFX_DIR + "stunnedElectrified.ogg"  # hemen ardından, sersemleme bitene kadar (3.94sn, fade ile kesilir)
 
 const RING_FPS := 14.0
 # ring animasyonu: 25 kare @14fps, 3 kare hazırlık sonrası ses başlar → ateş kısmı ≈1.57sn; ses ~1.5sn (kuyruk dahil)
@@ -456,7 +459,20 @@ func _armor_break() -> void:
 	if gm and gm.has_method("show_boss_status"):
 		gm.show_boss_status("stun", "res://assets/elemIndicators/stun.png", ARMOR_STUN_TIME,
 			Lang.t("boss_stun_title"), Lang.t("boss_stun_desc"))
-	await get_tree().create_timer(ARMOR_STUN_TIME, false).timeout
+	# Sesler: kırılma anı "stunned", hemen ardından arızalı kısım "stunnedElectrified" (sersemleme bitene kadar)
+	Sfx.play_path_dedicated(SFX_STUNNED)
+	var t_first: float = (load(SFX_STUNNED) as AudioStream).get_length() if ResourceLoader.exists(SFX_STUNNED) else 0.0
+	await get_tree().create_timer(minf(t_first, ARMOR_STUN_TIME), false).timeout
+	var loop_snd: AudioStreamPlayer = null
+	if not is_dead and is_stunned:
+		loop_snd = Sfx.play_path_dedicated(SFX_STUNNED_ELEC)
+	# Arızalı ses sersemlemenin bitişinden ELEC_EARLY sn ÖNCE fade ile kapanmaya başlar
+	await get_tree().create_timer(maxf(ARMOR_STUN_TIME - t_first - ELEC_EARLY, 0.0), false).timeout
+	if is_instance_valid(loop_snd):
+		var ftw := loop_snd.create_tween()
+		ftw.tween_property(loop_snd, "volume_db", -40.0, ELEC_EARLY * 0.8)
+		ftw.tween_callback(loop_snd.stop)
+	await get_tree().create_timer(ELEC_EARLY, false).timeout
 	if is_dead: return
 	is_stunned = false
 	_to_walk()
@@ -473,7 +489,9 @@ func _armor_break_fx() -> void:
 			0.0, 1.0, 0.45)
 	_spawn_armor_debris()
 	var game = get_parent()
-	if game and game.has_method("screen_shake_heavy"):
+	if game and game.has_method("_screen_shake_strong"):
+		game._screen_shake_strong()   # ±8px, ~0.4sn azalan genlik (eskisi ±3px'ti, fark edilmiyordu)
+	elif game and game.has_method("screen_shake_heavy"):
 		game.screen_shake_heavy()
 
 func _spawn_armor_debris() -> void:
