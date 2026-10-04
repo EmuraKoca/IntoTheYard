@@ -4064,3 +4064,4 @@ Kullanıcı: oyun içinde core hasarını artıran kart olmasın, oyuncu sinerji
 
 ## Temizlik (2026-10-04, kullanıcı kararı)
 Boss test tetikleyicisi (`_debug_boss_triggered`, 20sn) **kaldırıldı** — boss artık normal akışta, `BOSS_SPAWN_TIME` (600sn = 10. dakika) ile geliyor (`_spawn_section_boss`: Smiler → Cyber-404 → Nyx sırası). Kullanılmayan `assets/enemys/cyber404/sheets/cyber404_walk_S.png` (+`.import`) silindi. Cyber-404 teması (`cyber404inthefield`, mekanik robot sesi) boss müziğiyle birlikte çalmaya devam edecek — bilinçli tasarım. `× 8.0` XP/upgrade çarpanı ve `_ready()`'deki test Calamity slotları kullanıcı isteğiyle **şimdilik duruyor** (yayından önce kaldırılacak).
+DEBUG (2026-10-04): S-Miler testi için `BOSS_SPAWN_TIME` **600 → 10.0** (oyunun 10. saniyesi; ilk boss sırası Smiler). **Test bitince 600.0'a geri alınmalı.**

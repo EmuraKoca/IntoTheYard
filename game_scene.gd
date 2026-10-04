@@ -324,7 +324,7 @@ const _DATA_BAR_H    := 14.0
 const _DATA_BAR_W    := 272.0
 
 # ── Boss sırası — her bölümde 10. dakikada boss gelir ────────────────────────
-const BOSS_SPAWN_TIME: float = 600.0
+const BOSS_SPAWN_TIME: float = 10.0   # DEBUG: S-Miler testi için 10sn — normal değer 600.0 (10. dakika), test bitince geri al
 var _boss_check_index:  int  = 0
 var _boss_spawned:      bool = false
 var _cyber404_node = null
