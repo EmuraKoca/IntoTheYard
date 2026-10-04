@@ -342,9 +342,68 @@ func _start_boss_intro() -> void:
 	crate.name   = "BossCrate"
 	_crate_node  = crate
 	add_child(crate)
-	crate.landed.connect(_screen_shake)
+	crate.landed.connect(_on_crate_landed)
 	crate.boss_emerged.connect(_on_boss_emerged)
 	crate.play_intro(Vector2(995, 570))
+
+# ── Sandık yere çarpınca toz halkası: genişleyen halka değdiği düşmanları öldürür ─────────────
+# (klasik ölüm animasyonuyla, XP/skor yok). Halkanın etki alanı her karedeki gerçek sprite
+# sınırlarından (alfa bbox) hesaplanır → görselle birebir örtüşür.
+const DUST_DIR := "res://assets/VFX/dustRing/"
+const DUST_SCALE := 5.0        # 256px kare büyütmesi (halka yarı-genişliği ≈ 100px × scale)
+const DUST_FPS := 30.0         # yüksek fps → genişleme daha akıcı (25 kare ≈ 0.83sn)
+
+func _on_crate_landed() -> void:
+	_screen_shake()
+	if is_instance_valid(_crate_node):
+		_spawn_dust_ring(_crate_node.position + Vector2(0, 90.0))   # sandığın yere değdiği nokta
+
+func _spawn_dust_ring(center: Vector2) -> void:
+	var tex: Array = []
+	while ResourceLoader.exists(DUST_DIR + "frame_%03d.png" % tex.size()):
+		tex.append(load(DUST_DIR + "frame_%03d.png" % tex.size()))
+	if tex.is_empty():
+		return
+	var rects: Array = []
+	for t in tex:
+		rects.append((t as Texture2D).get_image().get_used_rect())
+	var sf := SpriteFrames.new()
+	if sf.has_animation("default"): sf.remove_animation("default")
+	sf.add_animation("dust")
+	sf.set_animation_speed("dust", DUST_FPS)
+	sf.set_animation_loop("dust", false)
+	for t in tex:
+		sf.add_frame("dust", t)
+	var spr := AnimatedSprite2D.new()
+	spr.sprite_frames = sf
+	spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	spr.position = center
+	spr.scale = Vector2(DUST_SCALE * 0.85, DUST_SCALE * 0.85)
+	spr.z_index = 1
+	add_child(spr)
+	# Kareler arası sıçramayı yumuşatmak için ömür boyunca sürekli hafif büyüme (0.85 → 1.1)
+	create_tween().tween_property(spr, "scale", Vector2(DUST_SCALE * 1.1, DUST_SCALE * 1.1), float(tex.size()) / DUST_FPS)		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	var reach := [Vector2.ZERO, Vector2.ZERO]   # [yarı-boyut (px), merkez ofseti] — en geniş kare kadar genişlemiş kalır
+	var kill_cb := func():
+		var r: Rect2i = rects[spr.frame]
+		var sc: float = spr.scale.x
+		var half := Vector2(r.size) * 0.5 * sc
+		var off := (Vector2(r.position) + Vector2(r.size) * 0.5 - Vector2(128, 128)) * sc
+		if half.x > reach[0].x:
+			reach[0] = half
+			reach[1] = off
+		var c: Vector2 = center + reach[1]
+		for z in get_tree().get_nodes_in_group("subjects"):
+			# Boss'a dokunma (kutudan çıkarken halka hâlâ sürüyor olabilir; boss'un die()'ı parametresiz)
+			if not is_instance_valid(z) or z.get("is_dead") or z == boss or z == _cyber404_node:
+				continue
+			var d: Vector2 = z.global_position - c
+			if reach[0].x > 0.0 and reach[0].y > 0.0 and pow(d.x / reach[0].x, 2.0) + pow(d.y / reach[0].y, 2.0) <= 1.0:
+				kill_without_rewards(z, "normal")
+	spr.frame_changed.connect(kill_cb)
+	spr.animation_finished.connect(spr.queue_free)
+	spr.play("dust")
+	kill_cb.call()
 
 func _on_boss_emerged() -> void:
 	var crate: Node2D = _crate_node
@@ -379,8 +438,6 @@ func _spawn_boss_at(spawn_pos: Vector2) -> void:
 	_screen_shake()
 	if is_instance_valid(b):
 		b.get_node("CollisionShape2D").disabled = false
-		if b.has_method("_landing_wave"):
-			b._landing_wave()
 	
 func _screen_shake() -> void:
 	var camera = get_node("Camera2D")
@@ -1375,6 +1432,8 @@ func update_ui() -> void:
 # veri parçacığı verilmez. die() subject_died()'ı eşzamanlı çağırdığı için bayrak yeterli.
 var _suppress_kill_rewards := false
 func kill_without_rewards(z: Node, cause: String = "brutal") -> void:
+	if z == boss or z == _cyber404_node:
+		return
 	_suppress_kill_rewards = true
 	z.die(cause)
 	_suppress_kill_rewards = false
@@ -3791,7 +3850,7 @@ func _vfx_yard_engine(apply_fn: Callable, bolt_color: Color, fallback_flash: Col
 	add_child(engine)
 	engine.play("start")
 
-	var _bolts_fired := false
+	var _bolts_fired := [false]   # Array: lambda yerel bool'u DEĞERE göre kopyalar, kalıcı olmaz
 	# Kalabalık odalarda (Backdoor/Systemic Failure gibi filtresiz — TÜM düşmanları
 	# hedefleyen Calamity'lerde) tüm bolt+apply işini AYNI frame'de yapmak (her biri bir
 	# Line2D+Tween oluşturuyor, apply_fn de debuff ikonu ekleyebiliyor) gözle görülür bir
@@ -3817,8 +3876,8 @@ func _vfx_yard_engine(apply_fn: Callable, bolt_color: Color, fallback_flash: Col
 			if _n % 6 == 0:
 				await get_tree().process_frame
 	engine.frame_changed.connect(func():
-		if not _bolts_fired and is_instance_valid(engine) and engine.animation == "start" and engine.frame >= max(start_frame_count - 2, 0):
-			_bolts_fired = true
+		if not _bolts_fired[0] and is_instance_valid(engine) and engine.animation == "start" and engine.frame >= max(start_frame_count - 2, 0):
+			_bolts_fired[0] = true
 			_fire_bolts.call()
 	)
 
@@ -3867,7 +3926,7 @@ func _vfx_yard_engine_to_point(get_target_pos: Callable, bolt_color: Color, on_a
 	add_child(engine)
 	engine.play("start")
 
-	var _bolt_fired := false
+	var _bolt_fired := [false]   # Array: lambda yerel bool'u DEĞERE göre kopyalar, kalıcı olmaz
 	var _fire_bolt := func():
 		_screen_shake_strong()
 		Sfx.play_path("res://assets/sfx/engines/yardEngineImpact.ogg")
@@ -3875,8 +3934,8 @@ func _vfx_yard_engine_to_point(get_target_pos: Callable, bolt_color: Color, on_a
 		_vfx_engine_bolt(yard_center, target_pos, bolt_color)
 		on_arrival.call()
 	engine.frame_changed.connect(func():
-		if not _bolt_fired and is_instance_valid(engine) and engine.animation == "start" and engine.frame >= max(start_frame_count - 2, 0):
-			_bolt_fired = true
+		if not _bolt_fired[0] and is_instance_valid(engine) and engine.animation == "start" and engine.frame >= max(start_frame_count - 2, 0):
+			_bolt_fired[0] = true
 			_fire_bolt.call()
 	)
 
@@ -5400,7 +5459,7 @@ func _process(delta: float) -> void:
 	# DEBUG: test için Cyber-404 gerçek oyun süresinin 10. saniyesinde geliyor (level-up
 	# ekranının kapanma anından tamamen bağımsız, saf zaman bazlı — bu yüzden ne zaman
 	# geleceği net). Test bitince bu blok (+ _debug_boss_triggered değişkeni) kaldırılmalı.
-	if not _debug_boss_triggered and elapsed_time >= 10.0:
+	if not _debug_boss_triggered and elapsed_time >= 20.0:
 		_debug_boss_triggered = true
 		if not _cyber404_spawned and _crate_node == null:
 			_cyber404_spawned = true

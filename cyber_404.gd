@@ -157,24 +157,6 @@ func _setup_sprite() -> void:
 	sprite.scale          = Vector2(0.7, 0.7)
 	sprite.play("walk")
 
-# Boss kutudan çıkınca sahadaki düşmanlar yok olmak yerine ÖLÜR (brutal ölüm animasyonu);
-# ölüm boss'tan uzaklıkla kademelenir — dalga hissi. Zaten ölü olanlara (ceset) dokunulmaz.
-const LANDING_WAVE_SPEED := 1500.0   # px/sn
-func _landing_wave() -> void:
-	for z in get_tree().get_nodes_in_group("subjects"):
-		if z == self or not is_instance_valid(z) or z.get("is_dead"):
-			continue
-		_kill_after(z, global_position.distance_to(z.global_position) / LANDING_WAVE_SPEED)
-
-func _kill_after(z: Node, delay: float) -> void:
-	await get_tree().create_timer(delay, false).timeout
-	if is_instance_valid(z) and not z.get("is_dead") and z.has_method("die"):
-		var game = get_parent()
-		if game and game.has_method("kill_without_rewards"):
-			game.kill_without_rewards(z, "brutal")   # animasyonlu ölüm, XP/skor yok
-		else:
-			z.die("brutal")
-
 func _physics_process(delta: float) -> void:
 	if is_frozen or is_stunned or is_dead:
 		return

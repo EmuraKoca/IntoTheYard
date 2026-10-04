@@ -9,6 +9,8 @@ extends Node2D
 
 signal landed
 signal boss_emerged
+var _landed_fired := false
+var _visible_fired := false
 
 const CRATE_W := 108.0
 const CRATE_H := 108.0
@@ -291,8 +293,9 @@ func _play_intro_sprite(land_pos: Vector2) -> void:
 	fall_tw.tween_property(self, "position:y", land_pos.y, float(IMPACT_FRAME) / FALL_FPS)\
 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 
-	var _landed_fired  := false
-	var _visible_fired := false
+	# DİKKAT: bayraklar INSTANCE değişkeni (aşağıda) — yerel `var x := false` olsaydı lambda onu
+	# DEĞERE göre kopyalar, `x = true` kalıcı olmaz ve sinyal her karede yeniden ateşlenirdi
+	# ("landed"/"boss_emerged" 10+ kez → toz halkası üst üste, ses tekrarı hatalarının asıl sebebi).
 	spr.frame_changed.connect(func():
 		_update_fall_shadow(spr.frame)
 		if not _landed_fired and spr.frame >= IMPACT_FRAME:
