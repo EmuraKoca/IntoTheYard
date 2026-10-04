@@ -329,7 +329,6 @@ var _boss_check_index:  int  = 0
 var _boss_spawned:      bool = false
 var _cyber404_node = null
 var _cyber404_spawned: bool = false
-var _debug_boss_triggered: bool = false  # test için: bkz. _process()
 
 func _start_boss_intro() -> void:
 	var crate = load("res://crate_intro.gd").new()
@@ -5458,16 +5457,6 @@ func _process(delta: float) -> void:
 		_boss_spawned = true
 		_boss_check_index += 1
 		_spawn_section_boss()
-
-	# DEBUG: test için Cyber-404 gerçek oyun süresinin 10. saniyesinde geliyor (level-up
-	# ekranının kapanma anından tamamen bağımsız, saf zaman bazlı — bu yüzden ne zaman
-	# geleceği net). Test bitince bu blok (+ _debug_boss_triggered değişkeni) kaldırılmalı.
-	if not _debug_boss_triggered and elapsed_time >= 20.0:
-		_debug_boss_triggered = true
-		if not _cyber404_spawned and _crate_node == null:
-			_cyber404_spawned = true
-			_boss_spawned = true
-			_start_boss_intro()
 
 func _on_upgrade_selected(index: int, canvas: CanvasLayer) -> void:
 	canvas.queue_free()
