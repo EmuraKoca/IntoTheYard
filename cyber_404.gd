@@ -17,7 +17,8 @@ var is_burning = false
 var is_stunned = false
 var original_speed = 120.0
 var speed = 120.0
-var keep_distance = 500.0
+var keep_distance = 500.0   # (artık kullanılmıyor — yatay hizalanma hareketi)
+var _fixed_y: float = NAN
 var chain_anchor = Vector2(995, 560)   # yeni (genişletilmiş) oyun alanının merkezi (x:360-1630)
 var chain_length = 450.0
 var ring_timer = 0.0
@@ -170,24 +171,17 @@ func _physics_process(delta: float) -> void:
 	if player == null:
 		return
 
-	var dist = global_position.distance_to(player.global_position)
-
-	if dist > keep_distance:
-		var diff = player.global_position - global_position
-		if abs(diff.x) > abs(diff.y):
-			velocity = Vector2(sign(diff.x) * speed, 0)
-		else:
-			velocity = Vector2(0, sign(diff.y) * speed)
-	elif dist < keep_distance - 50:
-		var diff = global_position - player.global_position
-		if abs(diff.x) > abs(diff.y):
-			velocity = Vector2(sign(diff.x) * speed, 0)
-		else:
-			velocity = Vector2(0, sign(diff.y) * speed)
+	# S-Miler tarzı hareket: sadece YATAY, oyuncunun X konumuna hizalanır; Y, çıkış (sandık) konumunda sabit.
+	if is_nan(_fixed_y):
+		_fixed_y = global_position.y
+	var dx: float = player.global_position.x - global_position.x
+	if abs(dx) > 24.0:
+		velocity = Vector2(sign(dx) * speed, 0)
 	else:
 		velocity = Vector2.ZERO
 
 	move_and_slide()
+	global_position.y = _fixed_y
 
 	# Chain constraint
 	var dist_to_anchor = global_position.distance_to(chain_anchor)

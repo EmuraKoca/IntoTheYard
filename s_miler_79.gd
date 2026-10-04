@@ -74,6 +74,11 @@ var _bullet_scene = preload("res://bullet.tscn")
 # ══════════════════════════════════════════════════════════
 # READY / SETUP
 # ══════════════════════════════════════════════════════════
+# Boss boyu: gövde ≈ Cyber-404 ile aynı (görünen gövde ~190×182px). 232px karede gövde 103×100px →
+# 190/103 ≈ 1.84 sprite ölçeği (eskiden 0.9). Çarpışma kapsülü de aynı oranda büyür.
+const SPRITE_SCALE := 1.84
+const SIZE_MULT := SPRITE_SCALE / 0.9
+
 func _ready() -> void:
 	z_index = 3
 	add_to_group("subjects")
@@ -82,15 +87,15 @@ func _ready() -> void:
 	var col  := CollisionShape2D.new()
 	col.name  = "CollisionShape2D"
 	var shape := CapsuleShape2D.new()
-	shape.radius = 22.0
-	shape.height = 44.0
+	shape.radius = 22.0 * SIZE_MULT
+	shape.height = 44.0 * SIZE_MULT
 	col.shape    = shape
 	col.disabled = true
 	add_child(col)
 
 	_sprite = AnimatedSprite2D.new()
 	_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	_sprite.scale          = Vector2(0.9, 0.9)
+	_sprite.scale          = Vector2(SPRITE_SCALE, SPRITE_SCALE)
 	_sprite.position.y     = 0.0   # yerde — hover yok
 	add_child(_sprite)
 	_setup_frames()
