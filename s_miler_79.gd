@@ -32,25 +32,28 @@ var _sprite: AnimatedSprite2D = null
 # Missile VFX sırasında gölge — frame 10'a (≈0.56s) kadar küçülür, sonra yok olur
 var _missile_impact_shadow_t  : float  = 0.0
 var _missile_impact_shadow_pos: Vector2 = Vector2.ZERO
-const MISSILE_IMPACT_SHADOW_DUR := 0.556  # 10 frame @ 18 fps
+# Füze düşüş+patlama hızlandırması: uyarı bittikten sonra hasara kadar geçen süre 0.45sn / MISSILE_FALL_SPEED.
+# (1.0 = eski hız; yürüyerek kaçılabildiği için 2.0 — bu değeri büyüt = uyarıdan sonra daha az kaçma süresi)
+const MISSILE_FALL_SPEED := 2.0
+const MISSILE_IMPACT_SHADOW_DUR := 0.556 / MISSILE_FALL_SPEED  # 10 frame @ 18fps (hızlandırılmış)
 
 # ─────────────────────────────────────────────────────────
 # GATLING  — 3'lü mermi salvosu × 5 burst
 # ─────────────────────────────────────────────────────────
-const GATLING_CD      := 10.0
+const GATLING_CD      := 6.0     # eskiden 10 — saldırılar arası boşluk çok uzundu
 const GATLING_BURSTS  := 5
 const GATLING_SPREAD  := 10.0   # derece
-var _gatling_t    : float = 5.0
+var _gatling_t    : float = 3.0
 var _gatling_busy : bool  = false
 
 # ─────────────────────────────────────────────────────────
 # SWING SWORD  — TP → kılıç → geri TP
 # ─────────────────────────────────────────────────────────
-const SWING_CD     := 18.0
+const SWING_CD     := 9.0     # eskiden 18
 const SWING_DMG    := 28
 const SWING_RADIUS := 78.0
 const SWING_WARN   := 0.65   # uyarı süresi (s)
-var _swing_t      : float   = 14.0
+var _swing_t      : float   = 7.0
 var _swing_busy      : bool    = false
 var _swing_at_player : bool    = false  # TP sonrası player yanında → Y sabitleme kapalı
 var _swing_warn_t    : float   = 0.0   # 1→0 uyarı alpha
@@ -60,16 +63,26 @@ var _home_pos        : Vector2 = Vector2.ZERO
 # ─────────────────────────────────────────────────────────
 # MISSILE  — kafasını sallayarak füze çağırır
 # ─────────────────────────────────────────────────────────
-const MISSILE_CD   := 22.0
+const MISSILE_CD   := 12.0    # eskiden 22
 const MISSILE_WARN := 0.65   # uyarı süresi (s) — Swing ile aynı (SWING_WARN); eskiden 1.8sn çok genişti
+const MISSILE_COUNT    := 3     # art arda füze sayısı
+const MISSILE_INTERVAL := 1.0   # füzeler arası (uyarı başlangıcından uyarı başlangıcına, sn)
 const MISSILE_DMG  := 38
 const MISSILE_R    := 95.0
-var _missile_t       : float   = 10.0
+var _missile_t       : float   = 5.0
 var _missile_busy    : bool    = false
 var _missile_warn_t  : float   = 0.0   # 1→0
 var _missile_warn_pos: Vector2 = Vector2.ZERO
 
 var _bullet_scene = preload("res://bullet.tscn")
+
+# Bir saldırı bitince diğer hepsinin sayacı en az bu kadar sürer → ardışık saldırılar arasında kısa nefes,
+# ama uzun boş yürüyüş de yok.
+const ATTACK_GAP := 1.5
+func _attack_done() -> void:
+	_gatling_t = maxf(_gatling_t, ATTACK_GAP)
+	_swing_t   = maxf(_swing_t,   ATTACK_GAP)
+	_missile_t = maxf(_missile_t, ATTACK_GAP)
 
 # ══════════════════════════════════════════════════════════
 # READY / SETUP
@@ -277,7 +290,7 @@ func _start_gatling() -> void:
 	_sprite.play("gatling")
 
 	# Animasyonun başlaması için kısa ön hazırlık
-	await get_tree().create_timer(0.3).timeout
+	await get_tree().create_timer(0.3, false).timeout
 
 	for _b in range(GATLING_BURSTS):
 		if is_dead or not is_instance_valid(self):
@@ -293,14 +306,15 @@ func _start_gatling() -> void:
 			bullet.global_position = global_position
 			get_parent().add_child(bullet)
 			bullet.launch(dir.rotated(spread))
-		await get_tree().create_timer(0.18).timeout
+		await get_tree().create_timer(0.18, false).timeout
 
-	await get_tree().create_timer(0.4).timeout
+	await get_tree().create_timer(0.4, false).timeout
 	if not is_instance_valid(self) or is_dead:
 		return
 
 	_gatling_busy = false
 	_gatling_t    = GATLING_CD
+	_attack_done()
 	_sprite.play("idle")
 
 # ══════════════════════════════════════════════════════════
@@ -323,7 +337,7 @@ func _start_swing() -> void:
 	queue_redraw()
 
 	# Uyarı süresi
-	await get_tree().create_timer(SWING_WARN).timeout
+	await get_tree().create_timer(SWING_WARN, false).timeout
 	if not is_instance_valid(self) or is_dead:
 		return
 
@@ -336,7 +350,7 @@ func _start_swing() -> void:
 	_sprite.play("swing")
 
 	# Kılıç iner — kısa gecikme sonrası hasar
-	await get_tree().create_timer(0.12).timeout
+	await get_tree().create_timer(0.12, false).timeout
 	if not is_instance_valid(self) or is_dead:
 		_swing_at_player = false
 		return
@@ -356,6 +370,7 @@ func _start_swing() -> void:
 
 	_swing_busy = false
 	_swing_t    = SWING_CD
+	_attack_done()
 	_sprite.play("idle")
 
 # ══════════════════════════════════════════════════════════
@@ -366,39 +381,52 @@ func _start_missile() -> void:
 	if _gatling_busy or _swing_busy or _missile_busy:
 		return
 	_missile_busy = true
-	var player := get_tree().get_first_node_in_group("player") as Node2D
-	if player == null:
+	if get_tree().get_first_node_in_group("player") == null:
 		_missile_busy = false
 		_missile_t    = MISSILE_CD
 		return
 
-	_missile_warn_pos = player.global_position
-	_missile_warn_t   = 1.0
+	# Füze pozunu tüm seri boyunca koru (kafa sallama animasyonu)
 	_sprite.play("missile_pose")
-	queue_redraw()
 
-	# Uyarı süresi — player kaçma şansı
-	await get_tree().create_timer(MISSILE_WARN).timeout
-	if not is_instance_valid(self) or is_dead:
-		return
+	# MISSILE_COUNT füze art arda; her biri uyarı başladığı andaki GÜNCEL oyuncu konumuna gider.
+	# Füzeler arası (uyarı başlangıcından uyarı başlangıcına) MISSILE_INTERVAL sn.
+	for i in range(MISSILE_COUNT):
+		var player := get_tree().get_first_node_in_group("player") as Node2D
+		if player == null or not is_instance_valid(self) or is_dead:
+			break
+		_missile_warn_pos = player.global_position
+		_missile_warn_t   = 1.0
+		queue_redraw()
 
-	_missile_warn_t = 0.0
-	queue_redraw()
+		# Uyarı süresi — player kaçma şansı
+		await get_tree().create_timer(MISSILE_WARN, false).timeout
+		if not is_instance_valid(self) or is_dead:
+			return
 
-	# Impact gölgesini başlat — VFX frame 10'a kadar küçülür
-	_missile_impact_shadow_pos = _missile_warn_pos
-	_missile_impact_shadow_t   = 1.0
+		_missile_warn_t = 0.0
+		queue_redraw()
 
-	# VFX'i hedefe bırak (bağımsız coroutine)
-	_spawn_missile_vfx(_missile_warn_pos)
+		# Impact gölgesini başlat — VFX frame 10'a kadar küçülür
+		_missile_impact_shadow_pos = _missile_warn_pos
+		_missile_impact_shadow_t   = 1.0
 
-	# Animasyon sonu bekle
-	await get_tree().create_timer(1.0).timeout
+		# VFX'i hedefe bırak (bağımsız coroutine)
+		_spawn_missile_vfx(_missile_warn_pos)
+
+		if i < MISSILE_COUNT - 1:
+			await get_tree().create_timer(maxf(MISSILE_INTERVAL - MISSILE_WARN, 0.0), false).timeout
+			if not is_instance_valid(self) or is_dead:
+				return
+
+	# Son füzenin düşüş/patlaması bitsin
+	await get_tree().create_timer(1.0, false).timeout
 	if not is_instance_valid(self) or is_dead:
 		return
 
 	_missile_busy = false
 	_missile_t    = MISSILE_CD
+	_attack_done()
 	_sprite.play("idle")
 
 # ──────────────────────────────────────────────────────────
@@ -415,7 +443,7 @@ func _spawn_missile_vfx(pos: Vector2) -> void:
 	if vframes.has_animation("default"):
 		vframes.remove_animation("default")
 	vframes.add_animation("explode")
-	vframes.set_animation_speed("explode", 18.0)
+	vframes.set_animation_speed("explode", 18.0 * MISSILE_FALL_SPEED)
 	vframes.set_animation_loop("explode", false)
 	for i in range(28):
 		vframes.add_frame("explode", load(BASE + "skillMissile/VFX/frame_%03d.png" % i))
@@ -426,11 +454,11 @@ func _spawn_missile_vfx(pos: Vector2) -> void:
 
 	# Yukarıdan aşağıya hızlanan düşüş
 	var fall := vfx.create_tween()
-	fall.tween_property(vfx, "global_position:y", pos.y, 0.38)\
+	fall.tween_property(vfx, "global_position:y", pos.y, 0.38 / MISSILE_FALL_SPEED)\
 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 
 	# Çarpma anında hasar (düşüşün bitiminde)
-	await get_tree().create_timer(0.45).timeout
+	await get_tree().create_timer(0.45 / MISSILE_FALL_SPEED, false).timeout
 	if is_dead or not is_instance_valid(self):
 		return
 	var p := get_tree().get_first_node_in_group("player") as Node2D
@@ -470,7 +498,7 @@ func die() -> void:
 		game.hide_boss_bar()
 	_sprite.play("death")
 	await _sprite.animation_finished
-	await get_tree().create_timer(1.5).timeout
+	await get_tree().create_timer(1.5, false).timeout
 	if is_instance_valid(self):
 		queue_free()
 
@@ -531,21 +559,21 @@ func apply_slow(amount: float, duration: float = 3.0) -> void:
 	if is_slowed: return
 	is_slowed = true; original_speed = speed; speed *= (1.0 - amount)
 	_boss_set_element("slow")
-	await get_tree().create_timer(duration).timeout
+	await get_tree().create_timer(duration, false).timeout
 	if not is_instance_valid(self): return
 	speed = original_speed; is_slowed = false; _boss_clear_element()
 
 func apply_frozen() -> void:
 	is_frozen = true
 	_boss_set_element("frozen")
-	await get_tree().create_timer(3.0).timeout
+	await get_tree().create_timer(3.0, false).timeout
 	if not is_instance_valid(self): return
 	is_frozen = false; _boss_clear_element()
 
 func apply_wet() -> void:
 	is_wet = true
 	_boss_set_element("wet")
-	await get_tree().create_timer(5.0).timeout
+	await get_tree().create_timer(5.0, false).timeout
 	if not is_instance_valid(self): return
 	is_wet = false; _boss_clear_element()
 
@@ -553,7 +581,7 @@ func apply_glitch() -> void:
 	if is_glitched: return
 	is_glitched = true
 	_boss_set_element("glitch")
-	await get_tree().create_timer(3.0).timeout
+	await get_tree().create_timer(3.0, false).timeout
 	if not is_instance_valid(self): return
 	is_glitched = false; _boss_clear_element()
 
@@ -561,7 +589,7 @@ func apply_electrified() -> void:
 	if is_electrified: return
 	is_electrified = true
 	_boss_set_element("electrified")
-	await get_tree().create_timer(5.0).timeout
+	await get_tree().create_timer(5.0, false).timeout
 	if is_instance_valid(self):
 		is_electrified = false; _boss_clear_element()
 
@@ -570,7 +598,7 @@ func apply_burn() -> void:
 	is_burning = true
 	_boss_set_element("burn")
 	for i in range(3):
-		await get_tree().create_timer(1.0).timeout
+		await get_tree().create_timer(1.0, false).timeout
 		if is_instance_valid(self) and health > 0:
 			health -= 2
 			if health <= 0: die()

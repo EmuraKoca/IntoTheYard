@@ -1090,15 +1090,15 @@ func _no_ball_nearby() -> bool:
 
 
 func take_damage(amount) -> void:
-	if invincible or _ghost_step_active:
+	# Hasar sonrası dokunulmazlık (eskiden 0.3sn) KALDIRILDI (kullanıcı kararı): oyun zaten zor, oyuncu
+	# boss'a güçlenerek girmeli; art arda gelen her mermi/vuruş ayrı hasar verir. Ghost Step (dash sonrası
+	# bağışıklık kartı) hâlâ geçerli.
+	if _ghost_step_active:
 		return
-	invincible = true
 	_react_flash_physical()
 	var game = get_parent()
 	if game.has_method("player_damaged"):
 		game.player_damaged(amount)
-	await get_tree().create_timer(0.3).timeout
-	invincible = false
 
 # Düşmanlardaki fiziksel-vuruş beyaz flaşıyla aynı desen (base_enemy.gd::_react_flash) —
 # oyuncu hasar aldığında da görsel geri bildirim versin diye. _flash_id çakışan
