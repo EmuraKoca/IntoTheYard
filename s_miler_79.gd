@@ -8,8 +8,8 @@ const BASE := "res://assets/enemys/S_Miler_79/"
 const BOB_SPD := 3.0   # sadece uyarı efektlerinde kullanılır
 
 # --- Stats ---
-var health        : int   = 250
-var max_health    : int   = 250
+var health        : int   = 500
+var max_health    : int   = 500
 var speed         : float = 68.0
 var original_speed: float = 68.0
 var is_dead       : bool  = false
@@ -61,7 +61,7 @@ var _home_pos        : Vector2 = Vector2.ZERO
 # MISSILE  — kafasını sallayarak füze çağırır
 # ─────────────────────────────────────────────────────────
 const MISSILE_CD   := 22.0
-const MISSILE_WARN := 1.8   # uyarı süresi (s)
+const MISSILE_WARN := 0.65   # uyarı süresi (s) — Swing ile aynı (SWING_WARN); eskiden 1.8sn çok genişti
 const MISSILE_DMG  := 38
 const MISSILE_R    := 95.0
 var _missile_t       : float   = 10.0
@@ -86,9 +86,10 @@ func _ready() -> void:
 
 	var col  := CollisionShape2D.new()
 	col.name  = "CollisionShape2D"
-	var shape := CapsuleShape2D.new()
-	shape.radius = 22.0 * SIZE_MULT
-	shape.height = 44.0 * SIZE_MULT
+	# Görünen gövdenin tamamını (bacaklar dahil) kapsayan dikdörtgen: kare içinde gövde 103×100px × SPRITE_SCALE.
+	# Eski kapsül yarıçap 45 / yükseklik 90 idi → gövdenin yarısı genişlikte, alt yarısı (bacaklar) dışarıda kalıyordu.
+	var shape := RectangleShape2D.new()
+	shape.size = Vector2(103.0, 100.0) * SPRITE_SCALE * 0.96
 	col.shape    = shape
 	col.disabled = true
 	add_child(col)
