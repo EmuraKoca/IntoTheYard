@@ -324,7 +324,7 @@ const _DATA_BAR_H    := 14.0
 const _DATA_BAR_W    := 272.0
 
 # ── Boss sırası — her bölümde 10. dakikada boss gelir ────────────────────────
-const BOSS_SPAWN_TIME: float = 10.0   # DEBUG: S-Miler testi için 10sn — normal değer 600.0 (10. dakika), test bitince geri al
+const BOSS_SPAWN_TIME: float = 600.0
 var _boss_check_index:  int  = 0
 var _boss_spawned:      bool = false
 var _cyber404_node = null
@@ -1247,6 +1247,7 @@ func _spawn_hasmen_entrance() -> void:
 	)
 
 func _ready() -> void:
+	y_sort_enabled = true   # aynı z_index'teki düşmanlar y konumuna göre sıralanır (alttaki öne çizilir)
 	GameData.rescued_total = 0
 	_player_node = get_node("Player")
 	_setup_hex_shield()
@@ -5209,27 +5210,27 @@ func _spawn_subject() -> void:
 	for i in 5: pool.append("subject")
 
 	# 4-7: + FranticSubject
-	if level >= 4:
+	if true:  # TEST: tüm düşmanlar baştan (eski eşik level 4)
 		for i in 3: pool.append("frantic")
 
 	# 8-11: + ArmedSubject
-	if level >= 8:
+	if true:  # TEST: tüm düşmanlar baştan (eski eşik level 8)
 		for i in 2: pool.append("armed")
 
 	# 12-15: + HeavySubject
-	if level >= 12:
+	if true:  # TEST: tüm düşmanlar baştan (eski eşik level 12)
 		for i in 2: pool.append("heavy")
 
 	# 16-19: + CyberShooter
-	if level >= 16:
+	if true:  # TEST: tüm düşmanlar baştan (eski eşik level 16)
 		pool.append("cyber_shooter")
 
 	# 20-22: + CyberRifle
-	if level >= 20:
+	if true:  # TEST: tüm düşmanlar baştan (eski eşik level 20)
 		pool.append("cyber_rifle")
 
 	# 23+: + CyberShotgun
-	if level >= 23:
+	if true:  # TEST: tüm düşmanlar baştan (eski eşik level 23)
 		pool.append("cyber_shotgun")
 
 	var subject

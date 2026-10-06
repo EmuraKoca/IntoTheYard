@@ -28,31 +28,12 @@ func _get_effective_death_base() -> String:
 
 func _setup_sprite() -> void:
 	var sprite: AnimatedSprite2D = $HeavySprite
-	var frames := SpriteFrames.new()
-	if frames.has_animation("default"):
-		frames.remove_animation("default")
-	var base := "res://assets/enemys/heavySubject/sheets/"
-	var dirs  := ["N","NE","E","SE","S","SW","W","NW"]
-	var anims := [["walk", 6, true], ["uppercut", 7, false]]
-	for a in anims:
-		var anim_name: String = str(a[0])
-		var frame_count: int  = int(a[1])
-		var looping: bool     = bool(a[2])
-		for d in dirs:
-			var key: String = anim_name + "_" + str(d)
-			var tex: Texture2D = load(base + "heavy_" + anim_name + "_" + str(d) + ".png")
-			frames.add_animation(key)
-			frames.set_animation_speed(key, 8.0)
-			frames.set_animation_loop(key, looping)
-			for i in range(frame_count):
-				var atlas := AtlasTexture.new()
-				atlas.atlas  = tex
-				atlas.region = Rect2(i * 128, 0, 128, 128)
-				frames.add_frame(key, atlas)
-	_add_died_anims(frames)
-	sprite.sprite_frames  = frames
+	sprite.sprite_frames = _load_monster_frames("heavySubject", {
+		"walk_": ["walk", 8.0, true],
+		"uppercut_": ["attack", 8.0, false],
+	})
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	sprite.scale          = Vector2(0.85, 0.85)
+	sprite.scale          = Vector2(1.7, 1.7)
 	sprite.animation_finished.connect(_on_uppercut_finished)
 	sprite.play("walk_S")
 

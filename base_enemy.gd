@@ -109,6 +109,43 @@ func _add_died_anims(frames: SpriteFrames) -> void:
 				frames.add_frame(key, load(eff_base + folder + "/" + dir_name + "/frame_%03d.png" % i))
 				i += 1
 
+# Yeni canavar sprite'lari: walk/attack 8 yonlu (klasorler east, south-east...), died sadece SE/SW.
+# anim_map: {"walk_": ["walk", fps, loop, (maks kare)], ...}
+const _MONSTER_DIRS := {"N": "north", "NE": "north-east", "E": "east", "SE": "south-east",
+	"S": "south", "SW": "south-west", "W": "west", "NW": "north-west"}
+
+func _load_monster_frames(folder: String, anim_map: Dictionary, died_fps: float = 12.0) -> SpriteFrames:
+	var frames := SpriteFrames.new()
+	if frames.has_animation("default"):
+		frames.remove_animation("default")
+	var base := "res://assets/newEnemies/" + folder + "/Idle/animations/"
+	for prefix: String in anim_map:
+		var info: Array = anim_map[prefix]
+		var src: String = str(info[0])
+		var fps: float = float(info[1])
+		var looping: bool = bool(info[2])
+		var max_frames: int = int(info[3]) if info.size() > 3 else 999
+		for d: String in _MONSTER_DIRS:
+			var side: String = _MONSTER_DIRS[d]
+			var key: String = prefix + d
+			frames.add_animation(key)
+			frames.set_animation_speed(key, fps)
+			frames.set_animation_loop(key, looping)
+			var i := 0
+			while i < max_frames and ResourceLoader.exists(base + src + "/" + side + "/frame_%03d.png" % i):
+				frames.add_frame(key, load(base + src + "/" + side + "/frame_%03d.png" % i))
+				i += 1
+	for side2: String in ["south-east", "south-west"]:
+		var dkey: String = "died_" + side2
+		frames.add_animation(dkey)
+		frames.set_animation_speed(dkey, died_fps)
+		frames.set_animation_loop(dkey, false)
+		var j := 0
+		while ResourceLoader.exists(base + "died/" + side2 + "/frame_%03d.png" % j):
+			frames.add_frame(dkey, load(base + "died/" + side2 + "/frame_%03d.png" % j))
+			j += 1
+	return frames
+
 func _elem_indicator_y_offset() -> float:
 	return -68.0
 

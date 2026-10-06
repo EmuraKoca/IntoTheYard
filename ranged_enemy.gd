@@ -10,6 +10,34 @@ func _elem_indicator_y_offset() -> float:
 func _update_anim(_moving: bool) -> void:
 	pass  # child override: walk_ veya idle_ prefix ile anim oynat
 
+# Ates animasyonu: attack_<yon> oynar, mermi FIRE_FRAME karesinde cikar (_fire alt sinifta)
+const ATTACK_FPS: float = 12.0
+const FIRE_FRAME: int = 4
+var _attacking: bool = false
+
+func _fire(_target: Node2D) -> void:
+	pass
+
+func _shoot(target: Node2D) -> void:
+	if _attacking or is_dead: return
+	_attacking = true
+	var spr := get_sprite()
+	_update_anim_dir((target.global_position - global_position).normalized())
+	var key := "attack_" + _anim_dir
+	var has_anim: bool = spr != null and spr.sprite_frames != null and spr.sprite_frames.has_animation(key)
+	if has_anim:
+		spr.play(key)
+	await get_tree().create_timer(float(FIRE_FRAME) / ATTACK_FPS, false).timeout
+	if not is_instance_valid(self) or is_dead:
+		return
+	if is_instance_valid(target) and not is_glitched:
+		_fire(target)
+	if has_anim and spr.animation == key and spr.is_playing():
+		await spr.animation_finished
+	if not is_instance_valid(self) or is_dead:
+		return
+	_attacking = false
+
 # Glitchli silahlı düşman: mermi atmaz, en yakın düşmana yürüyüp yakın dövüş hasarı verir
 var _glitch_atk_cd: float = 0.0
 

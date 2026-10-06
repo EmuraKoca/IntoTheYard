@@ -24,31 +24,12 @@ func _get_effective_death_base() -> String:
 
 func _setup_sprite() -> void:
 	var sprite: AnimatedSprite2D = $SubjectSprite
-	var frames := SpriteFrames.new()
-	if frames.has_animation("default"):
-		frames.remove_animation("default")
-	var base := "res://assets/enemys/subject/sheets/"
-	var dirs  := ["N","NE","E","SE","S","SW","W","NW"]
-	var anims := [["walk", 6, true], ["punch", 7, false]]
-	for a in anims:
-		var anim_name: String = str(a[0])
-		var frame_count: int  = int(a[1])
-		var looping: bool     = bool(a[2])
-		for d in dirs:
-			var key: String = anim_name + "_" + str(d)
-			var tex: Texture2D = load(base + "subject_" + anim_name + "_" + d + ".png")
-			frames.add_animation(key)
-			frames.set_animation_speed(key, 10.0)
-			frames.set_animation_loop(key, looping)
-			for i in range(frame_count):
-				var atlas := AtlasTexture.new()
-				atlas.atlas  = tex
-				atlas.region = Rect2(i * 60, 0, 60, 60)
-				frames.add_frame(key, atlas)
-	_add_died_anims(frames)
-	sprite.sprite_frames  = frames
+	sprite.sprite_frames = _load_monster_frames("subject", {
+		"walk_": ["walk", 10.0, true],
+		"punch_": ["attack", 10.0, false],
+	})
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	sprite.scale          = Vector2(1.8, 1.8)
+	sprite.scale          = Vector2(1.5, 1.5)
 	sprite.animation_finished.connect(_on_punch_finished)
 	sprite.play("walk_S")
 

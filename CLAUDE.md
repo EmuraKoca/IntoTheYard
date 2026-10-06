@@ -3,6 +3,18 @@
 Bu dosya, farklı bilgisayarlardaki (ev / işyeri) Claude Code oturumları arasında bağlam
 köprüsü olarak kullanılır. Her oturum başında oku, her oturum sonunda güncelle.
 
+## Temel 7 düşman canavar sprite'larına geçti — 8 yönlü (2026-10-07, oyunda denenmedi)
+Yaş sınırı sebebiyle insansı düşmanlar yerine `assets/newEnemies/<tür>/Idle/animations/` bağlandı: walk/attack **8 yönlü** (east, south-east, ... 8'er kare, 64-68px), died yalnız south-east/south-west. Eşleşme: subject, anormalSubject (=armed, walkJump+attack), heavySubject, franticSubject, cyberShooter/Rifle/Shotgun. `base_enemy.gd::_load_monster_frames(klasör, {önek: [kaynak, fps, loop, (maks kare)]})` 8 yön klasörünü `_anim_dir` anahtarlarına (N,NE,...) bağlıyor; `die()` mantığı değişmedi. Eski statlar/saldırılar aynen. Silahlı düşmanlarda `idle_` = walk'ın ilk karesi; atış sırasında attack animasyonu OYNAMIYOR (sonra eklenebilir). Burn/frozen/electric/brutal ölüm varyantları yok → hepsi tek `died_`. Ölçek 1.7 (heavy 1.9), her düşmanın `_setup_sprite`'ından ayarlanır. Eski `assets/enemys/<tür>/sheets|animations` kullanılmıyor (silinmedi).
+
+## Test ayarı (2026-10-07): boss zamanı eski haline, tüm düşmanlar baştan
+`BOSS_SPAWN_TIME` 10 → **600** (S-Miler eski yerinde, 10. dk). `game_scene.gd::_spawn_subject()` havuzundaki level eşikleri (4/8/12/16/20/23) `if true:` yapıldı → 7 temel düşmanın hepsi baştan çıkıyor. **Yayından önce `if level >= N:` eşikleri geri konmalı** (yorumlarda eski değerler yazılı).
+
+## Düşman çizim sırası: y-sort (2026-10-07, oyunda denenmedi)
+Düşmanlar spawn sırasına göre üst üste biniyordu (yeni sprite'lar daha büyük, ayakları öndekinin görselini eziyordu). `game_scene.gd::_ready()` başına `y_sort_enabled = true` → aynı `z_index`'teki düğümler y konumuna göre çizilir (aşağıdaki öne). Yan etki olursa (başka nesnelerin sırası) o satır silinip düşman `_physics_process`'inde z_index ayarına geçilebilir.
+
+## Silahlı düşmanlara ateş (attack) animasyonu (2026-10-07, oyunda denenmedi)
+`ranged_enemy.gd::_shoot()` artık animasyonlu: dururken `attack_<yön>` (8 kare, 12fps) oynar, mermi `FIRE_FRAME=4` karesinde (≈0.33sn) `_fire()` ile çıkar (cyber_shooter/rifle/shotgun'ta eski `_shoot` gövdesi `_fire` oldu), animasyon bitince yürüme/idle'a döner; `_attacking` bayrağı sırasında `_update_anim` animasyonu ezmez. Namlu parlaması VFX'i projede bulunamadı — kullanıcı klasörünü verince `_fire` içine eklenecek. FIRE_FRAME gerçek ateş karesine göre ayarlanmalı.
+
 ## Cyber-404 füzesi düzeltildi — takip eden, dash ile atlatılan (2026-10-02, oyunda denenmedi)
 Kullanıcı 15sn'lik füzeyi oyunda hiç göremedi. Kök sebepler: `missile.gd` `max_range=400`
 iken boss oyuncudan 450-550px uzakta durduğu için (`keep_distance=500`) füze hep boşlukta

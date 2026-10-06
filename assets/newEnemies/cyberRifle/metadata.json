@@ -1,0 +1,105 @@
+{
+  "group_id": "9acf1c44-70ef-4bb3-8fb8-d76edec7eecd",
+  "states": [
+    {
+      "character": {
+        "id": "30e230dd-9b98-4004-9a5e-442dfade9add",
+        "name": "Idle",
+        "prompt": "A cyber-organic sniper creature for a cyberpunk pixel-art roguelite game.\n\nA long-range enemy that fires ONE projectile at a time with a long delay between shots. Very low attack frequency but extremely high damage and high precision.\n\nThe creature is clearly NON-HUMAN, a strange alien biomechanical organism with corrupted organic tissue and subtle mechanical elements.\n\nIMPORTANT: There must be NO visible gun, NO barrel, NO handheld weapon and NO conventional firearm.\n\nThe firing mechanism must be naturally integrated into the HEAD. Create a single small, clearly visible circular firing aperture in the center of the head, like a hollow opening or organic-mechanical cavity. The projectile should appear to originate directly from this opening.\n\nDo NOT extend a long barrel from the head. The firing aperture should remain compact and integrated into the creature's head, making the creature itself look like the weapon.\n\nKeep the creature BILATERALLY SYMMETRICAL. Left and right sides must have matching anatomy and mechanical structures. The central firing aperture is the only focal point.\n\nLean, calm and precise body shape. Stable posture, slightly lowered head, suggesting a creature that patiently aims before firing. Minimal armor and minimal mechanical detail.\n\nThe head should have no human face, no human eyes and no recognizable human anatomy. The central firing aperture can have a subtle glow or mechanical-organic rim.\n\nCyberpunk 2099, corrupted cyber-organic technology, alien biomechanical organism, clean and readable pixel art, simple strong silhouette.\n\nFULL BODY, three-quarter side view, centered character, symmetrical silhouette, readable at small pixel-art resolution.\n\nNo visible weapons, no gun, no barrel, no handheld equipment, no shoulder weapon, no asymmetric equipment, no environment, no ground, no shadows, no blood, no gore, no text, no numbers, no UI, no other characters.",
+        "size": {
+          "width": 48,
+          "height": 48
+        },
+        "template_id": "custom",
+        "directions": 8,
+        "view": "high top-down",
+        "created_at": "2026-10-06T13:58:02.823614+00:00"
+      },
+      "folder": "Idle",
+      "frames": {
+        "rotations": {
+          "south": "Idle/rotations/south.png",
+          "south-east": "Idle/rotations/south-east.png",
+          "east": "Idle/rotations/east.png",
+          "north-east": "Idle/rotations/north-east.png",
+          "north": "Idle/rotations/north.png",
+          "north-west": "Idle/rotations/north-west.png",
+          "west": "Idle/rotations/west.png",
+          "south-west": "Idle/rotations/south-west.png"
+        },
+        "animations": {
+          "walk": {
+            "south-east": [
+              "Idle/animations/walk/south-east/frame_000.png",
+              "Idle/animations/walk/south-east/frame_001.png",
+              "Idle/animations/walk/south-east/frame_002.png",
+              "Idle/animations/walk/south-east/frame_003.png",
+              "Idle/animations/walk/south-east/frame_004.png",
+              "Idle/animations/walk/south-east/frame_005.png",
+              "Idle/animations/walk/south-east/frame_006.png",
+              "Idle/animations/walk/south-east/frame_007.png"
+            ],
+            "south-west": [
+              "Idle/animations/walk/south-west/frame_000.png",
+              "Idle/animations/walk/south-west/frame_001.png",
+              "Idle/animations/walk/south-west/frame_002.png",
+              "Idle/animations/walk/south-west/frame_003.png",
+              "Idle/animations/walk/south-west/frame_004.png",
+              "Idle/animations/walk/south-west/frame_005.png",
+              "Idle/animations/walk/south-west/frame_006.png",
+              "Idle/animations/walk/south-west/frame_007.png"
+            ]
+          },
+          "attack": {
+            "south-east": [
+              "Idle/animations/attack/south-east/frame_000.png",
+              "Idle/animations/attack/south-east/frame_001.png",
+              "Idle/animations/attack/south-east/frame_002.png",
+              "Idle/animations/attack/south-east/frame_003.png",
+              "Idle/animations/attack/south-east/frame_004.png",
+              "Idle/animations/attack/south-east/frame_005.png",
+              "Idle/animations/attack/south-east/frame_006.png",
+              "Idle/animations/attack/south-east/frame_007.png"
+            ],
+            "south-west": [
+              "Idle/animations/attack/south-west/frame_000.png",
+              "Idle/animations/attack/south-west/frame_001.png",
+              "Idle/animations/attack/south-west/frame_002.png",
+              "Idle/animations/attack/south-west/frame_003.png",
+              "Idle/animations/attack/south-west/frame_004.png",
+              "Idle/animations/attack/south-west/frame_005.png",
+              "Idle/animations/attack/south-west/frame_006.png",
+              "Idle/animations/attack/south-west/frame_007.png"
+            ]
+          },
+          "died": {
+            "south-west": [
+              "Idle/animations/died/south-west/frame_000.png",
+              "Idle/animations/died/south-west/frame_001.png",
+              "Idle/animations/died/south-west/frame_002.png",
+              "Idle/animations/died/south-west/frame_003.png",
+              "Idle/animations/died/south-west/frame_004.png",
+              "Idle/animations/died/south-west/frame_005.png",
+              "Idle/animations/died/south-west/frame_006.png",
+              "Idle/animations/died/south-west/frame_007.png",
+              "Idle/animations/died/south-west/frame_008.png"
+            ],
+            "south-east": [
+              "Idle/animations/died/south-east/frame_000.png",
+              "Idle/animations/died/south-east/frame_001.png",
+              "Idle/animations/died/south-east/frame_002.png",
+              "Idle/animations/died/south-east/frame_003.png",
+              "Idle/animations/died/south-east/frame_004.png",
+              "Idle/animations/died/south-east/frame_005.png",
+              "Idle/animations/died/south-east/frame_006.png",
+              "Idle/animations/died/south-east/frame_007.png",
+              "Idle/animations/died/south-east/frame_008.png"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "export_version": "3.1",
+  "export_date": "2026-10-06T18:01:19.103037"
+}
