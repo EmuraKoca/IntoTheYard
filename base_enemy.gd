@@ -135,15 +135,21 @@ func _load_monster_frames(folder: String, anim_map: Dictionary, died_fps: float 
 			while i < max_frames and ResourceLoader.exists(base + src + "/" + side + "/frame_%03d.png" % i):
 				frames.add_frame(key, load(base + src + "/" + side + "/frame_%03d.png" % i))
 				i += 1
-	for side2: String in ["south-east", "south-west"]:
-		var dkey: String = "died_" + side2
-		frames.add_animation(dkey)
-		frames.set_animation_speed(dkey, died_fps)
-		frames.set_animation_loop(dkey, false)
-		var j := 0
-		while ResourceLoader.exists(base + "died/" + side2 + "/frame_%03d.png" % j):
-			frames.add_frame(dkey, load(base + "died/" + side2 + "/frame_%03d.png" % j))
-			j += 1
+	# Ölüm animasyonları: died_ (normal) + brutal_/burn_/frozen_/electric_ (klasör varsa)
+	var death_folders := {"died_": "died", "brutal_": "brutal", "burn_": "burn", "frozen_": "frozen", "electric_": "electric"}
+	for prefix2: String in death_folders:
+		var folder2: String = death_folders[prefix2]
+		for side2: String in ["south-east", "south-west"]:
+			if not ResourceLoader.exists(base + folder2 + "/" + side2 + "/frame_000.png"):
+				continue
+			var dkey: String = prefix2 + side2
+			frames.add_animation(dkey)
+			frames.set_animation_speed(dkey, died_fps)
+			frames.set_animation_loop(dkey, false)
+			var j := 0
+			while ResourceLoader.exists(base + folder2 + "/" + side2 + "/frame_%03d.png" % j):
+				frames.add_frame(dkey, load(base + folder2 + "/" + side2 + "/frame_%03d.png" % j))
+				j += 1
 	return frames
 
 func _elem_indicator_y_offset() -> float:
