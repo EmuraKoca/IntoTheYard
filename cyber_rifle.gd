@@ -54,14 +54,7 @@ func _enemy_process(delta: float) -> void:
 	var player = get_tree().get_first_node_in_group("player")
 	if player == null: return
 	var dist = global_position.distance_to(player.global_position)
-	var moving: bool = dist > 420
-	if moving:
-		velocity = (player.global_position - global_position).normalized() * speed
-		_update_anim_dir(velocity)
-	else:
-		velocity = Vector2.ZERO
-		var to_player = (player.global_position - global_position).normalized()
-		_update_anim_dir(to_player)
+	var moving: bool = _ranged_move(player, 420.0)
 	move_and_slide()
 	_update_anim(moving)
 	shoot_timer += delta

@@ -15,6 +15,35 @@ const ATTACK_FPS: float = 12.0
 const FIRE_FRAME: int = 4
 var _attacking: bool = false
 
+# Menzile gelene kadar yaklaşır; menzildeyken yaklaşmaz, sadece yatay eksende
+# oyuncunun X'ine hizalanır. Menzilden ancak HOLD_MARGIN kadar uzaklaşılırsa
+# tekrar yaklaşır (histerezis → oyuncu kıpırdadıkça sürekli yaklaşmaz).
+const HOLD_MARGIN: float = 450.0
+const STRAFE_FACTOR: float = 0.7
+const STRAFE_DEADZONE: float = 30.0
+var _in_position: bool = false
+
+func _ranged_move(player: Node2D, range_px: float) -> bool:
+	var to_player: Vector2 = player.global_position - global_position
+	var dist: float = to_player.length()
+	if _in_position:
+		if dist > range_px + HOLD_MARGIN:
+			_in_position = false
+	elif dist <= range_px:
+		_in_position = true
+	if not _in_position:
+		velocity = to_player.normalized() * speed
+		_update_anim_dir(velocity)
+		return true
+	var dx: float = to_player.x
+	if _attacking or absf(dx) < STRAFE_DEADZONE:
+		velocity = Vector2.ZERO
+		_update_anim_dir(to_player.normalized())
+		return false
+	velocity = Vector2(signf(dx) * speed * STRAFE_FACTOR, 0.0)
+	_update_anim_dir(velocity)
+	return true
+
 func _fire(_target: Node2D) -> void:
 	pass
 

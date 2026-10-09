@@ -3,6 +3,9 @@
 Bu dosya, farklı bilgisayarlardaki (ev / işyeri) Claude Code oturumları arasında bağlam
 köprüsü olarak kullanılır. Her oturum başında oku, her oturum sonunda güncelle.
 
+## Silahlı düşmanlar konumunu koruyor — menzilde sadece yatay hareket (2026-10-09, kullanıcı test etti, çalışıyor)
+Sorun: oyuncu yer değiştirdikçe silahlılar (shooter/rifle/shotgun) her seferinde biraz daha yaklaşıyordu (menzil sınırında gidip gelme). Fix: `ranged_enemy.gd::_ranged_move(player, menzil)` ortak yardımcısı — menzile (shooter 340, rifle 420, shotgun 270) gelene kadar yaklaşır; menzildeyken (`_in_position`) yaklaşmaz, sadece **yatay eksende** oyuncunun X'ine hizalanır (`STRAFE_FACTOR=0.7` hız, `STRAFE_DEADZONE=30px`); atış animasyonu sırasında durur. Oyuncu menzil+`HOLD_MARGIN`'dan uzaklaşırsa tekrar yaklaşır; ilk denemede 90px'ti ve oyuncu hareket edince yine yaklaşıyorlardı → 450px'e çıkarıldı (pratikte konumu bırakmazlar). Ayar: bu sabitler.
+
 ## Vuruş sesi hız sınırı — sıkışık kalabalıkta "trrrt" önlendi (2026-10-09, kullanıcı test etti, çalışıyor)
 `ball.gd::_play_hit_sfx()` tüm toplar için ortak `static var _last_hit_sfx_msec` ile sınırlandı: son sesten `HIT_SFX_MIN_GAP_MS=70` ms geçmeden yeni vuruş sesi çalmıyor; son ses `HIT_SFX_BUSY_GAP_MS=160` ms içindeyse ses -4 → -8 dB kısılıyor; perde 0.94-1.06 rastgele. Ses dosyasını kısaltmak gerekmedi. Ayar: bu üç sabit (daha az ses için MIN_GAP'i artır).
 
