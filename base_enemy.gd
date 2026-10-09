@@ -1,6 +1,7 @@
 extends CharacterBody2D
 
 static var _freeze_sf: SpriteFrames = null
+static var _monster_frames_cache: Dictionary = {}   # tür -> paylaşımlı SpriteFrames (spawn başına yeniden yüklemeyi önler)
 
 # ── Debuff süreleri (tek yerden ayar) — reaksiyon/Calamity'ler top dönmeden bitmesin diye uzun ──
 const BURN_DURATION: float = 6.0          # toplam yanma süresi (3 tick x 2sn)
@@ -114,7 +115,30 @@ func _add_died_anims(frames: SpriteFrames) -> void:
 const _MONSTER_DIRS := {"N": "north", "NE": "north-east", "E": "east", "SE": "south-east",
 	"S": "south", "SW": "south-west", "W": "west", "NW": "north-west"}
 
+# Oyun başında düşman karelerini arka planda yükler (ilk spawn takılmasını önler)
+static func warm_monster_assets() -> void:
+	var stack: Array[String] = ["res://assets/newEnemies"]
+	while not stack.is_empty():
+		var dir_path: String = stack.pop_back()
+		var d := DirAccess.open(dir_path)
+		if d == null: continue
+		for sub in d.get_directories():
+			if sub == "rotations": continue
+			stack.append(dir_path + "/" + sub)
+		for f in d.get_files():
+			if f.ends_with(".png"):
+				ResourceLoader.load_threaded_request(dir_path + "/" + f)
+
 func _load_monster_frames(folder: String, anim_map: Dictionary, died_fps: float = 12.0) -> SpriteFrames:
+	# SpriteFrames salt-okunur kullanıldığı için tüm örnekler aynı kaynağı paylaşır
+	var key: String = folder + "|" + str(anim_map) + "|" + str(died_fps)
+	if _monster_frames_cache.has(key):
+		return _monster_frames_cache[key]
+	var built: SpriteFrames = _build_monster_frames(folder, anim_map, died_fps)
+	_monster_frames_cache[key] = built
+	return built
+
+func _build_monster_frames(folder: String, anim_map: Dictionary, died_fps: float = 12.0) -> SpriteFrames:
 	var frames := SpriteFrames.new()
 	if frames.has_animation("default"):
 		frames.remove_animation("default")

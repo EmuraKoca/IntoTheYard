@@ -1247,6 +1247,7 @@ func _spawn_hasmen_entrance() -> void:
 	)
 
 func _ready() -> void:
+	preload("res://base_enemy.gd").warm_monster_assets()
 	y_sort_enabled = true   # aynı z_index'teki düşmanlar y konumuna göre sıralanır (alttaki öne çizilir)
 	GameData.rescued_total = 0
 	_player_node = get_node("Player")

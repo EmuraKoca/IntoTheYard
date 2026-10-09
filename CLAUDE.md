@@ -3,6 +3,9 @@
 Bu dosya, farklı bilgisayarlardaki (ev / işyeri) Claude Code oturumları arasında bağlam
 köprüsü olarak kullanılır. Her oturum başında oku, her oturum sonunda güncelle.
 
+## PERFORMANS: başlangıç donmaları — yeni düşman kareleri her spawn'da yükleniyordu (2026-10-09, kullanıcı test etti, çözüldü)
+Kök sebep: `base_enemy.gd::_load_monster_frames` her düşman doğduğunda sıfırdan `SpriteFrames` kurup ~150-200 PNG'yi `load()` ediyordu (8 yön walk/attack + 5 ölüm çeşidi). Düşman havuzu baştan 7 tür olunca ilk dakikada yüzlerce spawn = tüm oyun donuyor; texture cache ısındıkça azalıyordu. Fix: (1) `static var _monster_frames_cache` — tür başına BİR kez kurulup paylaşılıyor (`_build_monster_frames` asıl kurucu), (2) `warm_monster_assets()` (static) `game_scene._ready` başında `assets/newEnemies` altındaki tüm PNG'leri `ResourceLoader.load_threaded_request` ile arka planda yüklüyor. Hâlâ donma varsa: ilk spawn anında 7 türün frame kurulumu (türü başına bir kez) veya `blob_shadow`/HP etiketi/y-sort şüpheli.
+
 ## Temel 7 düşman canavar sprite'larına geçti — 8 yönlü (2026-10-07, oyunda denenmedi)
 Yaş sınırı sebebiyle insansı düşmanlar yerine `assets/newEnemies/<tür>/Idle/animations/` bağlandı: walk/attack **8 yönlü** (east, south-east, ... 8'er kare, 64-68px), died yalnız south-east/south-west. Eşleşme: subject, anormalSubject (=armed, walkJump+attack), heavySubject, franticSubject, cyberShooter/Rifle/Shotgun. `base_enemy.gd::_load_monster_frames(klasör, {önek: [kaynak, fps, loop, (maks kare)]})` 8 yön klasörünü `_anim_dir` anahtarlarına (N,NE,...) bağlıyor; `die()` mantığı değişmedi. Eski statlar/saldırılar aynen. Silahlı düşmanlarda `idle_` = walk'ın ilk karesi; atış sırasında attack animasyonu OYNAMIYOR (sonra eklenebilir). Burn/frozen/electric/brutal ölüm varyantları yok → hepsi tek `died_`. Ölçek 1.7 (heavy 1.9), her düşmanın `_setup_sprite`'ından ayarlanır. Eski `assets/enemys/<tür>/sheets|animations` kullanılmıyor (silinmedi).
 
