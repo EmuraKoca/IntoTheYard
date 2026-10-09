@@ -3,6 +3,17 @@
 Bu dosya, farklı bilgisayarlardaki (ev / işyeri) Claude Code oturumları arasında bağlam
 köprüsü olarak kullanılır. Her oturum başında oku, her oturum sonunda güncelle.
 
+## DEMO YAPIMI — `GameData.DEMO_MODE` bayrağı (2026-10-10, kullanıcı test etti, çalışıyor)
+`game_data.gd::DEMO_MODE` (const, şu an **true**). Demo .exe çıkınca **false** yap → tam/dev davranış geri gelir (tüm demo değişiklikleri bu bayrağa bağlı). Demo'da:
+- **Ayrı kayıt**: `user://ity_save_demo.cfg` (tam sürüm `ity_save.cfg`'ye dokunmaz) → herkes level 0 / chip 0 başlar, demo oynayan oynadıkça Black Market'ten alır.
+- **3 karakter açık** (`is_unlocked` true).
+- **Sadece Cyber-404 boss** (`game_scene.gd::_spawn_section_boss` demoda hep indeks 1; S-Miler/Nyx kodu duruyor). Demoda boss **5. dakikada** (`BOSS_SPAWN_TIME` 300, tam sürüm 600).
+- **Hızlı upgrade ×8.0 kapalı** (demoda ×1), **düşman türleri ZAMANLA açılır** (`_enemy_gate`: frantic 20sn, armed 50sn, heavy 90sn, shooter 130sn, rifle 180sn, shotgun 230sn — 5 dk içinde publisher hepsini görsün; level eşikleri demoda kullanılmıyor). DEMO_MODE=false iken eski test davranışı (×8, tüm düşmanlar baştan).
+- **"Tam sürümde çok daha fazla boss!"** (`demo_more_bosses`): Cyber-404 ölünce 6sn'lik banner (`_show_demo_boss_banner`) + game over / run-end ekranlarında alt yazı (`_add_demo_note`).
+- **Düşman seçim ekranı** (`enemy_select.tscn/.gd`): karakter onayından sonra (character_select `_on_confirm` → `GameData.pending_scene`) CyberHuman / CyberCreature. `GameData.enemy_style`: **creature** = şimdiki sistem (`assets/newEnemies` + ölüm kanı + 8-yön attack); **human** = eski `assets/enemys` sprite'ları (7 düşmanın `_setup_sprite_human()`'ı eski commit 311ed558^'den geri alındı; `_setup_sprite()` stile göre dallanır), ölüm kanı (`deathBlood`) YOK, `warm_monster_assets` çalışmaz. Dev'de (DEMO_MODE=false) seçim ekranı yok, stil creature.
+- **Demo düzeltmeleri (2026-10-10)**: karakter seçim ekranı BACK/CONFIRM artık Lang'dan (`cs_back_btn`/`cs_confirm_btn`), "Black Market" TR'de **Kara Borsa**; CyberHuman takılması için `base_enemy.gd::warm_human_assets()` (eski sheet + ölüm karelerini arka planda yükler, `game_scene._ready` stile göre warm_human/warm_monster seçer); seçim ekranı açıklamalarından kan uyarısı kaldırıldı.
+- Human modda silahlılar `attack_` animasyonu olmadığı için sadece 0.33sn gecikmeyle ateş eder (animasyonsuz).
+
 ## Credits: Pixabay eklendi (2026-10-09, kullanıcı test etti, çalışıyor)
 Pixabay lisansı atıf ZORUNLU KILMIYOR (Content License, serbest kullanım) ama takdir ediliyor; kullanıcı sitenin ücretsiz içeriğinden çok faydalandığı için `main_menu.gd::_on_credits` `lines` listesine "Pixabay — pixabay.com - Free assets, thank you!" eklendi (3 satır olunca Geri butonu y=700→840). Özel bir zorunlu atıf metni yok.
 

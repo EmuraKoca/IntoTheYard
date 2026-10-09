@@ -30,6 +30,8 @@ func _ready() -> void:
 	$Button2.set_meta("sfx_click", "characterSelect")
 	$Button2.pressed.connect(_on_confirm)
 	$Label.text = Lang.t("cs_title")
+	$Button.text = "◀  " + Lang.t("cs_back_btn")
+	$Button2.text = Lang.t("cs_confirm_btn") + "  ▶"
 
 	_build_ui()
 	_refresh()
@@ -346,11 +348,17 @@ func _on_confirm() -> void:
 	var c: Dictionary = CHARS[_cur]
 	if _is_locked(c): return
 	GameData.selected_character = c["id"]
+	var next_scene := "res://game_scene.tscn"
 	if GameData.show_intro:
 		GameData.show_intro = false
-		get_tree().change_scene_to_file("res://intro_scene.tscn")
+		next_scene = "res://intro_scene.tscn"
+	if GameData.DEMO_MODE:
+		# Demo: karakterden sonra düşman türü seçimi, ardından next_scene
+		GameData.pending_scene = next_scene
+		get_tree().change_scene_to_file("res://enemy_select.tscn")
 	else:
-		get_tree().change_scene_to_file("res://game_scene.tscn")
+		GameData.enemy_style = "creature"
+		get_tree().change_scene_to_file(next_scene)
 
 func _on_back() -> void:
 	get_tree().change_scene_to_file("res://main_menu.tscn")
@@ -480,7 +488,7 @@ func _open_achievements(restore_scroll: int = 0) -> void:
 
 	var chip_lbl := Label.new()
 	chip_lbl.name = "ChipLbl"
-	chip_lbl.text = "Bakiye: %d Chip" % GameData.chips
+	chip_lbl.text = Lang.t("shop_balance") % GameData.chips
 	chip_lbl.add_theme_font_override("font", _font_bold)
 	chip_lbl.add_theme_font_size_override("font_size", 38)
 	chip_lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.8))
@@ -597,7 +605,7 @@ func _open_achievements(restore_scroll: int = 0) -> void:
 			row.add_child(collect_btn)
 
 	var close_btn := Button.new()
-	close_btn.text = "✕  Kapat"
+	close_btn.text = Lang.t("shop_close")
 	close_btn.add_theme_font_override("font", _font_bold)
 	close_btn.add_theme_font_size_override("font_size", 19)
 	close_btn.add_theme_color_override("font_color", Color(0.8, 0.2, 0.2))
@@ -632,7 +640,7 @@ func _open_shop() -> void:
 	canvas.add_child(bg)
 
 	var title := Label.new()
-	title.text = "⬡  BLACK MARKET  —  %s" % CHARS[_cur]["name"].to_upper()
+	title.text = "⬡  " + Lang.t("shop_title") + "  —  " + CHARS[_cur]["name"].to_upper()
 	title.add_theme_font_override("font", _font_bold)
 	title.add_theme_font_size_override("font_size", 57)
 	title.add_theme_color_override("font_color", char_col)
@@ -640,7 +648,7 @@ func _open_shop() -> void:
 	canvas.add_child(title)
 
 	var chip_lbl := Label.new()
-	chip_lbl.text = "Bakiye: %d Chip" % GameData.chips
+	chip_lbl.text = Lang.t("shop_balance") % GameData.chips
 	chip_lbl.add_theme_font_override("font", _font_bold)
 	chip_lbl.add_theme_font_size_override("font_size", 38)
 	chip_lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.8))
@@ -678,7 +686,7 @@ func _open_shop() -> void:
 		canvas.add_child(border)
 
 		var name_lbl := Label.new()
-		name_lbl.text = item["name"]
+		name_lbl.text = Lang.t("shop_" + item["id"] + "_name")
 		name_lbl.add_theme_font_override("font", _font_bold)
 		name_lbl.add_theme_font_size_override("font_size", 19)
 		name_lbl.add_theme_color_override("font_color", col if not maxed else Color(0.3,0.3,0.3))
@@ -686,7 +694,7 @@ func _open_shop() -> void:
 		canvas.add_child(name_lbl)
 
 		var desc_lbl := Label.new()
-		desc_lbl.text = item["desc"]
+		desc_lbl.text = Lang.t("shop_" + item["id"] + "_desc")
 		desc_lbl.add_theme_font_override("font", _font_regular)
 		desc_lbl.add_theme_font_size_override("font_size", 19)
 		desc_lbl.add_theme_color_override("font_color", Color(0.6,0.6,0.65) if not maxed else Color(0.28,0.28,0.28))
@@ -728,7 +736,7 @@ func _open_shop() -> void:
 		canvas.add_child(buy_btn)
 
 	var close_btn := Button.new()
-	close_btn.text = "✕  Kapat"
+	close_btn.text = Lang.t("shop_close")
 	close_btn.add_theme_font_override("font", _font_bold)
 	close_btn.add_theme_font_size_override("font_size", 19)
 	close_btn.add_theme_color_override("font_color", Color(0.8,0.2,0.2))

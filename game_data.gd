@@ -1,6 +1,14 @@
 extends Node
 
-const SAVE_PATH := "user://ity_save.cfg"
+# ── DEMO BAYRAĞI ─────────────────────────────────────────────────────────────
+# true: demo yapımı (3 karakter açık, sadece Cyber-404 boss, ayrı kayıt dosyası,
+# düşman seçim ekranı, hızlı-upgrade/test hileleri kapalı). Tam sürüm için false.
+const DEMO_MODE := true
+const SAVE_PATH := "user://ity_save_demo.cfg" if DEMO_MODE else "user://ity_save.cfg"
+
+# Düşman görünümü: "creature" (assets/newEnemies + ölüm kanı) / "human" (assets/enemys, kansız)
+var enemy_style: String = "creature"
+var pending_scene: String = "res://game_scene.tscn"
 
 var selected_character := "vector"
 var unlocked_characters: Array[String] = ["vector", "cyclone"]
@@ -280,7 +288,11 @@ func unlock_character(char_id: String) -> void:
 		save_data()
 
 func is_unlocked(char_id: String) -> bool:
+	if DEMO_MODE: return true
 	return char_id in unlocked_characters
+
+func is_human_style() -> bool:
+	return enemy_style == "human"
 
 # ── XP ───────────────────────────────────────────────────────────────────────
 func add_xp(char_id: String, amount: int) -> void:

@@ -20,6 +20,45 @@ func _get_effective_death_base() -> String:
 	return "res://assets/effectiveDeathAnimations/cyberRifle/"
 
 func _setup_sprite() -> void:
+	if GameData.is_human_style(): _setup_sprite_human()
+	else: _setup_sprite_creature()
+
+func _setup_sprite_human() -> void:
+	var sprite: AnimatedSprite2D = $RifleSprite
+	var frames := SpriteFrames.new()
+	if frames.has_animation("default"):
+		frames.remove_animation("default")
+	var base := "res://assets/enemys/cyberRifle/sheets/"
+	var dirs  := ["N","NE","E","SE","S","SW","W","NW"]
+	for d in dirs:
+		var dd: String = str(d)
+		var walk_key: String = "walk_" + dd
+		var walk_tex: Texture2D = load(base + "cyberrifle_walk_" + dd + ".png")
+		frames.add_animation(walk_key)
+		frames.set_animation_speed(walk_key, 10.0)
+		frames.set_animation_loop(walk_key, true)
+		for i in range(6):
+			var atlas := AtlasTexture.new()
+			atlas.atlas  = walk_tex
+			atlas.region = Rect2(i * 124, 0, 124, 124)
+			frames.add_frame(walk_key, atlas)
+		var idle_key: String = "idle_" + dd
+		var idle_tex: Texture2D = load(base + "cyberrifle_idle_" + dd + ".png")
+		frames.add_animation(idle_key)
+		frames.set_animation_speed(idle_key, 2.0)
+		frames.set_animation_loop(idle_key, true)
+		for i in range(2):
+			var atlas := AtlasTexture.new()
+			atlas.atlas  = idle_tex
+			atlas.region = Rect2(i * 124, 0, 124, 124)
+			frames.add_frame(idle_key, atlas)
+	_add_died_anims(frames)
+	sprite.sprite_frames  = frames
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	sprite.scale          = Vector2(0.88, 0.88)
+	sprite.play("idle_S")
+
+func _setup_sprite_creature() -> void:
 	var sprite: AnimatedSprite2D = $RifleSprite
 	sprite.sprite_frames = _load_monster_frames("cyberRifle", {
 		"walk_": ["walk", 10.0, true],

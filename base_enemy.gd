@@ -129,6 +129,23 @@ static func warm_monster_assets() -> void:
 			if f.ends_with(".png"):
 				ResourceLoader.load_threaded_request(dir_path + "/" + f)
 
+# CyberHuman: eski insansı düşman sheet/ölüm karelerini arka planda yükler
+static func warm_human_assets() -> void:
+	var stack: Array[String] = []
+	for f in ["subject", "armedSubject", "heavySubject", "franticSubject", "cyberShooter", "cyberRifle", "cyberShotgun"]:
+		stack.append("res://assets/enemys/" + f)
+	stack.append("res://assets/effectiveDeathAnimations")
+	while not stack.is_empty():
+		var dir_path: String = stack.pop_back()
+		var d := DirAccess.open(dir_path)
+		if d == null: continue
+		for sub in d.get_directories():
+			if sub == "rotations": continue
+			stack.append(dir_path + "/" + sub)
+		for f in d.get_files():
+			if f.ends_with(".png"):
+				ResourceLoader.load_threaded_request(dir_path + "/" + f)
+
 func _load_monster_frames(folder: String, anim_map: Dictionary, died_fps: float = 12.0) -> SpriteFrames:
 	# SpriteFrames salt-okunur kullanıldığı için tüm örnekler aynı kaynağı paylaşır
 	var key: String = folder + "|" + str(anim_map) + "|" + str(died_fps)
@@ -1314,6 +1331,7 @@ const BLOOD_SCALE: float = 2.5
 const BLOOD_OFFSET_Y: float = 25.0
 
 func _spawn_death_blood() -> void:
+	if GameData.is_human_style(): return  # CyberHuman: kansız
 	if _blood_frames == null:
 		var sf := SpriteFrames.new()
 		sf.add_animation("blood")

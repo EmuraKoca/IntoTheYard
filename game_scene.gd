@@ -324,7 +324,8 @@ const _DATA_BAR_H    := 14.0
 const _DATA_BAR_W    := 272.0
 
 # ── Boss sırası — her bölümde 10. dakikada boss gelir ────────────────────────
-const BOSS_SPAWN_TIME: float = 600.0
+# Demo: boss 5. dakikada; tam sürüm: 10. dakika
+const BOSS_SPAWN_TIME: float = 300.0 if GameData.DEMO_MODE else 600.0
 var _boss_check_index:  int  = 0
 var _boss_spawned:      bool = false
 var _cyber404_node = null
@@ -614,7 +615,28 @@ func show_boss_status(id: String, icon_path: String, duration: float, title: Str
 	boss_bar_canvas.add_child(slot)
 	slot.setup(icon_path, duration, title, desc)
 
+# Demo: boss ölünce kısa süreli "tam sürümde daha fazla boss" bandı
+func _show_demo_boss_banner() -> void:
+	var cl := CanvasLayer.new()
+	cl.layer = 90
+	add_child(cl)
+	var note := Label.new()
+	note.text = Lang.t("demo_more_bosses")
+	note.add_theme_font_override("font", _font_bold)
+	note.add_theme_font_size_override("font_size", 57)
+	note.modulate = Color(1.0, 0.8, 0.0, 0.0)
+	note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	note.position = Vector2(0, 300)
+	note.size = Vector2(1630, 80)
+	cl.add_child(note)
+	var tw := note.create_tween()
+	tw.tween_property(note, "modulate:a", 1.0, 0.6)
+	tw.tween_interval(4.5)
+	tw.tween_property(note, "modulate:a", 0.0, 1.0)
+	tw.tween_callback(cl.queue_free)
+
 func hide_boss_bar() -> void:
+	if GameData.DEMO_MODE: _show_demo_boss_banner()
 	boss_defeated = true
 	_stop_boss_music()
 	if boss_bar_canvas:
@@ -800,6 +822,19 @@ func record_element_used(element: String) -> void:
 		if _elements_used_run.size() >= 3:
 			GameData.record_run_3element()
 
+# Demo notu: ekranın altında "tam sürümde daha fazla boss" yazısı
+func _add_demo_note(canvas: CanvasLayer) -> void:
+	if not GameData.DEMO_MODE: return
+	var note := Label.new()
+	note.text = Lang.t("demo_more_bosses")
+	note.add_theme_font_override("font", _font_bold)
+	note.add_theme_font_size_override("font_size", 38)
+	note.modulate = Color(1.0, 0.8, 0.0)
+	note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	note.position = Vector2(0, 960)
+	note.size = Vector2(1360, 50)
+	canvas.add_child(note)
+
 func _show_run_end_screen() -> void:
 	get_tree().paused = true
 	var canvas := CanvasLayer.new()
@@ -928,6 +963,7 @@ func _show_hasmen_selection() -> void:
 	hasmen_img.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	hasmen_img.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	canvas.add_child(hasmen_img)
+	_add_demo_note(canvas)
 
 	# Name label — above visual, centered
 	var hasmen_label = Label.new()
@@ -1148,7 +1184,9 @@ func _update_processor_btn() -> void:
 		_processor_btn.add_theme_color_override("font_pressed_color", Color(0.30, 0.30, 0.35))
 
 func _spawn_section_boss() -> void:
-	match _boss_check_index - 1:
+	# Demo: sadece Cyber-404 (bölüm indeksi 1)
+	var _boss_idx: int = 1 if GameData.DEMO_MODE else _boss_check_index - 1
+	match _boss_idx:
 		0:  # Bölüm 1 — Smiler
 			if not _smiler_spawned:
 				_smiler_spawned = true
@@ -1247,7 +1285,10 @@ func _spawn_hasmen_entrance() -> void:
 	)
 
 func _ready() -> void:
-	preload("res://base_enemy.gd").warm_monster_assets()
+	if GameData.is_human_style():
+		preload("res://base_enemy.gd").warm_human_assets()
+	else:
+		preload("res://base_enemy.gd").warm_monster_assets()
 	y_sort_enabled = true   # aynı z_index'teki düşmanlar y konumuna göre sıralanır (alttaki öne çizilir)
 	GameData.rescued_total = 0
 	_player_node = get_node("Player")
@@ -1469,7 +1510,7 @@ func subject_died(xp_reward: int = 1, death_pos: Vector2 = Vector2.ZERO, etype: 
 		spawn_interval = max(spawn_interval - 0.1, min_spawn_interval)
 	# Veri parçacıkları: hasar miktarına göre 3-7 parçacık
 	var particle_count := clampi(xp_reward + 2, 3, 7)
-	_spawn_data_particles(death_pos, float(xp_reward) * 10.0 * 8.0, particle_count)  # DEBUG: hızlı upgrade testi, test bitince ×8.0 kaldırılmalı
+	_spawn_data_particles(death_pos, float(xp_reward) * 10.0 * (1.0 if GameData.DEMO_MODE else 8.0), particle_count)  # DEBUG ×8 hızlı upgrade: demoda kapalı (GameData.DEMO_MODE)
 
 func _get_hp_bar_rect() -> Rect2:
 	# Artık her karakter HealthBar2'yi kullanıyor (sol üst, iç dolgu alanı, UI
@@ -2749,6 +2790,7 @@ func show_game_over(death_dur: float = 0.0) -> void:
 	hasmen_img.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	hasmen_img.expand_mode  = TextureRect.EXPAND_IGNORE_SIZE
 	canvas.add_child(hasmen_img)
+	_add_demo_note(canvas)
 
 	# Neon pink vertical divider
 	var divider = ColorRect.new()
@@ -5203,6 +5245,12 @@ func _make_gravity_gradient() -> Gradient:
 	g.offsets = [0.0, 0.5, 1.0]
 	return g
 
+# Demo: 5 dakikada tüm düşman türleri görülsün diye türler level yerine ZAMANLA açılır.
+# Dev (DEMO_MODE=false): hepsi baştan (test).
+func _enemy_gate(demo_time_sec: float) -> bool:
+	if not GameData.DEMO_MODE: return true
+	return elapsed_time >= demo_time_sec
+
 func _spawn_subject() -> void:
 	# Level bazlı ağırlıklı havuz — yeni tipler kademeli olarak eklenir
 	var pool: Array = []
@@ -5211,27 +5259,27 @@ func _spawn_subject() -> void:
 	for i in 5: pool.append("subject")
 
 	# 4-7: + FranticSubject
-	if true:  # TEST: tüm düşmanlar baştan (eski eşik level 4)
+	if _enemy_gate(20.0):  # demo: bu saniyede açılır (boss 5. dk); dev: baştan
 		for i in 3: pool.append("frantic")
 
 	# 8-11: + ArmedSubject
-	if true:  # TEST: tüm düşmanlar baştan (eski eşik level 8)
+	if _enemy_gate(50.0):  # demo: bu saniyede açılır (boss 5. dk); dev: baştan
 		for i in 2: pool.append("armed")
 
 	# 12-15: + HeavySubject
-	if true:  # TEST: tüm düşmanlar baştan (eski eşik level 12)
+	if _enemy_gate(90.0):  # demo: bu saniyede açılır (boss 5. dk); dev: baştan
 		for i in 2: pool.append("heavy")
 
 	# 16-19: + CyberShooter
-	if true:  # TEST: tüm düşmanlar baştan (eski eşik level 16)
+	if _enemy_gate(130.0):  # demo: bu saniyede açılır (boss 5. dk); dev: baştan
 		pool.append("cyber_shooter")
 
 	# 20-22: + CyberRifle
-	if true:  # TEST: tüm düşmanlar baştan (eski eşik level 20)
+	if _enemy_gate(180.0):  # demo: bu saniyede açılır (boss 5. dk); dev: baştan
 		pool.append("cyber_rifle")
 
 	# 23+: + CyberShotgun
-	if true:  # TEST: tüm düşmanlar baştan (eski eşik level 23)
+	if _enemy_gate(230.0):  # demo: bu saniyede açılır (boss 5. dk); dev: baştan
 		pool.append("cyber_shotgun")
 
 	var subject
