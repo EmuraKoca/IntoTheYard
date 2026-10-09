@@ -822,6 +822,82 @@ func record_element_used(element: String) -> void:
 		if _elements_used_run.size() >= 3:
 			GameData.record_run_3element()
 
+# ── Demo açılış pop-up'ları: önce bilgi, sonra öğretici (oyun duraklatılmış) ──
+func _demo_popup(title_text: String, lines: Array, highlight_auto: bool) -> void:
+	var cl := CanvasLayer.new()
+	cl.layer = 120
+	cl.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(cl)
+	var dim := ColorRect.new()
+	dim.color = Color(0, 0, 0, 0.72)
+	dim.size = Vector2(1920, 1080)
+	cl.add_child(dim)
+	var h := 150 + lines.size() * 100 + 130
+	var panel := Panel.new()
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.02, 0.05, 0.09, 0.97)
+	sb.border_color = Color(0, 0.95, 1, 0.9)
+	sb.set_border_width_all(3)
+	sb.set_corner_radius_all(8)
+	panel.add_theme_stylebox_override("panel", sb)
+	panel.size = Vector2(1300, h)
+	panel.position = Vector2(310, (1080 - h) * 0.5)
+	cl.add_child(panel)
+	var t := Label.new()
+	t.text = title_text
+	t.add_theme_font_override("font", _font_bold)
+	t.add_theme_font_size_override("font_size", 57)
+	t.modulate = Color(1, 0.8, 0)
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	t.position = Vector2(0, 25)
+	t.size = Vector2(1300, 80)
+	panel.add_child(t)
+	for i in lines.size():
+		var l := Label.new()
+		l.text = str(lines[i])
+		l.add_theme_font_override("font", _font_bold)
+		l.add_theme_font_size_override("font_size", 38)
+		l.modulate = Color(0.82, 0.92, 1, 1)
+		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		l.position = Vector2(50, 130 + i * 100)
+		l.size = Vector2(1200, 90)
+		panel.add_child(l)
+	if highlight_auto:
+		# AUTO düğmesinin (sağ üst) çevresine yanıp sönen çerçeve
+		var hl := Panel.new()
+		var hs := StyleBoxFlat.new()
+		hs.bg_color = Color(0, 0, 0, 0)
+		hs.border_color = Color(1, 0.8, 0, 1)
+		hs.set_border_width_all(4)
+		hs.set_corner_radius_all(4)
+		hl.add_theme_stylebox_override("panel", hs)
+		hl.position = Vector2(1752, 12)
+		hl.size = Vector2(108, 48)
+		hl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		cl.add_child(hl)
+		var tw := hl.create_tween().set_loops()
+		tw.tween_property(hl, "modulate:a", 0.25, 0.5)
+		tw.tween_property(hl, "modulate:a", 1.0, 0.5)
+	var ok := Button.new()
+	ok.text = Lang.t("demo_ok")
+	ok.add_theme_font_override("font", _font_bold)
+	ok.add_theme_font_size_override("font_size", 38)
+	ok.add_theme_color_override("font_color", Color(0, 0.95, 1, 1))
+	ok.position = Vector2(450, h - 100)
+	ok.size = Vector2(400, 70)
+	panel.add_child(ok)
+	await ok.pressed
+	cl.queue_free()
+
+func _show_demo_intro_popups() -> void:
+	get_tree().paused = true
+	await _demo_popup("DEMO", [Lang.t("demo_notice")], false)
+	await _demo_popup(Lang.t("tut_title"), [
+		Lang.t("tut_move"), Lang.t("tut_aim"), Lang.t("tut_fire"),
+		Lang.t("tut_dash"), Lang.t("tut_auto"), Lang.t("tut_cal")], true)
+	get_tree().paused = false
+
 # Demo notu: ekranın altında "tam sürümde daha fazla boss" yazısı
 func _add_demo_note(canvas: CanvasLayer) -> void:
 	if not GameData.DEMO_MODE: return
@@ -1399,6 +1475,9 @@ func _ready() -> void:
 	update_ui()
 
 	$UI/CalamityCircle.visible = false
+
+	if GameData.DEMO_MODE:
+		await _show_demo_intro_popups()
 
 	await get_tree().process_frame
 	_spawn_hasmen_entrance()

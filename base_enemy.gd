@@ -215,6 +215,10 @@ func _on_lethal_damage(_from_ally: bool) -> void:
 
 func _ready() -> void:
 	z_index = 2
+	# Demo: düşman canları 1/3'e iner (boss'lar base_enemy'den türemez; boss_enemy.gd hariç tutulur)
+	if GameData.DEMO_MODE and not get_script().resource_path.ends_with("boss_enemy.gd"):
+		health = maxi(1, int(round(float(health) / 3.0)))
+		max_health = maxi(1, int(round(float(max_health) / 3.0)))
 	_setup_sprite()
 	preload("res://blob_shadow.gd").attach(self, get_sprite())
 	_chip_node = Node2D.new()

@@ -372,7 +372,7 @@ func _rts_fire_at_nearest() -> void:
 			nearest_dist = d
 			nearest = s
 	if nearest == null: return
-	aim_direction = (nearest.global_position - global_position).normalized()
+	aim_direction = (nearest.global_position - (global_position + Vector2(20, -24))).normalized()
 	_fire_ball()
 
 func _fire_ball() -> void:
@@ -667,7 +667,8 @@ func _physics_process(delta: float) -> void:
 
 	# Chain constraint check
 
-	aim_direction = (get_global_mouse_position() - global_position).normalized()
+	# Nişan silah ucundan hesaplanır (core'lar oradan çıkıyor; çizgiyle birebir aynı yön)
+	aim_direction = (get_global_mouse_position() - (global_position + Vector2(20, -24))).normalized()
 
 	var dist_to_anchor = global_position.distance_to(chain_anchor)
 	if dist_to_anchor > chain_length:
@@ -1138,17 +1139,7 @@ func _draw() -> void:
 
 	# Orbit halkaları kaldırıldı — core'lar artık silahın içinde
 
-	# Nişan çizgisi — sol tık basılıyken
-	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) and not orbit_balls.is_empty():
-		var drawn := 0.0
-		var draw_dash := true
-		while drawn < 150.0:
-			var seg := 10.0 if draw_dash else 6.0
-			seg = min(seg, 150.0 - drawn)
-			if draw_dash:
-				draw_line(aim_direction * drawn, aim_direction * (drawn + seg), Color(0, 0.9, 1.0, 0.7), 2.0)
-			drawn += seg
-			draw_dash = not draw_dash
+	# Nişan çizgisi game_scene._draw'da çiziliyor (silah ucundan, aim_direction ile aynı yön)
 
 
 func _spawn_footstep_dust(pos: Vector2) -> void:
