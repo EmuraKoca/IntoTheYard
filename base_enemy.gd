@@ -330,6 +330,7 @@ func die(cause: String = "normal") -> void:
 		if _lnc_game and _lnc_game.has_method("heal_player"): _lnc_game.heal_player(2)
 	is_dead = true
 	z_index = 0
+	_spawn_death_blood()
 	set_physics_process(false)
 	$CollisionShape2D.set_deferred("disabled", true)
 	collision_layer = 0
@@ -1046,7 +1047,10 @@ func _register_corpse() -> void:
 	if not is_instance_valid(self): return
 	var tween := create_tween()
 	tween.tween_property(self, "modulate:a", 0.0, CORPSE_FADE)
+	if _blood_fx and is_instance_valid(_blood_fx):
+		tween.parallel().tween_property(_blood_fx, "modulate:a", 0.0, CORPSE_FADE)
 	await tween.finished
+	if _blood_fx and is_instance_valid(_blood_fx): _blood_fx.queue_free()
 	if is_instance_valid(self): queue_free()
 
 # ── VFX ──────────────────────────────────────────────────────────────────────
@@ -1300,3 +1304,35 @@ func _draw_chip() -> void:
 		var ey2: float = ey + cos(t * 10.0 + i) * 3.5
 		_chip_node.draw_line(p + Vector2(ex, ey), p + Vector2(ex2, ey2), Color(0.1, 0.75, 1.0, a * 0.75), 1.0)
 		_chip_node.draw_line(p + Vector2(ex, ey), p + Vector2(ex2, ey2), Color(0.45, 0.0, 0.75, a * 0.50), 0.6)
+
+
+# ── Ölüm kanı VFX'i (assets/VFX/deathBlood, 64x64, tek seferlik) ──
+static var _blood_frames: SpriteFrames = null
+var _blood_fx: AnimatedSprite2D = null
+const BLOOD_FPS: float = 24.0
+const BLOOD_SCALE: float = 2.5
+const BLOOD_OFFSET_Y: float = 25.0
+
+func _spawn_death_blood() -> void:
+	if _blood_frames == null:
+		var sf := SpriteFrames.new()
+		sf.add_animation("blood")
+		sf.set_animation_loop("blood", false)
+		sf.set_animation_speed("blood", BLOOD_FPS)
+		var i := 0
+		while ResourceLoader.exists("res://assets/VFX/deathBlood/frame_%03d.png" % i):
+			sf.add_frame("blood", load("res://assets/VFX/deathBlood/frame_%03d.png" % i))
+			i += 1
+		if i == 0: return
+		_blood_frames = sf
+	var parent := get_parent()
+	if parent == null: return
+	var fx := AnimatedSprite2D.new()
+	fx.sprite_frames = _blood_frames
+	fx.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	fx.scale = Vector2(BLOOD_SCALE, BLOOD_SCALE)
+	fx.z_index = -1  # ceset z_index=0; y-sort yüzünden aynı z'de kan üstte çiziliyordu
+	parent.add_child(fx)
+	fx.global_position = global_position + Vector2(0, BLOOD_OFFSET_Y)
+	fx.play("blood")
+	_blood_fx = fx  # solma/silinme _register_corpse'ta cesetle birlikte yapılır
