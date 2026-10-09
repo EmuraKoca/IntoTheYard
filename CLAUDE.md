@@ -3,6 +3,9 @@
 Bu dosya, farklı bilgisayarlardaki (ev / işyeri) Claude Code oturumları arasında bağlam
 köprüsü olarak kullanılır. Her oturum başında oku, her oturum sonunda güncelle.
 
+## Credits: Pixabay eklendi (2026-10-09, kullanıcı test etti, çalışıyor)
+Pixabay lisansı atıf ZORUNLU KILMIYOR (Content License, serbest kullanım) ama takdir ediliyor; kullanıcı sitenin ücretsiz içeriğinden çok faydalandığı için `main_menu.gd::_on_credits` `lines` listesine "Pixabay — pixabay.com - Free assets, thank you!" eklendi (3 satır olunca Geri butonu y=700→840). Özel bir zorunlu atıf metni yok.
+
 ## Ölüm kanı VFX'i (2026-10-09, kullanıcı test etti, çalışıyor)
 `assets/VFX/deathBlood/` (37 kare, 64x64) → `base_enemy.gd::_spawn_death_blood()`, `die()` içinde `is_dead=true` anında çağrılıyor (7 temel düşman). Tek seferlik, 24fps, ölçek 2.5 (`BLOOD_FPS`/`BLOOD_SCALE`), düşmanın `BLOOD_OFFSET_Y`=+25px altında (ilk -10 çok yukarıdaydı; kare sayısı artık 25, dinamik), parent'a eklenir (düşman silinse de oynar), bitince kendini siler; kareler static önbellekli. Boss'lar (cyber_404/nyx/smiler) `base_enemy` değil → yok. Kan `z_index=-1` (ceset 0; y-sort yüzünden aynı z'de kan üstte çiziliyordu). Solma/silinme `_register_corpse` tween'ine paralel (`_blood_fx`) — ceset sayacı ölüm animasyonu BİTİNCE başladığı için kanın kendi sayacı önce kayboluyordu.
 

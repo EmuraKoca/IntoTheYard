@@ -209,6 +209,7 @@ func _on_credits() -> void:
 	cv.add_child(title)
 	var lines := [
 		["Silver Font", "Poppy Works  -  CC BY 4.0"],
+		["Pixabay", "pixabay.com  -  Free assets, thank you!"],
 		["Special Thanks", "Çağla Dondurma"],
 	]
 	for i in lines.size():
@@ -233,7 +234,7 @@ func _on_credits() -> void:
 	var col := Color(1, 0.18, 0.58, 1)
 	var back := Button.new()
 	back.text = Lang.t("ui_back")
-	back.position = Vector2(755, 700)
+	back.position = Vector2(755, 840)
 	back.size = Vector2(410, 70)
 	back.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	back.icon = load("res://assets/menuIcons/back.png")
