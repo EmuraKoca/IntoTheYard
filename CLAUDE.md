@@ -28,7 +28,7 @@ Yaş sınırı sebebiyle insansı düşmanlar yerine `assets/newEnemies/<tür>/I
 Düşmanlar spawn sırasına göre üst üste biniyordu (yeni sprite'lar daha büyük, ayakları öndekinin görselini eziyordu). `game_scene.gd::_ready()` başına `y_sort_enabled = true` → aynı `z_index`'teki düğümler y konumuna göre çizilir (aşağıdaki öne). Yan etki olursa (başka nesnelerin sırası) o satır silinip düşman `_physics_process`'inde z_index ayarına geçilebilir.
 
 ## Silahlı düşmanlara ateş (attack) animasyonu (2026-10-07, oyunda denenmedi)
-`ranged_enemy.gd::_shoot()` artık animasyonlu: dururken `attack_<yön>` (8 kare, 12fps) oynar, mermi `FIRE_FRAME=4` karesinde (≈0.33sn) `_fire()` ile çıkar (cyber_shooter/rifle/shotgun'ta eski `_shoot` gövdesi `_fire` oldu), animasyon bitince yürüme/idle'a döner; `_attacking` bayrağı sırasında `_update_anim` animasyonu ezmez. Namlu parlaması VFX'i projede bulunamadı — kullanıcı klasörünü verince `_fire` içine eklenecek. FIRE_FRAME gerçek ateş karesine göre ayarlanmalı.
+`ranged_enemy.gd::_shoot()` artık animasyonlu: dururken `attack_<yön>` (8 kare, 12fps) oynar, mermi `FIRE_FRAME=4` karesinde (≈0.33sn) `_fire()` ile çıkar (cyber_shooter/rifle/shotgun'ta eski `_shoot` gövdesi `_fire` oldu), animasyon bitince yürüme/idle'a döner; `_attacking` bayrağı sırasında `_update_anim` animasyonu ezmez. Namlu parlaması: kullanıcı kontrol etti, mevcut hâliyle iyi görünüyor → KONU KAPANDI (2026-10-09), ek VFX/FIRE_FRAME ayarı gerekmiyor.
 
 ## Cyber-404 füzesi düzeltildi — takip eden, dash ile atlatılan (2026-10-02, oyunda denenmedi)
 Kullanıcı 15sn'lik füzeyi oyunda hiç göremedi. Kök sebepler: `missile.gd` `max_range=400`
