@@ -149,8 +149,21 @@ func _ready() -> void:
 
 # Konuma bağlı AudioStreamPlayer2D yerine paylaşımlı Sfx havuzu (calamity/UI sesleriyle aynı,
 # çalıştığı doğrulanmış yol) — kullanıcı vuruş seslerinin hiç gelmediğini bildirdi.
+# Vuruş sesi tüm toplar için ORTAK hız sınırlı: sıkışık düşman kalabalığında aynı karede
+# onlarca vuruş "trrrt" gibi patlıyordu. Son sesten HIT_SFX_MIN_GAP_MS geçmeden yenisi çalmaz;
+# sık vuruşlarda ses de biraz kısılır, perde hafif rastgele (aynı ses üst üste binmesin).
+const HIT_SFX_MIN_GAP_MS: int = 70
+const HIT_SFX_BUSY_GAP_MS: int = 160
+static var _last_hit_sfx_msec: int = 0
+
 func _play_hit_sfx() -> void:
-	Sfx.play_path("res://assets/sfx/hitBalls/hitClassic.ogg", -4.0)
+	var now: int = Time.get_ticks_msec()
+	var gap: int = now - _last_hit_sfx_msec
+	if gap < HIT_SFX_MIN_GAP_MS:
+		return
+	_last_hit_sfx_msec = now
+	var vol: float = -4.0 if gap > HIT_SFX_BUSY_GAP_MS else -8.0
+	Sfx.play_path("res://assets/sfx/hitBalls/hitClassic.ogg", vol, randf_range(0.94, 1.06))
 
 func _setup_ball_sprite() -> void:
 	var folder: String

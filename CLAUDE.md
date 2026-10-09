@@ -3,6 +3,9 @@
 Bu dosya, farklı bilgisayarlardaki (ev / işyeri) Claude Code oturumları arasında bağlam
 köprüsü olarak kullanılır. Her oturum başında oku, her oturum sonunda güncelle.
 
+## Vuruş sesi hız sınırı — sıkışık kalabalıkta "trrrt" önlendi (2026-10-09, kullanıcı test etti, çalışıyor)
+`ball.gd::_play_hit_sfx()` tüm toplar için ortak `static var _last_hit_sfx_msec` ile sınırlandı: son sesten `HIT_SFX_MIN_GAP_MS=70` ms geçmeden yeni vuruş sesi çalmıyor; son ses `HIT_SFX_BUSY_GAP_MS=160` ms içindeyse ses -4 → -8 dB kısılıyor; perde 0.94-1.06 rastgele. Ses dosyasını kısaltmak gerekmedi. Ayar: bu üç sabit (daha az ses için MIN_GAP'i artır).
+
 ## PERFORMANS: başlangıç donmaları — yeni düşman kareleri her spawn'da yükleniyordu (2026-10-09, kullanıcı test etti, çözüldü)
 Kök sebep: `base_enemy.gd::_load_monster_frames` her düşman doğduğunda sıfırdan `SpriteFrames` kurup ~150-200 PNG'yi `load()` ediyordu (8 yön walk/attack + 5 ölüm çeşidi). Düşman havuzu baştan 7 tür olunca ilk dakikada yüzlerce spawn = tüm oyun donuyor; texture cache ısındıkça azalıyordu. Fix: (1) `static var _monster_frames_cache` — tür başına BİR kez kurulup paylaşılıyor (`_build_monster_frames` asıl kurucu), (2) `warm_monster_assets()` (static) `game_scene._ready` başında `assets/newEnemies` altındaki tüm PNG'leri `ResourceLoader.load_threaded_request` ile arka planda yüklüyor. Hâlâ donma varsa: ilk spawn anında 7 türün frame kurulumu (türü başına bir kez) veya `blob_shadow`/HP etiketi/y-sort şüpheli.
 
