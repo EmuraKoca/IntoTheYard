@@ -4,7 +4,7 @@ Bu dosya, farklı bilgisayarlardaki (ev / işyeri) Claude Code oturumları aras�
 köprüsü olarak kullanılır. Her oturum başında oku, her oturum sonunda güncelle.
 
 ## DEMO YAPIMI — `GameData.DEMO_MODE` bayrağı (2026-10-10, kullanıcı test etti, çalışıyor)
-`game_data.gd::DEMO_MODE` (const, şu an **true**). Demo .exe çıkınca **false** yap → tam/dev davranış geri gelir (tüm demo değişiklikleri bu bayrağa bağlı). Demo'da:
+`game_data.gd::DEMO_MODE` (const, şu an **false** — demo .exe 2026-10-10'da çıkarıldı ve GameDev.ist'e başvuruyla gönderildi; demo build'i tekrar almak için **true** yap, tüm demo değişiklikleri bu bayrağa bağlı). Demo'da:
 - **Ayrı kayıt**: `user://ity_save_demo.cfg` (tam sürüm `ity_save.cfg`'ye dokunmaz) → herkes level 0 / chip 0 başlar, demo oynayan oynadıkça Black Market'ten alır.
 - **3 karakter açık** (`is_unlocked` true).
 - **Sadece Cyber-404 boss** (`game_scene.gd::_spawn_section_boss` demoda hep indeks 1; S-Miler/Nyx kodu duruyor). Demoda boss **5. dakikada** (`BOSS_SPAWN_TIME` 300, tam sürüm 600).

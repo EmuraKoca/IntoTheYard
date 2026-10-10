@@ -3,7 +3,7 @@ extends Node
 # ── DEMO BAYRAĞI ─────────────────────────────────────────────────────────────
 # true: demo yapımı (3 karakter açık, sadece Cyber-404 boss, ayrı kayıt dosyası,
 # düşman seçim ekranı, hızlı-upgrade/test hileleri kapalı). Tam sürüm için false.
-const DEMO_MODE := true
+const DEMO_MODE := false
 const SAVE_PATH := "user://ity_save_demo.cfg" if DEMO_MODE else "user://ity_save.cfg"
 
 # Düşman görünümü: "creature" (assets/newEnemies + ölüm kanı) / "human" (assets/enemys, kansız)
