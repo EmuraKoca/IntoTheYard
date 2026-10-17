@@ -1261,7 +1261,7 @@ func _update_processor_btn() -> void:
 
 func _spawn_section_boss() -> void:
 	# Demo: sadece Cyber-404 (bölüm indeksi 1)
-	var _boss_idx: int = 1 if GameData.DEMO_MODE else _boss_check_index - 1
+	var _boss_idx: int = 1 if GameData.DEMO_MODE else 2  # DEBUG: Nyx testi (sabit 2) — normal akış: _boss_check_index - 1
 	match _boss_idx:
 		0:  # Bölüm 1 — Smiler
 			if not _smiler_spawned:

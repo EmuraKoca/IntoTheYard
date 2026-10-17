@@ -5,8 +5,12 @@ signal landed   # inis tamam → game_scene elektrik temizligi
 const BASE     := "res://assets/enemys/Nyx_09 The Quantum Widow/animations/"
 const BASE_ROT := "res://assets/enemys/Nyx_09 The Quantum Widow/rotations/"
 
-const HOVER_H := 30.0
-const BOB_AMP := 3.5
+# Boyut: görünen gövde (walk karesi ~89×124px) × NYX_SCALE ≈ 133×186 dünya px — Cyber-404 / S-Miler gövdesiyle aynı boy.
+# Eski ölçek 0.85 idi; havada durma yüksekliği, sallanma ve gölge aynı oranda (NYX_K) büyütüldü.
+const NYX_SCALE := 1.5
+const NYX_K     := NYX_SCALE / 0.85
+const HOVER_H := 30.0 * NYX_K
+const BOB_AMP := 3.5 * NYX_K
 const BOB_SPD := 2.0
 
 # Lazer parametreleri
@@ -19,7 +23,9 @@ const LASER_DMG_INT  := 0.10   # her 0.1s kontrol — doner lazer icin gerekli
 const LASER_DAMAGE   := 2      # daha sik carptigimiz icin hasar dusuruldu
 
 # Elektrik carpmasi parametreleri
-const BOLT_WARN_DUR  := 1.0    # uyari suresi (s)
+const BOLT_WARN_DUR  := 1.0    # (eski sabit zaman; artık uyarı süresi animasyondan geliyor: BOLT_STRIKE_FRAME / BOLT_ANIM_FPS)
+const BOLT_STRIKE_FRAME := 12  # electricStrike'ın bu karesinde elektrik düşer (hasar + yıldırım)
+const BOLT_ANIM_FPS     := 12.0  # 12 kare / 12fps = 1.0sn uyarı (eskisiyle aynı)
 const BOLT_COOLDOWN  := 13.0   # saldiriler arasi
 const BOLT_DAMAGE    := 18
 const BOLT_RADIUS    := 55.0   # hasar yarıcapı
@@ -85,20 +91,21 @@ var _sprite: AnimatedSprite2D = null
 func _ready() -> void:
 	z_index = 3
 	add_to_group("subjects")
-	call_deferred("_attach_shadow")
+	# (BlobShadow kaldırıldı: Nyx'in gölgesi _draw'daki, bob ile büyüyüp küçülen oval)
 
 	var col := CollisionShape2D.new()
 	col.name = "CollisionShape2D"
-	var shape := CapsuleShape2D.new()
-	shape.radius = 20.0
-	shape.height = 40.0
+	# Görünen gövdeyi (89×124px kare içi) kapsayan dikdörtgen, havada duran sprite'ın merkezinde
+	var shape := RectangleShape2D.new()
+	shape.size   = Vector2(89.0, 124.0) * NYX_SCALE * 0.96
 	col.shape    = shape
+	col.position = Vector2(-1.5 * NYX_SCALE, -HOVER_H - 2.0 * NYX_SCALE)
 	col.disabled = true
 	add_child(col)
 
 	_sprite = AnimatedSprite2D.new()
 	_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	_sprite.scale          = Vector2(0.85, 0.85)
+	_sprite.scale          = Vector2(NYX_SCALE, NYX_SCALE)
 	_sprite.position.y     = -HOVER_H
 	add_child(_sprite)
 	_setup_frames()
@@ -117,7 +124,7 @@ func _setup_frames() -> void:
 
 	# Walk
 	frames.add_animation("walk")
-	frames.set_animation_speed("walk", 8.0)
+	frames.set_animation_speed("walk", 5.0)   # 8 → 5: yürüme animasyonu daha yavaş (hareket hızına dokunulmadı)
 	frames.set_animation_loop("walk", true)
 	for i in range(1, 9):
 		frames.add_frame("walk", load(BASE + "walk/frame_%03d.png" % i))
@@ -135,6 +142,20 @@ func _setup_frames() -> void:
 	frames.set_animation_loop("charge", true)
 	for fn in ["006", "007"]:
 		frames.add_frame("charge", load(BASE + "entry/frame_" + fn + ".png"))
+
+	# Electric Strike (yıldırım): 0-11 hazırlık/şarj, 12+ elektrik düşmeye başlar (BOLT_STRIKE_FRAME)
+	frames.add_animation("electric_strike")
+	frames.set_animation_speed("electric_strike", BOLT_ANIM_FPS)
+	frames.set_animation_loop("electric_strike", false)
+	for i in range(40):
+		frames.add_frame("electric_strike", load(BASE + "electricStrike/frame_%03d.png" % i))
+
+	# Elektrik döngüsü: yıldırımlar sürerken 19-39 arası sürekli oynar
+	frames.add_animation("electric_strike_loop")
+	frames.set_animation_speed("electric_strike_loop", BOLT_ANIM_FPS)
+	frames.set_animation_loop("electric_strike_loop", true)
+	for i in range(19, 40):
+		frames.add_frame("electric_strike_loop", load(BASE + "electricStrike/frame_%03d.png" % i))
 
 	# Spin (rotation frame'leri, saat yonunde: E -> SE -> S -> SW -> W -> NW -> N -> NE)
 	frames.add_animation("spin")
@@ -329,7 +350,7 @@ func _start_teleport() -> void:
 
 		var appear := create_tween()
 		appear.set_parallel(true)
-		appear.tween_property(_sprite, "scale",    Vector2(1.05, 1.05),       0.22)\
+		appear.tween_property(_sprite, "scale",    Vector2(NYX_SCALE, NYX_SCALE) * 1.235, 0.22)\
 			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		appear.tween_property(_sprite, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.22)
 		var ring_tw := create_tween()
@@ -339,7 +360,7 @@ func _start_teleport() -> void:
 		)
 		await appear.finished
 		if not is_instance_valid(self) or is_dead: return
-		_sprite.scale = Vector2(0.85, 0.85)
+		_sprite.scale = Vector2(NYX_SCALE, NYX_SCALE)
 
 		# Kisa sarj (0.25s) — hedef uyarisi goster
 		var pw := get_tree().get_first_node_in_group("player")
@@ -380,7 +401,6 @@ func _start_teleport() -> void:
 
 func _start_bolt() -> void:
 	_bolt_active = true
-	_sprite.play("charge")
 
 	# 5 carpi art arda, 1s arayla
 	for _strike in range(5):
@@ -394,10 +414,22 @@ func _start_bolt() -> void:
 		_bolt_pts.clear()
 		queue_redraw()
 
-		# 1s uyari
-		await get_tree().create_timer(BOLT_WARN_DUR).timeout
-		if not is_instance_valid(self) or is_dead:
-			return
+		if _strike == 0:
+			# electricStrike bir kez başlar: 0-11 şarj (uyarı), BOLT_STRIKE_FRAME'de ilk elektrik düşer;
+			# animasyon sonuna (39) varınca 19-39 arası döngüye girer ve saldırı bitene kadar döner
+			_sprite.play("electric_strike")
+			_sprite.set_frame_and_progress(0, 0.0)
+			if not _sprite.animation_finished.is_connected(_on_bolt_anim_finished):
+				_sprite.animation_finished.connect(_on_bolt_anim_finished)
+			while _sprite.frame < BOLT_STRIKE_FRAME and _sprite.animation == "electric_strike":
+				await _sprite.frame_changed
+				if not is_instance_valid(self) or is_dead:
+					return
+		else:
+			# Sonraki yıldırımlar: animasyon (elektrik döngüsü) kesilmeden akar, sadece uyarı süresi beklenir
+			await get_tree().create_timer(BOLT_WARN_DUR, false).timeout
+			if not is_instance_valid(self) or is_dead:
+				return
 
 		# Carpma
 		_generate_bolt()
@@ -414,7 +446,7 @@ func _start_bolt() -> void:
 				p.take_damage(BOLT_DAMAGE)
 
 		# Bolt 0.35s gorunur
-		await get_tree().create_timer(0.35).timeout
+		await get_tree().create_timer(0.35, false).timeout
 		if not is_instance_valid(self):
 			return
 		_bolt_pts.clear()
@@ -426,6 +458,10 @@ func _start_bolt() -> void:
 	if _laser_timer < 5.0:
 		_laser_timer = 5.0
 	_sprite.play("walk")
+
+func _on_bolt_anim_finished() -> void:
+	if _bolt_active and not is_dead and _sprite.animation == "electric_strike":
+		_sprite.play("electric_strike_loop")
 
 func _generate_bolt() -> void:
 	_bolt_pts.clear()
@@ -483,12 +519,12 @@ func _draw() -> void:
 		scale_factor = _entry_progress
 	else:
 		scale_factor = lerp(0.68, 1.0, (sin(_bob_t * BOB_SPD * 2.2) + 1.0) * 0.5)
-	var rx := 24.0 * scale_factor
-	var ry :=  6.0 * scale_factor
+	var rx := 24.0 * NYX_K * scale_factor
+	var ry :=  6.0 * NYX_K * scale_factor
 	var pts := PackedVector2Array()
 	for i in 24:
 		var a := float(i) / 24.0 * TAU
-		pts.append(Vector2(cos(a) * rx, 46.0 + sin(a) * ry))
+		pts.append(Vector2(cos(a) * rx, 46.0 * NYX_K + sin(a) * ry))
 	draw_colored_polygon(pts, Color(0.0, 0.0, 0.0, _shadow_alpha))
 
 	# --- LAZER UYARI ---
@@ -715,6 +751,3 @@ func _physical_flash() -> void:
 	await get_tree().create_timer(0.08, false).timeout
 	if is_instance_valid(self):
 		modulate = Color(1, 1, 1, 1)
-
-func _attach_shadow() -> void:
-	preload("res://blob_shadow.gd").attach(self, _sprite)

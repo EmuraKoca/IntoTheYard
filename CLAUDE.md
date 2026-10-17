@@ -4142,3 +4142,10 @@ S-Miler füzesi: uyarı bittikten sonraki süre kısaltıldı (kullanıcı: yür
 - **Inis golgesi**: boss'a bagli `BlobShadow` inis boyunca gizli (alpha 0), yerde sabit `_make_entry_shadow` golgesi kucukten buyur (TRANS_QUAD); BlobShadow ile birebir ayni olcum (`get_animation_names()[0]` ilk kare). Eski `_draw` govde-ortasi golgesi silindi.
 - **Fuze kafa sallama** (`missile_pose`): 6 → 9 fps (1.5×). Son fuze birakilinca animasyon icinde oldugu dongunun SONUNA kadar oynar (`await animation_looped`), sonra idle (yarim kalmasin/erken kesilmesin). Fuze zamanlamalarina dokunulmadi.
 - Boss muzigi (`bossSceneTheme`) genel sistem: `show_boss_bar` → baslar, `hide_boss_bar` → biter; S-Miler zaten bagli.
+
+## Nyx-09: boyut, golge, electricStrike, walk hizi (2026-10-17, kullanici test etti, calisiyor)
+- **Boyut**: `NYX_SCALE=1.5` (eski 0.85) → govde ~133×186 dunya px (Cyber-404/S-Miler ile ayni boy). `NYX_K=NYX_SCALE/0.85` ile HOVER_H, BOB_AMP ve `_draw` golgesi ayni oranda buyur; carpisma kapsulu (r20) yerine govdeyi kaplayan dikdortgen (89×124 × scale × 0.96, sprite merkezinde); isinlanma belirisi 1.05/0.85 sabitleri `NYX_SCALE*1.235` / `NYX_SCALE`.
+- **Golge**: BlobShadow KALDIRILDI (kullanici karari); sadece `_draw`'daki bob ile buyuyup kuculen oval kaldi.
+- **Yildirim (`_start_bolt`)**: `electricStrike` (40 kare): kare 0-11 sarj, **12. karede ilk yildirim duser** (`BOLT_STRIKE_FRAME`, `BOLT_ANIM_FPS=12` → 1.0sn uyari). Animasyon sonuna varinca `electric_strike_loop` (kare 19-39, dongu) saldiri bitene kadar doner. 2-5. yildirimlarda animasyon yeniden baslatilmaz, uyari `create_timer(BOLT_WARN_DUR, false)` ile beklenir. 0.35sn gorunme zamanlayicisi pause-safe yapildi. 5 yildirim ≈ 6.75sn, bekleme 13sn, hasar 18, yaricap 55.
+- **Walk animasyonu** 8 → 5 fps (hareket hizi `speed=58` ayni).
+- **DEBUG (yayin oncesi geri al)**: `game_scene.gd::_spawn_section_boss` dev modda boss indeksi sabit 2 (Nyx) — normal akis `_boss_check_index - 1`; `BOSS_SPAWN_TIME` dev modda 10.0 (600.0 olmali).
