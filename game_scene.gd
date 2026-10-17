@@ -325,7 +325,7 @@ const _DATA_BAR_W    := 272.0
 
 # ── Boss sırası — her bölümde 10. dakikada boss gelir ────────────────────────
 # Demo: boss 5. dakikada; tam sürüm: 10. dakika
-const BOSS_SPAWN_TIME: float = 300.0 if GameData.DEMO_MODE else 600.0
+const BOSS_SPAWN_TIME: float = 300.0 if GameData.DEMO_MODE else 10.0  # DEBUG: S-Miler testi, 600.0'a geri al
 var _boss_check_index:  int  = 0
 var _boss_spawned:      bool = false
 var _cyber404_node = null

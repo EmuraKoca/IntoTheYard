@@ -40,7 +40,10 @@ const MISSILE_IMPACT_SHADOW_DUR := 0.556 / MISSILE_FALL_SPEED  # 10 frame @ 18fp
 # ─────────────────────────────────────────────────────────
 # GATLING  — 3'lü mermi salvosu × 5 burst
 # ─────────────────────────────────────────────────────────
-const GATLING_CD      := 6.0     # eskiden 10 — saldırılar arası boşluk çok uzundu
+const GATLING_CD      := 4.5     # 6 -> 4.5 (daha sık)
+const SFX_MACHINEGUN  := "res://assets/sfx/bosses/s-miler79/machineGun.ogg"
+const SFX_SWORD_SWING := "res://assets/sfx/bosses/s-miler79/swordSwing.ogg"
+const SFX_MISSILE_EXPLOSION := "res://assets/sfx/bosses/s-miler79/homingMissileExplosion.ogg"
 const GATLING_BURSTS  := 5
 const GATLING_SPREAD  := 10.0   # derece
 var _gatling_t    : float = 3.0
@@ -49,9 +52,10 @@ var _gatling_busy : bool  = false
 # ─────────────────────────────────────────────────────────
 # SWING SWORD  — TP → kılıç → geri TP
 # ─────────────────────────────────────────────────────────
-const SWING_CD     := 9.0     # eskiden 18
+const SWING_CD     := 7.0     # 9 -> 7
 const SWING_DMG    := 28
 const SWING_RADIUS := 78.0
+const SWING_STANDOFF := 150.0  # boss ışınlanınca uyarı dairesinin merkezine bu kadar uzakta durur
 const SWING_WARN   := 0.65   # uyarı süresi (s)
 var _swing_t      : float   = 7.0
 var _swing_busy      : bool    = false
@@ -63,7 +67,7 @@ var _home_pos        : Vector2 = Vector2.ZERO
 # ─────────────────────────────────────────────────────────
 # MISSILE  — kafasını sallayarak füze çağırır
 # ─────────────────────────────────────────────────────────
-const MISSILE_CD   := 12.0    # eskiden 22
+const MISSILE_CD   := 9.0     # 12 -> 9
 const MISSILE_WARN := 0.65   # uyarı süresi (s) — Swing ile aynı (SWING_WARN); eskiden 1.8sn çok genişti
 const MISSILE_COUNT    := 3     # art arda füze sayısı
 const MISSILE_INTERVAL := 1.0   # füzeler arası (uyarı başlangıcından uyarı başlangıcına, sn)
@@ -78,7 +82,7 @@ var _bullet_scene = preload("res://bullet.tscn")
 
 # Bir saldırı bitince diğer hepsinin sayacı en az bu kadar sürer → ardışık saldırılar arasında kısa nefes,
 # ama uzun boş yürüyüş de yok.
-const ATTACK_GAP := 1.5
+const ATTACK_GAP := 0.8   # 1.5 -> 0.8 (saldırılar arası nefes payı)
 func _attack_done() -> void:
 	_gatling_t = maxf(_gatling_t, ATTACK_GAP)
 	_swing_t   = maxf(_swing_t,   ATTACK_GAP)
@@ -147,10 +151,10 @@ func _setup_frames() -> void:
 	for i in range(6):
 		f.add_frame("walk_sw", load(BASE + "walk/south-west/frame_%03d.png" % i))
 
-	# Gatling — 14 frame, döngülü (saldırı boyunca)
+	# Gatling — 14 frame @12fps ≈ 1.17sn, tek seferlik (saldırı süresi ≈ 0.3+0.9+0.1 = 1.3sn)
 	f.add_animation("gatling")
 	f.set_animation_speed("gatling", 12.0)
-	f.set_animation_loop("gatling", true)
+	f.set_animation_loop("gatling", false)
 	for i in range(14):
 		f.add_frame("gatling", load(BASE + "skillGatling/frame_%03d.png" % i))
 
@@ -292,6 +296,9 @@ func _start_gatling() -> void:
 	# Animasyonun başlaması için kısa ön hazırlık
 	await get_tree().create_timer(0.3, false).timeout
 
+	# Ateş sesi: salvolar başlarken çalar, bitince kısılıp kesilir
+	var gun_snd: AudioStreamPlayer = Sfx.play_path_dedicated(SFX_MACHINEGUN)
+
 	for _b in range(GATLING_BURSTS):
 		if is_dead or not is_instance_valid(self):
 			break
@@ -308,7 +315,12 @@ func _start_gatling() -> void:
 			bullet.launch(dir.rotated(spread))
 		await get_tree().create_timer(0.18, false).timeout
 
-	await get_tree().create_timer(0.4, false).timeout
+	if is_instance_valid(gun_snd):
+		var ftw := gun_snd.create_tween()
+		ftw.tween_property(gun_snd, "volume_db", -40.0, 0.35)
+		ftw.tween_callback(gun_snd.stop)
+
+	await get_tree().create_timer(0.1, false).timeout
 	if not is_instance_valid(self) or is_dead:
 		return
 
@@ -345,9 +357,16 @@ func _start_swing() -> void:
 	queue_redraw()
 
 	# Player'ın yanına TP — Y sabitleme kapalı
+	# Oyuncunun üstüne değil, uyarı alanının SWING_STANDOFF px önüne (kendi tarafına) ışınlan
+	var back: Vector2 = _home_pos - _swing_pos
+	back = back.normalized() if back.length() > 1.0 else Vector2.UP
+	var tp: Vector2 = _swing_pos + back * SWING_STANDOFF
+	tp.x = clampf(tp.x, 420.0, 1570.0)
+	tp.y = clampf(tp.y, 300.0, 1020.0)
 	_swing_at_player = true
-	global_position  = _swing_pos
+	global_position  = tp
 	_sprite.play("swing")
+	Sfx.play_path_dedicated(SFX_SWORD_SWING)
 
 	# Kılıç iner — kısa gecikme sonrası hasar
 	await get_tree().create_timer(0.12, false).timeout
@@ -355,7 +374,8 @@ func _start_swing() -> void:
 		_swing_at_player = false
 		return
 	var p := get_tree().get_first_node_in_group("player") as Node2D
-	if p and global_position.distance_to(p.global_position) < SWING_RADIUS:
+	# Hasar alanı = uyarıda gösterilen kırmızı daire (boss'un konumu değil)
+	if p and _swing_pos.distance_to(p.global_position) < SWING_RADIUS:
 		p.take_damage(SWING_DMG)
 
 	# Animasyon bitmesini bekle
@@ -461,6 +481,7 @@ func _spawn_missile_vfx(pos: Vector2) -> void:
 	await get_tree().create_timer(0.45 / MISSILE_FALL_SPEED, false).timeout
 	if is_dead or not is_instance_valid(self):
 		return
+	Sfx.play_path_dedicated(SFX_MISSILE_EXPLOSION)
 	var p := get_tree().get_first_node_in_group("player") as Node2D
 	if p and p.global_position.distance_to(pos) < MISSILE_R:
 		p.take_damage(MISSILE_DMG)
