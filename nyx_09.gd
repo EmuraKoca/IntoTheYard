@@ -12,6 +12,9 @@ const SFX_ELECTRIC_CHARGE_SKIP := 2.7   # dosyanın baştaki sessiz kısmı (ses
 const SFX_ELECTRIC_CHARGE_PITCH := 0.8  # ses ~5.3sn → ~6.7sn: 5 yıldırımlık saldırının (~6.75sn) tamamını kaplar
 const SFX_LIGHTNING := "res://assets/sfx/bosses/nyx-09/lightning.ogg"
 var _bolt_snd: AudioStreamPlayer = null
+const ENTRY_FALL_TIME  := 2.2    # yukarıdan iniş süresi (sn)
+const LAND_IMPACT_FRAME := 26    # landing animasyonunda yere değiş karesi
+const LAND_FPS := float(LAND_IMPACT_FRAME) / ENTRY_FALL_TIME   # ≈11.8: kare 26 iniş bitişine denk gelir
 const NYX_SCALE := 1.5
 const NYX_K     := NYX_SCALE / 0.85
 const HOVER_H := 30.0 * NYX_K
@@ -120,12 +123,8 @@ func _setup_frames() -> void:
 	if frames.has_animation("default"):
 		frames.remove_animation("default")
 
-	# Entry
-	frames.add_animation("entry")
-	frames.set_animation_speed("entry", 6.0)
-	frames.set_animation_loop("entry", true)
-	for fn in ["001","002","003","005","006","007"]:
-		frames.add_frame("entry", load(BASE + "entry/frame_" + fn + ".png"))
+	# (Eski "entry" animasyonu kaldırıldı — iniş artık "landing". entry/ klasöründe sadece 006-007 kaldı:
+	#  "charge" animasyonu (lazer hazırlığı) onları kullanıyor.)
 
 	# Walk
 	frames.add_animation("walk")
@@ -147,6 +146,14 @@ func _setup_frames() -> void:
 	frames.set_animation_loop("charge", true)
 	for fn in ["006", "007"]:
 		frames.add_frame("charge", load(BASE + "entry/frame_" + fn + ".png"))
+
+	# Landing (iniş VFX'i, 36 kare): 0-25 enerji aurasıyla süzülme, 26'da yere değiş (beyaz patlama),
+	# 30'da ikinci patlama, 31-35 toparlanma. Hız öyle seçildi ki kare 26 tam iniş tween'inin bitişine denk gelir.
+	frames.add_animation("landing")
+	frames.set_animation_speed("landing", LAND_FPS)
+	frames.set_animation_loop("landing", false)
+	for i in range(36):
+		frames.add_frame("landing", load(BASE + "landing/frame_%03d.png" % i))
 
 	# Electric Strike (yıldırım): 0-11 hazırlık/şarj, 12+ elektrik düşmeye başlar (BOLT_STRIKE_FRAME)
 	frames.add_animation("electric_strike")
@@ -174,26 +181,32 @@ func _setup_frames() -> void:
 func play_entry(land_pos: Vector2) -> void:
 	_fixed_y = land_pos.y
 	position  = Vector2(land_pos.x, -200.0)
-	_sprite.play("entry")
+	_sprite.play("landing")
 
 	var tw := create_tween()
 	tw.set_parallel(true)
-	tw.tween_property(self, "position:y", land_pos.y, 2.2)\
+	tw.tween_property(self, "position:y", land_pos.y, ENTRY_FALL_TIME)\
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	tw.tween_method(_set_entry_progress, 0.0, 1.0, 2.2)
+	tw.tween_method(_set_entry_progress, 0.0, 1.0, ENTRY_FALL_TIME)
 	await tw.finished
 
-	_in_entry = false
 	_entry_progress = 1.0
-	$CollisionShape2D.disabled = false
-	_sprite.play("walk")
 
+	# Yere değiş (kare ~26): sahne temizliği + boss barı hemen; boss toparlanma karelerinin sonuna kadar
+	# saldırmaz / vurulamaz (_in_entry)
 	emit_signal("landed")
 	var game := get_parent()
 	if game.has_method("show_boss_bar"):
 		game.show_boss_bar(self, "NYX-09  //  THE QUANTUM WIDOW")
 	if game.has_method("update_boss_bar"):
 		game.update_boss_bar(0, health, 0, max_health)
+
+	await _sprite.animation_finished
+	if not is_instance_valid(self) or is_dead:
+		return
+	_in_entry = false
+	$CollisionShape2D.disabled = false
+	_sprite.play("walk")
 
 func _set_entry_progress(v: float) -> void:
 	_entry_progress = v

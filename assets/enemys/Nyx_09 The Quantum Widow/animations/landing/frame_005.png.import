@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d3fa67fgy5pf7"
-path="res://.godot/imported/frame_001.png-adea9c84b735233abf9e6162c76352a4.ctex"
+uid="uid://cehkw0gkho3kx"
+path="res://.godot/imported/frame_005.png-cc21c99a52316f3badcc71f404428ed5.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemys/Nyx_09 The Quantum Widow/animations/entry/frame_001.png"
-dest_files=["res://.godot/imported/frame_001.png-adea9c84b735233abf9e6162c76352a4.ctex"]
+source_file="res://assets/enemys/Nyx_09 The Quantum Widow/animations/landing/frame_005.png"
+dest_files=["res://.godot/imported/frame_005.png-cc21c99a52316f3badcc71f404428ed5.ctex"]
 
 [params]
 
