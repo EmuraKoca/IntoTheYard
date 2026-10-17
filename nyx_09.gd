@@ -7,6 +7,11 @@ const BASE_ROT := "res://assets/enemys/Nyx_09 The Quantum Widow/rotations/"
 
 # Boyut: görünen gövde (walk karesi ~89×124px) × NYX_SCALE ≈ 133×186 dünya px — Cyber-404 / S-Miler gövdesiyle aynı boy.
 # Eski ölçek 0.85 idi; havada durma yüksekliği, sallanma ve gölge aynı oranda (NYX_K) büyütüldü.
+const SFX_ELECTRIC_CHARGE      := "res://assets/sfx/bosses/nyx-09/electricCharge.ogg"
+const SFX_ELECTRIC_CHARGE_SKIP := 2.7   # dosyanın baştaki sessiz kısmı (ses ~2.75sn'de başlıyor)
+const SFX_ELECTRIC_CHARGE_PITCH := 0.8  # ses ~5.3sn → ~6.7sn: 5 yıldırımlık saldırının (~6.75sn) tamamını kaplar
+const SFX_LIGHTNING := "res://assets/sfx/bosses/nyx-09/lightning.ogg"
+var _bolt_snd: AudioStreamPlayer = null
 const NYX_SCALE := 1.5
 const NYX_K     := NYX_SCALE / 0.85
 const HOVER_H := 30.0 * NYX_K
@@ -401,6 +406,8 @@ func _start_teleport() -> void:
 
 func _start_bolt() -> void:
 	_bolt_active = true
+	# Şarj sesi: dosyanın baştaki ~2.7sn'lik sessiz kısmı atlanıyor
+	_bolt_snd = Sfx.play_path_dedicated(SFX_ELECTRIC_CHARGE, 0.0, SFX_ELECTRIC_CHARGE_PITCH, SFX_ELECTRIC_CHARGE_SKIP)
 
 	# 5 carpi art arda, 1s arayla
 	for _strike in range(5):
@@ -433,6 +440,8 @@ func _start_bolt() -> void:
 
 		# Carpma
 		_generate_bolt()
+		_spawn_bolt_vfx(_bolt_target)
+		Sfx.play_path_dedicated(SFX_LIGHTNING)
 		_bolt_flash = 1.0
 		queue_redraw()
 
@@ -452,12 +461,54 @@ func _start_bolt() -> void:
 		_bolt_pts.clear()
 
 	# 5 carpma bitti
+	_fade_bolt_snd(0.4)
 	_bolt_active = false
 	_bolt_timer  = BOLT_COOLDOWN
 	# Lazer henuz hazirsa 5s bos birak
 	if _laser_timer < 5.0:
 		_laser_timer = 5.0
 	_sprite.play("walk")
+
+# Yıldırım sprite'ı (assets/VFX/calamitys/lightning, 5 kare 168×168, üstten düşer, patlama merkezi karede ~y=98).
+# Patlama merkezi hedef noktaya oturur; ölçek 1.5 → patlama yarıçapı ≈ 63px ≈ BOLT_RADIUS (55).
+const BOLT_VFX_PATH  := "res://assets/VFX/calamitys/lightning/frame_%03d.png"
+const BOLT_VFX_SCALE := 1.5
+const BOLT_VFX_BURST_Y := 98.0   # karede patlama merkezinin y'si (kare merkezi 84)
+static var _bolt_vfx_frames: SpriteFrames = null
+
+func _spawn_bolt_vfx(pos: Vector2) -> void:
+	if _bolt_vfx_frames == null:
+		if not ResourceLoader.exists(BOLT_VFX_PATH % 0):
+			return
+		var sf := SpriteFrames.new()
+		if sf.has_animation("default"):
+			sf.remove_animation("default")
+		sf.add_animation("strike")
+		sf.set_animation_speed("strike", 16.0)
+		sf.set_animation_loop("strike", false)
+		var i := 0
+		while ResourceLoader.exists(BOLT_VFX_PATH % i):
+			sf.add_frame("strike", load(BOLT_VFX_PATH % i))
+			i += 1
+		_bolt_vfx_frames = sf
+	var bolt := AnimatedSprite2D.new()
+	bolt.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	bolt.sprite_frames = _bolt_vfx_frames
+	bolt.scale = Vector2(BOLT_VFX_SCALE, BOLT_VFX_SCALE)
+	bolt.z_index = 9
+	get_parent().add_child(bolt)
+	bolt.global_position = pos - Vector2(0.0, (BOLT_VFX_BURST_Y - 84.0) * BOLT_VFX_SCALE)
+	bolt.play("strike")
+	bolt.animation_finished.connect(bolt.queue_free)
+
+func _fade_bolt_snd(dur: float) -> void:
+	if is_instance_valid(_bolt_snd):
+		var s := _bolt_snd
+		_bolt_snd = null
+		var tw := s.create_tween()
+		tw.set_pause_mode(Tween.TWEEN_PAUSE_STOP)   # player PROCESS_MODE_ALWAYS → tween pause'da da akardı
+		tw.tween_property(s, "volume_db", -40.0, dur)
+		tw.tween_callback(s.stop)
 
 func _on_bolt_anim_finished() -> void:
 	if _bolt_active and not is_dead and _sprite.animation == "electric_strike":
@@ -644,17 +695,8 @@ func _draw() -> void:
 			Color(0.4, 0.9, 1.0, 0.85 + pulse * 0.15), 2.5)
 
 	# --- BOLT CARPMA ---
-	if not _bolt_pts.is_empty():
-		var alpha : float = _bolt_flash * 0.95 + 0.05
-		for i in range(_bolt_pts.size() - 1):
-			var ba : Vector2 = to_local(_bolt_pts[i])
-			var bb : Vector2 = to_local(_bolt_pts[i + 1])
-			draw_line(ba, bb, Color(0.0, 0.45, 0.9, alpha * 0.35), 14.0)
-			draw_line(ba, bb, Color(0.1, 0.65, 1.0, alpha * 0.90),  5.0)
-			draw_line(ba, bb, Color(0.75, 0.96, 1.0, alpha),         1.8)
-		var tip_bl : Vector2 = to_local(_bolt_pts[_bolt_pts.size() - 1])
-		draw_circle(tip_bl, 18.0 * _bolt_flash, Color(0.1, 0.70, 1.0, _bolt_flash * 0.7))
-		draw_circle(tip_bl, 8.0,                Color(0.8, 0.97, 1.0, _bolt_flash))
+	# Yıldırımın görseli artık sprite (_spawn_bolt_vfx, Calamity Lightning kareleri). Eski elle çizilen
+	# zikzak/uç daireleri kaldırıldı; `_bolt_pts` sadece "çarpma oldu → uyarı dairesini gizle" bayrağı.
 
 	if _bolt_flash > 0.0:
 		draw_circle(Vector2.ZERO, 45.0 * _bolt_flash, Color(0.0, 0.55, 1.0, _bolt_flash * 0.45))
@@ -673,6 +715,7 @@ func die() -> void:
 	if is_dead: return
 	is_dead = true
 	_laser_active = false
+	_fade_bolt_snd(0.2)
 	set_physics_process(false)
 	$CollisionShape2D.disabled = true
 	var game := get_parent()

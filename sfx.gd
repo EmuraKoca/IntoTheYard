@@ -64,7 +64,8 @@ func play_path(path: String, volume_db: float = 0.0, pitch_scale: float = 1.0) -
 # Uzun/kesilmemesi gereken sesler için (örn. boss makineli tüfek): paylaşımlı 8'lik havuz yerine
 # bu sese ÖZEL, geçici bir player açar. Havuz sırayla döndüğü için sık çalan sesler (top
 # vuruşları vb.) uzun bir sesi 8 çağrı sonra kesebiliyordu. Bitince kendini siler.
-func play_path_dedicated(path: String, volume_db: float = 0.0, pitch_scale: float = 1.0) -> AudioStreamPlayer:
+# start_at: sesin baştaki sessiz kısmını atlamak için başlangıç saniyesi (örn. Nyx electricCharge ~2.7sn).
+func play_path_dedicated(path: String, volume_db: float = 0.0, pitch_scale: float = 1.0, start_at: float = 0.0) -> AudioStreamPlayer:
 	if not _cache.has(path):
 		_cache[path] = load(path) if ResourceLoader.exists(path) else null
 	if _cache[path] == null:
@@ -79,7 +80,7 @@ func play_path_dedicated(path: String, volume_db: float = 0.0, pitch_scale: floa
 	p.pitch_scale = pitch_scale
 	add_child(p)
 	p.finished.connect(p.queue_free)
-	p.play()
+	p.play(start_at)
 	return p
 
 # Bir sesi henüz ÇALMADAN önbelleğe yükler — ilk kez `play_path()` ile çağrılan bir ses
