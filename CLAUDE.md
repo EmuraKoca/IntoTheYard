@@ -4134,3 +4134,11 @@ S-Miler füzesi: uyarı bittikten sonraki süre kısaltıldı (kullanıcı: yür
 - **Swing**: boss artik oyuncunun USTUNE degil, uyari dairesinin merkezinden `SWING_STANDOFF=150`px uzaga (kendi tarafina) isinlaniyor (oyuncuyu itmiyordu); hasar alani = uyari dairesi (`_swing_pos`, yaricap 78), boss'un konumu degil.
 - **Zorluk (kullanici karari: soulslike hissi)**: Gatling CD 6->4.5, Swing 9->7, Fuze 12->9, `ATTACK_GAP` 1.5->0.8. Hasarlar bilerek yuksek: swing 28, fuze 38 (oyuncu temel can ~40), gatling mermisi 3 (bullet.gd varsayilani). Dokunma.
 - **DEBUG (yayin oncesi geri al)**: `game_scene.gd::BOSS_SPAWN_TIME` dev modda **10.0** (S-Miler testi), 600.0 olmali.
+
+## S-Miler-79: giris (fallingDown sesi + landing VFX + gol ge) ve fuze animasyonu (2026-10-17, kullanici test etti, calisiyor)
+- **Giris sesi**: `fallingDown.ogg` (3.2sn) `play_entry` basinda calar, boss ekran disinda `_pre_delay = ses - ENTRY_FALL_TIME(2.5)` bekler → sesin sonu inis anina denk gelir (Cyber-404 sandik girisi deseni).
+- **Inis VFX'i** `assets/enemys/S_Miler_79/landing/` (36 kare, boss'un kendi sprite'i): 1-6 jet'li suzulme (`land_fall`, dongu, inis boyunca), 7-36 yere degis+alev+toz+toparlanma (`land_impact`, 14fps ≈2.1sn). `landed` sinyali + boss bari yere degis aninda; boss toparlanma bitene kadar saldirmaz/vurulamaz (`_in_entry`).
+- **Inis karelerini idle ile hizalama**: inis karelerinde karakter idle'dan ~18.5px (kare ici) asagida cizili → idle'a gecince "golgesine ziplama" oluyordu. `LAND_Y_OFFSET = -18.5*SPRITE_SCALE` ile sprite inis boyunca yukari alinir, idle'da 0'lanir. **Dikkat**: bu offset `BlobShadow` olcumunden SONRA (2. kare) uygulanmali — blob `sprite.position.y`'yi olcup STATIC onbellekler.
+- **Inis golgesi**: boss'a bagli `BlobShadow` inis boyunca gizli (alpha 0), yerde sabit `_make_entry_shadow` golgesi kucukten buyur (TRANS_QUAD); BlobShadow ile birebir ayni olcum (`get_animation_names()[0]` ilk kare). Eski `_draw` govde-ortasi golgesi silindi.
+- **Fuze kafa sallama** (`missile_pose`): 6 → 9 fps (1.5×). Son fuze birakilinca animasyon icinde oldugu dongunun SONUNA kadar oynar (`await animation_looped`), sonra idle (yarim kalmasin/erken kesilmesin). Fuze zamanlamalarina dokunulmadi.
+- Boss muzigi (`bossSceneTheme`) genel sistem: `show_boss_bar` → baslar, `hide_boss_bar` → biter; S-Miler zaten bagli.

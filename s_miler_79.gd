@@ -44,6 +44,11 @@ const GATLING_CD      := 4.5     # 6 -> 4.5 (daha sık)
 const SFX_MACHINEGUN  := "res://assets/sfx/bosses/s-miler79/machineGun.ogg"
 const SFX_SWORD_SWING := "res://assets/sfx/bosses/s-miler79/swordSwing.ogg"
 const SFX_MISSILE_EXPLOSION := "res://assets/sfx/bosses/s-miler79/homingMissileExplosion.ogg"
+const SFX_FALLING     := "res://assets/sfx/bosses/s-miler79/fallingDown.ogg"
+const ENTRY_FALL_TIME := 2.5   # girişte yukarıdan iniş süresi (sn)
+const ENTRY_SHADOW_ALPHA := 0.36   # iniş gölgesinin son opaklığı (BlobShadow.COLOR ile aynı)
+const LAND_Y_OFFSET := -18.5 * SPRITE_SCALE   # iniş karelerini idle ile hizalar (son iniş karesi idle'dan ~18-19px aşağıda)
+const LAND_IMPACT_FPS := 14.0  # iniş VFX'inin (30 kare) toparlanma hızı ≈ 2.1sn
 const GATLING_BURSTS  := 5
 const GATLING_SPREAD  := 10.0   # derece
 var _gatling_t    : float = 3.0
@@ -160,7 +165,7 @@ func _setup_frames() -> void:
 
 	# Missile duruş — 9 frame, döngülü (uyarı boyunca)
 	f.add_animation("missile_pose")
-	f.set_animation_speed("missile_pose", 6.0)
+	f.set_animation_speed("missile_pose", 9.0)   # 6 → 9: kafa sallama 1.5× hızlı (füze zamanlamalarına dokunulmadı)
 	f.set_animation_loop("missile_pose", true)
 	for i in range(9):
 		f.add_frame("missile_pose", load(BASE + "skillMissile/frame_%03d.png" % i))
@@ -179,6 +184,19 @@ func _setup_frames() -> void:
 	for i in range(9):
 		f.add_frame("death", load(BASE + "death/frame_%03d.png" % i))
 
+	# İniş VFX'i (landing/frame_001..036): 1-6 jet alevleriyle süzülme (iniş boyunca döngü),
+	# 7-36 yere değiş + alev + toz + toparlanma (tek seferlik, iniş anında)
+	f.add_animation("land_fall")
+	f.set_animation_speed("land_fall", 12.0)
+	f.set_animation_loop("land_fall", true)
+	for i in range(1, 7):
+		f.add_frame("land_fall", load(BASE + "landing/frame_%03d.png" % i))
+	f.add_animation("land_impact")
+	f.set_animation_speed("land_impact", LAND_IMPACT_FPS)
+	f.set_animation_loop("land_impact", false)
+	for i in range(7, 37):
+		f.add_frame("land_impact", load(BASE + "landing/frame_%03d.png" % i))
+
 	_sprite.sprite_frames = f
 
 # ══════════════════════════════════════════════════════════
@@ -187,26 +205,105 @@ func _setup_frames() -> void:
 func play_entry(land_pos: Vector2) -> void:
 	_fixed_y = land_pos.y
 	position  = Vector2(land_pos.x, -200.0)
-	_sprite.play("walk_s")   # aşağı inerken güneye bakıyor
+	_sprite.play("land_fall")   # jetlerle süzülüyor
+
+	# İniş boyunca boss'a bağlı BlobShadow gizli (boss'la birlikte düşüyordu); yerine yerde sabit,
+	# küçükten büyüyen bir iniş gölgesi var
+	await get_tree().process_frame
+	_set_blob_alpha(0.0)
+	# İniş karelerinde karakter idle'dan ~18.5px (kare içi) aşağı çizilmiş → sprite'ı yukarı al, yoksa
+	# animasyon bitip idle'a geçince boss "gölgesine doğru" yukarı zıplıyor. BlobShadow ölçümünü
+	# (sprite.position.y'yi hesaba katar ve önbelleğe alır) bozmasın diye ölçümden SONRA (2. kare) uygulanır.
+	await get_tree().process_frame
+	_sprite.position.y = LAND_Y_OFFSET
+
+	# Uyarı sesi: önce ses başlar, boss ekran dışında bekler; sesin SONU iniş anına denk gelir
+	# (Cyber-404 sandık girişindeki aynı desen — _pre_delay = ses süresi - iniş süresi)
+	var fall_stream: AudioStream = load(SFX_FALLING) if ResourceLoader.exists(SFX_FALLING) else null
+	if fall_stream != null:
+		Sfx.play_path_dedicated(SFX_FALLING)
+		var pre_delay: float = maxf(0.0, fall_stream.get_length() - ENTRY_FALL_TIME)
+		if pre_delay > 0.0:
+			await get_tree().create_timer(pre_delay, false).timeout
+			if not is_instance_valid(self):
+				return
+
+	_set_blob_alpha(0.0)   # BlobShadow geç eklenmişse diye tekrar
+	var ground := _make_entry_shadow(land_pos)
 
 	var tw := create_tween()
 	tw.set_parallel(true)
-	tw.tween_property(self, "position:y", land_pos.y, 2.5)\
+	tw.tween_property(self, "position:y", land_pos.y, ENTRY_FALL_TIME)\
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	tw.tween_method(_set_entry_progress, 0.0, 1.0, 2.5)
+	tw.tween_method(_set_entry_progress, 0.0, 1.0, ENTRY_FALL_TIME)
+	tw.tween_property(ground, "scale", Vector2.ONE, ENTRY_FALL_TIME)\
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.tween_property(ground, "color:a", ENTRY_SHADOW_ALPHA, ENTRY_FALL_TIME)\
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	await tw.finished
 
-	_in_entry = false
+	# Gölge el değiştirir: iniş gölgesi gider, aynı konumdaki BlobShadow açılır
+	if is_instance_valid(ground):
+		ground.queue_free()
+	_set_blob_alpha(1.0)
 	_entry_progress = 1.0
-	$CollisionShape2D.disabled = false
-	_sprite.play("idle")
+	_sprite.play("land_impact")
 
+	# Yere değiş: sahne temizliği/sarsıntı + boss barı hemen, boss toparlanana kadar saldırmaz
 	emit_signal("landed")
 	var game := get_parent()
 	if game.has_method("show_boss_bar"):
 		game.show_boss_bar(self, "S-MILER  //  79")
 	if game.has_method("update_boss_bar"):
 		game.update_boss_bar(0, health, 0, max_health)
+
+	await _sprite.animation_finished
+	if not is_instance_valid(self) or is_dead:
+		return
+	_in_entry = false
+	$CollisionShape2D.disabled = false
+	_sprite.position.y = 0.0
+	_sprite.play("idle")
+
+func _set_blob_alpha(a: float) -> void:
+	var blob := get_node_or_null("BlobShadow")
+	if blob != null:
+		blob.modulate.a = a
+
+# Yerde sabit, küçükten büyüyen iniş gölgesi — boyut/konum BlobShadow'la aynı hesap (gövde 103px ×
+# SPRITE_SCALE × 0.40 = rx; ayak hizası idle karesinin alt sınırı), böylece iniş anında kesintisiz devralır.
+func _make_entry_shadow(land_pos: Vector2) -> Polygon2D:
+	# BlobShadow ile BİREBİR aynı ölçüm: ilk animasyonun (get_animation_names()[0]) ilk karesinin alfa sınırı.
+	# (Önceden "idle" ölçülüyordu → farklı karede ayak hizası değişip gölge iniş sonrası kayıyordu)
+	var rx := 103.0 * SPRITE_SCALE * 0.40
+	var feet := 71.0 * SPRITE_SCALE
+	var cx := 0.0
+	var names := _sprite.sprite_frames.get_animation_names()
+	if not names.is_empty() and _sprite.sprite_frames.get_frame_count(names[0]) > 0:
+		var tex: Texture2D = _sprite.sprite_frames.get_frame_texture(names[0], 0)
+		if tex != null:
+			var img := tex.get_image()
+			if img != null:
+				var r := img.get_used_rect()
+				if r.size.x > 0:
+					cx = (float(r.position.x) + float(r.size.x) * 0.5 - float(tex.get_width()) * 0.5) * SPRITE_SCALE
+					feet = (float(r.position.y + r.size.y) - float(tex.get_height()) * 0.5) * SPRITE_SCALE
+					rx = maxf(float(r.size.x) * SPRITE_SCALE * 0.40, 8.0)
+	var ry := rx * 0.38
+	var pts := PackedVector2Array()
+	for i in 24:
+		var a := float(i) / 24.0 * TAU
+		pts.append(Vector2(cos(a) * rx, sin(a) * ry))
+	var sh := Polygon2D.new()
+	sh.polygon = pts
+	sh.color = Color(0.0, 0.0, 0.0, 0.05)
+	sh.top_level = true
+	sh.z_as_relative = false
+	sh.z_index = 1
+	sh.scale = Vector2(0.12, 0.12)
+	add_child(sh)
+	sh.global_position = land_pos + Vector2(cx, feet - ry * 0.35)
+	return sh
 
 func _set_entry_progress(v: float) -> void:
 	_entry_progress = v
@@ -438,11 +535,19 @@ func _start_missile() -> void:
 			await get_tree().create_timer(maxf(MISSILE_INTERVAL - MISSILE_WARN, 0.0), false).timeout
 			if not is_instance_valid(self) or is_dead:
 				return
-
-	# Son füzenin düşüş/patlaması bitsin
-	await get_tree().create_timer(1.0, false).timeout
+	# Son füze bırakıldı → kafa sallama içinde bulunduğu döngüyü TAMAMLAYIP biter (ne yarım kalır ne erken kesilir)
+	var t0 := Time.get_ticks_msec()
+	await _sprite.animation_looped
 	if not is_instance_valid(self) or is_dead:
 		return
+	_sprite.play("idle")
+
+	# Son füzenin düşüş/patlaması bitsin (toplam bekleme yine ≥ 1.0sn)
+	var left := 1.0 - float(Time.get_ticks_msec() - t0) / 1000.0
+	if left > 0.0:
+		await get_tree().create_timer(left, false).timeout
+		if not is_instance_valid(self) or is_dead:
+			return
 
 	_missile_busy = false
 	_missile_t    = MISSILE_CD
@@ -530,14 +635,7 @@ func _draw() -> void:
 	if is_dead:
 		return
 
-	# Gölge — ayak seviyesinde, sabit (hover yok)
-	var rx := 26.0
-	var ry :=  7.0
-	var pts := PackedVector2Array()
-	for i in 24:
-		var a := float(i) / 24.0 * TAU
-		pts.append(Vector2(cos(a) * rx, 32.0 + sin(a) * ry))
-	draw_colored_polygon(pts, Color(0.0, 0.0, 0.0, _shadow_alpha))
+	# (Eski sabit gövde-ortası gölgesi kaldırıldı: ayak gölgesi BlobShadow, iniş gölgesi _make_entry_shadow)
 
 	# ── Swing Sword uyarısı — kırmızı halka ──
 	if _swing_warn_t > 0.0 and not _swing_pos.is_equal_approx(Vector2.ZERO):
