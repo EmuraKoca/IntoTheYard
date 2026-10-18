@@ -31,7 +31,7 @@ var _tab_buttons: Array = []
 # Test notu: aynı oynatıcıyı stop()+play()+paused ile yeniden hazırlamak her ikinci geçişte takıldı (ilk hazırlanan
 # oynatıcı çalıştı). Bu yüzden her tur için YENİ bir oynatıcı oluşturulur, turun başında (geçişten uzakta) hazırlanır,
 # eski oynatıcı geçişten sonra silinir.
-const BG_VIDEO_LEN     := 10.0   # backgroundVideo.ogv süresi (sn)
+const BG_VIDEO_LEN     := 8.0    # backgroundVideoSeamless.ogv süresi (sn) — video değişirse güncelle
 const BG_VIDEO_OVERLAP := 0.7    # bitmeden bu kadar önce sıradaki oynatıcı devam eder, üstte yavaşça belirir
 const BG_VIDEO_PREP_DELAY := 1.5 # sıradaki oynatıcı, tur başladıktan bu kadar sonra (geçişten uzakta) hazırlanır
 var _bg_cur: VideoStreamPlayer = null

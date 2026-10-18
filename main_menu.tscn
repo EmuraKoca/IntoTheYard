@@ -9,7 +9,7 @@
 [ext_resource type="Texture2D" path="res://assets/menuIcons/credits.png" id="icon_credits"]
 [ext_resource type="Texture2D" path="res://assets/menuIcons/quit.png" id="icon_quit"]
 [ext_resource type="Texture2D" path="res://assets/menuBackground/mainMenuBackground.png" id="menu_bg"]
-[ext_resource type="VideoStream" path="res://assets/menuBackground/backgroundVideo.ogv" id="menu_bg_video"]
+[ext_resource type="VideoStream" path="res://assets/menuBackground/backgroundVideoSeamless.ogv" id="menu_bg_video"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1"]
 content_margin_left = 14.0
