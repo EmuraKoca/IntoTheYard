@@ -12,6 +12,7 @@ const SFX_ELECTRIC_CHARGE_SKIP := 2.7   # dosyanın baştaki sessiz kısmı (ses
 const SFX_ELECTRIC_CHARGE_PITCH := 0.8  # ses ~5.3sn → ~6.7sn: 5 yıldırımlık saldırının (~6.75sn) tamamını kaplar
 const SFX_LIGHTNING := "res://assets/sfx/bosses/nyx-09/lightning.ogg"
 var _bolt_snd: AudioStreamPlayer = null
+var _laser_snd: AudioStreamPlayer = null   # lazer boyunca çalan şarj sesi (electricCharge, yıldırımla aynı dosya)
 const SFX_FALLING := "res://assets/sfx/bosses/nyx-09/fallingDown.ogg"
 const ENTRY_FALL_TIME  := 2.2    # yukarıdan iniş süresi (sn)
 const LAND_IMPACT_FRAME := 26    # landing animasyonunda yere değiş karesi
@@ -24,7 +25,7 @@ const BOB_SPD := 2.0
 
 # Lazer parametreleri
 const LASER_LENGTH   := 920.0
-const LASER_HIT_W    := 42.0   # genis tutma — lazer hizli doner, dar olunca kaciriyor
+const LASER_HIT_W    := 33.0   # yarı genişlik (toplam 66px ≈ görünen huzme 60px + küçük pay); eski 42 görselden geniş kalıyordu
 const LASER_SPEED    := 1.75
 const LASER_DURATION := 4.0
 const LASER_COOLDOWN := 9.0
@@ -36,6 +37,32 @@ const LASER_ANIM_FPS    := 12.0
 const LASER_BEAMS_FRAME := 5
 const LASER_LOOP_FROM   := 12
 const LASER_HAND_OFFSET := Vector2(34.0, -9.0)
+# Lazer kolu görseli: animations/laser/laserShot (16 kare 128×128, yatay huzme, ortası y=64). Kol, aynalı tile'larla uzatılır
+# (her ikinci parça yatay çevrilir → birleşim yerinde kopukluk olmaz); kare 0. sütun boş olduğu için 1-127 bölgesi kullanılır.
+const LASER_BEAM_PATH    := "res://assets/enemys/Nyx_09 The Quantum Widow/animations/laser/laserShot/frame_%03d.png"
+const LASER_BEAM_FRAMES  := 16
+const LASER_BEAM_FPS     := 16.0
+const LASER_BEAM_SCALE_Y := 2.0     # huzme kalınlığı ≈ 30px × 2 ≈ 60px (hasar genişliği LASER_HIT_W ile eşleşir)
+const LASER_TILE_PX      := 127.0
+const LASER_MAX_TILES    := 4        # 920px / (127×2) ≈ 3.6 → 4 parça
+const LASER_TAPER_PX     := 150.0    # elden çıkışta huzme bu uzunlukta İNCEDEN kalına açılır (sonrası tam kalınlık)
+# İlk tile'a takılan shader: huzmenin başı ince, LASER_TAPER_PX sonunda tam kalınlık (eski çizilen koni gibi). UV.x kare içinde
+# 1/128..1 (0. sütun kesildi), UV.y 0..1; huzme y=0.5 etrafında, yarı kalınlığı ≈0.117 (+cila payı → 0.16).
+const LASER_TAPER_SHADER := """
+shader_type canvas_item;
+uniform float taper = 0.5;
+void fragment() {
+	float fx = clamp((UV.x - 1.0 / 128.0) / (127.0 / 128.0), 0.0, 1.0);
+	float k = clamp(fx / max(taper, 0.001), 0.0, 1.0);
+	float limit = mix(0.008, 0.16, k);
+	if (abs(UV.y - 0.5) > limit) {
+		COLOR.a = 0.0;
+	}
+}
+"""
+static var _laser_taper_shader: Shader = null
+static var _laser_beam_frames: SpriteFrames = null
+var _laser_arms: Array = []         # [{"root": Node2D, "tiles": Array[AnimatedSprite2D]}] — 3 kol
 
 # Elektrik carpmasi parametreleri
 const BOLT_WARN_DUR  := 1.0    # (eski sabit zaman; artık uyarı süresi animasyondan geliyor: BOLT_STRIKE_FRAME / BOLT_ANIM_FPS)
@@ -297,6 +324,7 @@ func _physics_process(delta: float) -> void:
 	if _laser_active:
 		if _laser_beams_on:
 			_laser_angle   += LASER_SPEED * delta
+			_update_laser_arms()
 			_laser_dur_left -= delta
 			_laser_dmg_t   -= delta
 			if _laser_dmg_t <= 0:
@@ -343,6 +371,8 @@ func _start_laser() -> void:
 	# El kalkar, enerji birikir: kollar LASER_BEAMS_FRAME'de (elektriklenme) başlar. Süre o andan itibaren sayılır.
 	_sprite.play("laser")
 	_sprite.set_frame_and_progress(0, 0.0)
+	# Şarj sesi: el kalkarken başlar (baştaki sessiz ~2.7sn atlanır), ~5.3sn → lazerin toplam süresini (≈0.4 + 4sn) kaplar
+	_laser_snd = Sfx.play_path_dedicated(SFX_ELECTRIC_CHARGE, 0.0, 1.0, SFX_ELECTRIC_CHARGE_SKIP)
 	if not _sprite.animation_finished.is_connected(_on_laser_anim_finished):
 		_sprite.animation_finished.connect(_on_laser_anim_finished)
 	while _sprite.frame < LASER_BEAMS_FRAME and _sprite.animation == "laser":
@@ -350,6 +380,99 @@ func _start_laser() -> void:
 		if not is_instance_valid(self) or is_dead or not _laser_active:
 			return
 	_laser_beams_on = true
+	_ensure_laser_arms()
+	_update_laser_arms()
+	_set_laser_arms_visible(true)
+
+func _get_laser_beam_frames() -> SpriteFrames:
+	if _laser_beam_frames == null:
+		var sf := SpriteFrames.new()
+		if sf.has_animation("default"):
+			sf.remove_animation("default")
+		sf.add_animation("beam")
+		sf.set_animation_speed("beam", LASER_BEAM_FPS)
+		sf.set_animation_loop("beam", true)
+		for i in range(LASER_BEAM_FRAMES):
+			var at := AtlasTexture.new()
+			at.atlas = load(LASER_BEAM_PATH % i)
+			at.region = Rect2(1.0, 0.0, LASER_TILE_PX, 128.0)
+			sf.add_frame("beam", at)
+		_laser_beam_frames = sf
+	return _laser_beam_frames
+
+# 3 kolun (her biri birkaç aynalı AnimatedSprite2D tile) düğümlerini bir kez kurar. Boss sprite'ının ARKASINDA kalsınlar diye
+# ilk çocuk olarak eklenir (boss gövdesi kolların üstünde çizilir).
+func _get_laser_taper_shader() -> Shader:
+	if _laser_taper_shader == null:
+		var sh := Shader.new()
+		sh.code = LASER_TAPER_SHADER
+		_laser_taper_shader = sh
+	return _laser_taper_shader
+
+func _ensure_laser_arms() -> void:
+	if not _laser_arms.is_empty():
+		return
+	var frames := _get_laser_beam_frames()
+	for _i in 3:
+		var root := Node2D.new()
+		root.visible = false
+		add_child(root)
+		move_child(root, 0)
+		var tiles: Array = []
+		for _t in LASER_MAX_TILES:
+			var spr := AnimatedSprite2D.new()
+			spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			spr.sprite_frames = frames
+			spr.centered = false
+			spr.offset = Vector2(0.0, -64.0)   # huzmenin dikey merkezi karede y=64
+			root.add_child(spr)
+			tiles.append(spr)
+		# İlk parça (elden çıkış): inceden kalına açılan uç
+		var mat := ShaderMaterial.new()
+		mat.shader = _get_laser_taper_shader()
+		(tiles[0] as AnimatedSprite2D).material = mat
+		_laser_arms.append({"root": root, "tiles": tiles, "mat": mat})
+
+func _set_laser_arms_visible(v: bool) -> void:
+	for arm in _laser_arms:
+		var root: Node2D = arm["root"]
+		root.visible = v
+		for spr in arm["tiles"]:
+			if v:
+				spr.play("beam")
+				spr.set_frame_and_progress(randi() % LASER_BEAM_FRAMES, 0.0)   # kollar farklı karede başlasın
+			else:
+				spr.stop()
+
+# Her frame: kolun açısı/çıkışı + duvara kırpılmış uzunluğa göre tile sayısı ve yatay ölçek (parçalar eşit esnetilir)
+func _update_laser_arms() -> void:
+	if _laser_arms.is_empty():
+		return
+	var o : Vector2 = _laser_origin_local()
+	for i in 3:
+		var arm: Dictionary = _laser_arms[i]
+		var root: Node2D = arm["root"]
+		var tiles: Array = arm["tiles"]
+		var angle : float = _laser_angle + float(i) * TAU / 3.0
+		var length: float = maxf(_laser_clip_length(Vector2(cos(angle), sin(angle))), 8.0)
+		root.position = o
+		root.rotation = angle
+		var n : int = clampi(roundi(length / (LASER_TILE_PX * LASER_BEAM_SCALE_Y)), 1, tiles.size())
+		var w : float = length / float(n)           # her parçanın dünya genişliği
+		var sx: float = w / LASER_TILE_PX
+		(arm["mat"] as ShaderMaterial).set_shader_parameter("taper", clampf(LASER_TAPER_PX / w, 0.05, 1.0))
+		for t in tiles.size():
+			var spr: AnimatedSprite2D = tiles[t]
+			if t < n:
+				spr.visible = true
+				if t % 2 == 1:                       # aynalı parça: x ölçeği negatif, sağ kenara oturur
+					spr.scale = Vector2(-sx, LASER_BEAM_SCALE_Y)
+					spr.position = Vector2(float(t + 1) * w, 0.0)
+				else:
+					spr.scale = Vector2(sx, LASER_BEAM_SCALE_Y)
+					spr.position = Vector2(float(t) * w, 0.0)
+			else:
+				spr.visible = false
 
 func _on_laser_anim_finished() -> void:
 	if _laser_active and not is_dead and _sprite.animation == "laser":
@@ -360,8 +483,10 @@ func _laser_origin_local() -> Vector2:
 	return _sprite.position + LASER_HAND_OFFSET * NYX_SCALE
 
 func _stop_laser() -> void:
+	_fade_laser_snd(0.4)
 	_laser_active = false
 	_laser_beams_on = false
+	_set_laser_arms_visible(false)
 	_laser_timer  = LASER_COOLDOWN
 	# Bolt henuz hazirsa 5s bos birak
 	if _bolt_timer < 5.0:
@@ -567,6 +692,15 @@ func _spawn_bolt_vfx(pos: Vector2) -> void:
 	bolt.play("strike")
 	bolt.animation_finished.connect(bolt.queue_free)
 
+func _fade_laser_snd(dur: float) -> void:
+	if is_instance_valid(_laser_snd):
+		var s := _laser_snd
+		_laser_snd = null
+		var tw := s.create_tween()
+		tw.set_pause_mode(Tween.TWEEN_PAUSE_STOP)   # player ALWAYS → tween pause'da da akardı
+		tw.tween_property(s, "volume_db", -40.0, dur)
+		tw.tween_callback(s.stop)
+
 func _fade_bolt_snd(dur: float) -> void:
 	if is_instance_valid(_bolt_snd):
 		var s := _bolt_snd
@@ -647,22 +781,7 @@ func _draw() -> void:
 
 	# (Eski gövde-merkezli lazer uyarı dairesi kaldırıldı: uyarı artık el kaldırma/şarj animasyonu)
 
-	# --- LAZER (3 kol koni) — çıkış noktası sol el ---
-	if _laser_active and _laser_beams_on:
-		var o : Vector2 = _laser_origin_local()
-		for i in 3:
-			var angle    : float   = _laser_angle + float(i) * TAU / 3.0
-			var dir      : Vector2 = Vector2(cos(angle), sin(angle))
-			var perp     : Vector2 = dir.rotated(PI * 0.5)
-			var clip_len : float   = _laser_clip_length(dir)
-			var tip      : Vector2 = o + dir * clip_len
-			draw_colored_polygon(PackedVector2Array([o, tip + perp * 28.0, tip - perp * 28.0]),
-				Color(0.0, 0.4, 1.0, 0.13))
-			draw_colored_polygon(PackedVector2Array([o, tip + perp * 11.0, tip - perp * 11.0]),
-				Color(0.1, 0.65, 1.0, 0.82))
-			draw_colored_polygon(PackedVector2Array([o, tip + perp * 3.0, tip - perp * 3.0]),
-				Color(0.75, 0.96, 1.0, 0.95))
-		draw_circle(o, 11.0, Color(0.4, 0.85, 1.0, 0.95))
+	# (Lazer kolları artık sprite — _update_laser_arms / laserShot; eski çizilen koni kaldırıldı)
 
 	# --- TELEPORT FLASH (mavi) ---
 	if _tele_flash > 0.0:
@@ -780,8 +899,10 @@ func take_damage(amount: int, _from_ally: bool = false, _kill_cause: String = "n
 func die() -> void:
 	if is_dead: return
 	is_dead = true
+	_fade_laser_snd(0.2)
 	_laser_active = false
 	_laser_beams_on = false
+	_set_laser_arms_visible(false)
 	_fade_bolt_snd(0.2)
 	set_physics_process(false)
 	$CollisionShape2D.disabled = true
@@ -796,7 +917,7 @@ func die() -> void:
 	if is_instance_valid(self):
 		queue_free()
 
-func apply_slow(amount: float, duration: float = 3.0) -> void:
+func apply_slow(amount: float, duration: float = 3.0, _source: String = "cryo", _anchor_pos: Vector2 = Vector2.ZERO) -> void:
 	if is_slowed: return
 	is_slowed = true; original_speed = speed; speed *= (1.0 - amount)
 	_boss_set_element("slow")
@@ -818,7 +939,7 @@ func apply_wet() -> void:
 	if not is_instance_valid(self): return
 	is_wet = false; _boss_clear_element()
 
-func apply_glitch() -> void:
+func apply_glitch(_duration: float = 2.0) -> void:
 	if is_glitched: return
 	is_glitched = true
 	_boss_set_element("glitch")

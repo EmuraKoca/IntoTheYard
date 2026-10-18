@@ -674,7 +674,7 @@ func _draw() -> void:
 # ══════════════════════════════════════════════════════════
 # ELEMENT ETKİLERİ  (boss barından gösterilir)
 # ══════════════════════════════════════════════════════════
-func apply_slow(amount: float, duration: float = 3.0) -> void:
+func apply_slow(amount: float, duration: float = 3.0, _source: String = "cryo", _anchor_pos: Vector2 = Vector2.ZERO) -> void:
 	if is_slowed: return
 	is_slowed = true; original_speed = speed; speed *= (1.0 - amount)
 	_boss_set_element("slow")
@@ -696,7 +696,7 @@ func apply_wet() -> void:
 	if not is_instance_valid(self): return
 	is_wet = false; _boss_clear_element()
 
-func apply_glitch() -> void:
+func apply_glitch(_duration: float = 2.0) -> void:
 	if is_glitched: return
 	is_glitched = true
 	_boss_set_element("glitch")

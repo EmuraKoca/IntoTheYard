@@ -565,7 +565,7 @@ func _play_death() -> void:
 	if is_instance_valid(self):
 		queue_free()
 
-func apply_slow(amount, duration: float = 3.0) -> void:
+func apply_slow(amount, duration: float = 3.0, _source: String = "cryo", _anchor_pos: Vector2 = Vector2.ZERO) -> void:
 	if is_slowed:
 		return
 	is_slowed = true
@@ -584,7 +584,7 @@ func apply_wet() -> void:
 	await get_tree().create_timer(5.0).timeout
 	is_wet = false
 
-func apply_glitch() -> void:
+func apply_glitch(_duration: float = 2.0) -> void:
 	# Boss is immune to glitch
 	return
 
