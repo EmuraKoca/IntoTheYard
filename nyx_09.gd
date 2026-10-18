@@ -34,6 +34,17 @@ const LASER_DAMAGE   := 2      # daha sik carptigimiz icin hasar dusuruldu
 # Lazer animasyonu (animations/laser, 35 kare): 3'te sol el kalkmaya başlar, 5'te elektriklenme → pervane görünür/hasar verir,
 # 12-34 arası döngüye girer. Lazer elden çıkar: elin kare merkezine (122,122) göre konumu ≈ (+34,-9) px (kareden ölçüldü).
 const LASER_ANIM_FPS    := 12.0
+# Işınlanma + beam animasyonları (animations/tpBeam): 1whileTeleporting (9, portal açılır Nyx girer) → ışınlanma →
+# 2afterTeleporting (10, yeni yerde portal açılır Nyx çıkar) → 3fbeamCharge (3) → 4beam (19, göğüs önünde enerji küresi).
+const TP_ANIM_FPS      := 12.0
+const TP_BEAM_ANIM_FPS := 32.0   # 19 kare ≈ 0.6sn (beam ömrü BEAM_LIFETIME 0.55sn'ye denk; 12fps 1.6sn sürerdi)
+# Portal karelerde Nyx'ten ~1.4× büyük (kare içinde çizili) → portalın göründüğü karelerde sprite küçültülür (kare başına çarpan).
+# Nyx'in kendisinin tam göründüğü ilk/son karelerde 1.0 (boyut sıçraması olmasın).
+const TP_OUT_SCALE := [1.0, 0.95, 0.75, 0.65, 0.65, 0.65, 0.65, 0.75, 1.0]
+const TP_IN_SCALE  := [0.75, 0.65, 0.65, 0.65, 0.65, 0.78, 0.9, 1.0, 1.0, 1.0]
+const TELE_MIN_DIST   := 450.0   # yeni konum eski konumdan en az bu kadar uzakta (tahmin edilemesin)
+const TELE_MIN_PLAYER := 160.0   # ... ve oyuncunun üstüne inmesin
+const BEAM_ORB_OFFSET  := Vector2(-6.0, 13.0)   # enerji küresi merkezi, kare merkezine (122,122) göre (kareden ölçüldü ≈ (116,135))
 const LASER_BEAMS_FRAME := 5
 const LASER_LOOP_FROM   := 12
 const LASER_HAND_OFFSET := Vector2(34.0, -9.0)
@@ -204,6 +215,29 @@ func _setup_frames() -> void:
 	for i in range(19, 40):
 		frames.add_frame("electric_strike_loop", load(BASE + "electricStrike/frame_%03d.png" % i))
 
+	# Işınlanma / beam (tpBeam): portal girişi, portal çıkışı, beam şarjı, beam atışı
+	var tp_base := BASE + "tpBeam/"
+	frames.add_animation("tp_out")
+	frames.set_animation_speed("tp_out", TP_ANIM_FPS)
+	frames.set_animation_loop("tp_out", false)
+	for i in range(9, 18):
+		frames.add_frame("tp_out", load(tp_base + "1whileTeleporting/frame_%03d.png" % i))
+	frames.add_animation("tp_in")
+	frames.set_animation_speed("tp_in", TP_ANIM_FPS)
+	frames.set_animation_loop("tp_in", false)
+	for fn in ["017b","017c","017d","017e","017f","017g","017h","017i","017j","018"]:
+		frames.add_frame("tp_in", load(tp_base + "2afterTeleporting/frame_" + fn + ".png"))
+	frames.add_animation("tp_charge")
+	frames.set_animation_speed("tp_charge", TP_ANIM_FPS)
+	frames.set_animation_loop("tp_charge", false)
+	for i in range(19, 22):
+		frames.add_frame("tp_charge", load(tp_base + "3fbeamCharge/frame_%03d.png" % i))
+	frames.add_animation("tp_beam")
+	frames.set_animation_speed("tp_beam", TP_BEAM_ANIM_FPS)
+	frames.set_animation_loop("tp_beam", false)
+	for i in range(22, 41):
+		frames.add_frame("tp_beam", load(tp_base + "4beam/frame_%03d.png" % i))
+
 	# Laser (pervane lazer): 0-4 el kalkar/şarj, 5'te kollar başlar; sonra 12-34 döngü
 	frames.add_animation("laser")
 	frames.set_animation_speed("laser", LASER_ANIM_FPS)
@@ -224,6 +258,7 @@ func _setup_frames() -> void:
 		frames.add_frame("spin", load(BASE_ROT + d + ".png"))
 
 	_sprite.sprite_frames = frames
+	_sprite.frame_changed.connect(_apply_tp_scale)
 
 func play_entry(land_pos: Vector2) -> void:
 	_fixed_y = land_pos.y
@@ -341,8 +376,8 @@ func _physics_process(delta: float) -> void:
 		if _laser_timer <= 0:
 			_start_laser()
 
-	# Hareket (lazer sirasinda dur)
-	if _laser_active:
+	# Hareket (lazer ve ışınlanma sırasında dur — portal/beam animasyonu boss ile birlikte kaymasın)
+	if _laser_active or _tele_active:
 		velocity = Vector2.ZERO
 		move_and_slide()
 		return
@@ -500,78 +535,47 @@ func _start_teleport() -> void:
 		return
 	_tele_active = true
 
-	# Ilk sarj
-	_sprite.play("charge")
-	await get_tree().create_timer(0.45).timeout
-	if not is_instance_valid(self) or is_dead: return
-
 	# 3 kez tp + beam, 1.5s arayla
 	for _strike in range(3):
 		if not is_instance_valid(self) or is_dead: return
 
-		# Hedef: player'in anlık X pozisyonu
+		# Hedef: eski konumdan UZAK (≥ TELE_MIN_DIST), oyuncunun üstünde değil, rastgele X — oyuncu tahmin edemesin
 		var pl := get_tree().get_first_node_in_group("player")
-		_tele_pos = Vector2(
-			clamp(pl.global_position.x if is_instance_valid(pl) else global_position.x, 420.0, 1570.0),
-			_fixed_y
-		)
+		_tele_pos = Vector2(_pick_tele_x(pl), _fixed_y)
 
-		# --- KAYBOLIS ---
-		_tele_flash = 1.0
-		queue_redraw()
-		var vanish := create_tween()
-		vanish.set_parallel(true)
-		vanish.tween_property(_sprite, "scale",    Vector2(0.0, 0.0),         0.28)\
-			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
-		vanish.tween_property(_sprite, "modulate", Color(0.2, 0.6, 2.0, 0.0), 0.28)
-		await vanish.finished
+		# --- KAYBOLIS: eski yerde portal açılır, Nyx içine girer (tp_out) ---
+		_sprite.play("tp_out")
+		_apply_tp_scale()
+		await _sprite.animation_finished
 		if not is_instance_valid(self) or is_dead: return
-		_sprite.visible  = false
-		_sprite.modulate = Color(1.0, 1.0, 1.0, 1.0)
-		position         = _tele_pos
+		_sprite.visible = false
+		_sprite.scale   = Vector2(NYX_SCALE, NYX_SCALE)
+		position        = _tele_pos
 
-		# Uyari gostergesi (0.5s)
-		_tele_warn_t = 1.0
-		queue_redraw()
-		await get_tree().create_timer(0.5).timeout
-		if not is_instance_valid(self) or is_dead: return
-
-		# --- BELIRIS ---
-		_sprite.visible  = true
-		_sprite.modulate = Color(0.2, 0.6, 2.0, 1.0)
-		_sprite.scale    = Vector2(0.0, 0.0)
-		_tele_flash      = 1.0
-		_tele_ring_r     = 5.0
-		queue_redraw()
-
-		var appear := create_tween()
-		appear.set_parallel(true)
-		appear.tween_property(_sprite, "scale",    Vector2(NYX_SCALE, NYX_SCALE) * 1.235, 0.22)\
-			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-		appear.tween_property(_sprite, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.22)
-		var ring_tw := create_tween()
-		ring_tw.tween_method(
-			func(v: float): _tele_ring_r = v; queue_redraw(),
-			5.0, TELE_RADIUS * 1.6, 0.45
-		)
-		await appear.finished
+		# --- BELIRIS: yeni yerde portal açılır, Nyx çıkar (tp_in); hedef uyarısı portalla birlikte ---
+		_sprite.visible = true
+		_sprite.play("tp_in")
+		_apply_tp_scale()
+		await _sprite.animation_finished
 		if not is_instance_valid(self) or is_dead: return
 		_sprite.scale = Vector2(NYX_SCALE, NYX_SCALE)
 
-		# Kisa sarj (0.25s) — hedef uyarisi goster
+		# Kisa sarj (tp_charge, 0.25s) — hedef uyarisi goster
 		var pw := get_tree().get_first_node_in_group("player")
 		if is_instance_valid(pw):
 			_beam_warn_pos = pw.global_position
 			_beam_warn_t   = 1.0
 			queue_redraw()
-		await get_tree().create_timer(0.25).timeout
+		_sprite.play("tp_charge")
+		await _sprite.animation_finished
 		if not is_instance_valid(self) or is_dead: return
 
-		# BEAM ATIS — mark pozisyonuna ates, oradan kacabilirsin
+		# BEAM ATIS — mark pozisyonuna ates, oradan kacabilirsin (tp_beam, göğüs önündeki küreden)
 		_beam_target = _beam_warn_pos
 		_beam_active = true
 		_beam_t      = 0.0
-		await get_tree().create_timer(BEAM_LIFETIME * 0.75).timeout
+		_sprite.play("tp_beam")
+		await get_tree().create_timer(BEAM_LIFETIME * 0.75, false).timeout
 		if is_instance_valid(self) and not is_dead:
 			var p2 := get_tree().get_first_node_in_group("player")
 			if is_instance_valid(p2) and not p2.is_dashing:
@@ -581,11 +585,17 @@ func _start_teleport() -> void:
 		var game := get_parent()
 		if game.has_method("_screen_shake"):
 			game._screen_shake()
-		_tele_ring_r = 0.0
+
+		# Beam animasyonunun kalanı bitsin, sonra yürüme
+		if is_instance_valid(self) and not is_dead and _sprite.animation == "tp_beam" and _sprite.is_playing():
+			await _sprite.animation_finished
+		if not is_instance_valid(self) or is_dead: return
+		_sprite.play("walk")
 
 		# Sonraki strike'a kadar 1.5s bekle (son strike'ta bekleme yok)
 		if _strike < 2:
-			await get_tree().create_timer(1.5).timeout
+			await get_tree().create_timer(1.5, false).timeout
+			if not is_instance_valid(self) or is_dead: return
 
 	# Sekans bitti
 	_tele_active  = false
@@ -594,6 +604,29 @@ func _start_teleport() -> void:
 	if _bolt_timer  < 5.0: _bolt_timer  = 5.0
 	position.y = _fixed_y
 	_sprite.play("walk")
+
+# Işınlanma hedef X'i: eski konumdan en az TELE_MIN_DIST uzakta, oyuncudan en az TELE_MIN_PLAYER uzakta, rastgele
+func _pick_tele_x(pl: Node) -> float:
+	var px : float = pl.global_position.x if is_instance_valid(pl) else -9999.0
+	for _i in 16:
+		var x : float = randf_range(420.0, 1570.0)
+		if absf(x - global_position.x) >= TELE_MIN_DIST and absf(x - px) >= TELE_MIN_PLAYER:
+			return x
+	# Uygun nokta bulunamadıysa: eski konuma göre arenanın uzak ucu
+	return 420.0 if global_position.x > 995.0 else 1570.0
+
+# Portal animasyonlarında (tp_out / tp_in) sprite ölçeğini kareye göre ayarlar (portal Nyx'ten büyük çizilmiş)
+func _apply_tp_scale() -> void:
+	var tbl: Array = []
+	if _sprite.animation == "tp_out":
+		tbl = TP_OUT_SCALE
+	elif _sprite.animation == "tp_in":
+		tbl = TP_IN_SCALE
+	if tbl.is_empty():
+		return
+	var f : int = clampi(_sprite.frame, 0, tbl.size() - 1)
+	var k : float = float(tbl[f])
+	_sprite.scale = Vector2(NYX_SCALE * k, NYX_SCALE * k)
 
 func _start_bolt() -> void:
 	_bolt_active = true
@@ -783,46 +816,23 @@ func _draw() -> void:
 
 	# (Lazer kolları artık sprite — _update_laser_arms / laserShot; eski çizilen koni kaldırıldı)
 
-	# --- TELEPORT FLASH (mavi) ---
-	if _tele_flash > 0.0:
-		draw_circle(Vector2.ZERO, 42.0 * _tele_flash, Color(0.0, 0.4, 1.0, _tele_flash * 0.70))
-		draw_circle(Vector2.ZERO, 18.0 * _tele_flash, Color(0.5, 0.9, 1.0, _tele_flash * 0.92))
-
-	# --- TELEPORT HEDEF UYARI ---
-	if _tele_active and _tele_warn_t > 0.0:
-		var t_loc : Vector2 = to_local(_tele_pos)
-		var pulse : float   = (sin(_bob_t * 14.0) + 1.0) * 0.5
-		draw_circle(t_loc, TELE_RADIUS,
-			Color(0.0, 0.4, 0.95, _tele_warn_t * (0.18 + pulse * 0.10)))
-		draw_arc(t_loc, TELE_RADIUS, 0, TAU, 40,
-			Color(0.1, 0.75, 1.0, _tele_warn_t * (0.70 + pulse * 0.20)), 2.5)
-		for i in 4:
-			var a  : float   = float(i) / 4.0 * TAU
-			var cv : Vector2 = t_loc + Vector2(cos(a), sin(a)) * TELE_RADIUS
-			draw_circle(cv, 5.0 * _tele_warn_t, Color(0.4, 0.9, 1.0, _tele_warn_t))
-
-	# --- TELEPORT BELIRME HALKASI ---
-	if _tele_ring_r > 0.0:
-		var fade : float = max(0.0, 1.0 - _tele_ring_r / (TELE_RADIUS * 1.6))
-		draw_arc(Vector2.ZERO, _tele_ring_r, 0, TAU, 40,
-			Color(0.1, 0.65, 1.0, fade * 0.9), 3.0)
-		draw_arc(Vector2.ZERO, _tele_ring_r * 0.6, 0, TAU, 40,
-			Color(0.5, 0.90, 1.0, fade * 0.5), 1.5)
+	# (Işınlanma hedef uyarı dairesi kaldırıldı: portal animasyonu zaten gösteriyor, konum rastgele)
 
 	# --- BEAM (tp sonrasi dalgali huzmesi) ---
 	if _beam_active and not _beam_target.is_equal_approx(Vector2.ZERO):
 		var alpha      : float   = 1.0 - _beam_t
 		var tip_l      : Vector2 = to_local(_beam_target)
-		var total_l    : float   = tip_l.length()
+		var o_l        : Vector2 = _sprite.position + BEAM_ORB_OFFSET * NYX_SCALE   # huzme göğüs önündeki enerji küresinden çıkar
+		var total_l    : float   = (tip_l - o_l).length()
 		if total_l > 1.0:
-			var b_dir  : Vector2 = tip_l.normalized()
+			var b_dir  : Vector2 = (tip_l - o_l).normalized()
 			var b_perp : Vector2 = b_dir.rotated(PI * 0.5)
 			var segs   : int     = 14
 			var centers: Array   = []
-			centers.append(Vector2.ZERO)
+			centers.append(o_l)
 			for si in range(1, segs):
 				var t    : float   = float(si) / float(segs)
-				var base : Vector2 = b_dir * total_l * t
+				var base : Vector2 = o_l + b_dir * total_l * t
 				# Sin dalgasi — inceden kalin, _bob_t ile canli
 				var jitter : float = sin(t * PI) * sin(t * 8.0 + _bob_t * 20.0) * 22.0 * (1.0 - t * 0.4)
 				centers.append(base + b_perp * jitter)
@@ -900,6 +910,7 @@ func die() -> void:
 	if is_dead: return
 	is_dead = true
 	_fade_laser_snd(0.2)
+	_sprite.scale = Vector2(NYX_SCALE, NYX_SCALE)   # ışınlanma portal ölçeği ortada kalmışsa ölüm animasyonu normal boyutta
 	_laser_active = false
 	_laser_beams_on = false
 	_set_laser_arms_visible(false)

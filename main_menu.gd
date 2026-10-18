@@ -27,6 +27,17 @@ var _settings_canvas: CanvasLayer = null
 var _tab_panels: Array = []
 var _tab_buttons: Array = []
 
+# ── Arka plan videosu: çift oynatıcı + çapraz geçiş (VideoStreamPlayer.loop başa sararken takılıyordu) ──
+# Test notu: aynı oynatıcıyı stop()+play()+paused ile yeniden hazırlamak her ikinci geçişte takıldı (ilk hazırlanan
+# oynatıcı çalıştı). Bu yüzden her tur için YENİ bir oynatıcı oluşturulur, turun başında (geçişten uzakta) hazırlanır,
+# eski oynatıcı geçişten sonra silinir.
+const BG_VIDEO_LEN     := 10.0   # backgroundVideo.ogv süresi (sn)
+const BG_VIDEO_OVERLAP := 0.7    # bitmeden bu kadar önce sıradaki oynatıcı devam eder, üstte yavaşça belirir
+const BG_VIDEO_PREP_DELAY := 1.5 # sıradaki oynatıcı, tur başladıktan bu kadar sonra (geçişten uzakta) hazırlanır
+var _bg_cur: VideoStreamPlayer = null
+var _bg_next: VideoStreamPlayer = null
+var _bg_swapping: bool = false
+
 # ─────────────────────────────────────────────────────────────────────────────
 func _ready() -> void:
 	_load_settings()
@@ -51,6 +62,68 @@ func _ready() -> void:
 	$BtnSettings.pressed.connect(_on_settings)
 	$BtnQuit.pressed.connect(_on_quit)
 	$BtnCredits.pressed.connect(_on_credits)
+	_setup_bg_video()
+
+func _setup_bg_video() -> void:
+	var a := get_node_or_null("BackgroundVideo") as VideoStreamPlayer
+	if a == null or a.stream == null:
+		return
+	a.loop = false
+	_bg_cur = a
+	a.finished.connect(_on_bg_video_finished.bind(a))
+	_prepare_next_bg_video()
+
+# Yeni oynatıcı: çalıştırılıp hemen duraklatılır (ilk kare çözülür), alfa 0 ile mevcut oynatıcının üstünde bekler
+func _prepare_next_bg_video() -> void:
+	if _bg_cur == null or not is_instance_valid(_bg_cur):
+		return
+	var b := VideoStreamPlayer.new()
+	b.stream       = _bg_cur.stream
+	b.expand       = true
+	b.position     = _bg_cur.position
+	b.size         = _bg_cur.size
+	b.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	b.modulate.a   = 0.0
+	b.loop         = false
+	add_child(b)
+	move_child(b, $BackgroundDim.get_index())   # karartma katmanının hemen altı
+	b.play()
+	b.paused = true
+	b.finished.connect(_on_bg_video_finished.bind(b))
+	_bg_next = b
+
+func _process(_delta: float) -> void:
+	if _bg_cur == null or _bg_swapping or _bg_next == null:
+		return
+	if _bg_cur.is_playing() and _bg_cur.stream_position >= BG_VIDEO_LEN - BG_VIDEO_OVERLAP:
+		_start_bg_swap(BG_VIDEO_OVERLAP)
+
+# Yedek: sürenin sonuna ulaşılamadıysa (stream_position güvenilmezse) video bittiğinde geçiş yapılır
+func _on_bg_video_finished(player: VideoStreamPlayer) -> void:
+	if player == _bg_cur and not _bg_swapping:
+		if _bg_next == null:
+			_prepare_next_bg_video()
+		_start_bg_swap(0.15)
+
+func _start_bg_swap(fade: float) -> void:
+	_bg_swapping = true
+	var nxt := _bg_next
+	nxt.paused = false
+	var tw := create_tween()
+	tw.tween_property(nxt, "modulate:a", 1.0, fade)
+	tw.tween_callback(_finish_bg_swap)
+
+func _finish_bg_swap() -> void:
+	var old := _bg_cur
+	_bg_cur  = _bg_next
+	_bg_next = null
+	if is_instance_valid(old):
+		old.queue_free()
+	_bg_swapping = false
+	# Sıradaki oynatıcıyı geçişten uzakta hazırla
+	await get_tree().create_timer(BG_VIDEO_PREP_DELAY).timeout
+	if is_instance_valid(self) and _bg_next == null:
+		_prepare_next_bg_video()
 
 func _apply_menu_lang() -> void:
 	$BtnNewGame.text  = Lang.t("mm_new_game")

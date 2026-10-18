@@ -8,6 +8,8 @@
 [ext_resource type="Texture2D" path="res://assets/menuIcons/settings.png" id="icon_settings"]
 [ext_resource type="Texture2D" path="res://assets/menuIcons/credits.png" id="icon_credits"]
 [ext_resource type="Texture2D" path="res://assets/menuIcons/quit.png" id="icon_quit"]
+[ext_resource type="Texture2D" path="res://assets/menuBackground/mainMenuBackground.png" id="menu_bg"]
+[ext_resource type="VideoStream" path="res://assets/menuBackground/backgroundVideo.ogv" id="menu_bg_video"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1"]
 content_margin_left = 14.0
@@ -121,6 +123,29 @@ offset_right = 1920.0
 offset_bottom = 1080.0
 mouse_filter = 2
 color = Color(0.008, 0.008, 0.022, 1)
+
+[node name="BackgroundImage" type="TextureRect" parent="."]
+offset_right = 1920.0
+offset_bottom = 1080.0
+mouse_filter = 2
+texture = ExtResource("menu_bg")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="BackgroundVideo" type="VideoStreamPlayer" parent="."]
+offset_right = 1920.0
+offset_bottom = 1080.0
+mouse_filter = 2
+stream = ExtResource("menu_bg_video")
+autoplay = true
+expand = true
+loop = false
+
+[node name="BackgroundDim" type="ColorRect" parent="."]
+offset_right = 1920.0
+offset_bottom = 1080.0
+mouse_filter = 2
+color = Color(0, 0.01, 0.04, 0.28)
 
 [node name="AccentLeft" type="ColorRect" parent="." unique_id=101010101]
 offset_right = 4.0
