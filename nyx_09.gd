@@ -12,6 +12,7 @@ const SFX_ELECTRIC_CHARGE_SKIP := 2.7   # dosyanın baştaki sessiz kısmı (ses
 const SFX_ELECTRIC_CHARGE_PITCH := 0.8  # ses ~5.3sn → ~6.7sn: 5 yıldırımlık saldırının (~6.75sn) tamamını kaplar
 const SFX_LIGHTNING := "res://assets/sfx/bosses/nyx-09/lightning.ogg"
 var _bolt_snd: AudioStreamPlayer = null
+const SFX_FALLING := "res://assets/sfx/bosses/nyx-09/fallingDown.ogg"
 const ENTRY_FALL_TIME  := 2.2    # yukarıdan iniş süresi (sn)
 const LAND_IMPACT_FRAME := 26    # landing animasyonunda yere değiş karesi
 const LAND_FPS := float(LAND_IMPACT_FRAME) / ENTRY_FALL_TIME   # ≈11.8: kare 26 iniş bitişine denk gelir
@@ -29,6 +30,12 @@ const LASER_DURATION := 4.0
 const LASER_COOLDOWN := 9.0
 const LASER_DMG_INT  := 0.10   # her 0.1s kontrol — doner lazer icin gerekli
 const LASER_DAMAGE   := 2      # daha sik carptigimiz icin hasar dusuruldu
+# Lazer animasyonu (animations/laser, 35 kare): 3'te sol el kalkmaya başlar, 5'te elektriklenme → pervane görünür/hasar verir,
+# 12-34 arası döngüye girer. Lazer elden çıkar: elin kare merkezine (122,122) göre konumu ≈ (+34,-9) px (kareden ölçüldü).
+const LASER_ANIM_FPS    := 12.0
+const LASER_BEAMS_FRAME := 5
+const LASER_LOOP_FROM   := 12
+const LASER_HAND_OFFSET := Vector2(34.0, -9.0)
 
 # Elektrik carpmasi parametreleri
 const BOLT_WARN_DUR  := 1.0    # (eski sabit zaman; artık uyarı süresi animasyondan geliyor: BOLT_STRIKE_FRAME / BOLT_ANIM_FPS)
@@ -59,6 +66,7 @@ var _fixed_y       : float = 380.0   # sabit yükseklik çizgisi
 
 # Lazer state
 var _laser_active  : bool  = false
+var _laser_beams_on: bool  = false   # kollar görünür + hasar veriyor (animasyonda elektriklenme karesinden sonra)
 var _laser_angle   : float = 0.0
 var _laser_timer   : float = 6.0
 var _laser_dur_left: float = 0.0
@@ -169,6 +177,18 @@ func _setup_frames() -> void:
 	for i in range(19, 40):
 		frames.add_frame("electric_strike_loop", load(BASE + "electricStrike/frame_%03d.png" % i))
 
+	# Laser (pervane lazer): 0-4 el kalkar/şarj, 5'te kollar başlar; sonra 12-34 döngü
+	frames.add_animation("laser")
+	frames.set_animation_speed("laser", LASER_ANIM_FPS)
+	frames.set_animation_loop("laser", false)
+	for i in range(35):
+		frames.add_frame("laser", load(BASE + "laser/frame_%03d.png" % i))
+	frames.add_animation("laser_loop")
+	frames.set_animation_speed("laser_loop", LASER_ANIM_FPS)
+	frames.set_animation_loop("laser_loop", true)
+	for i in range(LASER_LOOP_FROM, 35):
+		frames.add_frame("laser_loop", load(BASE + "laser/frame_%03d.png" % i))
+
 	# Spin (rotation frame'leri, saat yonunde: E -> SE -> S -> SW -> W -> NW -> N -> NE)
 	frames.add_animation("spin")
 	frames.set_animation_speed("spin", 10.0)
@@ -181,6 +201,19 @@ func _setup_frames() -> void:
 func play_entry(land_pos: Vector2) -> void:
 	_fixed_y = land_pos.y
 	position  = Vector2(land_pos.x, -200.0)
+
+	# Uyarı sesi: önce ses başlar, boss ekran dışında bekler; sesin SONU iniş anına denk gelir
+	# (S-Miler / Cyber-404 girişindeki aynı desen: _pre_delay = ses süresi - iniş süresi).
+	# Landing animasyonu bekleme BİTİNCE başlar ki kare 26 (yere değiş) iniş bitişine denk gelsin.
+	var fall_stream: AudioStream = load(SFX_FALLING) if ResourceLoader.exists(SFX_FALLING) else null
+	if fall_stream != null:
+		Sfx.play_path_dedicated(SFX_FALLING)
+		var pre_delay: float = maxf(0.0, fall_stream.get_length() - ENTRY_FALL_TIME)
+		if pre_delay > 0.0:
+			await get_tree().create_timer(pre_delay, false).timeout
+			if not is_instance_valid(self):
+				return
+
 	_sprite.play("landing")
 
 	var tw := create_tween()
@@ -262,14 +295,15 @@ func _physics_process(delta: float) -> void:
 
 	# Lazer saldiri zamanlayici
 	if _laser_active:
-		_laser_angle   += LASER_SPEED * delta
-		_laser_dur_left -= delta
-		_laser_dmg_t   -= delta
-		if _laser_dmg_t <= 0:
-			_laser_dmg_t = LASER_DMG_INT
-			_check_laser_hit()
-		if _laser_dur_left <= 0:
-			_stop_laser()
+		if _laser_beams_on:
+			_laser_angle   += LASER_SPEED * delta
+			_laser_dur_left -= delta
+			_laser_dmg_t   -= delta
+			if _laser_dmg_t <= 0:
+				_laser_dmg_t = LASER_DMG_INT
+				_check_laser_hit()
+			if _laser_dur_left <= 0:
+				_stop_laser()
 	elif not _bolt_active and not _tele_active:
 		# Bolt veya TP aktifken laser zamanlayici durur
 		_laser_timer -= delta
@@ -301,14 +335,33 @@ func _physics_process(delta: float) -> void:
 
 func _start_laser() -> void:
 	_laser_active   = true
+	_laser_beams_on = false
 	_laser_dur_left = LASER_DURATION
 	_laser_dmg_t    = 0.5   # ilk hasardan once kisa bekleme
 	_warn_flash     = 0.0
 	_laser_angle    = randf() * TAU   # rastgele baslangic acisi
-	_sprite.play("spin")
+	# El kalkar, enerji birikir: kollar LASER_BEAMS_FRAME'de (elektriklenme) başlar. Süre o andan itibaren sayılır.
+	_sprite.play("laser")
+	_sprite.set_frame_and_progress(0, 0.0)
+	if not _sprite.animation_finished.is_connected(_on_laser_anim_finished):
+		_sprite.animation_finished.connect(_on_laser_anim_finished)
+	while _sprite.frame < LASER_BEAMS_FRAME and _sprite.animation == "laser":
+		await _sprite.frame_changed
+		if not is_instance_valid(self) or is_dead or not _laser_active:
+			return
+	_laser_beams_on = true
+
+func _on_laser_anim_finished() -> void:
+	if _laser_active and not is_dead and _sprite.animation == "laser":
+		_sprite.play("laser_loop")
+
+# Lazerin çıkış noktası = Nyx'in sol eli (sprite'a bağlı, havada sallanmayı da izler)
+func _laser_origin_local() -> Vector2:
+	return _sprite.position + LASER_HAND_OFFSET * NYX_SCALE
 
 func _stop_laser() -> void:
 	_laser_active = false
+	_laser_beams_on = false
 	_laser_timer  = LASER_COOLDOWN
 	# Bolt henuz hazirsa 5s bos birak
 	if _bolt_timer < 5.0:
@@ -544,21 +597,22 @@ func _generate_bolt() -> void:
 # Oyun alani sinirlarinda lazeri kirpar (tribun duvari dahil)
 func _laser_clip_length(dir: Vector2) -> float:
 	var max_len : float = LASER_LENGTH
+	var o : Vector2 = global_position + _laser_origin_local()
 	if dir.x < -0.001:
-		max_len = min(max_len, (global_position.x - 360.0)  / abs(dir.x))
+		max_len = min(max_len, (o.x - 360.0)  / abs(dir.x))
 	if dir.x >  0.001:
-		max_len = min(max_len, (1630.0 - global_position.x) /     dir.x)
+		max_len = min(max_len, (1630.0 - o.x) /     dir.x)
 	if dir.y < -0.001:
-		max_len = min(max_len, (global_position.y - 260.0)  / abs(dir.y))
+		max_len = min(max_len, (o.y - 260.0)  / abs(dir.y))
 	if dir.y >  0.001:
-		max_len = min(max_len, (1040.0 - global_position.y) /     dir.y)
+		max_len = min(max_len, (1040.0 - o.y) /     dir.y)
 	return maxf(max_len, 0.0)
 
 func _check_laser_hit() -> void:
 	var player := get_tree().get_first_node_in_group("player")
 	if not is_instance_valid(player):
 		return
-	var to_player : Vector2 = player.global_position - global_position
+	var to_player : Vector2 = player.global_position - (global_position + _laser_origin_local())
 	if to_player.length() > LASER_LENGTH:
 		return
 	for i in 3:
@@ -591,25 +645,24 @@ func _draw() -> void:
 		pts.append(Vector2(cos(a) * rx, 46.0 * NYX_K + sin(a) * ry))
 	draw_colored_polygon(pts, Color(0.0, 0.0, 0.0, _shadow_alpha))
 
-	# --- LAZER UYARI ---
-	if _warn_flash > 0.01 and not _laser_active:
-		draw_circle(Vector2.ZERO, 30.0, Color(0.1, 0.7, 1.0, _warn_flash * 0.55))
+	# (Eski gövde-merkezli lazer uyarı dairesi kaldırıldı: uyarı artık el kaldırma/şarj animasyonu)
 
-	# --- LAZER (3 kol koni) ---
-	if _laser_active:
+	# --- LAZER (3 kol koni) — çıkış noktası sol el ---
+	if _laser_active and _laser_beams_on:
+		var o : Vector2 = _laser_origin_local()
 		for i in 3:
 			var angle    : float   = _laser_angle + float(i) * TAU / 3.0
 			var dir      : Vector2 = Vector2(cos(angle), sin(angle))
 			var perp     : Vector2 = dir.rotated(PI * 0.5)
 			var clip_len : float   = _laser_clip_length(dir)
-			var tip      : Vector2 = dir * clip_len
-			draw_colored_polygon(PackedVector2Array([Vector2.ZERO, tip + perp * 28.0, tip - perp * 28.0]),
+			var tip      : Vector2 = o + dir * clip_len
+			draw_colored_polygon(PackedVector2Array([o, tip + perp * 28.0, tip - perp * 28.0]),
 				Color(0.0, 0.4, 1.0, 0.13))
-			draw_colored_polygon(PackedVector2Array([Vector2.ZERO, tip + perp * 11.0, tip - perp * 11.0]),
+			draw_colored_polygon(PackedVector2Array([o, tip + perp * 11.0, tip - perp * 11.0]),
 				Color(0.1, 0.65, 1.0, 0.82))
-			draw_colored_polygon(PackedVector2Array([Vector2.ZERO, tip + perp * 3.0, tip - perp * 3.0]),
+			draw_colored_polygon(PackedVector2Array([o, tip + perp * 3.0, tip - perp * 3.0]),
 				Color(0.75, 0.96, 1.0, 0.95))
-		draw_circle(Vector2.ZERO, 11.0, Color(0.4, 0.85, 1.0, 0.95))
+		draw_circle(o, 11.0, Color(0.4, 0.85, 1.0, 0.95))
 
 	# --- TELEPORT FLASH (mavi) ---
 	if _tele_flash > 0.0:
@@ -728,6 +781,7 @@ func die() -> void:
 	if is_dead: return
 	is_dead = true
 	_laser_active = false
+	_laser_beams_on = false
 	_fade_bolt_snd(0.2)
 	set_physics_process(false)
 	$CollisionShape2D.disabled = true
