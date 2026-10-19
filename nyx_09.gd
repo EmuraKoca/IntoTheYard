@@ -31,6 +31,7 @@ const NYX_SCALE := 1.5
 const NYX_K     := NYX_SCALE / 0.85
 const HOVER_H := 30.0 * NYX_K
 const BOB_AMP := 3.5 * NYX_K
+const DEATH_FALL_TIME := 0.7   # ölürken havadan yere inme süresi
 const BOB_SPD := 2.0
 
 # Lazer parametreleri
@@ -1130,6 +1131,9 @@ func die() -> void:
 	if game.has_method("hide_boss_bar"):
 		game.hide_boss_bar()
 	_sprite.play("death")
+	# Havada süzülen Nyx ölürken gölgesine (yere) doğru düşer
+	var fall_tw := create_tween()
+	fall_tw.tween_property(_sprite, "position:y", 0.0, DEATH_FALL_TIME).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	await _sprite.animation_finished
 	await get_tree().create_timer(1.5).timeout
 	if is_instance_valid(self):

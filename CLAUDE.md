@@ -4205,3 +4205,6 @@ Tam ekran OFF iken başlık çubuğu görünmeyip pencere sürüklenemiyordu. Ol
 - Zafer ekranı sadeleştirildi: chip bilgisi tek satır (y=620), Devam butonu `_make_neon_button` (ana menü stili, ▶ ikonu). Game Over'daki Continue da aynı neon stile geçti (80,680).
 - Karakter seçim ekranı: `mainMenuBackground.png` (video yok) `character_select.gd::_ready`'de kodla eklenir (`ColorRect` taban katmanının üstüne, 0.5 alfa karartmayla). Okunurluk/uyum için alfa ayarlanabilir.
 - `BOSS_SPAWN_TIME` test değeri (60) 600'e geri alındı.
+
+## Nyx-09 ölürken yere iniyor (2026-10-20, test edildi)
+`nyx_09.gd::die()`: ölüm animasyonuyla paralel olarak sprite `position:y` hover yüksekliğinden 0'a (gölge hizası) `DEATH_FALL_TIME`=0.7sn'de iner (QUAD ease-in). Boss test değerleri (60sn + Nyx sabit) normale döndürüldü.
