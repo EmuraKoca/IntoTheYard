@@ -325,7 +325,7 @@ const _DATA_BAR_W    := 272.0
 
 # ── Boss sırası — her bölümde 10. dakikada boss gelir ────────────────────────
 # Demo: boss 5. dakikada; tam sürüm: 10. dakika
-const BOSS_SPAWN_TIME: float = 300.0 if GameData.DEMO_MODE else 600.0
+const BOSS_SPAWN_TIME: float = 300.0   # boss 5. dakikada (demo + tam sürüm)
 var _boss_check_index:  int  = 0
 var _boss_spawned:      bool = false
 var _cyber404_node = null
@@ -1366,11 +1366,101 @@ func _spawn_hasmen_entrance() -> void:
 		Vector2(250, 855)     # sandalye
 	)
 
-func _ready() -> void:
+# ── Yükleme ekranı: oyun başında tüm sprite/VFX/ses dosyaları arka planda yüklenir ─────
+# Amaç: oyun içinde (boss girişi, ilk Calamity, ilk düşman türü vb.) diskten yükleme
+# takılmaları (hitch) yaşanmasın. Kaynaklar `_warm_refs`'te tutulur (önbellekte kalsın);
+# static olduğu için aynı oturumdaki sonraki run'larda yükleme ekranı çıkmaz.
+static var _warm_refs: Array = []
+static var _warm_key: String = ""
+
+func _collect_warm_paths() -> Array[String]:
+	var roots: Array[String] = [
+		"res://assets/VFX", "res://assets/balls", "res://assets/elemIndicators",
+		"res://assets/hudBars", "res://assets/sfx", "res://assets/charsRedesign/" + GameData.selected_character,
+		"res://assets/enemys/cyber404", "res://assets/enemys/S_Miler_79",
+		"res://assets/enemys/Nyx_09 The Quantum Widow",
+	]
 	if GameData.is_human_style():
-		preload("res://base_enemy.gd").warm_human_assets()
+		for f in ["subject", "armedSubject", "heavySubject", "franticSubject", "cyberShooter", "cyberRifle", "cyberShotgun"]:
+			roots.append("res://assets/enemys/" + f)
+		roots.append("res://assets/effectiveDeathAnimations")
 	else:
-		preload("res://base_enemy.gd").warm_monster_assets()
+		roots.append("res://assets/newEnemies")
+		roots.append("res://assets/VFX/deathBlood")
+	var out: Array[String] = []
+	var seen := {}
+	var stack: Array = roots.duplicate()
+	while not stack.is_empty():
+		var dir_path: String = stack.pop_back()
+		var d := DirAccess.open(dir_path)
+		if d == null: continue
+		for sub in d.get_directories():
+			if sub == "rotations" or sub.begins_with("_original"): continue
+			stack.append(dir_path + "/" + sub)
+		for f in d.get_files():
+			if f.ends_with(".png") or f.ends_with(".ogg"):
+				var full: String = dir_path + "/" + f
+				if not seen.has(full):
+					seen[full] = true
+					out.append(full)
+	return out
+
+func _preload_all_assets() -> void:
+	var key: String = GameData.selected_character + "|" + str(GameData.is_human_style())
+	if _warm_key == key:
+		return
+	var paths := _collect_warm_paths()
+	var layer := CanvasLayer.new()
+	layer.layer = 200
+	layer.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(layer)
+	var bg := ColorRect.new()
+	bg.color = Color(0.005, 0.01, 0.03, 1)
+	bg.size = Vector2(1920, 1080)
+	layer.add_child(bg)
+	var lbl := Label.new()
+	lbl.text = "YÜKLENİYOR..." if Lang.locale == "tr" else "LOADING..."
+	lbl.add_theme_font_override("font", _font_bold)
+	lbl.add_theme_font_size_override("font_size", 57)
+	lbl.add_theme_color_override("font_color", Color(0, 0.95, 1))
+	lbl.position = Vector2(0, 440)
+	lbl.size = Vector2(1920, 80)
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	layer.add_child(lbl)
+	var bar_bg := ColorRect.new()
+	bar_bg.color = Color(0.02, 0.03, 0.1, 0.95)
+	bar_bg.position = Vector2(560, 560)
+	bar_bg.size = Vector2(800, 22)
+	layer.add_child(bar_bg)
+	var bar := ColorRect.new()
+	bar.color = Color(0, 0.95, 1)
+	bar.position = Vector2(562, 562)
+	bar.size = Vector2(0, 18)
+	layer.add_child(bar)
+
+	get_tree().paused = true
+	for pth in paths:
+		ResourceLoader.load_threaded_request(pth, "", true)
+	var t0 := Time.get_ticks_msec()
+	var pending: Array = paths.duplicate()
+	var total: int = maxi(paths.size(), 1)
+	while not pending.is_empty() and Time.get_ticks_msec() - t0 < 30000:
+		var still: Array = []
+		for pth in pending:
+			var st := ResourceLoader.load_threaded_get_status(pth)
+			if st == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+				still.append(pth)
+			elif st == ResourceLoader.THREAD_LOAD_LOADED:
+				_warm_refs.append(ResourceLoader.load_threaded_get(pth))
+		pending = still
+		bar.size.x = 796.0 * float(total - pending.size()) / float(total)
+		await get_tree().process_frame
+	_warm_key = key
+	get_tree().paused = false
+	layer.queue_free()
+
+func _ready() -> void:
+	await _preload_all_assets()
 	y_sort_enabled = true   # aynı z_index'teki düşmanlar y konumuna göre sıralanır (alttaki öne çizilir)
 	GameData.rescued_total = 0
 	_player_node = get_node("Player")
@@ -1595,7 +1685,7 @@ func subject_died(xp_reward: int = 1, death_pos: Vector2 = Vector2.ZERO, etype: 
 		spawn_interval = max(spawn_interval - 0.1, min_spawn_interval)
 	# Veri parçacıkları: hasar miktarına göre 3-7 parçacık
 	var particle_count := clampi(xp_reward + 2, 3, 7)
-	_spawn_data_particles(death_pos, float(xp_reward) * 10.0 * (1.0 if GameData.DEMO_MODE else 8.0), particle_count)  # DEBUG ×8 hızlı upgrade: demoda kapalı (GameData.DEMO_MODE)
+	_spawn_data_particles(death_pos, float(xp_reward) * 10.0, particle_count)
 
 func _get_hp_bar_rect() -> Rect2:
 	# Artık her karakter HealthBar2'yi kullanıyor (sol üst, iç dolgu alanı, UI
@@ -5302,10 +5392,8 @@ func _make_gravity_gradient() -> Gradient:
 	g.offsets = [0.0, 0.5, 1.0]
 	return g
 
-# Demo: 5 dakikada tüm düşman türleri görülsün diye türler level yerine ZAMANLA açılır.
-# Dev (DEMO_MODE=false): hepsi baştan (test).
+# 5 dakikada tüm düşman türleri görülsün diye türler ZAMANLA açılır (boss 5. dakikada).
 func _enemy_gate(demo_time_sec: float) -> bool:
-	if not GameData.DEMO_MODE: return true
 	return elapsed_time >= demo_time_sec
 
 func _spawn_subject() -> void:
