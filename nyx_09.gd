@@ -16,6 +16,13 @@ var _laser_snd: AudioStreamPlayer = null   # lazer boyunca çalan şarj sesi (el
 const SFX_TELEPORT := "res://assets/sfx/bosses/nyx-09/teleport.ogg"   # 2.0sn: kaybolma+beliriş (~1.6sn) + şarj boyunca
 const SFX_BEAM     := "res://assets/sfx/bosses/nyx-09/beam.ogg"       # 0.82sn: beam atışı
 const THEME_PATH := "res://assets/sfx/bosses/nyx-09/nyx09inthefield.ogg"   # boss teması (döngü), Cyber-404 ile aynı mantık
+const WAVE_COOLDOWN  := 11.0
+const WAVE_COUNT     := 3
+const WAVE_INTERVAL  := 1.0    # dalgalar arası (sn)
+const WAVE_FIRST_DELAY := 0.6  # kast başladıktan ilk dalgaya (kare ~7'de küre parlıyor)
+const WAVE_ANIM_FPS  := 12.0
+const WAVE_PATH      := "res://assets/enemys/Nyx_09 The Quantum Widow/animations/tripleShockWave/frame_%03d.png"
+const WaveScript     := preload("res://nyx_shockwave.gd")
 const SFX_FALLING := "res://assets/sfx/bosses/nyx-09/fallingDown.ogg"
 const ENTRY_FALL_TIME  := 2.2    # yukarıdan iniş süresi (sn)
 const LAND_IMPACT_FRAME := 26    # landing animasyonunda yere değiş karesi
@@ -33,7 +40,7 @@ const LASER_SPEED    := 1.75
 const LASER_DURATION := 4.0
 const LASER_COOLDOWN := 9.0
 const LASER_DMG_INT  := 0.10   # her 0.1s kontrol — doner lazer icin gerekli
-const LASER_DAMAGE   := 2      # daha sik carptigimiz icin hasar dusuruldu
+const LASER_DAMAGE   := 5      # temas basina; LASER_DMG_INT=0.1sn araligiyla (= 50/sn, 3 kol)
 # Lazer animasyonu (animations/laser, 35 kare): 3'te sol el kalkmaya başlar, 5'te elektriklenme → pervane görünür/hasar verir,
 # 12-34 arası döngüye girer. Lazer elden çıkar: elin kare merkezine (122,122) göre konumu ≈ (+34,-9) px (kareden ölçüldü).
 const LASER_ANIM_FPS    := 12.0
@@ -90,6 +97,8 @@ const TPB_SHOCK_DELAY  := 0.12    # çarpma efekti beam başladıktan bu kadar s
 static var _tpb_beam_frames: SpriteFrames = null
 static var _tpb_shock_frames: SpriteFrames = null
 var _tele_snd: AudioStreamPlayer = null
+var _wave_active: bool = false
+var _wave_timer: float = 8.0   # ilk dalga (diğer saldırılardan sonra)
 var _theme_player: AudioStreamPlayer = null
 
 # Boss bari belirdigi an (yere inis) baslar, olene kadar dongude calar (Cyber-404 temasi ile ayni desen).
@@ -124,8 +133,8 @@ const BOLT_COOLDOWN  := 13.0   # saldiriler arasi
 const BOLT_DAMAGE    := 18
 const BOLT_RADIUS    := 55.0   # hasar yarıcapı
 
-var health        : int   = 200
-var max_health    : int   = 200
+var health        : int   = 700
+var max_health    : int   = 700
 var speed         : float = 58.0
 var is_dead       : bool  = false
 var is_frozen     : bool  = false
@@ -154,7 +163,7 @@ var _warn_flash    : float = 0.0
 
 # Teleport + darbe state
 const TELE_COOLDOWN := 16.0
-const TELE_DAMAGE   := 22
+const TELE_DAMAGE   := 25
 const TELE_RADIUS   := 78.0
 
 var _tele_active  : bool    = false
@@ -280,6 +289,17 @@ func _setup_frames() -> void:
 		frames.add_frame("tp_beam", load(tp_base + "4beam/frame_%03d.png" % i))
 
 	# Laser (pervane lazer): 0-4 el kalkar/şarj, 5'te kollar başlar; sonra 12-34 döngü
+	frames.add_animation("wave_cast")
+	frames.set_animation_speed("wave_cast", WAVE_ANIM_FPS)
+	frames.set_animation_loop("wave_cast", false)
+	for i in range(22):
+		frames.add_frame("wave_cast", load(WAVE_PATH % i))
+	frames.add_animation("wave_hold")
+	frames.set_animation_speed("wave_hold", WAVE_ANIM_FPS)
+	frames.set_animation_loop("wave_hold", true)
+	for i in range(12, 22):
+		frames.add_frame("wave_hold", load(WAVE_PATH % i))
+
 	frames.add_animation("laser")
 	frames.set_animation_speed("laser", LASER_ANIM_FPS)
 	frames.set_animation_loop("laser", false)
@@ -389,13 +409,13 @@ func _physics_process(delta: float) -> void:
 		queue_redraw()
 
 	# Teleport zamanlayici
-	if not _laser_active and not _bolt_active and not _tele_active:
+	if not _laser_active and not _bolt_active and not _tele_active and not _wave_active:
 		_tele_timer -= delta
 		if _tele_timer <= 0.0:
 			_start_teleport()
 
 	# Elektrik carpma zamanlayici
-	if not _laser_active and not _bolt_active and not _tele_active:
+	if not _laser_active and not _bolt_active and not _tele_active and not _wave_active:
 		_bolt_timer -= delta
 		if _bolt_timer <= 0.0:
 			_start_bolt()
@@ -407,12 +427,16 @@ func _physics_process(delta: float) -> void:
 			_update_laser_arms()
 			_laser_dur_left -= delta
 			_laser_dmg_t   -= delta
-			if _laser_dmg_t <= 0:
+			# Her karede çarpışma kontrolü (uzakta kol saniyede ~1400px süpürür; 0.1sn'lik örnekleme oyuncuyu "atlıyordu");
+			# hasar ise LASER_DMG_INT aralığıyla verilir.
+			if _check_laser_hit() and _laser_dmg_t <= 0.0:
 				_laser_dmg_t = LASER_DMG_INT
-				_check_laser_hit()
+				var pl := get_tree().get_first_node_in_group("player")
+				if is_instance_valid(pl):
+					pl.take_damage(LASER_DAMAGE)
 			if _laser_dur_left <= 0:
 				_stop_laser()
-	elif not _bolt_active and not _tele_active:
+	elif not _bolt_active and not _tele_active and not _wave_active:
 		# Bolt veya TP aktifken laser zamanlayici durur
 		_laser_timer -= delta
 		if _laser_timer <= 1.0 and _laser_timer > 0:
@@ -421,8 +445,14 @@ func _physics_process(delta: float) -> void:
 		if _laser_timer <= 0:
 			_start_laser()
 
+	# Şok dalgası zamanlayıcı (aynı anda tek saldırı)
+	if not _laser_active and not _bolt_active and not _tele_active and not _wave_active:
+		_wave_timer -= delta
+		if _wave_timer <= 0.0:
+			_start_wave()
+
 	# Hareket (lazer ve ışınlanma sırasında dur — portal/beam animasyonu boss ile birlikte kaymasın)
-	if _laser_active or _tele_active:
+	if _laser_active or _tele_active or _wave_active:
 		velocity = Vector2.ZERO
 		move_and_slide()
 		return
@@ -440,6 +470,46 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 	global_position.y = _fixed_y   # Y'yi kilitle
+
+# Triple Shockwave: kast animasyonu, göğüs önündeki küreden 1sn arayla 3 güdümlü dalga
+func _start_wave() -> void:
+	var pl0 := get_tree().get_first_node_in_group("player")
+	if not is_instance_valid(pl0):
+		_wave_timer = WAVE_COOLDOWN
+		return
+	_wave_active = true
+	_sprite.play("wave_cast")
+	if not _sprite.animation_finished.is_connected(_on_wave_cast_finished):
+		_sprite.animation_finished.connect(_on_wave_cast_finished)
+	await get_tree().create_timer(WAVE_FIRST_DELAY, false).timeout
+	for i in WAVE_COUNT:
+		if not is_instance_valid(self) or is_dead:
+			return
+		_fire_wave()
+		if i < WAVE_COUNT - 1:
+			await get_tree().create_timer(WAVE_INTERVAL, false).timeout
+	await get_tree().create_timer(0.5, false).timeout
+	if not is_instance_valid(self) or is_dead:
+		return
+	_wave_active = false
+	_wave_timer = WAVE_COOLDOWN
+	_sprite.play("walk")
+
+func _on_wave_cast_finished() -> void:
+	if _wave_active and not is_dead and _sprite.animation == "wave_cast":
+		_sprite.play("wave_hold")
+
+func _fire_wave() -> void:
+	var pl := get_tree().get_first_node_in_group("player")
+	var game := get_parent()
+	if not is_instance_valid(pl) or not is_instance_valid(game):
+		return
+	var w: Node2D = WaveScript.new()
+	var from: Vector2 = global_position + _sprite.position + BEAM_ORB_OFFSET * NYX_SCALE
+	w.global_position = from
+	w.dir = (pl.global_position - from).normalized()
+	game.add_child(w)
+	w.global_position = from
 
 func _start_laser() -> void:
 	_laser_active   = true
@@ -670,6 +740,8 @@ func _stop_laser() -> void:
 	# Bolt henuz hazirsa 5s bos birak
 	if _bolt_timer < 5.0:
 		_bolt_timer = 5.0
+	if _wave_timer < 3.0:
+		_wave_timer = 3.0
 	_sprite.play("walk")
 
 func _start_teleport() -> void:
@@ -749,6 +821,7 @@ func _start_teleport() -> void:
 	_tele_timer   = TELE_COOLDOWN
 	if _laser_timer < 5.0: _laser_timer = 5.0
 	if _bolt_timer  < 5.0: _bolt_timer  = 5.0
+	if _wave_timer  < 3.0: _wave_timer  = 3.0
 	position.y = _fixed_y
 	_sprite.play("walk")
 
@@ -838,6 +911,8 @@ func _start_bolt() -> void:
 	# Lazer henuz hazirsa 5s bos birak
 	if _laser_timer < 5.0:
 		_laser_timer = 5.0
+	if _wave_timer < 3.0:
+		_wave_timer = 3.0
 	_sprite.play("walk")
 
 # Yıldırım sprite'ı (assets/VFX/calamitys/lightning, 5 kare 168×168, üstten düşer, patlama merkezi karede ~y=98).
@@ -917,18 +992,18 @@ func _laser_clip_length(dir: Vector2) -> float:
 	if dir.x >  0.001:
 		max_len = min(max_len, (1630.0 - o.x) /     dir.x)
 	if dir.y < -0.001:
-		max_len = min(max_len, (o.y - 260.0)  / abs(dir.y))
+		max_len = min(max_len, (o.y - 240.0)  / abs(dir.y))
 	if dir.y >  0.001:
-		max_len = min(max_len, (1040.0 - o.y) /     dir.y)
+		max_len = min(max_len, (1080.0 - o.y) /     dir.y)
 	return maxf(max_len, 0.0)
 
-func _check_laser_hit() -> void:
+func _check_laser_hit() -> bool:
 	var player := get_tree().get_first_node_in_group("player")
 	if not is_instance_valid(player):
-		return
+		return false
 	var to_player : Vector2 = player.global_position - (global_position + _laser_origin_local())
 	if to_player.length() > LASER_LENGTH:
-		return
+		return false
 	for i in 3:
 		var angle     : float   = _laser_angle + float(i) * TAU / 3.0
 		var laser_dir : Vector2 = Vector2(cos(angle), sin(angle))
@@ -938,8 +1013,8 @@ func _check_laser_hit() -> void:
 			continue
 		var perp : float = abs(to_player.dot(laser_dir.rotated(PI * 0.5)))
 		if perp < LASER_HIT_W and not player.is_dashing:
-			player.take_damage(LASER_DAMAGE)
-			return
+			return true
+	return false
 
 func _draw() -> void:
 	if is_dead:
@@ -1016,6 +1091,9 @@ func die() -> void:
 	_laser_beams_on = false
 	_set_laser_arms_visible(false)
 	_set_tpbeam_visible(false)
+	_wave_active = false
+	for w in get_tree().get_nodes_in_group("nyx_waves"):
+		w.queue_free()
 	_stop_theme()
 	if is_instance_valid(_tele_snd):
 		_tele_snd.stop()

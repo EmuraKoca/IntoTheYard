@@ -8,8 +8,8 @@ const BASE := "res://assets/enemys/S_Miler_79/"
 const BOB_SPD := 3.0   # sadece uyarı efektlerinde kullanılır
 
 # --- Stats ---
-var health        : int   = 500
-var max_health    : int   = 500
+var health        : int   = 700
+var max_health    : int   = 700
 var speed         : float = 68.0
 var original_speed: float = 68.0
 var is_dead       : bool  = false
