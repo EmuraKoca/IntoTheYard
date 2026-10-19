@@ -1358,3 +1358,8 @@ func _spawn_death_blood() -> void:
 	fx.global_position = global_position + Vector2(0, BLOOD_OFFSET_Y)
 	fx.play("blood")
 	_blood_fx = fx  # solma/silinme _register_corpse'ta cesetle birlikte yapılır
+	# Düşman ceset süresi dolmadan başka bir yolla silinirse (boss girişi vb.) kan da onunla gitsin
+	tree_exiting.connect(func():
+		if is_instance_valid(fx):
+			fx.queue_free()
+	)

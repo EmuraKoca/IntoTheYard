@@ -4208,3 +4208,6 @@ Tam ekran OFF iken başlık çubuğu görünmeyip pencere sürüklenemiyordu. Ol
 
 ## Nyx-09 ölürken yere iniyor (2026-10-20, test edildi)
 `nyx_09.gd::die()`: ölüm animasyonuyla paralel olarak sprite `position:y` hover yüksekliğinden 0'a (gölge hizası) `DEATH_FALL_TIME`=0.7sn'de iner (QUAD ease-in). Boss test değerleri (60sn + Nyx sabit) normale döndürüldü.
+
+## Ölüm kanı ceset silinince kalıyordu — düzeltildi (2026-10-20, oyunda denenmedi)
+Kan (`_blood_fx`) parent'a eklenip düşmanın ceset zamanlayıcısıyla (`_register_corpse`) siliniyordu; düşman o süre dolmadan başka yolla silinirse (boss giriş anı vb.) kan sonsuza dek kalıyordu. `base_enemy.gd::_spawn_death_blood`: `tree_exiting` bağlantısıyla düşman silinince kan da `queue_free` edilir.
