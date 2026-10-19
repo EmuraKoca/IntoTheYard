@@ -1267,7 +1267,9 @@ func _update_processor_btn() -> void:
 
 func _spawn_section_boss() -> void:
 	# Demo: sadece Cyber-404 (bölüm indeksi 1)
-	var _boss_idx: int = 1 if GameData.DEMO_MODE else _boss_check_index - 1
+	# Her karaktere sabit boss: Vector→S-Miler (Leila'yı açar), Leila→Cyber-404 (Cyclone'u açar), Cyclone→Nyx-09
+	var _char_boss := {"vector": 0, "leila": 1, "cyclone": 2}
+	var _boss_idx: int = 1 if GameData.DEMO_MODE else int(_char_boss.get(GameData.selected_character, 0))
 	match _boss_idx:
 		0:  # Bölüm 1 — Smiler
 			if not _smiler_spawned:
