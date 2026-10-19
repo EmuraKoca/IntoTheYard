@@ -4074,7 +4074,7 @@ offset_bottom = 1080.0
 mouse_filter = 2
 
 [node name="BallLauncherSprite" type="Sprite2D" parent="." unique_id=1696305855]
-z_index = 5
+z_index = 2
 position = Vector2(1539.0001, 317.00003)
 rotation = 0.715585
 scale = Vector2(0.18935956, 0.20545803)
