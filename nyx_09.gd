@@ -156,6 +156,10 @@ var _fixed_y       : float = 380.0   # sabit yükseklik çizgisi
 var _laser_active  : bool  = false
 var _laser_beams_on: bool  = false   # kollar görünür + hasar veriyor (animasyonda elektriklenme karesinden sonra)
 var _laser_angle   : float = 0.0
+var _laser_retracting : bool  = false   # lazer biterken kollar el'e doğru kısalır
+var _laser_retract_t  : float = 0.0
+var _laser_len_mult   : float = 1.0
+const LASER_RETRACT_TIME := 0.5
 var _laser_timer   : float = 6.0
 var _laser_dur_left: float = 0.0
 var _laser_dmg_t   : float = 0.0
@@ -420,6 +424,19 @@ func _physics_process(delta: float) -> void:
 		if _bolt_timer <= 0.0:
 			_start_bolt()
 
+	# Lazer bitişi: kollar çıkış noktasına doğru kısalıp kaybolur (dönmeye devam eder)
+	if _laser_retracting:
+		_laser_retract_t += delta
+		var k: float = clampf(_laser_retract_t / LASER_RETRACT_TIME, 0.0, 1.0)
+		_laser_len_mult = 1.0 - k * k
+		_laser_angle += LASER_SPEED * delta
+		if k >= 1.0 or is_dead:
+			_laser_retracting = false
+			_laser_len_mult = 1.0
+			_set_laser_arms_visible(false)
+		else:
+			_update_laser_arms()
+
 	# Lazer saldiri zamanlayici
 	if _laser_active:
 		if _laser_beams_on:
@@ -530,6 +547,8 @@ func _start_laser() -> void:
 		if not is_instance_valid(self) or is_dead or not _laser_active:
 			return
 	_laser_beams_on = true
+	_laser_retracting = false
+	_laser_len_mult = 1.0
 	_ensure_laser_arms()
 	_update_laser_arms()
 	_set_laser_arms_visible(true)
@@ -604,10 +623,11 @@ func _update_laser_arms() -> void:
 		var root: Node2D = arm["root"]
 		var tiles: Array = arm["tiles"]
 		var angle : float = _laser_angle + float(i) * TAU / 3.0
-		var length: float = maxf(_laser_clip_length(Vector2(cos(angle), sin(angle))), 8.0)
+		var full  : float = maxf(_laser_clip_length(Vector2(cos(angle), sin(angle))), 8.0)
 		root.position = o
 		root.rotation = angle
-		var n : int = clampi(roundi(length / (LASER_TILE_PX * LASER_BEAM_SCALE_Y)), 1, tiles.size())
+		var n : int = clampi(roundi(full / (LASER_TILE_PX * LASER_BEAM_SCALE_Y)), 1, tiles.size())   # tile sayısı tam uzunluktan (kısalırken titremesin)
+		var length: float = maxf(full * _laser_len_mult, 6.0)
 		var w : float = length / float(n)           # her parçanın dünya genişliği
 		var sx: float = w / LASER_TILE_PX
 		(arm["mat"] as ShaderMaterial).set_shader_parameter("taper", clampf(LASER_TAPER_PX / w, 0.05, 1.0))
@@ -734,8 +754,9 @@ func _laser_origin_local() -> Vector2:
 func _stop_laser() -> void:
 	_fade_laser_snd(0.4)
 	_laser_active = false
-	_laser_beams_on = false
-	_set_laser_arms_visible(false)
+	_laser_beams_on = false   # hasar biter; kollar görsel olarak kısalır (bir anda yok olmasın)
+	_laser_retracting = true
+	_laser_retract_t = 0.0
 	_laser_timer  = LASER_COOLDOWN
 	# Bolt henuz hazirsa 5s bos birak
 	if _bolt_timer < 5.0:
@@ -1089,6 +1110,8 @@ func die() -> void:
 	_sprite.scale = Vector2(NYX_SCALE, NYX_SCALE)   # ışınlanma portal ölçeği ortada kalmışsa ölüm animasyonu normal boyutta
 	_laser_active = false
 	_laser_beams_on = false
+	_laser_retracting = false
+	_laser_len_mult = 1.0
 	_set_laser_arms_visible(false)
 	_set_tpbeam_visible(false)
 	_wave_active = false
