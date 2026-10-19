@@ -330,7 +330,6 @@ func _on_credits() -> void:
 	var lines := [
 		["Silver Font", "Poppy Works  -  CC BY 4.0"],
 		["Pixabay", "pixabay.com  -  Free assets, thank you!"],
-		["Special Thanks", "Çağla Dondurma"],
 	]
 	for i in lines.size():
 		var head := Label.new()

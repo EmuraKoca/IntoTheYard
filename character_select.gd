@@ -64,12 +64,12 @@ func _build_ui() -> void:
 	add_child(root)
 
 	var btn_l := _make_arrow("◀")
-	btn_l.position = Vector2(760, 420)
+	btn_l.position = Vector2(840, 420)
 	btn_l.pressed.connect(_slide.bind(-1))
 	root.add_child(btn_l)
 
 	var btn_r := _make_arrow("▶")
-	btn_r.position = Vector2(1640, 420)
+	btn_r.position = Vector2(1720, 420)
 	btn_r.pressed.connect(_slide.bind(1))
 	root.add_child(btn_r)
 
@@ -81,7 +81,7 @@ func _build_ui() -> void:
 	root.add_child(_next_card)
 
 	var dots_box := HBoxContainer.new()
-	dots_box.position = Vector2(1200, 700)
+	dots_box.position = Vector2(1290, 700)
 	dots_box.add_theme_constant_override("separation", 8)
 	root.add_child(dots_box)
 	_dots.clear()
@@ -98,8 +98,7 @@ func _make_arrow(txt: String) -> Button:
 	b.size = Vector2(60, 60)
 	b.add_theme_font_override("font", _font_bold)
 	b.add_theme_font_size_override("font_size", 38)
-	b.add_theme_color_override("font_color",       Color(0, 0.9, 1))
-	b.add_theme_color_override("font_hover_color", Color(1, 1,   1))
+	_neon_btn(b, Color(0, 0.9, 1))
 	return b
 
 func _make_panel(pos: Vector2, sz: Vector2) -> Panel:
@@ -383,26 +382,19 @@ func _on_back() -> void:
 
 # ── Chip Mağazası ─────────────────────────────────────────────────────────────
 func _make_left_btn(label_text: String, col: Color) -> Button:
-	var flat := StyleBoxFlat.new()
-	flat.bg_color = Color(0, 0, 0, 0)
-	flat.border_width_bottom = 0
-	flat.border_width_top    = 0
-	flat.border_width_left   = 0
-	flat.border_width_right  = 0
-
 	var b := Button.new()
 	b.text = label_text
-	b.flat = true
 	b.add_theme_font_override("font", _font_bold)
 	b.add_theme_font_size_override("font_size", 38)
-	b.add_theme_color_override("font_color",       col)
-	b.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 1.0))
-	b.add_theme_color_override("font_pressed_color", col.lightened(0.3))
-	b.add_theme_stylebox_override("normal",  flat)
-	b.add_theme_stylebox_override("hover",   flat)
-	b.add_theme_stylebox_override("pressed", flat)
-	b.add_theme_stylebox_override("focus",   flat)
-	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	b.custom_minimum_size = Vector2(380, 64)
+	b.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	_neon_btn(b, col)
+	# 38px yazı için Silver dikey ortalama payı
+	for key in ["normal", "hover", "pressed", "disabled", "focus"]:
+		var sb := b.get_theme_stylebox(key) as StyleBoxFlat
+		if sb:
+			sb.content_margin_top = 14.0
+			sb.content_margin_bottom = 4.0
 	return b
 
 func _build_left_menu() -> void:

@@ -4214,3 +4214,6 @@ Kan (`_blood_fx`) parent'a eklenip düşmanın ceset zamanlayıcısıyla (`_regi
 
 ## Kara Borsa + Görevler neon stile geçti, Kara Borsa kaydırılabilir (2026-10-20, test edildi)
 `character_select.gd`: `_card_style(col, dim)` (koyu zemin, renkli çerçeve + hafif parlama) ve `_neon_btn(btn, col, dim)` (ana menü buton stili, normal/hover/pressed/disabled) yardımcıları. Kara Borsa: ürün satırları ürün renginde `Panel` kart, satın alma butonu cyan (yeterli) / soluk pembe (yetersiz) / soluk yeşil (MAX), Kapat pembe. Görevler: her görev `PanelContainer` kart (tamamlanmış yeşil, kilitli/alınmış soluk), COLLECT yeşil neon, kategori başlıkları cyan. Kara Borsa ürün listesi artık `ScrollContainer` (480,185 / 960x760) içinde — ürün sayısı arttıkça Kapat'a binmez; satın alınca liste yenilenir ama kaydırma konumu `_open_shop(restore_scroll)` ile korunur.
+
+## Karakter seçim ekranı cilası + Credits (2026-10-20, test edildi)
+`character_select.gd`: ◀ ▶ ok butonları ve sol menü (Görevler/Kara Borsa) `_neon_btn` ile neon stile geçti (sol menü 380x64 bordürlü buton); oklar kartlara eşit uzaklıkta ortalandı (sol x=840, sağ x=1720; kart merkezi x=1310), nokta göstergesi x=1290. Credits'ten "Special Thanks / Çağla Dondurma" satırı kaldırıldı (`main_menu.gd`).
