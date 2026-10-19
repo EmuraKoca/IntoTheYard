@@ -73,6 +73,21 @@ void fragment() {
 """
 static var _laser_taper_shader: Shader = null
 static var _laser_beam_frames: SpriteFrames = null
+# Işınlanma beam'i (tpBeam/4beam/beam: 8 kare 128×128 yatay çift-sarmal huzme, aynalı tile) + hedefe çarpma (beamShock: 20 kare 128×128)
+const TPB_BEAM_PATH   := "res://assets/enemys/Nyx_09 The Quantum Widow/animations/tpBeam/4beam/beam/frame_%03d.png"
+const TPB_BEAM_FRAMES := 8
+const TPB_BEAM_FPS    := 16.0
+const TPB_BEAM_SCALE_Y := 1.3     # huzme kalınlığı ≈38px × 1.3 ≈ 50px
+const TPB_MAX_TILES   := 12
+const TPB_SHOCK_PATH   := "res://assets/enemys/Nyx_09 The Quantum Widow/animations/tpBeam/4beam/beamShock/frame_%03d.png"
+const TPB_SHOCK_FRAMES := 20
+const TPB_SHOCK_FPS    := 36.0    # 20 kare ≈ 0.55sn (BEAM_LIFETIME); orijinal 12fps 1.7sn sürerdi
+const TPB_SHOCK_SCALE  := 0.9     # halka ≈ 112px × 0.9 ≈ 100px ≈ BEAM_HIT_RADIUS (48) × 2
+const TPB_SHOCK_DELAY  := 0.12    # çarpma efekti beam başladıktan bu kadar sonra (hasar 0.41sn'de, parlama tepesi ~0.3sn)
+static var _tpb_beam_frames: SpriteFrames = null
+static var _tpb_shock_frames: SpriteFrames = null
+var _tpb_root: Node2D = null
+var _tpb_tiles: Array = []
 var _laser_arms: Array = []         # [{"root": Node2D, "tiles": Array[AnimatedSprite2D]}] — 3 kol
 
 # Elektrik carpmasi parametreleri
@@ -325,6 +340,9 @@ func _physics_process(delta: float) -> void:
 		if _beam_t >= 1.0:
 			_beam_active = false
 			_beam_t = 0.0
+			_set_tpbeam_visible(false)
+		else:
+			_update_tpbeam()
 		queue_redraw()
 
 	# Beam uyari solma
@@ -509,6 +527,105 @@ func _update_laser_arms() -> void:
 			else:
 				spr.visible = false
 
+func _get_tpb_beam_frames() -> SpriteFrames:
+	if _tpb_beam_frames == null:
+		var sf := SpriteFrames.new()
+		if sf.has_animation("default"):
+			sf.remove_animation("default")
+		sf.add_animation("beam")
+		sf.set_animation_speed("beam", TPB_BEAM_FPS)
+		sf.set_animation_loop("beam", true)
+		for i in range(TPB_BEAM_FRAMES):
+			sf.add_frame("beam", load(TPB_BEAM_PATH % i))
+		_tpb_beam_frames = sf
+	return _tpb_beam_frames
+
+func _get_tpb_shock_frames() -> SpriteFrames:
+	if _tpb_shock_frames == null:
+		var sf := SpriteFrames.new()
+		if sf.has_animation("default"):
+			sf.remove_animation("default")
+		sf.add_animation("shock")
+		sf.set_animation_speed("shock", TPB_SHOCK_FPS)
+		sf.set_animation_loop("shock", false)
+		for i in range(TPB_SHOCK_FRAMES):
+			sf.add_frame("shock", load(TPB_SHOCK_PATH % i))
+		_tpb_shock_frames = sf
+	return _tpb_shock_frames
+
+# Beam tile düğümlerini bir kez kurar (boss sprite'ının ÜSTÜNDE: huzme göğüs önündeki küreden çıkar)
+func _ensure_tpbeam() -> void:
+	if _tpb_root != null:
+		return
+	_tpb_root = Node2D.new()
+	_tpb_root.visible = false
+	add_child(_tpb_root)
+	var frames := _get_tpb_beam_frames()
+	for _t in TPB_MAX_TILES:
+		var spr := AnimatedSprite2D.new()
+		spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		spr.sprite_frames = frames
+		spr.centered = false
+		spr.offset = Vector2(0.0, -64.0)
+		_tpb_root.add_child(spr)
+		_tpb_tiles.append(spr)
+
+func _set_tpbeam_visible(v: bool) -> void:
+	if _tpb_root == null:
+		return
+	_tpb_root.visible = v
+	for spr in _tpb_tiles:
+		if v:
+			spr.play("beam")
+		else:
+			spr.stop()
+
+func _start_tpbeam_fx() -> void:
+	_ensure_tpbeam()
+	_set_tpbeam_visible(true)
+	_update_tpbeam()
+	# Hedefe çarpma efekti (dünya konumunda, boss'tan bağımsız; bitince kendini siler)
+	var pos := _beam_target
+	var game := get_parent()
+	await get_tree().create_timer(TPB_SHOCK_DELAY, false).timeout
+	if not is_instance_valid(self) or is_dead or not is_instance_valid(game):
+		return
+	var shock := AnimatedSprite2D.new()
+	shock.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	shock.sprite_frames = _get_tpb_shock_frames()
+	shock.global_position = pos
+	shock.scale = Vector2(TPB_SHOCK_SCALE, TPB_SHOCK_SCALE)
+	shock.z_index = 4
+	game.add_child(shock)
+	shock.play("shock")
+	shock.animation_finished.connect(shock.queue_free)
+
+# Her frame: orb'dan hedefe uzanan huzme; aynalı tile'lar (t%2==1 x-ters), son yarıda solar
+func _update_tpbeam() -> void:
+	if _tpb_root == null or not _tpb_root.visible:
+		return
+	var o : Vector2 = _sprite.position + BEAM_ORB_OFFSET * NYX_SCALE
+	var d : Vector2 = to_local(_beam_target) - o
+	var length: float = maxf(d.length(), 8.0)
+	_tpb_root.position = o
+	_tpb_root.rotation = d.angle()
+	_tpb_root.modulate.a = clampf((1.0 - _beam_t) * 2.0, 0.0, 1.0)
+	var n : int = clampi(roundi(length / (128.0 * TPB_BEAM_SCALE_Y)), 1, _tpb_tiles.size())
+	var w : float = length / float(n)
+	var sx: float = w / 128.0
+	for t in _tpb_tiles.size():
+		var spr: AnimatedSprite2D = _tpb_tiles[t]
+		if t < n:
+			spr.visible = true
+			if t % 2 == 1:
+				spr.scale = Vector2(-sx, TPB_BEAM_SCALE_Y)
+				spr.position = Vector2(float(t + 1) * w, 0.0)
+			else:
+				spr.scale = Vector2(sx, TPB_BEAM_SCALE_Y)
+				spr.position = Vector2(float(t) * w, 0.0)
+		else:
+			spr.visible = false
+
 func _on_laser_anim_finished() -> void:
 	if _laser_active and not is_dead and _sprite.animation == "laser":
 		_sprite.play("laser_loop")
@@ -575,6 +692,7 @@ func _start_teleport() -> void:
 		_beam_active = true
 		_beam_t      = 0.0
 		_sprite.play("tp_beam")
+		_start_tpbeam_fx()
 		await get_tree().create_timer(BEAM_LIFETIME * 0.75, false).timeout
 		if is_instance_valid(self) and not is_dead:
 			var p2 := get_tree().get_first_node_in_group("player")
@@ -818,53 +936,7 @@ func _draw() -> void:
 
 	# (Işınlanma hedef uyarı dairesi kaldırıldı: portal animasyonu zaten gösteriyor, konum rastgele)
 
-	# --- BEAM (tp sonrasi dalgali huzmesi) ---
-	if _beam_active and not _beam_target.is_equal_approx(Vector2.ZERO):
-		var alpha      : float   = 1.0 - _beam_t
-		var tip_l      : Vector2 = to_local(_beam_target)
-		var o_l        : Vector2 = _sprite.position + BEAM_ORB_OFFSET * NYX_SCALE   # huzme göğüs önündeki enerji küresinden çıkar
-		var total_l    : float   = (tip_l - o_l).length()
-		if total_l > 1.0:
-			var b_dir  : Vector2 = (tip_l - o_l).normalized()
-			var b_perp : Vector2 = b_dir.rotated(PI * 0.5)
-			var segs   : int     = 14
-			var centers: Array   = []
-			centers.append(o_l)
-			for si in range(1, segs):
-				var t    : float   = float(si) / float(segs)
-				var base : Vector2 = o_l + b_dir * total_l * t
-				# Sin dalgasi — inceden kalin, _bob_t ile canli
-				var jitter : float = sin(t * PI) * sin(t * 8.0 + _bob_t * 20.0) * 22.0 * (1.0 - t * 0.4)
-				centers.append(base + b_perp * jitter)
-			centers.append(tip_l)
-
-			# Dal-branchler
-			for bi in 3:
-				var bst : int    = int(randf_range(3, segs - 2))
-				var bpt : Vector2 = centers[bst]
-				var ba  : float  = b_dir.angle() + randf_range(-0.7, 0.7)
-				var blen : float = randf_range(18.0, 45.0)
-				var bend : Vector2 = bpt + Vector2(cos(ba), sin(ba)) * blen
-				var bw   : float = 3.0 * float(bst) / float(segs) * alpha
-				draw_line(bpt, bend, Color(0.1, 0.7, 1.0, alpha * 0.65), max(bw, 0.8))
-				draw_line(bpt, bend, Color(0.7, 0.95, 1.0, alpha * 0.80), 0.8)
-
-			# Ana huzmesi: her segment ince baslar kalin biter
-			for si in range(centers.size() - 1):
-				var t   : float   = float(si) / float(centers.size() - 1)
-				var ca  : Vector2 = centers[si]
-				var cb  : Vector2 = centers[si + 1]
-				var w   : float   = lerp(0.5, 14.0, t)   # ince → kalin
-				# Dis parlama
-				draw_line(ca, cb, Color(0.0, 0.45, 1.0, alpha * 0.28), w * 2.8)
-				# Ana beam
-				draw_line(ca, cb, Color(0.1, 0.65, 1.0, alpha * 0.88), w)
-				# Parlak cekirdek
-				draw_line(ca, cb, Color(0.75, 0.96, 1.0, alpha * 0.95), max(w * 0.25, 0.7))
-
-			# Hedef noktasi carpma
-			draw_circle(tip_l, 20.0 * alpha, Color(0.1, 0.7, 1.0, alpha * 0.6))
-			draw_circle(tip_l, 9.0  * alpha, Color(0.8, 0.97, 1.0, alpha))
+	# (Işınlanma beam'i artık sprite: _update_tpbeam / tpBeam/4beam/beam + beamShock; eski çizilen dalgalı huzme kaldırıldı)
 
 	# --- BEAM HEDEF UYARISI ---
 	if _beam_warn_t > 0.0:
@@ -914,6 +986,7 @@ func die() -> void:
 	_laser_active = false
 	_laser_beams_on = false
 	_set_laser_arms_visible(false)
+	_set_tpbeam_visible(false)
 	_fade_bolt_snd(0.2)
 	set_physics_process(false)
 	$CollisionShape2D.disabled = true
