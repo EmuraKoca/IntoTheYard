@@ -4211,3 +4211,6 @@ Tam ekran OFF iken başlık çubuğu görünmeyip pencere sürüklenemiyordu. Ol
 
 ## Ölüm kanı ceset silinince kalıyordu — düzeltildi (2026-10-20, oyunda denenmedi)
 Kan (`_blood_fx`) parent'a eklenip düşmanın ceset zamanlayıcısıyla (`_register_corpse`) siliniyordu; düşman o süre dolmadan başka yolla silinirse (boss giriş anı vb.) kan sonsuza dek kalıyordu. `base_enemy.gd::_spawn_death_blood`: `tree_exiting` bağlantısıyla düşman silinince kan da `queue_free` edilir.
+
+## Kara Borsa + Görevler neon stile geçti, Kara Borsa kaydırılabilir (2026-10-20, test edildi)
+`character_select.gd`: `_card_style(col, dim)` (koyu zemin, renkli çerçeve + hafif parlama) ve `_neon_btn(btn, col, dim)` (ana menü buton stili, normal/hover/pressed/disabled) yardımcıları. Kara Borsa: ürün satırları ürün renginde `Panel` kart, satın alma butonu cyan (yeterli) / soluk pembe (yetersiz) / soluk yeşil (MAX), Kapat pembe. Görevler: her görev `PanelContainer` kart (tamamlanmış yeşil, kilitli/alınmış soluk), COLLECT yeşil neon, kategori başlıkları cyan. Kara Borsa ürün listesi artık `ScrollContainer` (480,185 / 960x760) içinde — ürün sayısı arttıkça Kapat'a binmez; satın alınca liste yenilenir ama kaydırma konumu `_open_shop(restore_scroll)` ile korunur.

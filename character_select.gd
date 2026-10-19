@@ -486,6 +486,52 @@ func _milestone_display(key: String) -> Dictionary:
 		label = "Calamity slotunu %s kez doldur" % key.split("_")[2]
 	return {"label": label, "reward": reward}
 
+# ── Neon stil yardımcıları (ana menü buton paletiyle uyumlu) ───────────────────
+func _card_style(col: Color, dim: bool = false) -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	if dim:
+		sb.bg_color = Color(0.025, 0.03, 0.07, 0.85)
+		sb.border_color = Color(col.r, col.g, col.b, 0.25)
+	else:
+		sb.bg_color = Color(col.r * 0.08 + 0.01, col.g * 0.08 + 0.015, col.b * 0.1 + 0.04, 0.92)
+		sb.border_color = Color(col.r, col.g, col.b, 0.75)
+		sb.shadow_color = Color(col.r, col.g, col.b, 0.22)
+		sb.shadow_size = 6
+	sb.set_border_width_all(2)
+	sb.set_corner_radius_all(4)
+	sb.content_margin_left = 16.0
+	sb.content_margin_right = 16.0
+	sb.content_margin_top = 8.0
+	sb.content_margin_bottom = 8.0
+	return sb
+
+func _neon_btn(btn: Button, col: Color, dim: bool = false) -> void:
+	btn.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	var fcol := Color(col.r, col.g, col.b, 0.45) if dim else col
+	for c in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color", "font_disabled_color"]:
+		btn.add_theme_color_override(c, fcol)
+	var defs := {
+		"normal":   [Color(0.025, 0.03, 0.07, 0.9) if dim else Color(0.02, 0.03, 0.1, 0.92), Color(col.r, col.g, col.b, 0.3) if dim else col, 0],
+		"hover":    [Color(0.03, 0.035, 0.08, 0.92) if dim else Color(col.r * 0.2, col.g * 0.2, col.b * 0.2 + 0.03, 0.97), Color(col.r, col.g, col.b, 0.4) if dim else Color(minf(col.r + 0.2, 1.0), minf(col.g + 0.2, 1.0), minf(col.b + 0.2, 1.0), 1.0), 0 if dim else 14],
+		"pressed":  [Color(col.r * 0.12, col.g * 0.12, col.b * 0.12 + 0.02, 0.97), Color(col.r, col.g, col.b, 0.8), 0],
+		"disabled": [Color(0.025, 0.03, 0.07, 0.9), Color(col.r, col.g, col.b, 0.22), 0],
+	}
+	for key in defs:
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = defs[key][0]
+		sb.border_color = defs[key][1]
+		sb.set_border_width_all(2)
+		sb.set_corner_radius_all(4)
+		sb.content_margin_left = 12.0
+		sb.content_margin_right = 12.0
+		sb.content_margin_top = 8.0     # Silver'ın dikey ortalama farkı
+		sb.content_margin_bottom = 3.0
+		if defs[key][2] > 0:
+			sb.shadow_color = Color(col.r, col.g, col.b, 0.4)
+			sb.shadow_size = defs[key][2]
+		btn.add_theme_stylebox_override(key, sb)
+	btn.add_theme_stylebox_override("focus", btn.get_theme_stylebox("normal"))
+
 func _open_achievements(restore_scroll: int = 0) -> void:
 	var canvas := CanvasLayer.new()
 	canvas.layer = 90
@@ -560,7 +606,7 @@ func _open_achievements(restore_scroll: int = 0) -> void:
 		cat_lbl.text = cat["title"]
 		cat_lbl.add_theme_font_override("font", _font_bold)
 		cat_lbl.add_theme_font_size_override("font_size", 19)
-		cat_lbl.add_theme_color_override("font_color", Color(0.4, 0.4, 0.5))
+		cat_lbl.add_theme_color_override("font_color", Color(0.0, 0.72, 0.82, 0.9))
 		var spacer := Control.new()
 		spacer.custom_minimum_size = Vector2(0, 6)
 		vbox.add_child(spacer)
@@ -570,9 +616,13 @@ func _open_achievements(restore_scroll: int = 0) -> void:
 			var is_completed: bool = key in GameData.completed_milestones
 			var is_claimed: bool   = key in GameData.claimed_milestones
 
+			var card_col := Color(0.0, 0.9, 0.6) if is_completed else Color(0.0, 0.72, 0.82)
+			var card := PanelContainer.new()
+			card.add_theme_stylebox_override("panel", _card_style(card_col, is_claimed or not is_completed))
+			vbox.add_child(card)
 			var row := HBoxContainer.new()
 			row.add_theme_constant_override("separation", 16)
-			vbox.add_child(row)
+			card.add_child(row)
 
 			var lbl := Label.new()
 			lbl.text = info["label"]
@@ -620,6 +670,12 @@ func _open_achievements(restore_scroll: int = 0) -> void:
 				collect_btn.text     = "COLLECT"
 				collect_btn.disabled = true
 				collect_btn.add_theme_color_override("font_color", Color(0.25, 0.25, 0.28))
+			if is_claimed:
+				_neon_btn(collect_btn, Color(0.0, 0.9, 0.6), true)
+			elif is_completed:
+				_neon_btn(collect_btn, Color(0.0, 0.9, 0.6))
+			else:
+				_neon_btn(collect_btn, Color(0.0, 0.72, 0.82), true)
 			row.add_child(collect_btn)
 
 	var close_btn := Button.new()
@@ -628,6 +684,7 @@ func _open_achievements(restore_scroll: int = 0) -> void:
 	close_btn.add_theme_font_size_override("font_size", 19)
 	close_btn.add_theme_color_override("font_color", Color(0.8, 0.2, 0.2))
 	close_btn.size     = Vector2(200, 50)
+	_neon_btn(close_btn, Color(1, 0.18, 0.58))
 	close_btn.position = Vector2(860, 940)
 	close_btn.pressed.connect(func(): canvas.queue_free(); _refresh_header_buttons())
 	canvas.add_child(close_btn)
@@ -643,7 +700,7 @@ func _refresh_header_buttons() -> void:
 		ab.text = Lang.t("cs_quests") + ("  [%d]" % pending if pending > 0 else "")
 		ab.add_theme_color_override("font_color", Color(1.0, 0.85, 0.0) if pending > 0 else Color(0.7, 0.7, 0.75))
 
-func _open_shop() -> void:
+func _open_shop(restore_scroll: int = 0) -> void:
 	Sfx.play_path("res://assets/sfx/ui/blackMarketEntrance.ogg")
 	var char_id: String = CHARS[_cur]["id"]
 	var char_col: Color = CHARS[_cur]["color"]
@@ -662,7 +719,7 @@ func _open_shop() -> void:
 	title.add_theme_font_override("font", _font_bold)
 	title.add_theme_font_size_override("font_size", 57)
 	title.add_theme_color_override("font_color", char_col)
-	title.position = Vector2(480, 55)
+	title.position = Vector2(510, 30)
 	canvas.add_child(title)
 
 	var chip_lbl := Label.new()
@@ -670,7 +727,7 @@ func _open_shop() -> void:
 	chip_lbl.add_theme_font_override("font", _font_bold)
 	chip_lbl.add_theme_font_size_override("font_size", 38)
 	chip_lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.8))
-	chip_lbl.position = Vector2(480, 115)
+	chip_lbl.position = Vector2(514, 120)
 	canvas.add_child(chip_lbl)
 
 	# Sadece bu karaktere uygun itemları filtrele
@@ -680,9 +737,19 @@ func _open_shop() -> void:
 		if allowed.size() == 0 or char_id in allowed:
 			visible_items.append(item)
 
+	# Ürün listesi kaydırılabilir (ürün sayısı arttıkça Kapat butonuna binmesin)
+	var scroll := ScrollContainer.new()
+	scroll.position = Vector2(480, 185)
+	scroll.size     = Vector2(960, 760)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	canvas.add_child(scroll)
+	var content := Control.new()
+	content.custom_minimum_size = Vector2(960, visible_items.size() * 92 + 12)
+	scroll.add_child(content)
+
 	for i in visible_items.size():
 		var item: Dictionary = visible_items[i]
-		var row_y := 195 + i * 100
+		var row_y := 6 + i * 92
 		var col: Color = item["color"]
 		var stack: int     = GameData.shop_stack(item["id"], char_id)
 		var max_s: int     = item["max_stack"]
@@ -690,48 +757,41 @@ func _open_shop() -> void:
 		var cost: int      = GameData.get_item_cost(item, char_id)
 		var affordable: bool = GameData.chips >= cost
 
-		var box := ColorRect.new()
-		box.color    = Color(col.r*0.06, col.g*0.06, col.b*0.1, 0.85) if not maxed else Color(0.04,0.04,0.04,0.7)
-		box.size     = Vector2(900, 82)
-		box.position = Vector2(510, row_y)
-		canvas.add_child(box)
-
-		var border := ColorRect.new()
-		border.color    = Color(col.r, col.g, col.b, 0.35) if not maxed else Color(0.18,0.18,0.18,0.4)
-		border.size     = Vector2(902, 84)
-		border.position = Vector2(509, row_y - 1)
-		border.z_index  = -1
-		canvas.add_child(border)
+		var box := Panel.new()
+		box.add_theme_stylebox_override("panel", _card_style(col, maxed))
+		box.size     = Vector2(900, 80)
+		box.position = Vector2(30, row_y)
+		content.add_child(box)
 
 		var name_lbl := Label.new()
 		name_lbl.text = Lang.t("shop_" + item["id"] + "_name")
 		name_lbl.add_theme_font_override("font", _font_bold)
 		name_lbl.add_theme_font_size_override("font_size", 19)
 		name_lbl.add_theme_color_override("font_color", col if not maxed else Color(0.3,0.3,0.3))
-		name_lbl.position = Vector2(528, row_y + 8)
-		canvas.add_child(name_lbl)
+		name_lbl.position = Vector2(56, row_y + 6)
+		content.add_child(name_lbl)
 
 		var desc_lbl := Label.new()
 		desc_lbl.text = Lang.t("shop_" + item["id"] + "_desc")
 		desc_lbl.add_theme_font_override("font", _font_regular)
 		desc_lbl.add_theme_font_size_override("font_size", 19)
 		desc_lbl.add_theme_color_override("font_color", Color(0.6,0.6,0.65) if not maxed else Color(0.28,0.28,0.28))
-		desc_lbl.position = Vector2(528, row_y + 36)
-		canvas.add_child(desc_lbl)
+		desc_lbl.position = Vector2(56, row_y + 32)
+		content.add_child(desc_lbl)
 
 		# Stack göstergesi (0/3 kutucuklar)
 		for si in max_s:
 			var sq := ColorRect.new()
 			sq.size     = Vector2(16, 16)
-			sq.position = Vector2(960 + si * 22, row_y + 32)
-			sq.color    = col if si < stack else Color(0.15, 0.15, 0.18)
-			canvas.add_child(sq)
+			sq.position = Vector2(580 + si * 26, row_y + 32)
+			sq.color    = col if si < stack else Color(0.1, 0.12, 0.2)
+			content.add_child(sq)
 
 		var buy_btn := Button.new()
 		buy_btn.add_theme_font_override("font", _font_bold)
 		buy_btn.add_theme_font_size_override("font_size", 19)
-		buy_btn.size     = Vector2(155, 42)
-		buy_btn.position = Vector2(1255, row_y + 20)
+		buy_btn.size     = Vector2(150, 44)
+		buy_btn.position = Vector2(760, row_y + 18)
 		if maxed:
 			buy_btn.text     = "MAX ✓"
 			buy_btn.disabled = true
@@ -748,10 +808,21 @@ func _open_shop() -> void:
 			buy_btn.pressed.connect(func():
 				if GameData.buy_item(iid):
 					Sfx.play("purchase")
+					var pos: int = scroll.scroll_vertical
 					canvas.queue_free()
-					_open_shop()
+					_open_shop(pos)
 			)
-		canvas.add_child(buy_btn)
+		if maxed:
+			_neon_btn(buy_btn, Color(0.0, 0.9, 0.6), true)
+		elif not affordable:
+			_neon_btn(buy_btn, Color(1, 0.18, 0.58), true)
+		else:
+			_neon_btn(buy_btn, Color(0.0, 0.95, 1.0))
+		content.add_child(buy_btn)
+
+	if restore_scroll > 0:
+		scroll.scroll_vertical = restore_scroll
+		scroll.call_deferred("set", "scroll_vertical", restore_scroll)
 
 	var close_btn := Button.new()
 	close_btn.text = Lang.t("shop_close")
@@ -759,6 +830,7 @@ func _open_shop() -> void:
 	close_btn.add_theme_font_size_override("font_size", 19)
 	close_btn.add_theme_color_override("font_color", Color(0.8,0.2,0.2))
 	close_btn.size     = Vector2(200, 50)
-	close_btn.position = Vector2(860, 950)
+	_neon_btn(close_btn, Color(1, 0.18, 0.58))
+	close_btn.position = Vector2(860, 960)
 	close_btn.pressed.connect(func(): canvas.queue_free())
 	canvas.add_child(close_btn)
