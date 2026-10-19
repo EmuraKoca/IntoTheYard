@@ -911,6 +911,15 @@ func _add_demo_note(canvas: CanvasLayer) -> void:
 	note.size = Vector2(1360, 50)
 	canvas.add_child(note)
 
+# Boss ölüm animasyonu (+ yerde kalma süresi) bitince zafer ekranı açılır; ekran
+# hemen açılırsa oyun duraklayıp animasyon oynamadan kesiliyordu.
+func _boss_victory(boss_node) -> void:
+	if is_instance_valid(boss_node):
+		await boss_node.tree_exiting
+		# tree_exiting düğüm ağacı değişirken tetiklenir; add_child o an kilitli → bir kare bekle
+		await get_tree().process_frame
+	_show_run_end_screen()
+
 func _show_run_end_screen() -> void:
 	get_tree().paused = true
 	var canvas := CanvasLayer.new()
@@ -952,32 +961,22 @@ func _show_run_end_screen() -> void:
 	stats.position = Vector2(160, 340)
 	canvas.add_child(stats)
 
+	# Chip: tek satır (kazanılan + toplam)
 	var chips_earned := GameData.chips - _run_start_chips
 	var chip_lbl := Label.new()
 	chip_lbl.add_theme_font_size_override("font_size", 38)
 	chip_lbl.add_theme_font_override("font", _font_bold)
 	if chips_earned > 0:
-		chip_lbl.text = "+ %d Chip" % chips_earned
+		chip_lbl.text = "+ %d Chip   (Toplam: %d)" % [chips_earned, GameData.chips]
 		chip_lbl.modulate = Color(0.0, 1.0, 0.8)
 	else:
-		chip_lbl.text = "Chip kazanılmadı"
-		chip_lbl.modulate = Color(0.5, 0.5, 0.6)
-	chip_lbl.position = Vector2(160, 520)
+		chip_lbl.text = "Chip kazanılmadı   (Toplam: %d)" % GameData.chips
+		chip_lbl.modulate = Color(0.6, 0.6, 0.7)
+	chip_lbl.position = Vector2(160, 620)
 	canvas.add_child(chip_lbl)
 
-	var chip_total_lbl := Label.new()
-	chip_total_lbl.text = "Toplam: %d Chip" % GameData.chips
-	chip_total_lbl.add_theme_font_size_override("font_size", 38)
-	chip_total_lbl.add_theme_font_override("font", _font_bold)
-	chip_total_lbl.modulate = Color(0.6, 0.6, 0.7)
-	chip_total_lbl.position = Vector2(160, 560)
-	canvas.add_child(chip_total_lbl)
-
-	var btn := Button.new()
-	btn.text = Lang.t("go_continue")
-	btn.add_theme_font_size_override("font_size", 38)
-	btn.position = Vector2(160, 620)
-	btn.size     = Vector2(400, 60)
+	# Devam butonu: ana menüdeki neon stil
+	var btn := _make_neon_button(Lang.t("go_continue"), "play", false, Vector2(160, 740))
 	canvas.add_child(btn)
 	await btn.pressed
 	canvas.queue_free()
@@ -2946,12 +2945,7 @@ func show_game_over(death_dur: float = 0.0) -> void:
 	canvas.add_child(attr_lbl)
 
 	# ── Butonlar ──────────────────────────────────────────────
-	var continue_btn = Button.new()
-	continue_btn.text         = Lang.t("go_continue")
-	continue_btn.position     = Vector2(340, 660)
-	continue_btn.size         = Vector2(300, 55)
-	continue_btn.process_mode = Node.PROCESS_MODE_ALWAYS
-	continue_btn.add_theme_font_override("font", _font_bold)
+	var continue_btn := _make_neon_button(Lang.t("go_continue"), "play", false, Vector2(80, 680))
 	canvas.add_child(continue_btn)
 
 	await continue_btn.pressed
@@ -5496,21 +5490,24 @@ func _process(delta: float) -> void:
 	# Boss ölüm kontrolü her frame çalışır — spawn_interval beklenmez
 	if _smiler_node != null:
 		if not is_instance_valid(_smiler_node) or _smiler_node.is_dead:
+			var _dead_boss = _smiler_node
 			_smiler_node = null
 			GameData.unlock_character("leila")
 			GameData.add_xp(GameData.selected_character, 30)
-			_show_run_end_screen()
+			_boss_victory(_dead_boss)
 	if _cyber404_node != null:
 		if not is_instance_valid(_cyber404_node) or _cyber404_node.is_dead:
+			var _dead_boss = _cyber404_node
 			_cyber404_node = null
 			GameData.unlock_character("cyclone")
 			GameData.add_xp(GameData.selected_character, 30)
-			_show_run_end_screen()
+			_boss_victory(_dead_boss)
 	if _nyx_node != null:
 		if not is_instance_valid(_nyx_node) or _nyx_node.is_dead:
+			var _dead_boss = _nyx_node
 			_nyx_node = null
 			GameData.add_xp(GameData.selected_character, 30)
-			_show_run_end_screen()
+			_boss_victory(_dead_boss)
 
 	spawn_timer += delta
 	if spawn_timer >= spawn_interval:

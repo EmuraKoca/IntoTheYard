@@ -26,6 +26,24 @@ func _ready() -> void:
 	var old := get_node_or_null("HBoxContainer")
 	if old: old.visible = false
 
+	# Arka plan: ana menüdeki görsel (video yok), üstüne okunurluk için karartma
+	var _bgimg := TextureRect.new()
+	_bgimg.texture      = load("res://assets/menuBackground/mainMenuBackground.png")
+	_bgimg.size         = Vector2(1920, 1080)
+	_bgimg.expand_mode  = TextureRect.EXPAND_IGNORE_SIZE
+	_bgimg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	_bgimg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_bgimg)
+	var _bgdim := ColorRect.new()
+	_bgdim.color        = Color(0, 0.01, 0.04, 0.5)
+	_bgdim.size         = Vector2(1920, 1080)
+	_bgdim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_bgdim)
+	var _base := get_node_or_null("ColorRect")
+	if _base:
+		move_child(_bgimg, _base.get_index() + 1)
+		move_child(_bgdim, _base.get_index() + 2)
+
 	$Button.pressed.connect(_on_back)
 	$Button2.set_meta("sfx_click", "characterSelect")
 	$Button2.pressed.connect(_on_confirm)

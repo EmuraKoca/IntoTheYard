@@ -4199,3 +4199,9 @@ Demo'da 16:10 (laptop) ekranlarda alt/üstte gri şerit görülüyordu: `project
 
 ## Pencereli mod: başlık çubuğu görünmüyordu (arkadaş raporu, 2026-10-20, oyunda denenmedi)
 Tam ekran OFF iken başlık çubuğu görünmeyip pencere sürüklenemiyordu. Olası sebep: varsayılan pencere 1920x1080 + başlık çubuğu, 1080p ekranda ekran dışına taşıyor; tam ekrandan dönünce borderless bayrağı kalması da olabilir. `main_menu.gd::_apply_resolution`: `WINDOW_FLAG_BORDERLESS=false`, boyut `screen_get_usable_rect` (−16px) ile sınırlı, dekorasyon dahil ekrana sığdırılıp ortalanıyor. Geliştirici makinesinde sorun yeniden üretilemedi; arkadaşın monitöründe test bekleniyor.
+
+## Zafer/Game Over ekranı düzeni + karakter seçim arka planı (2026-10-20, test edildi: zafer ekranı; diğerleri denenmedi)
+- Boss ölünce zafer ekranı artık ölüm animasyonu bitince açılıyor (`game_scene.gd::_boss_victory`: boss `tree_exiting` + 1 kare bekle; hemen açılınca oyun duraklayıp animasyon kesiliyordu, `add_child` kilidi için 1 kare gerekti).
+- Zafer ekranı sadeleştirildi: chip bilgisi tek satır (y=620), Devam butonu `_make_neon_button` (ana menü stili, ▶ ikonu). Game Over'daki Continue da aynı neon stile geçti (80,680).
+- Karakter seçim ekranı: `mainMenuBackground.png` (video yok) `character_select.gd::_ready`'de kodla eklenir (`ColorRect` taban katmanının üstüne, 0.5 alfa karartmayla). Okunurluk/uyum için alfa ayarlanabilir.
+- `BOSS_SPAWN_TIME` test değeri (60) 600'e geri alındı.
