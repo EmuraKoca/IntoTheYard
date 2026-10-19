@@ -635,10 +635,22 @@ func _apply_resolution(idx: int) -> void:
 	get_tree().root.content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS
 	get_tree().root.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_EXPAND
 	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
-	DisplayServer.window_set_size(res)
-	# Pencereyi ekran ortasına al
-	var screen_size := DisplayServer.screen_get_size()
-	DisplayServer.window_set_position((screen_size - res) / 2)
+	# Tam ekrandan dönünce kenarlıksız bayrağı kalmasın: başlık çubuğu görünmeli, pencere sürüklenebilmeli
+	DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_BORDERLESS, false)
+	# Pencere (başlık çubuğu dahil) kullanılabilir ekran alanından büyük olmasın
+	var usable := DisplayServer.screen_get_usable_rect()
+	var avail := usable.size - Vector2i(16, 16)
+	var win := Vector2i(mini(res.x, avail.x), mini(res.y, avail.y))
+	DisplayServer.window_set_size(win)
+	var deco := DisplayServer.window_get_size_with_decorations()
+	if deco.y > usable.size.y:
+		win.y -= deco.y - usable.size.y
+		DisplayServer.window_set_size(win)
+		deco = DisplayServer.window_get_size_with_decorations()
+	var pos := usable.position + (usable.size - deco) / 2
+	var top_pad := maxi(deco.y - win.y, 0)    # başlık çubuğu yüksekliği (konum istemci alanına göre)
+	pos.y = maxi(pos.y + top_pad, usable.position.y + top_pad)
+	DisplayServer.window_set_position(pos)
 
 func _build_display_tab(parent: Control, rect: Rect2) -> Control:
 	var cont := Control.new()
