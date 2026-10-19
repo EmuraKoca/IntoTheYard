@@ -40,6 +40,10 @@ var _bg_swapping: bool = false
 
 # ─────────────────────────────────────────────────────────────────────────────
 func _ready() -> void:
+	# Menüde ekran oranı farklıysa (16:10 vb.) şerit yerine arka plan ekranı kaplar;
+	# oyun sahnesi project.godot'taki "keep" ayarına menüden çıkınca döner.
+	get_tree().root.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_EXPAND
+	get_tree().root.size_changed.connect(_fit_menu)
 	_load_settings()
 	_apply_settings()
 	_apply_menu_lang()
@@ -63,6 +67,47 @@ func _ready() -> void:
 	$BtnQuit.pressed.connect(_on_quit)
 	$BtnCredits.pressed.connect(_on_credits)
 	_setup_bg_video()
+	_fit_menu()
+
+func _exit_tree() -> void:
+	var r := get_tree().root
+	if r.size_changed.is_connected(_fit_menu):
+		r.size_changed.disconnect(_fit_menu)
+	r.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_KEEP
+
+# Görünür alan (expand ile 1920x1080'den büyük olabilir)
+func _menu_view_size() -> Vector2:
+	return Vector2(maxf(get_viewport().get_visible_rect().size.x, 1920.0),
+			maxf(get_viewport().get_visible_rect().size.y, 1080.0))
+
+func _menu_offset() -> Vector2:
+	return (_menu_view_size() - Vector2(1920, 1080)) * 0.5
+
+func _cover(c: Control) -> void:
+	c.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	c.position = -_menu_offset()
+	c.size     = _menu_view_size()
+
+# Menüyü 1920x1080 düzeniyle ortalar, arka plan katmanlarını tüm ekrana yayar
+func _fit_menu() -> void:
+	var off := _menu_offset()
+	var vs  := _menu_view_size()
+	position = off
+	for n in ["ColorRect", "BackgroundImage", "BackgroundVideo", "BackgroundDim"]:
+		var c := get_node_or_null(n) as Control
+		if c:
+			_cover(c)
+	for v in [_bg_cur, _bg_next]:
+		if v != null and is_instance_valid(v):
+			_cover(v)
+	var al := get_node_or_null("AccentLeft") as Control
+	if al:
+		al.position = Vector2(-off.x, -off.y)
+		al.size = Vector2(4, vs.y)
+	var ar := get_node_or_null("AccentRight") as Control
+	if ar:
+		ar.position = Vector2(1920 + off.x - 4, -off.y)
+		ar.size = Vector2(4, vs.y)
 
 func _setup_bg_video() -> void:
 	var a := get_node_or_null("BackgroundVideo") as VideoStreamPlayer
@@ -153,14 +198,15 @@ func _start_new_game() -> void:
 func _show_confirm_dialog() -> void:
 	var canvas := CanvasLayer.new()
 	canvas.layer = 100
+	canvas.offset = _menu_offset()
 	add_child(canvas)
 
 	# Karartma
 	var dim := ColorRect.new()
 	dim.color = Color(0, 0, 0, 0.72)
-	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 	dim.mouse_filter = Control.MOUSE_FILTER_STOP
 	canvas.add_child(dim)
+	_cover(dim)
 
 	# Kutu
 	var box := Panel.new()
@@ -266,11 +312,12 @@ func _on_load_game() -> void:
 func _on_credits() -> void:
 	var cv := CanvasLayer.new()
 	cv.layer = 10
+	cv.offset = _menu_offset()
 	add_child(cv)
 	var dim := ColorRect.new()
-	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 	dim.color = Color(0, 0, 0, 0.92)
 	cv.add_child(dim)
+	_cover(dim)
 	var title := Label.new()
 	title.text = Lang.t("mm_credits")
 	title.position = Vector2(0, 230)
@@ -350,6 +397,7 @@ func _on_settings() -> void:
 		return
 	_settings_canvas = CanvasLayer.new()
 	_settings_canvas.layer = 10
+	_settings_canvas.offset = _menu_offset()
 	add_child(_settings_canvas)
 	_build_settings_ui()
 
@@ -361,10 +409,10 @@ func _build_settings_ui() -> void:
 
 	# ── Koyu arkaplan overlay ─────────────────────────────────────────────────
 	var dim := ColorRect.new()
-	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 	dim.color = Color(0, 0, 0, 0.72)
 	dim.mouse_filter = Control.MOUSE_FILTER_STOP
 	_settings_canvas.add_child(dim)
+	_cover(dim)
 
 	# ── Panel ─────────────────────────────────────────────────────────────────
 	var panel := Panel.new()
@@ -585,7 +633,7 @@ func _apply_resolution(idx: int) -> void:
 	var res: Vector2i = RESOLUTIONS[idx]
 	get_tree().root.content_scale_size = Vector2i(1920, 1080)
 	get_tree().root.content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS
-	get_tree().root.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_KEEP
+	get_tree().root.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_EXPAND
 	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
 	DisplayServer.window_set_size(res)
 	# Pencereyi ekran ortasına al
