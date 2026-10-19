@@ -325,7 +325,7 @@ const _DATA_BAR_W    := 272.0
 
 # ── Boss sırası — her bölümde 10. dakikada boss gelir ────────────────────────
 # Demo: boss 5. dakikada; tam sürüm: 10. dakika
-const BOSS_SPAWN_TIME: float = 300.0 if GameData.DEMO_MODE else 10.0  # DEBUG: S-Miler testi, 600.0'a geri al
+const BOSS_SPAWN_TIME: float = 300.0 if GameData.DEMO_MODE else 600.0
 var _boss_check_index:  int  = 0
 var _boss_spawned:      bool = false
 var _cyber404_node = null
@@ -1261,7 +1261,7 @@ func _update_processor_btn() -> void:
 
 func _spawn_section_boss() -> void:
 	# Demo: sadece Cyber-404 (bölüm indeksi 1)
-	var _boss_idx: int = 1 if GameData.DEMO_MODE else 2  # DEBUG: Nyx testi (sabit 2) — normal akış: _boss_check_index - 1
+	var _boss_idx: int = 1 if GameData.DEMO_MODE else _boss_check_index - 1
 	match _boss_idx:
 		0:  # Bölüm 1 — Smiler
 			if not _smiler_spawned:
