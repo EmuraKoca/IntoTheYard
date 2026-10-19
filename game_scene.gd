@@ -918,10 +918,17 @@ func _show_run_end_screen() -> void:
 	canvas.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(canvas)
 
-	var bg := ColorRect.new()
-	bg.color = Color(0.02, 0.02, 0.06, 0.95)
-	bg.size  = Vector2(1920, 1080)
+	# Zafer ekranı: Mr. Hasmen görseli (sağda), sol taraf yazı için boş-karanlık
+	var bg := TextureRect.new()
+	bg.texture      = load("res://assets/menuBackground/winEndingScreen.png")
+	bg.size         = Vector2(1920, 1080)
+	bg.expand_mode  = TextureRect.EXPAND_IGNORE_SIZE
+	bg.stretch_mode = TextureRect.STRETCH_SCALE
 	canvas.add_child(bg)
+	var bg_dim := ColorRect.new()   # sol yarıya hafif karartma (yazı okunurluğu)
+	bg_dim.color = Color(0.0, 0.0, 0.03, 0.35)
+	bg_dim.size  = Vector2(1100, 1080)
+	canvas.add_child(bg_dim)
 
 	var minutes := int(elapsed_time / 60)
 	var seconds  := int(elapsed_time) % 60
@@ -931,7 +938,7 @@ func _show_run_end_screen() -> void:
 	title.add_theme_font_size_override("font_size", 76)
 	title.add_theme_font_override("font", _font_bold)
 	title.modulate = Color(0.2, 1.0, 0.6)
-	title.position = Vector2(660, 200)
+	title.position = Vector2(140, 200)
 	canvas.add_child(title)
 
 	var stats_text := (Lang.t("run_end_time") + "\n\n" + Lang.t("run_end_enemies") + "\n\n" + Lang.t("run_end_allies")) % [
@@ -942,7 +949,7 @@ func _show_run_end_screen() -> void:
 	stats.add_theme_font_size_override("font_size", 38)
 	stats.add_theme_font_override("font", _font_bold)
 	stats.modulate = Color(0.85, 0.85, 0.9)
-	stats.position = Vector2(760, 340)
+	stats.position = Vector2(160, 340)
 	canvas.add_child(stats)
 
 	var chips_earned := GameData.chips - _run_start_chips
@@ -955,7 +962,7 @@ func _show_run_end_screen() -> void:
 	else:
 		chip_lbl.text = "Chip kazanılmadı"
 		chip_lbl.modulate = Color(0.5, 0.5, 0.6)
-	chip_lbl.position = Vector2(760, 520)
+	chip_lbl.position = Vector2(160, 520)
 	canvas.add_child(chip_lbl)
 
 	var chip_total_lbl := Label.new()
@@ -963,13 +970,13 @@ func _show_run_end_screen() -> void:
 	chip_total_lbl.add_theme_font_size_override("font_size", 38)
 	chip_total_lbl.add_theme_font_override("font", _font_bold)
 	chip_total_lbl.modulate = Color(0.6, 0.6, 0.7)
-	chip_total_lbl.position = Vector2(760, 560)
+	chip_total_lbl.position = Vector2(160, 560)
 	canvas.add_child(chip_total_lbl)
 
 	var btn := Button.new()
 	btn.text = Lang.t("go_continue")
 	btn.add_theme_font_size_override("font_size", 38)
-	btn.position = Vector2(760, 620)
+	btn.position = Vector2(160, 620)
 	btn.size     = Vector2(400, 60)
 	canvas.add_child(btn)
 	await btn.pressed
@@ -2855,37 +2862,14 @@ func show_game_over(death_dur: float = 0.0) -> void:
 	canvas.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(canvas)
 
-	# ── Koyu arka plan ────────────────────────────────────────
-	var bg = ColorRect.new()
-	bg.color    = Color(0.01, 0.01, 0.04, 0.96)
-	bg.size     = Vector2(1920, 1080)
+	# ── Arka plan: Mr. Hasmen görseli (sağda), sol taraf yazı için boş ──
+	var bg = TextureRect.new()
+	bg.texture      = load("res://assets/menuBackground/winEndingScreen.png")
+	bg.size         = Vector2(1920, 1080)
+	bg.expand_mode  = TextureRect.EXPAND_IGNORE_SIZE
+	bg.stretch_mode = TextureRect.STRETCH_SCALE
 	canvas.add_child(bg)
-
-	# ── Hasmen visual (right side) ─────────────────────────────
-	var hasmen_img = TextureRect.new()
-	hasmen_img.texture      = load("res://assets/mrHasmen.png")
-	hasmen_img.size         = Vector2(500, 900)
-	hasmen_img.position     = Vector2(1380, 180)
-	hasmen_img.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	hasmen_img.expand_mode  = TextureRect.EXPAND_IGNORE_SIZE
-	canvas.add_child(hasmen_img)
 	_add_demo_note(canvas)
-
-	# Neon pink vertical divider
-	var divider = ColorRect.new()
-	divider.size     = Vector2(2, 1080)
-	divider.position = Vector2(1360, 0)
-	divider.color    = Color(1.0, 0.08, 0.58, 0.4)
-	canvas.add_child(divider)
-
-	# "MR. HASMEN" isim etiketi
-	var hasmen_name = Label.new()
-	hasmen_name.text     = "MR. HASMEN"
-	hasmen_name.position = Vector2(1385, 150)
-	hasmen_name.add_theme_font_override("font", _font_bold)
-	hasmen_name.add_theme_font_size_override("font_size", 19)
-	hasmen_name.add_theme_color_override("font_color", Color(1.0, 0.08, 0.58, 0.85))
-	canvas.add_child(hasmen_name)
 
 	# ── Header ─────────────────────────────────────────────────
 	var header = Label.new()
@@ -2899,7 +2883,7 @@ func show_game_over(death_dur: float = 0.0) -> void:
 	# ── Rapor kutusu ──────────────────────────────────────────
 	var report_bg = ColorRect.new()
 	report_bg.position = Vector2(80, 148)
-	report_bg.size     = Vector2(1240, 320)
+	report_bg.size     = Vector2(820, 320)
 	report_bg.color    = Color(0.03, 0.05, 0.08, 0.92)
 	canvas.add_child(report_bg)
 
@@ -2939,14 +2923,14 @@ func show_game_over(death_dur: float = 0.0) -> void:
 	# ── Hasmen quote ────────────────────────────────────────────
 	var quote_bg = ColorRect.new()
 	quote_bg.position = Vector2(80, 506)
-	quote_bg.size     = Vector2(1240, 110)
+	quote_bg.size     = Vector2(820, 110)
 	quote_bg.color    = Color(0.05, 0.02, 0.07, 0.92)
 	canvas.add_child(quote_bg)
 
 	var quote_lbl = Label.new()
 	quote_lbl.text          = "\"" + _get_hasmen_quote() + "\""
 	quote_lbl.position      = Vector2(110, 518)
-	quote_lbl.size          = Vector2(1190, 60)
+	quote_lbl.size          = Vector2(760, 60)
 	quote_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
 	quote_lbl.add_theme_font_override("font", _font_regular)
 	quote_lbl.add_theme_font_size_override("font_size", 19)
@@ -2964,7 +2948,7 @@ func show_game_over(death_dur: float = 0.0) -> void:
 	# ── Butonlar ──────────────────────────────────────────────
 	var continue_btn = Button.new()
 	continue_btn.text         = Lang.t("go_continue")
-	continue_btn.position     = Vector2(340, 760)
+	continue_btn.position     = Vector2(340, 660)
 	continue_btn.size         = Vector2(300, 55)
 	continue_btn.process_mode = Node.PROCESS_MODE_ALWAYS
 	continue_btn.add_theme_font_override("font", _font_bold)
