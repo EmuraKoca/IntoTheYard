@@ -13,6 +13,9 @@ const SFX_ELECTRIC_CHARGE_PITCH := 0.8  # ses ~5.3sn → ~6.7sn: 5 yıldırıml�
 const SFX_LIGHTNING := "res://assets/sfx/bosses/nyx-09/lightning.ogg"
 var _bolt_snd: AudioStreamPlayer = null
 var _laser_snd: AudioStreamPlayer = null   # lazer boyunca çalan şarj sesi (electricCharge, yıldırımla aynı dosya)
+const SFX_TELEPORT := "res://assets/sfx/bosses/nyx-09/teleport.ogg"   # 2.0sn: kaybolma+beliriş (~1.6sn) + şarj boyunca
+const SFX_BEAM     := "res://assets/sfx/bosses/nyx-09/beam.ogg"       # 0.82sn: beam atışı
+const THEME_PATH := "res://assets/sfx/bosses/nyx-09/nyx09inthefield.ogg"   # boss teması (döngü), Cyber-404 ile aynı mantık
 const SFX_FALLING := "res://assets/sfx/bosses/nyx-09/fallingDown.ogg"
 const ENTRY_FALL_TIME  := 2.2    # yukarıdan iniş süresi (sn)
 const LAND_IMPACT_FRAME := 26    # landing animasyonunda yere değiş karesi
@@ -86,6 +89,29 @@ const TPB_SHOCK_SCALE  := 0.9     # halka ≈ 112px × 0.9 ≈ 100px ≈ BEAM_HI
 const TPB_SHOCK_DELAY  := 0.12    # çarpma efekti beam başladıktan bu kadar sonra (hasar 0.41sn'de, parlama tepesi ~0.3sn)
 static var _tpb_beam_frames: SpriteFrames = null
 static var _tpb_shock_frames: SpriteFrames = null
+var _tele_snd: AudioStreamPlayer = null
+var _theme_player: AudioStreamPlayer = null
+
+# Boss bari belirdigi an (yere inis) baslar, olene kadar dongude calar (Cyber-404 temasi ile ayni desen).
+func _start_theme() -> void:
+	if _theme_player != null or not ResourceLoader.exists(THEME_PATH):
+		return
+	var stream: AudioStream = load(THEME_PATH)
+	if "loop" in stream:
+		stream.loop = true
+	_theme_player = AudioStreamPlayer.new()
+	_theme_player.stream = stream
+	_theme_player.bus = "GameplaySFX" if AudioServer.get_bus_index("GameplaySFX") >= 0 else "Master"
+	_theme_player.volume_db = linear_to_db(0.455)
+	add_child(_theme_player)
+	_theme_player.play()
+
+func _stop_theme() -> void:
+	if not is_instance_valid(_theme_player):
+		return
+	var tw := create_tween()
+	tw.tween_property(_theme_player, "volume_db", -40.0, 1.5)
+	tw.tween_callback(_theme_player.stop)
 var _tpb_root: Node2D = null
 var _tpb_tiles: Array = []
 var _laser_arms: Array = []         # [{"root": Node2D, "tiles": Array[AnimatedSprite2D]}] — 3 kol
@@ -308,6 +334,7 @@ func play_entry(land_pos: Vector2) -> void:
 	var game := get_parent()
 	if game.has_method("show_boss_bar"):
 		game.show_boss_bar(self, "NYX-09  //  THE QUANTUM WIDOW")
+		_start_theme()
 	if game.has_method("update_boss_bar"):
 		game.update_boss_bar(0, health, 0, max_health)
 
@@ -661,6 +688,7 @@ func _start_teleport() -> void:
 		_tele_pos = Vector2(_pick_tele_x(pl), _fixed_y)
 
 		# --- KAYBOLIS: eski yerde portal açılır, Nyx içine girer (tp_out) ---
+		_tele_snd = Sfx.play_path_dedicated(SFX_TELEPORT)
 		_sprite.play("tp_out")
 		_apply_tp_scale()
 		await _sprite.animation_finished
@@ -692,6 +720,7 @@ func _start_teleport() -> void:
 		_beam_active = true
 		_beam_t      = 0.0
 		_sprite.play("tp_beam")
+		Sfx.play_path_dedicated(SFX_BEAM)
 		_start_tpbeam_fx()
 		await get_tree().create_timer(BEAM_LIFETIME * 0.75, false).timeout
 		if is_instance_valid(self) and not is_dead:
@@ -987,6 +1016,10 @@ func die() -> void:
 	_laser_beams_on = false
 	_set_laser_arms_visible(false)
 	_set_tpbeam_visible(false)
+	_stop_theme()
+	if is_instance_valid(_tele_snd):
+		_tele_snd.stop()
+		_tele_snd.queue_free()
 	_fade_bolt_snd(0.2)
 	set_physics_process(false)
 	$CollisionShape2D.disabled = true
