@@ -4233,3 +4233,18 @@ Seçim **karakter seçim ekranında** (kartların altı, `character_select.gd::_
 - Uygulama noktaları: `base_enemy._ready` (düşman canı), 3 boss `_ready` → `_apply_difficulty_hp()` (can + varsa zırh), `game_scene.player_damaged` (aldığı hasar, min 1), spawn kontrolü, `subject_died` XP + boss XP.
 - Dikkat: `project.godot`'taki `default_clear_color` (siyah) satırı editörde silinmişti, geri eklendi; editör tekrar silerse gri şeritler döner.
 - Karakter seçim kartlarında karakterler artık hep South'a bakar: `_setup_sprite` tek kareli (south.png) SpriteFrames kullanır (eskiden 8 yönlü dönme animasyonu; `stop()` hover'da kareyi North'a atıyordu).
+
+## Boss + zorluk seçim ekranı (Megabonk tarzı) — 2026-10-21, oyunda denenmedi
+Karakter seçim ekranındaki zorluk butonları KALDIRILDI. Akış: karakter ONAYLA → **`boss_select.tscn/.gd`** (yeni, kodla kurulur) → `GameData.pending_scene` (intro/game). Demo akışı aynı (enemy_select).
+- **Sol panel**: boss listesi (S-Miler-79 → Cyber-404 → Nyx-09), kilitliler "???". **Orta**: seçili karakter (south). **Sağ panel**: boss küçük resmi, ad, "Seviye N" (bitirilen en yüksek seviye), Toplam Run, Yüksek Skor (öldürülen düşman), Speedrun (boss'u yenme süresi), 3 zorluk satırı (Seviye 1 Kolay 0.5x XP, Seviye 2 Normal 1x, Seviye 3 Zor 1.5x; bitirilene ✓, bitirilmemiş üst seviye KİLİTLİ/seçilemez), ONAYLA/GERİ.
+- **İlerleme karakter+boss başına** (`GameData.boss_progress["char|boss"]` = cleared/runs/score/time, kayıt bölümü `[bosses]`): boss N açılması için aynı karakterle boss N-1 Seviye 1 yenilmiş olmalı; Seviye t açılması için t-1 bitirilmiş olmalı. `record_boss_run` (run başında, `game_scene._ready`), `record_boss_clear` (`_boss_victory`).
+- `GameData.selected_boss` artık boss'u belirler (`_spawn_section_boss`); eski "karakter başına sabit boss" kaldırıldı. Karakter kilitleri aynı: S-Miler → Leila, Cyber-404 → Cyclone (game_scene `_process`).
+- Zorluk tablosu `DIFFICULTY_TABLE` easy/normal/**hard** (Zor: düşman canı ×1.4, boss ×1.5, aldığı hasar ×1.3, spawn aralığı ×0.8, XP ×1.5). Normal = mevcut denge. Eski `normal_unlocked` kaldırıldı.
+- Eksik/sonra: "Meydan Okumalar" butonu yok, Seviye 3 dengesi test edilmedi.
+
+## Seçim ekranları görselleri + boss/zorluk ekranı cilası (2026-10-21, test edildi)
+- Karakter seçim kartları ve boss seçim ekranının ortası artık `assets/SelectCharacterScreen/<char>PickScreen.png` kullanıyor (`character_select.gd::_setup_sprite(sprite, id, hedef_yükseklik)`: orta kart 390px, yan kartlar 260px; ölçek görselin kendi yüksekliğinden hesaplanır). Boss seçimde karakter (705,350), 480x640.
+- Karakter carousel'i eski sağ konumuna döndü (oklar x=840/1720, kartlar 990/1180/1460, noktalar 1290).
+- Boss seçim arka planı `assets/menuBackground/difficultySelectionScreenLive.png`, karartma 0.25. Kilitli zorluk satırları gri/soluk ama isim ve XP çarpanı görünür, seçilemez (hata sesi). `if true:` kalıntısı `boss_select.gd` ~236'da duruyor.
+- Cyclone teması TR: "Manipülatif" (`lang.gd` cs_theme_cyclone).
+- Boss seçim ekranı + karakter başına boss ilerlemesi (`boss_progress`) bu commit'le giriyor; `game_data.gd::unlocked_characters` yanlışlıkla silinip geri eklendi.

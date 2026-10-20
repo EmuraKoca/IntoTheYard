@@ -914,9 +914,10 @@ func _add_demo_note(canvas: CanvasLayer) -> void:
 # Boss ölüm animasyonu (+ yerde kalma süresi) bitince zafer ekranı açılır; ekran
 # hemen açılırsa oyun duraklayıp animasyon oynamadan kesiliyordu.
 func _boss_victory(boss_node) -> void:
-	# Kolay modda boss yenilince bu karakterin Normal modu açılır
-	if GameData.difficulty == "easy":
-		GameData.unlock_normal(GameData.selected_character)
+	# Boss yenilince: o karakter+boss için seviye tiki, skor (öldürülen düşman) ve süre kaydedilir
+	if not GameData.DEMO_MODE:
+		GameData.record_boss_clear(GameData.selected_character, GameData.selected_boss,
+			GameData.difficulty_tier(), total_subjects_killed, elapsed_time)
 	if is_instance_valid(boss_node):
 		await boss_node.tree_exiting
 		# tree_exiting düğüm ağacı değişirken tetiklenir; add_child o an kilitli → bir kare bekle
@@ -1271,8 +1272,8 @@ func _update_processor_btn() -> void:
 func _spawn_section_boss() -> void:
 	# Demo: sadece Cyber-404 (bölüm indeksi 1)
 	# Her karaktere sabit boss: Vector→S-Miler (Leila'yı açar), Leila→Cyber-404 (Cyclone'u açar), Cyclone→Nyx-09
-	var _char_boss := {"vector": 0, "leila": 1, "cyclone": 2}
-	var _boss_idx: int = 1 if GameData.DEMO_MODE else int(_char_boss.get(GameData.selected_character, 0))
+	# Boss, boss seçim ekranından gelir (GameData.selected_boss)
+	var _boss_idx: int = 1 if GameData.DEMO_MODE else GameData.selected_boss
 	match _boss_idx:
 		0:  # Bölüm 1 — Smiler
 			if not _smiler_spawned:
@@ -1466,6 +1467,8 @@ func _preload_all_assets() -> void:
 
 func _ready() -> void:
 	await _preload_all_assets()
+	if not GameData.DEMO_MODE:
+		GameData.record_boss_run(GameData.selected_character, GameData.selected_boss)
 	y_sort_enabled = true   # aynı z_index'teki düşmanlar y konumuna göre sıralanır (alttaki öne çizilir)
 	GameData.rescued_total = 0
 	_player_node = get_node("Player")

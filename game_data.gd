@@ -12,13 +12,15 @@ var pending_scene: String = "res://game_scene.tscn"
 
 var selected_character := "vector"
 
-# ── Zorluk (karakter seçim ekranından seçilir) ────────────────────────────────
-# Normal = oyunun mevcut dengesi (tüm çarpanlar 1.0). Kolay'da boss'u yenince o karakterin Normal'i açılır.
+# ── Zorluk + Boss seçimi (boss_select ekranından seçilir) ─────────────────────
+# Seviye 1 = Kolay, Seviye 2 = Normal (oyunun mevcut dengesi), Seviye 3 = Zor.
 var difficulty: String = "easy"
-var normal_unlocked: Dictionary = {"vector": false, "leila": false, "cyclone": false}
+var selected_boss: int = 0   # 0 S-Miler, 1 Cyber-404, 2 Nyx
+const DIFFICULTY_KEYS: Array = ["easy", "normal", "hard"]
 const DIFFICULTY_TABLE: Dictionary = {
 	"easy":   {"enemy_hp": 0.6, "boss_hp": 0.5, "dmg_taken": 0.6, "spawn": 1.25, "reward": 0.5},
 	"normal": {"enemy_hp": 1.0, "boss_hp": 1.0, "dmg_taken": 1.0, "spawn": 1.0,  "reward": 1.0},
+	"hard":   {"enemy_hp": 1.4, "boss_hp": 1.5, "dmg_taken": 1.3, "spawn": 0.8,  "reward": 1.5},
 }
 # enemy_hp: düşman canı, boss_hp: boss can/zırh, dmg_taken: oyuncunun aldığı hasar,
 # spawn: spawn aralığı çarpanı (büyük = daha seyrek), reward: XP çarpanı
@@ -26,13 +28,56 @@ func diff(key: String) -> float:
 	if DEMO_MODE: return 1.0   # demo kendi ayarlarını kullanır
 	return float(DIFFICULTY_TABLE.get(difficulty, DIFFICULTY_TABLE["normal"]).get(key, 1.0))
 
-func is_normal_unlocked(char_id: String) -> bool:
-	return DEMO_MODE or bool(normal_unlocked.get(char_id, false))
+func difficulty_tier() -> int:
+	return maxi(1, DIFFICULTY_KEYS.find(difficulty) + 1)
 
-func unlock_normal(char_id: String) -> void:
-	if not bool(normal_unlocked.get(char_id, false)):
-		normal_unlocked[char_id] = true
-		save_data()
+const BOSSES: Array = [
+	{"id": "smiler",   "name": "S-Miler-79", "thumb": "res://assets/enemys/S_Miler_79/rotations/south.png"},
+	{"id": "cyber404", "name": "Cyber-404",  "thumb": "res://assets/enemys/cyber404/rotations/south.png"},
+	{"id": "nyx",      "name": "Nyx-09",     "thumb": "res://assets/enemys/Nyx_09 The Quantum Widow/rotations/south.png"},
+]
+
+# Karakter + boss başına ilerleme: "char|boss" -> {cleared (en yüksek bitirilen seviye 0-3), runs, score, time}
+var boss_progress: Dictionary = {}
+
+func _bp(char_id: String, boss: int) -> Dictionary:
+	var k := "%s|%d" % [char_id, boss]
+	if not boss_progress.has(k):
+		boss_progress[k] = {"cleared": 0, "runs": 0, "score": 0, "time": 0.0}
+	return boss_progress[k]
+
+func boss_cleared(char_id: String, boss: int) -> int:
+	return int(_bp(char_id, boss)["cleared"])
+
+func boss_runs(char_id: String, boss: int) -> int:
+	return int(_bp(char_id, boss)["runs"])
+
+func boss_best_score(char_id: String, boss: int) -> int:
+	return int(_bp(char_id, boss)["score"])
+
+func boss_best_time(char_id: String, boss: int) -> float:
+	return float(_bp(char_id, boss)["time"])
+
+# İlk boss açık; sonraki boss, önceki boss bu karakterle yenilince (Seviye 1 yeter) açılır
+func is_boss_unlocked(char_id: String, boss: int) -> bool:
+	return DEMO_MODE or boss == 0 or boss_cleared(char_id, boss - 1) >= 1
+
+# Seviye 1 açık; sonraki seviye, öncekini bitirince açılır
+func is_tier_unlocked(char_id: String, boss: int, tier: int) -> bool:
+	return tier <= 1 or boss_cleared(char_id, boss) >= tier - 1
+
+func record_boss_run(char_id: String, boss: int) -> void:
+	_bp(char_id, boss)["runs"] += 1
+	save_data()
+
+func record_boss_clear(char_id: String, boss: int, tier: int, score: int, time_sec: float) -> void:
+	var d := _bp(char_id, boss)
+	d["cleared"] = maxi(int(d["cleared"]), tier)
+	d["score"] = maxi(int(d["score"]), score)
+	if float(d["time"]) <= 0.0 or time_sec < float(d["time"]):
+		d["time"] = time_sec
+	save_data()
+
 var unlocked_characters: Array[String] = ["vector", "cyclone"]
 
 # Kümülatif XP eşikleri — level 2,3,4,5,6 için gereken toplam XP
@@ -363,8 +408,8 @@ func save_data() -> void:
 	cfg.set_value("progress", "char_xp_vector",      char_xp.get("vector",  0))
 	cfg.set_value("progress", "char_xp_leila",       char_xp.get("leila",   0))
 	cfg.set_value("progress", "char_xp_cyclone",     char_xp.get("cyclone", 0))
-	for cid in normal_unlocked:
-		cfg.set_value("difficulty", "normal_unlocked_" + cid, normal_unlocked[cid])
+	for k in boss_progress:
+		cfg.set_value("bosses", k, boss_progress[k])
 	cfg.set_value("chips", "total", chips)
 	cfg.set_value("chips", "completed_milestones", completed_milestones)
 	cfg.set_value("chips", "claimed_milestones",   claimed_milestones)
@@ -404,8 +449,11 @@ func load_data() -> void:
 	char_xp["vector"]  = cfg.get_value("progress", "char_xp_vector",  0)
 	char_xp["leila"]   = cfg.get_value("progress", "char_xp_leila",   0)
 	char_xp["cyclone"] = cfg.get_value("progress", "char_xp_cyclone", 0)
-	for cid in normal_unlocked:
-		normal_unlocked[cid] = bool(cfg.get_value("difficulty", "normal_unlocked_" + cid, false))
+	if cfg.has_section("bosses"):
+		for k in cfg.get_section_keys("bosses"):
+			var v: Variant = cfg.get_value("bosses", k, {})
+			if v is Dictionary:
+				boss_progress[k] = v
 	chips = cfg.get_value("chips", "total", 0)
 	var ms: Variant = cfg.get_value("chips", "completed_milestones", [])
 	if ms is Array:

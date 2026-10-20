@@ -142,7 +142,7 @@ const _TR := {
 	"cs_locked":           "Bu karakter henüz kilitli.",
 	"cs_theme_vector":   "Kinetik",
 	"cs_theme_leila":    "Elemental",
-	"cs_theme_cyclone":  "Manipülasyon",
+	"cs_theme_cyclone":  "Manipülatif",
 
 	# ── Yeni Oyun Onayı ───────────────────────────────────────────────────────
 	"ng_title":   "! YENİ OYUN",

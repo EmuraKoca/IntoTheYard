@@ -44,6 +44,12 @@ func _ready() -> void:
 		move_child(_bgimg, _base.get_index() + 1)
 		move_child(_bgdim, _base.get_index() + 2)
 
+	# Alt butonlar ekranın altında ortada (ONAYLA solda, GERİ sağda)
+	$Button2.position = Vector2(715, 983)
+	$Button2.size = Vector2(250, 70)
+	$Button.position = Vector2(985, 983)
+	$Button.size = Vector2(220, 70)
+	$InfoPanel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	$Button.pressed.connect(_on_back)
 	$Button2.set_meta("sfx_click", "characterSelect")
 	$Button2.pressed.connect(_on_confirm)
@@ -91,7 +97,6 @@ func _build_ui() -> void:
 		dots_box.add_child(dot)
 		_dots.append(dot)
 
-	_build_difficulty_ui(root)
 
 func _make_arrow(txt: String) -> Button:
 	var b := Button.new()
@@ -124,7 +129,6 @@ func _refresh() -> void:
 	_fill_side(_next_card,   CHARS[next_i])
 	_update_dots()
 	_update_info()
-	_update_difficulty_ui()
 	var c: Dictionary = CHARS[_cur]
 	if not _is_locked(c):
 		_start_matrix(_center_card, c["color"])
@@ -150,7 +154,7 @@ func _fill_side(card: Panel, c: Dictionary) -> void:
 	if not locked:
 		var sprite := AnimatedSprite2D.new()
 		sprite.position = card.size / 2 + Vector2(0, -30)
-		_setup_sprite(sprite, c["id"], c["sc"] * 0.52)
+		_setup_sprite(sprite, c["id"], 260.0)
 		card.add_child(sprite)
 	elif locked:
 		var lk := Label.new()
@@ -191,8 +195,8 @@ func _fill_center(card: Panel, c: Dictionary) -> void:
 
 	if not locked:
 		var sprite := AnimatedSprite2D.new()
-		sprite.position = card.size / 2 + Vector2(0, -55)
-		_setup_sprite(sprite, c["id"], c["sc"] * 0.88)
+		sprite.position = card.size / 2 + Vector2(0, -62)
+		_setup_sprite(sprite, c["id"], 390.0)
 		card.add_child(sprite)
 	elif locked:
 		var lk := Label.new()
@@ -267,74 +271,6 @@ func _update_dots() -> void:
 			dot.color = Color(0.3, 0.3, 0.3, 0.55)
 			dot.custom_minimum_size = Vector2(7, 7)
 
-# ── Zorluk seçimi (karakter kartlarının altında) ────────────────────────────────
-var _diff_btns: Dictionary = {}
-var _diff_label: Label = null
-
-func _diff_name(d: String) -> String:
-	var tr: bool = Lang.locale == "tr"
-	return ("KOLAY" if tr else "EASY") if d == "easy" else ("NORMAL")
-
-func _build_difficulty_ui(root: Control) -> void:
-	if GameData.DEMO_MODE:
-		return   # demo kendi ayarlarıyla çalışır
-	_diff_label = Label.new()
-	_diff_label.text = "ZORLUK" if Lang.locale == "tr" else "DIFFICULTY"
-	_diff_label.add_theme_font_override("font", _font_bold)
-	_diff_label.add_theme_font_size_override("font_size", 19)
-	_diff_label.add_theme_color_override("font_color", Color(0.0, 0.72, 0.82, 0.9))
-	_diff_label.position = Vector2(1080, 762)
-	_diff_label.size = Vector2(460, 24)
-	_diff_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	root.add_child(_diff_label)
-	var xs := {"easy": 1080.0, "normal": 1320.0}
-	for d in ["easy", "normal"]:
-		var b := Button.new()
-		b.add_theme_font_override("font", _font_bold)
-		b.add_theme_font_size_override("font_size", 38)
-		b.size = Vector2(220, 64)
-		b.position = Vector2(xs[d], 796)
-		b.set_meta("sfx_click", "")
-		b.pressed.connect(_on_difficulty_pressed.bind(d))
-		root.add_child(b)
-		_diff_btns[d] = b
-	_update_difficulty_ui()
-
-func _on_difficulty_pressed(d: String) -> void:
-	var cid: String = CHARS[_cur]["id"]
-	if d == "normal" and not GameData.is_normal_unlocked(cid):
-		Sfx.play("errorBuzz")
-		return
-	Sfx.play("menuClick")
-	GameData.difficulty = d
-	_update_difficulty_ui()
-
-func _update_difficulty_ui() -> void:
-	if _diff_btns.is_empty():
-		return
-	var cid: String = CHARS[_cur]["id"]
-	if GameData.difficulty == "normal" and not GameData.is_normal_unlocked(cid):
-		GameData.difficulty = "easy"   # bu karakterde Normal henüz açık değil
-	for d in _diff_btns:
-		var b: Button = _diff_btns[d]
-		var locked: bool = d == "normal" and not GameData.is_normal_unlocked(cid)
-		var selected: bool = GameData.difficulty == d
-		var col: Color = Color(0.0, 0.95, 1.0) if d == "easy" else Color(1, 0.18, 0.58)
-		b.text = (("KİLİTLİ" if Lang.locale == "tr" else "LOCKED") if locked else _diff_name(d))
-		_neon_btn(b, col, locked or not selected)
-		# seçili olan dolu/parlak görünür
-		if selected and not locked:
-			var sb := b.get_theme_stylebox("normal") as StyleBoxFlat
-			if sb:
-				sb.bg_color = Color(col.r * 0.25, col.g * 0.25, col.b * 0.25 + 0.04, 0.97)
-				sb.shadow_color = Color(col.r, col.g, col.b, 0.5)
-				sb.shadow_size = 12
-		for key in ["normal", "hover", "pressed", "disabled", "focus"]:
-			var sb2 := b.get_theme_stylebox(key) as StyleBoxFlat
-			if sb2:
-				sb2.content_margin_top = 14.0
-				sb2.content_margin_bottom = 4.0
-
 # ── Info panel ────────────────────────────────────────────────────────────────
 func _update_info() -> void:
 	var c:      Dictionary = CHARS[_cur]
@@ -372,7 +308,7 @@ func _update_info() -> void:
 		info.get_node("LabelTalent").visible = false
 
 # ── Sprite kurulum ────────────────────────────────────────────────────────────
-func _setup_sprite(sprite: AnimatedSprite2D, char_id: String, sc: float) -> void:
+func _setup_sprite(sprite: AnimatedSprite2D, char_id: String, target_h: float) -> void:
 	# Tek kare (south): animasyon/stop/hover hangi karede olursa olsun karakter hep güneye bakar
 	var frames := SpriteFrames.new()
 	if frames.has_animation("default"):
@@ -380,7 +316,9 @@ func _setup_sprite(sprite: AnimatedSprite2D, char_id: String, sc: float) -> void
 	frames.add_animation("spin")
 	frames.set_animation_speed("spin", 1.0)
 	frames.set_animation_loop("spin", false)
-	frames.add_frame("spin", load("res://assets/charsRedesign/%s/rotations/south.png" % char_id))
+	var tex: Texture2D = load("res://assets/SelectCharacterScreen/%sPickScreen.png" % char_id)
+	frames.add_frame("spin", tex)
+	var sc: float = target_h / float(tex.get_height())
 	sprite.sprite_frames  = frames
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	sprite.scale          = Vector2(sc, sc)
@@ -437,13 +375,14 @@ func _on_confirm() -> void:
 	if GameData.show_intro:
 		GameData.show_intro = false
 		next_scene = "res://intro_scene.tscn"
+	GameData.pending_scene = next_scene
 	if GameData.DEMO_MODE:
 		# Demo: karakterden sonra düşman türü seçimi, ardından next_scene
-		GameData.pending_scene = next_scene
 		get_tree().change_scene_to_file("res://enemy_select.tscn")
 	else:
+		# Tam sürüm: karakterden sonra boss + zorluk seçim ekranı, ardından next_scene
 		GameData.enemy_style = "creature"
-		get_tree().change_scene_to_file(next_scene)
+		get_tree().change_scene_to_file("res://boss_select.tscn")
 
 func _on_back() -> void:
 	get_tree().change_scene_to_file("res://main_menu.tscn")
