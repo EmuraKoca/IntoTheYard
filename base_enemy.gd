@@ -215,6 +215,8 @@ func _on_lethal_damage(_from_ally: bool) -> void:
 
 func _ready() -> void:
 	z_index = 2
+	# Düşmanlar kendi katmanında (8): birbirinin içinden geçer, duvar/oyuncu/boss ile çarpışmaya devam eder (mask 1)
+	collision_layer = 8
 	# Demo: düşman canları 1/3'e iner (boss'lar base_enemy'den türemez; boss_enemy.gd hariç tutulur)
 	if GameData.DEMO_MODE and not get_script().resource_path.ends_with("boss_enemy.gd"):
 		health = maxi(1, int(round(float(health) / 3.0)))

@@ -4248,3 +4248,6 @@ Karakter seçim ekranındaki zorluk butonları KALDIRILDI. Akış: karakter ONAY
 - Boss seçim arka planı `assets/menuBackground/difficultySelectionScreenLive.png`, karartma 0.25. Kilitli zorluk satırları gri/soluk ama isim ve XP çarpanı görünür, seçilemez (hata sesi). `if true:` kalıntısı `boss_select.gd` ~236'da duruyor.
 - Cyclone teması TR: "Manipülatif" (`lang.gd` cs_theme_cyclone).
 - Boss seçim ekranı + karakter başına boss ilerlemesi (`boss_progress`) bu commit'le giriyor; `game_data.gd::unlocked_characters` yanlışlıkla silinip geri eklendi.
+
+## Düşmanlar birbirinin içinden geçer (2026-10-21, test edildi)
+Hızlı düşmanlar yavaşlara çarpıp takılıyordu. `base_enemy.gd::_ready` → `collision_layer = 8` (temel düşmanlar kendi katmanında, mask 1 aynı: duvar/oyuncu/boss ile çarpışır, birbiriyle çarpışmaz). Core'lar (`ball.gd` mask `1|8`) ve oyuncu (`player.gd` mask `1|8`) düşmanlara çarpmaya devam eder. Boss'lar katman 1'de kaldı. Geri almak: üç satırı sil. Cesetler zaten layer/mask 0.

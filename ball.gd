@@ -145,7 +145,7 @@ func _ready() -> void:
 	call_deferred("_update_modulate")
 	_cached_player = get_tree().get_first_node_in_group("player")
 	collision_layer = 2
-	collision_mask  = 1
+	collision_mask  = 1 | 8   # duvar/boss (1) + temel düşmanlar (8)
 
 # Konuma bağlı AudioStreamPlayer2D yerine paylaşımlı Sfx havuzu (calamity/UI sesleriyle aynı,
 # çalıştığı doğrulanmış yol) — kullanıcı vuruş seslerinin hiç gelmediğini bildirdi.

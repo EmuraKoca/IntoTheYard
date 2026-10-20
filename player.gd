@@ -438,6 +438,7 @@ func catch_ball(_ball: Node2D) -> void:
 
 
 func _ready() -> void:
+	collision_mask = 1 | 8   # temel düşmanlar artık katman 8 — oyuncu hâlâ onlara çarpar
 	# _process'i AnimatedSprite2D'den (priority 0) SONRA çalıştır
 	# Böylece aynı frame'de animasyon durduğu an is_playing() false görürüz
 	process_priority = 1
