@@ -593,6 +593,8 @@ func _setup_weapon_sprite() -> void:
 	_weapon_sprite.texture = _weapon_textures.get("S")
 	_weapon_sprite.z_index = 15
 	_weapon_sprite.z_as_relative = false
+	# Eklenmeden ÖNCE doğru yere koy: yoksa ilk karede (0,0)'da çizilip yerine ışınlanıyordu (yükleme sonrası titreme)
+	_weapon_sprite.position = player.global_position + Vector2(20, -24)
 	get_parent().add_child.call_deferred(_weapon_sprite)
 
 func _setup_leila_sfx() -> void:
