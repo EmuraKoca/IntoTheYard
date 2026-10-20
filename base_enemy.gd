@@ -1365,7 +1365,10 @@ func _spawn_death_blood() -> void:
 	fx.play("blood")
 	_blood_fx = fx  # solma/silinme _register_corpse'ta cesetle birlikte yapılır
 	# Düşman ceset süresi dolmadan başka bir yolla silinirse (boss girişi vb.) kan da onunla gitsin
-	tree_exiting.connect(func():
-		if is_instance_valid(fx):
-			fx.queue_free()
-	)
+	if not tree_exiting.is_connected(_free_blood_on_exit):
+		tree_exiting.connect(_free_blood_on_exit)
+
+# Lambda DEĞİL: kan kendi animasyonuyla önce silinirse lambda'nın yakaladığı fx "freed" hatası basıyordu
+func _free_blood_on_exit() -> void:
+	if is_instance_valid(_blood_fx):
+		_blood_fx.queue_free()

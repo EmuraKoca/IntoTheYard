@@ -1571,7 +1571,13 @@ func _ready() -> void:
 	_run_start_chips = GameData.chips
 	var _cal_start := GameData.get_shop_start_calamity_count()
 	if _cal_start > 0:
-		var _cal_pool := ["⚡", "🔥", "🌀", "❄️", "🌊", "☠️"]
+		# Başlangıç Calamity'si karakterin KENDİ havuzundan gelir (önkoşulsuz/hemen işe yarayanlar)
+		var _cal_pools := {
+			"vector":  ["🌀", "💥", "🔓", "🏚️", "🕳️", "🌧️"],
+			"leila":   ["⚡", "🔥", "❄️", "🌊", "🌋", "⛈️"],
+			"cyclone": ["👾", "🎱", "🪞", "🧪", "💣", "☠️"],
+		}
+		var _cal_pool: Array = (_cal_pools.get(GameData.selected_character, _cal_pools["vector"]) as Array).duplicate()
 		_cal_pool.shuffle()
 		for _ci in range(min(_cal_start, max_calamity_slots)):
 			calamity_slots.append(_cal_pool[_ci])

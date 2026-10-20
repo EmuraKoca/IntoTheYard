@@ -4251,3 +4251,7 @@ Karakter seçim ekranındaki zorluk butonları KALDIRILDI. Akış: karakter ONAY
 
 ## Düşmanlar birbirinin içinden geçer (2026-10-21, test edildi)
 Hızlı düşmanlar yavaşlara çarpıp takılıyordu. `base_enemy.gd::_ready` → `collision_layer = 8` (temel düşmanlar kendi katmanında, mask 1 aynı: duvar/oyuncu/boss ile çarpışır, birbiriyle çarpışmaz). Core'lar (`ball.gd` mask `1|8`) ve oyuncu (`player.gd` mask `1|8`) düşmanlara çarpmaya devam eder. Boss'lar katman 1'de kaldı. Geri almak: üç satırı sil. Cesetler zaten layer/mask 0.
+
+## Başlangıç Calamity havuzu karaktere göre + ölüm kanı lambda hatası (2026-10-21, test edildi)
+- Markette "başlangıç Calamity" artık karakterin KENDİ havuzundan gelir (`game_scene.gd::_ready` `_cal_pools`: Vector 🌀💥🔓🏚️🕳️🌧️, Leila ⚡🔥❄️🌊🌋⛈️, Cyclone 👾🎱🪞🧪💣☠️; önkoşul isteyenler dahil değil). Eskiden karışık havuzdan Vector'a Leila/Cyclone Calamity'si geliyordu.
+- **"Lambda capture at index 0 was freed" hata spam'i**: kök sebep `base_enemy.gd::_spawn_death_blood`'taki `tree_exiting.connect(func(): fx.queue_free())` — kan animasyonu kendi silinince, düşman sahneden çıkarken lambda yakaladığı freed `fx` ile çağrılıyordu (düşman başına bir hata). Artık adlı fonksiyon `_free_blood_on_exit()` (member `_blood_fx` kontrolü). **Genel kural: bir node'a bağlanan lambda başka bir node'u yakalıyorsa, o node lambda'dan önce silinebiliyorsa lambda yerine adlı fonksiyon + member kullan** (mesajda dosya/satır çıkmaz, bulması zor).
