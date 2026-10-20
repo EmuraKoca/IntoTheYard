@@ -104,6 +104,7 @@ const SIZE_MULT := SPRITE_SCALE / 0.9
 func _ready() -> void:
 	z_index = 3
 	add_to_group("subjects")
+	_apply_difficulty_hp()
 	call_deferred("_attach_shadow")
 
 	var col  := CollisionShape2D.new()
@@ -742,3 +743,13 @@ func _physical_flash() -> void:
 
 func _attach_shadow() -> void:
 	preload("res://blob_shadow.gd").attach(self, _sprite)
+
+# Zorluk: boss can (ve varsa zırh) çarpanı
+func _apply_difficulty_hp() -> void:
+	var m: float = GameData.diff("boss_hp")
+	if m == 1.0: return
+	health = maxi(1, int(round(float(health) * m)))
+	max_health = maxi(1, int(round(float(max_health) * m)))
+	if get("armor") != null:
+		set("armor", maxi(0, int(round(float(get("armor")) * m))))
+		set("max_armor", maxi(1, int(round(float(get("max_armor")) * m))))

@@ -219,6 +219,10 @@ func _ready() -> void:
 	if GameData.DEMO_MODE and not get_script().resource_path.ends_with("boss_enemy.gd"):
 		health = maxi(1, int(round(float(health) / 3.0)))
 		max_health = maxi(1, int(round(float(max_health) / 3.0)))
+	var _ehp: float = GameData.diff("enemy_hp")
+	if _ehp != 1.0 and not get_script().resource_path.ends_with("boss_enemy.gd"):
+		health = maxi(1, int(round(float(health) * _ehp)))
+		max_health = maxi(1, int(round(float(max_health) * _ehp)))
 	_setup_sprite()
 	preload("res://blob_shadow.gd").attach(self, get_sprite())
 	_chip_node = Node2D.new()

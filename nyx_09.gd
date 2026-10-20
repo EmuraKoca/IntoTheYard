@@ -200,6 +200,7 @@ var _sprite: AnimatedSprite2D = null
 func _ready() -> void:
 	z_index = 3
 	add_to_group("subjects")
+	_apply_difficulty_hp()
 	# (BlobShadow kaldırıldı: Nyx'in gölgesi _draw'daki, bob ile büyüyüp küçülen oval)
 
 	var col := CollisionShape2D.new()
@@ -1204,3 +1205,13 @@ func _physical_flash() -> void:
 	await get_tree().create_timer(0.08, false).timeout
 	if is_instance_valid(self):
 		modulate = Color(1, 1, 1, 1)
+
+# Zorluk: boss can (ve varsa zırh) çarpanı
+func _apply_difficulty_hp() -> void:
+	var m: float = GameData.diff("boss_hp")
+	if m == 1.0: return
+	health = maxi(1, int(round(float(health) * m)))
+	max_health = maxi(1, int(round(float(max_health) * m)))
+	if get("armor") != null:
+		set("armor", maxi(0, int(round(float(get("armor")) * m))))
+		set("max_armor", maxi(1, int(round(float(get("max_armor")) * m))))

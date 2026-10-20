@@ -914,6 +914,9 @@ func _add_demo_note(canvas: CanvasLayer) -> void:
 # Boss ölüm animasyonu (+ yerde kalma süresi) bitince zafer ekranı açılır; ekran
 # hemen açılırsa oyun duraklayıp animasyon oynamadan kesiliyordu.
 func _boss_victory(boss_node) -> void:
+	# Kolay modda boss yenilince bu karakterin Normal modu açılır
+	if GameData.difficulty == "easy":
+		GameData.unlock_normal(GameData.selected_character)
 	if is_instance_valid(boss_node):
 		await boss_node.tree_exiting
 		# tree_exiting düğüm ağacı değişirken tetiklenir; add_child o an kilitli → bir kare bekle
@@ -1671,7 +1674,7 @@ func subject_died(xp_reward: int = 1, death_pos: Vector2 = Vector2.ZERO, etype: 
 		return
 	subjects_killed += 1
 	total_subjects_killed += 1
-	var _xp := int(float(xp_reward) * GameData.get_shop_xp_mult())
+	var _xp := int(float(xp_reward) * GameData.get_shop_xp_mult() * GameData.diff("reward"))
 	GameData.add_xp(GameData.selected_character, _xp)
 	GameData.record_kill(etype)
 	GameData.record_char_kill(GameData.selected_character)
@@ -2846,6 +2849,9 @@ func subject_rescued() -> void:
 	GameData.add_xp(GameData.selected_character, 2)
 
 func player_damaged(amount: int = 1) -> void:
+	var _dm: float = GameData.diff("dmg_taken")
+	if _dm != 1.0:
+		amount = maxi(1, int(round(float(amount) * _dm)))
 	var _p := get_node_or_null("Player")
 	# Shock Reflex: Electrocute sonrası 3s için %8 kaçınma
 	if _p and _p.get("has_shock_reflex") and _p.has_shock_reflex and _p._shock_reflex_timer > 0.0:
@@ -5583,24 +5589,24 @@ func _process(delta: float) -> void:
 			var _dead_boss = _smiler_node
 			_smiler_node = null
 			GameData.unlock_character("leila")
-			GameData.add_xp(GameData.selected_character, 30)
+			GameData.add_xp(GameData.selected_character, int(30.0 * GameData.diff("reward")))
 			_boss_victory(_dead_boss)
 	if _cyber404_node != null:
 		if not is_instance_valid(_cyber404_node) or _cyber404_node.is_dead:
 			var _dead_boss = _cyber404_node
 			_cyber404_node = null
 			GameData.unlock_character("cyclone")
-			GameData.add_xp(GameData.selected_character, 30)
+			GameData.add_xp(GameData.selected_character, int(30.0 * GameData.diff("reward")))
 			_boss_victory(_dead_boss)
 	if _nyx_node != null:
 		if not is_instance_valid(_nyx_node) or _nyx_node.is_dead:
 			var _dead_boss = _nyx_node
 			_nyx_node = null
-			GameData.add_xp(GameData.selected_character, 30)
+			GameData.add_xp(GameData.selected_character, int(30.0 * GameData.diff("reward")))
 			_boss_victory(_dead_boss)
 
 	spawn_timer += delta
-	if spawn_timer >= spawn_interval:
+	if spawn_timer >= spawn_interval * GameData.diff("spawn"):
 		spawn_timer = 0.0
 		var nyx_alive: bool     = is_instance_valid(_nyx_node)      and not _nyx_node.is_dead
 		var smiler_alive: bool  = is_instance_valid(_smiler_node)  and not _smiler_node.is_dead

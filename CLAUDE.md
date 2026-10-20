@@ -4225,3 +4225,11 @@ Kan (`_blood_fx`) parent'a eklenip düşmanın ceset zamanlayıcısıyla (`_regi
 ## Karakter başına sabit boss (2026-10-21, oyunda denenmedi) + GELECEK FİKRİ
 Sorun: `_boss_check_index` her run'da 0'dan başladığı için tam sürümde hep S-Miler geliyordu, Cyber-404/Nyx hiç gelmiyordu. Geçici çözüm (publisher toplantısı için): `game_scene.gd::_spawn_section_boss` karaktere göre sabit boss — **Vector → S-Miler-79** (yenilince Leila açılır), **Leila → Cyber-404** (Cyclone açılır), **Cyclone → Nyx-09**. Demo (`DEMO_MODE`) hâlâ sadece Cyber-404.
 **Gelecek fikri (kullanıcı, 2026-10-21, değerlendirilecek)**: Megabonk benzeri zorluk sistemi — karakter seçildikten sonra zorluk seçimi; Kolay modda bir kez yenince Normal mod açılır (ve devamı: daha zor modlar). Boss seçimi de buna/ilerlemeye bağlanabilir (örn. kayıtta yenilen boss'lar → sıradaki run'da sıradaki boss, hepsi yenilince rastgele). Henüz tasarlanmadı.
+
+## Zorluk modu: Kolay / Normal (2026-10-21, oyunda denenmedi)
+Seçim **karakter seçim ekranında** (kartların altı, `character_select.gd::_build_difficulty_ui`): KOLAY / NORMAL neon butonları (seçili olan dolu/parlak, kilitli "KİLİTLİ"). Demo'da gizli (`DEMO_MODE`), demo `GameData.diff()` hep 1.0.
+- `game_data.gd`: `difficulty` ("easy" varsayılan), `normal_unlocked[char]` (kayıt: `[difficulty] normal_unlocked_<char>`), `DIFFICULTY_TABLE` (Normal = mevcut denge, tüm çarpanlar 1.0; **Kolay**: düşman canı ×0.6, boss can/zırh ×0.5, oyuncunun aldığı hasar ×0.6, spawn aralığı ×1.25, XP ×0.5), `diff(anahtar)`, `is_normal_unlocked`, `unlock_normal`.
+- **Kilit**: karakter başına; Kolay'da o karakterin boss'u yenilince Normal açılır (`game_scene.gd::_boss_victory`). Chip ödülü çarpanlanmadı (chip milestone'lardan geliyor), sadece XP.
+- Uygulama noktaları: `base_enemy._ready` (düşman canı), 3 boss `_ready` → `_apply_difficulty_hp()` (can + varsa zırh), `game_scene.player_damaged` (aldığı hasar, min 1), spawn kontrolü, `subject_died` XP + boss XP.
+- Dikkat: `project.godot`'taki `default_clear_color` (siyah) satırı editörde silinmişti, geri eklendi; editör tekrar silerse gri şeritler döner.
+- Karakter seçim kartlarında karakterler artık hep South'a bakar: `_setup_sprite` tek kareli (south.png) SpriteFrames kullanır (eskiden 8 yönlü dönme animasyonu; `stop()` hover'da kareyi North'a atıyordu).

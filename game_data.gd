@@ -11,6 +11,28 @@ var enemy_style: String = "creature"
 var pending_scene: String = "res://game_scene.tscn"
 
 var selected_character := "vector"
+
+# ── Zorluk (karakter seçim ekranından seçilir) ────────────────────────────────
+# Normal = oyunun mevcut dengesi (tüm çarpanlar 1.0). Kolay'da boss'u yenince o karakterin Normal'i açılır.
+var difficulty: String = "easy"
+var normal_unlocked: Dictionary = {"vector": false, "leila": false, "cyclone": false}
+const DIFFICULTY_TABLE: Dictionary = {
+	"easy":   {"enemy_hp": 0.6, "boss_hp": 0.5, "dmg_taken": 0.6, "spawn": 1.25, "reward": 0.5},
+	"normal": {"enemy_hp": 1.0, "boss_hp": 1.0, "dmg_taken": 1.0, "spawn": 1.0,  "reward": 1.0},
+}
+# enemy_hp: düşman canı, boss_hp: boss can/zırh, dmg_taken: oyuncunun aldığı hasar,
+# spawn: spawn aralığı çarpanı (büyük = daha seyrek), reward: XP çarpanı
+func diff(key: String) -> float:
+	if DEMO_MODE: return 1.0   # demo kendi ayarlarını kullanır
+	return float(DIFFICULTY_TABLE.get(difficulty, DIFFICULTY_TABLE["normal"]).get(key, 1.0))
+
+func is_normal_unlocked(char_id: String) -> bool:
+	return DEMO_MODE or bool(normal_unlocked.get(char_id, false))
+
+func unlock_normal(char_id: String) -> void:
+	if not bool(normal_unlocked.get(char_id, false)):
+		normal_unlocked[char_id] = true
+		save_data()
 var unlocked_characters: Array[String] = ["vector", "cyclone"]
 
 # Kümülatif XP eşikleri — level 2,3,4,5,6 için gereken toplam XP
@@ -341,6 +363,8 @@ func save_data() -> void:
 	cfg.set_value("progress", "char_xp_vector",      char_xp.get("vector",  0))
 	cfg.set_value("progress", "char_xp_leila",       char_xp.get("leila",   0))
 	cfg.set_value("progress", "char_xp_cyclone",     char_xp.get("cyclone", 0))
+	for cid in normal_unlocked:
+		cfg.set_value("difficulty", "normal_unlocked_" + cid, normal_unlocked[cid])
 	cfg.set_value("chips", "total", chips)
 	cfg.set_value("chips", "completed_milestones", completed_milestones)
 	cfg.set_value("chips", "claimed_milestones",   claimed_milestones)
@@ -380,6 +404,8 @@ func load_data() -> void:
 	char_xp["vector"]  = cfg.get_value("progress", "char_xp_vector",  0)
 	char_xp["leila"]   = cfg.get_value("progress", "char_xp_leila",   0)
 	char_xp["cyclone"] = cfg.get_value("progress", "char_xp_cyclone", 0)
+	for cid in normal_unlocked:
+		normal_unlocked[cid] = bool(cfg.get_value("difficulty", "normal_unlocked_" + cid, false))
 	chips = cfg.get_value("chips", "total", 0)
 	var ms: Variant = cfg.get_value("chips", "completed_milestones", [])
 	if ms is Array:
