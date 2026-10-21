@@ -61,12 +61,13 @@ func _ready() -> void:
 		music.get_stream().set("loop", true)
 		get_tree().root.add_child.call_deferred(music)
 
-	$BtnNewGame.pressed.connect(_on_new_game)
+	$BtnNewGame.pressed.connect(_on_story)
 	$BtnLoadGame.pressed.connect(_on_load_game)
 	$BtnSurvival.pressed.connect(_on_survival)
 	$BtnSettings.pressed.connect(_on_settings)
 	$BtnQuit.pressed.connect(_on_quit)
 	$BtnCredits.pressed.connect(_on_credits)
+	_layout_menu()
 	_setup_bg_video()
 	_fit_menu()
 
@@ -172,7 +173,7 @@ func _finish_bg_swap() -> void:
 		_prepare_next_bg_video()
 
 func _apply_menu_lang() -> void:
-	$BtnNewGame.text  = Lang.t("mm_new_game")
+	$BtnNewGame.text  = Lang.t("mm_story")
 	$BtnLoadGame.text = Lang.t("mm_load_game")
 	$BtnSurvival.text = Lang.t("mm_survival")
 	$BtnSettings.text = Lang.t("mm_settings")
@@ -182,6 +183,79 @@ func _apply_menu_lang() -> void:
 		$LabelSubtitle.text = Lang.t("mm_subtitle")
 	if has_node("LabelVersion"):
 		$LabelVersion.text  = Lang.t("mm_version")
+
+# ── Düzen: 2 büyük oynama butonu + altta küçük ikincil sıra ─────────────────
+func _layout_menu() -> void:
+	$BtnLoadGame.visible = false   # "Devam" artık Hikaye penceresinde
+	# Yazı başlığı yerine logo görseli
+	$LabelTitle.visible = false
+	var logo := TextureRect.new()
+	logo.name = "LogoImage"
+	logo.texture = load("res://assets/menuBackground/intoTheYardMainMenuText.png")
+	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	logo.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	logo.position = Vector2(600, 50)
+	logo.size = Vector2(720, 260)
+	add_child(logo)
+	if has_node("LabelSubtitle"):
+		$LabelSubtitle.position.y = 322.0
+	# Logonun üstündeki/altındaki mavi çizgiler kaldırıldı
+	for ln in ["LineTop", "LineBottom"]:
+		if has_node(ln):
+			get_node(ln).visible = false
+	var big := [["BtnNewGame", 470.0], ["BtnSurvival", 590.0]]
+	for b in big:
+		var n: Button = get_node(b[0])
+		n.position = Vector2(660, b[1])
+		n.size = Vector2(600, 100)
+		n.add_theme_font_size_override("font_size", 57)
+	var small := [["BtnSettings", 485.0], ["BtnCredits", 810.0], ["BtnQuit", 1135.0]]
+	for b in small:
+		var n: Button = get_node(b[0])
+		n.position = Vector2(b[1], 850)
+		n.size = Vector2(300, 68)
+		n.add_theme_font_size_override("font_size", 38)
+
+# Hikaye: Yeni / Devam seçimi (kayıt yoksa Devam pasif)
+func _on_story() -> void:
+	var canvas := CanvasLayer.new()
+	canvas.layer = 100
+	canvas.offset = _menu_offset()
+	add_child(canvas)
+	var dim := ColorRect.new()
+	dim.color = Color(0, 0, 0, 0.78)
+	dim.mouse_filter = Control.MOUSE_FILTER_STOP
+	canvas.add_child(dim)
+	_cover(dim)
+	var title := Label.new()
+	title.text = Lang.t("mm_story")
+	title.position = Vector2(0, 300)
+	title.size = Vector2(1920, 100)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_override("font", _font_bold)
+	title.add_theme_font_size_override("font_size", 76)
+	title.modulate = Color(1, 0.8, 0)
+	canvas.add_child(title)
+	var has_save := FileAccess.file_exists("user://ity_save.cfg")
+	var make := func(src: String, txt: String, y: float, cb: Callable, enabled: bool) -> void:
+		var b: Button = get_node(src).duplicate()
+		b.visible = true
+		b.text = txt
+		b.position = Vector2(660, y)
+		b.size = Vector2(600, 90)
+		b.add_theme_font_size_override("font_size", 38)
+		b.disabled = not enabled
+		b.pressed.connect(cb)
+		canvas.add_child(b)
+	make.call("BtnSurvival", Lang.t("mm_new_game"), 450.0, func():
+		canvas.queue_free()
+		_on_new_game(), true)
+	make.call("BtnLoadGame", Lang.t("mm_load_game"), 560.0, func():
+		canvas.queue_free()
+		_on_load_game(), has_save)
+	make.call("BtnQuit", Lang.t("cs_back_btn"), 700.0, func(): canvas.queue_free(), true)
 
 # ── Menü işlemleri ────────────────────────────────────────────────────────────
 func _on_new_game() -> void:

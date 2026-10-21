@@ -25,7 +25,7 @@ Farklı bilgisayarlar / telefon (Remote Control) oturumları arasında bağlam k
 ## Mimari harita
 - Autoload'lar: `GameData` (kayıt, `game_mode` "story"/"survival", `DEMO_MODE`, zorluk, boss ilerlemesi), `Lang`, `Sfx`.
 - Ana sahne `game_scene.tscn/.gd` (5800+ satır) Story ve Survival için ortak. Diğer: `player.gd`, `ball.gd`, `ball_launcher.gd`, `base_enemy.gd` (+ 7 temel düşman scripti), boss'lar `cyber_404.gd`, `s_miler_79.gd`, `nyx_09.gd`, `crate_intro.gd`, `blob_shadow.gd`, `main_menu`, `character_select`, `boss_select`, `enemy_select` (demo).
-- Menü akışı: Ana menü (YENİ HİKAYE / HİKAYEYE DEVAM / SURVIVAL / Ayarlar / Credits / Çıkış) → karakter seçimi → (Story: boss+zorluk seçimi; Survival: doğrudan oyun; Demo: düşman stili seçimi). `mode_select.*` artık kullanılmıyor (silinebilir).
+- Menü akışı: Ana menü (logo `intoTheYardMainMenuText.png`; 2 büyük buton HİKAYE [→ pencere: Yeni Hikaye / Hikayeye Devam / Geri] + SURVIVAL; altta küçük Ayarlar/Credits/Çıkış; düzen kodla `main_menu.gd::_layout_menu`, eski başlık etiketi/çizgiler gizli) → karakter seçimi → (Story: boss+zorluk seçimi; Survival: doğrudan oyun; Demo: düşman stili seçimi). `mode_select.*` artık kullanılmıyor (silinebilir).
 - Ekran: stretch canvas_items + aspect keep (oyun 16:9 sabit, siyah şeritler); menü `expand` + `_fit_menu`/`_cover`.
 - Yükleme ekranı: `_preload_all_assets` (threaded load, `_warm_refs`).
 - Font: Silver (19px ızgara; boyutlar 19'un katı; CC BY 4.0, credits'te atıf var). Neon buton stili `_make_neon_button` / `_neon_btn`.

@@ -46,6 +46,7 @@ const _TR := {
 	# ── Ana Menü ─────────────────────────────────────────────────────────────
 	"mm_new_game":   "YENİ HİKAYE",
 	"mm_survival":   "SURVIVAL",
+	"mm_story":      "HİKAYE",
 	"mm_load_game":  "HİKAYEYE DEVAM",
 	"mm_settings":   "AYARLAR",
 	"mm_quit":       "ÇIKIŞ",
@@ -208,6 +209,7 @@ const _EN := {
 	# ── Ana Menü ─────────────────────────────────────────────────────────────
 	"mm_new_game":   "NEW STORY",
 	"mm_survival":   "SURVIVAL",
+	"mm_story":      "STORY",
 	"mm_load_game":  "CONTINUE STORY",
 	"mm_settings":   "SETTINGS",
 	"mm_quit":       "QUIT",
