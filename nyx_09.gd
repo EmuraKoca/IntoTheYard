@@ -151,6 +151,7 @@ var _in_entry      : bool  = true
 var _bob_t         : float = 0.0
 var _shadow_alpha  : float = 0.0
 var _entry_progress: float = 0.0
+var free_roam      : bool  = false   # Survival: her yöne yürür, ışınlanma oyuncunun çevresine
 var _fixed_y       : float = 380.0   # sabit yükseklik çizgisi
 
 # Lazer state
@@ -480,7 +481,10 @@ func _physics_process(delta: float) -> void:
 	var player := get_tree().get_first_node_in_group("player")
 	if is_instance_valid(player):
 		var dx : float = player.global_position.x - global_position.x
-		if abs(dx) > 100:
+		if free_roam:
+			var to_p : Vector2 = player.global_position - global_position
+			velocity = to_p.normalized() * speed if to_p.length() > 100.0 else Vector2.ZERO
+		elif abs(dx) > 100:
 			velocity = Vector2(sign(dx) * speed, 0.0)
 		else:
 			velocity = Vector2.ZERO
@@ -488,7 +492,8 @@ func _physics_process(delta: float) -> void:
 		velocity = Vector2.ZERO
 
 	move_and_slide()
-	global_position.y = _fixed_y   # Y'yi kilitle
+	if not free_roam:
+		global_position.y = _fixed_y   # Y'yi kilitle
 
 # Triple Shockwave: kast animasyonu, göğüs önündeki küreden 1sn arayla 3 güdümlü dalga
 func _start_wave() -> void:
@@ -780,7 +785,10 @@ func _start_teleport() -> void:
 
 		# Hedef: eski konumdan UZAK (≥ TELE_MIN_DIST), oyuncunun üstünde değil, rastgele X — oyuncu tahmin edemesin
 		var pl := get_tree().get_first_node_in_group("player")
-		_tele_pos = Vector2(_pick_tele_x(pl), _fixed_y)
+		if free_roam and is_instance_valid(pl):
+			_tele_pos = (pl as Node2D).global_position + Vector2.RIGHT.rotated(randf() * TAU) * randf_range(280.0, 420.0)
+		else:
+			_tele_pos = Vector2(_pick_tele_x(pl), _fixed_y)
 
 		# --- KAYBOLIS: eski yerde portal açılır, Nyx içine girer (tp_out) ---
 		_tele_snd = Sfx.play_path_dedicated(SFX_TELEPORT)
@@ -845,7 +853,8 @@ func _start_teleport() -> void:
 	if _laser_timer < 5.0: _laser_timer = 5.0
 	if _bolt_timer  < 5.0: _bolt_timer  = 5.0
 	if _wave_timer  < 3.0: _wave_timer  = 3.0
-	position.y = _fixed_y
+	if not free_roam:
+		position.y = _fixed_y
 	_sprite.play("walk")
 
 # Işınlanma hedef X'i: eski konumdan en az TELE_MIN_DIST uzakta, oyuncudan en az TELE_MIN_PLAYER uzakta, rastgele
@@ -1010,14 +1019,17 @@ func _generate_bolt() -> void:
 func _laser_clip_length(dir: Vector2) -> float:
 	var max_len : float = LASER_LENGTH
 	var o : Vector2 = global_position + _laser_origin_local()
+	var ar := Rect2(360.0, 240.0, 1270.0, 840.0)
+	if free_roam and get_parent() and get_parent().has_method("play_bounds"):
+		ar = get_parent().play_bounds()
 	if dir.x < -0.001:
-		max_len = min(max_len, (o.x - 360.0)  / abs(dir.x))
+		max_len = min(max_len, (o.x - ar.position.x)  / abs(dir.x))
 	if dir.x >  0.001:
-		max_len = min(max_len, (1630.0 - o.x) /     dir.x)
+		max_len = min(max_len, (ar.end.x - o.x) /     dir.x)
 	if dir.y < -0.001:
-		max_len = min(max_len, (o.y - 240.0)  / abs(dir.y))
+		max_len = min(max_len, (o.y - ar.position.y)  / abs(dir.y))
 	if dir.y >  0.001:
-		max_len = min(max_len, (1080.0 - o.y) /     dir.y)
+		max_len = min(max_len, (ar.end.y - o.y) /     dir.y)
 	return maxf(max_len, 0.0)
 
 func _check_laser_hit() -> bool:

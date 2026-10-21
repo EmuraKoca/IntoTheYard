@@ -23,6 +23,7 @@ var is_glitched   : bool  = false
 # --- Giriş & hareket ---
 var _in_entry      : bool   = true
 var _entry_progress: float  = 0.0
+var free_roam      : bool   = false   # Survival: her yöne yürür
 var _fixed_y       : float  = 300.0   # play_entry tarafından ayarlanır
 var _bob_t         : float  = 0.0
 var _shadow_alpha  : float  = 0.0
@@ -351,14 +352,25 @@ func _physics_process(delta: float) -> void:
 		# Yetenek bu frame'de başladıysa hareket kodunu atla
 		if _gatling_busy or _swing_busy or _missile_busy:
 			velocity = Vector2.ZERO
-			global_position.y = _fixed_y
+			if not free_roam: global_position.y = _fixed_y
 			return
 
 		# Yatay hareket — player'ın X konumuna hizalanır
 		var player := get_tree().get_first_node_in_group("player") as Node2D
 		if player:
 			var dx: float = player.global_position.x - global_position.x
-			if abs(dx) > 24.0:
+			var _dist: float = player.global_position.distance_to(global_position)
+			if free_roam and _dist > 40.0:
+				var dir: float = 1.0 if dx >= 0.0 else -1.0
+				velocity = (player.global_position - global_position).normalized() * speed
+				var anim := "walk_se" if dir > 0 else "walk_sw"
+				if _sprite.animation != anim:
+					_sprite.play(anim)
+			elif free_roam:
+				velocity = Vector2.ZERO
+				if _sprite.animation in ["walk_se", "walk_sw"]:
+					_sprite.play("idle")
+			elif abs(dx) > 24.0:
 				var dir: float = sign(dx)
 				velocity = Vector2(dir * speed, 0)
 				var anim := "walk_se" if dir > 0 else "walk_sw"
@@ -373,12 +385,12 @@ func _physics_process(delta: float) -> void:
 
 		# Y sabit çizgisini koru
 		move_and_slide()
-		global_position.y = _fixed_y
+		if not free_roam: global_position.y = _fixed_y
 	else:
 		# Saldırı sırasında hareketsiz kal
 		velocity = Vector2.ZERO
 		# Swing TP sırasında Y sabitleme KAPALI — player yanında duruyoruz
-		if not _swing_at_player:
+		if not _swing_at_player and not free_roam:
 			global_position.y = _fixed_y
 
 # ══════════════════════════════════════════════════════════
@@ -459,8 +471,9 @@ func _start_swing() -> void:
 	var back: Vector2 = _home_pos - _swing_pos
 	back = back.normalized() if back.length() > 1.0 else Vector2.UP
 	var tp: Vector2 = _swing_pos + back * SWING_STANDOFF
-	tp.x = clampf(tp.x, 420.0, 1570.0)
-	tp.y = clampf(tp.y, 300.0, 1020.0)
+	if not free_roam:
+		tp.x = clampf(tp.x, 420.0, 1570.0)
+		tp.y = clampf(tp.y, 300.0, 1020.0)
 	_swing_at_player = true
 	global_position  = tp
 	_sprite.play("swing")
@@ -484,7 +497,8 @@ func _start_swing() -> void:
 
 	# Sabit Y çizgisine geri TP
 	_swing_at_player = false
-	global_position  = Vector2(_home_pos.x, _fixed_y)
+	if not free_roam:
+		global_position  = Vector2(_home_pos.x, _fixed_y)
 
 	_swing_busy = false
 	_swing_t    = SWING_CD

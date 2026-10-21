@@ -19,6 +19,7 @@ var original_speed = 120.0
 var speed = 120.0
 var keep_distance = 500.0   # (artık kullanılmıyor — yatay hizalanma hareketi)
 var _fixed_y: float = NAN
+var free_roam: bool = false   # Survival: her yöne yürür (Y sabit değil, zincir yok)
 var chain_anchor = Vector2(995, 560)   # yeni (genişletilmiş) oyun alanının merkezi (x:360-1630)
 var chain_length = 450.0
 var ring_timer = 0.0
@@ -176,19 +177,24 @@ func _physics_process(delta: float) -> void:
 	if is_nan(_fixed_y):
 		_fixed_y = global_position.y
 	var dx: float = player.global_position.x - global_position.x
-	if abs(dx) > 24.0:
-		velocity = Vector2(sign(dx) * speed, 0)
+	if free_roam:
+		var to_p: Vector2 = player.global_position - global_position
+		velocity = to_p.normalized() * speed if to_p.length() > 40.0 else Vector2.ZERO
+		move_and_slide()
 	else:
-		velocity = Vector2.ZERO
+		if abs(dx) > 24.0:
+			velocity = Vector2(sign(dx) * speed, 0)
+		else:
+			velocity = Vector2.ZERO
 
-	move_and_slide()
-	global_position.y = _fixed_y
+		move_and_slide()
+		global_position.y = _fixed_y
 
-	# Chain constraint
-	var dist_to_anchor = global_position.distance_to(chain_anchor)
-	if dist_to_anchor > chain_length:
-		var dir_to_anchor = (chain_anchor - global_position).normalized()
-		global_position = chain_anchor - dir_to_anchor * chain_length
+		# Chain constraint
+		var dist_to_anchor = global_position.distance_to(chain_anchor)
+		if dist_to_anchor > chain_length:
+			var dir_to_anchor = (chain_anchor - global_position).normalized()
+			global_position = chain_anchor - dir_to_anchor * chain_length
 
 	ring_timer += delta
 	missile_timer += delta
