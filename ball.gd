@@ -581,8 +581,9 @@ func _physics_process(delta: float) -> void:
 	# Duvar sınırları + sonsuz sekme koruması
 	var _bounced := false
 	var _side_bounced := false
-	if global_position.x <= 409:
-		global_position.x = 411
+	var _pb: Rect2 = _play_bounds()
+	if global_position.x <= _pb.position.x:
+		global_position.x = _pb.position.x + 2.0
 		move_direction.x = abs(move_direction.x)
 		_bounced = true
 		_side_bounced = true
@@ -593,21 +594,21 @@ func _physics_process(delta: float) -> void:
 				_gfx._screen_shake_small()
 				_spawn_impact_burst(global_position, Color(0.5, 0.2, 1.0), 12)
 				_spawn_siege_debris(global_position)
-	if global_position.x >= 1580:
-		global_position.x = 1578
+	if global_position.x >= _pb.end.x:
+		global_position.x = _pb.end.x - 2.0
 		move_direction.x = -abs(move_direction.x)
 		_bounced = true
 		_side_bounced = true
-	if global_position.y <= 260:
-		global_position.y = 262
+	if global_position.y <= _pb.position.y:
+		global_position.y = _pb.position.y + 2.0
 		move_direction.y = abs(move_direction.y)
 		_bounced = true
 		# Backstab Protocol: North duvarı → sonraki isabet crit
 		var _bp_check := _get_player()
 		if _bp_check and _bp_check.get("backstab_protocol_level") and _bp_check.backstab_protocol_level > 0:
 			_backstab_ready = true
-	if global_position.y >= 1040:
-		global_position.y = 1038
+	if global_position.y >= _pb.end.y:
+		global_position.y = _pb.end.y - 2.0
 		move_direction.y = -abs(move_direction.y)
 		_start_returning()
 		return
@@ -801,17 +802,18 @@ func _process_returning(delta: float) -> void:
 	speed = min(speed + 220.0 * delta, 680.0)
 
 	# Duvar sekme
-	if global_position.x <= 409:
-		global_position.x = 411
+	var _pb2: Rect2 = _play_bounds()
+	if global_position.x <= _pb2.position.x:
+		global_position.x = _pb2.position.x + 2.0
 		move_direction.x = abs(move_direction.x)
-	if global_position.x >= 1580:
-		global_position.x = 1578
+	if global_position.x >= _pb2.end.x:
+		global_position.x = _pb2.end.x - 2.0
 		move_direction.x = -abs(move_direction.x)
-	if global_position.y <= 260:
-		global_position.y = 262
+	if global_position.y <= _pb2.position.y:
+		global_position.y = _pb2.position.y + 2.0
 		move_direction.y = abs(move_direction.y)
-	if global_position.y >= 1040:
-		global_position.y = 1038
+	if global_position.y >= _pb2.end.y:
+		global_position.y = _pb2.end.y - 2.0
 		move_direction.y = -abs(move_direction.y)
 
 	# Dönerken de düşmana çarpar (tam hasar)
@@ -2634,3 +2636,11 @@ func _spawn_tracer_trail(pos: Vector2) -> void:
 		await game.get_tree().create_timer(0.1 * (i + 1), false).timeout
 		_tick.call()
 	if is_instance_valid(zone): zone.queue_free()
+
+
+# Oyun alanı sınırı: Story'de sabit arena, Survival'da kameranın görünen penceresi.
+func _play_bounds() -> Rect2:
+	var g := get_tree().get_first_node_in_group("game")
+	if g and g.has_method("play_bounds"):
+		return g.play_bounds()
+	return Rect2(409.0, 260.0, 1171.0, 780.0)

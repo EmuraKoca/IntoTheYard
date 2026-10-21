@@ -63,6 +63,7 @@ func _ready() -> void:
 
 	$BtnNewGame.pressed.connect(_on_new_game)
 	$BtnLoadGame.pressed.connect(_on_load_game)
+	$BtnSurvival.pressed.connect(_on_survival)
 	$BtnSettings.pressed.connect(_on_settings)
 	$BtnQuit.pressed.connect(_on_quit)
 	$BtnCredits.pressed.connect(_on_credits)
@@ -173,6 +174,7 @@ func _finish_bg_swap() -> void:
 func _apply_menu_lang() -> void:
 	$BtnNewGame.text  = Lang.t("mm_new_game")
 	$BtnLoadGame.text = Lang.t("mm_load_game")
+	$BtnSurvival.text = Lang.t("mm_survival")
 	$BtnSettings.text = Lang.t("mm_settings")
 	$BtnQuit.text     = Lang.t("mm_quit")
 	$BtnCredits.text  = Lang.t("mm_credits")
@@ -194,11 +196,7 @@ func _start_new_game() -> void:
 	GameData.char_xp = {"vector": 0, "leila": 0, "cyclone": 0}
 	GameData.show_intro = true
 	GameData.game_mode = "story"
-	# Tam sürümde önce mod seçimi (Story / Survival); demo sadece Story
-	if GameData.DEMO_MODE:
-		get_tree().change_scene_to_file("res://character_select.tscn")
-	else:
-		get_tree().change_scene_to_file("res://mode_select.tscn")
+	get_tree().change_scene_to_file("res://character_select.tscn")
 
 func _show_confirm_dialog() -> void:
 	var canvas := CanvasLayer.new()
@@ -313,6 +311,11 @@ func _show_confirm_dialog() -> void:
 func _on_load_game() -> void:
 	GameData.load_data()
 	GameData.game_mode = "story"
+	get_tree().change_scene_to_file("res://character_select.tscn")
+
+func _on_survival() -> void:
+	GameData.load_data()
+	GameData.game_mode = "survival"
 	get_tree().change_scene_to_file("res://character_select.tscn")
 
 func _on_credits() -> void:

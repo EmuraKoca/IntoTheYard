@@ -44,8 +44,9 @@ func status_glossary(keyword: String) -> String:
 
 const _TR := {
 	# ── Ana Menü ─────────────────────────────────────────────────────────────
-	"mm_new_game":   "YENİ OYUN",
-	"mm_load_game":  "KAYDI YÜKLE",
+	"mm_new_game":   "YENİ HİKAYE",
+	"mm_survival":   "SURVIVAL",
+	"mm_load_game":  "HİKAYEYE DEVAM",
 	"mm_settings":   "AYARLAR",
 	"mm_quit":       "ÇIKIŞ",
 	"mm_credits": "EMEĞİ GEÇENLER",
@@ -205,8 +206,9 @@ const _TR := {
 
 const _EN := {
 	# ── Ana Menü ─────────────────────────────────────────────────────────────
-	"mm_new_game":   "NEW GAME",
-	"mm_load_game":  "LOAD GAME",
+	"mm_new_game":   "NEW STORY",
+	"mm_survival":   "SURVIVAL",
+	"mm_load_game":  "CONTINUE STORY",
 	"mm_settings":   "SETTINGS",
 	"mm_quit":       "QUIT",
 	"mm_credits": "CREDITS",

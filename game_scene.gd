@@ -448,6 +448,67 @@ func _spawn_boss_at(spawn_pos: Vector2) -> void:
 	if is_instance_valid(b):
 		b.get_node("CollisionShape2D").disabled = false
 	
+# --- SURVIVAL MODU ---
+const SURV_TILE := Vector2(1302.0, 1018.0)
+const SURV_PANEL_X := 1630.0   # sağ UI paneli bu x'ten başlar
+const SURV_CAM_SHIFT := 145.0  # oyuncu görünür alanın (0..1630) ortasında dursun
+var _surv_floor: Sprite2D = null
+
+func is_survival() -> bool:
+	return GameData.game_mode == "survival"
+
+# Core'ların sekeceği sınır: Story'de sabit arena, Survival'da kameranın görünen oyun penceresi.
+func play_bounds() -> Rect2:
+	if not is_survival():
+		return Rect2(409.0, 260.0, 1171.0, 780.0)
+	var c: Vector2 = get_node("Camera2D").get_screen_center_position()
+	return Rect2(c.x - 960.0 + 20.0, c.y - 540.0 + 20.0, SURV_PANEL_X - 40.0, 1080.0 - 40.0)
+
+func _setup_survival() -> void:
+	if not is_survival():
+		return
+	for n in ["Tribune", "LivingArea", "Street", "BG_GameArea", "BG_Tribune", "BG_Street", "BG_Living",
+			"ShaderOverlay", "BallLauncherSprite", "ProcessorSprite", "Decoration", "ColorRect", "FusionZone"]:
+		var nd := get_node_or_null(n)
+		if nd and "visible" in nd:
+			nd.visible = false
+	for n in ["WallBottom", "WallLeft", "WallRight", "EnergyBarrier", "UIWall"]:
+		var w := get_node_or_null(n)
+		if w:
+			if w is CollisionObject2D:
+				w.collision_layer = 0
+				w.collision_mask = 0
+			w.visible = false
+	var dz := get_node_or_null("DeathZone")
+	if dz:
+		dz.monitoring = false
+		dz.monitorable = false
+	var tex: Texture2D = load("res://assets/backgrounds/PixelBackgrounds/survivalModeArea.png")
+	_surv_floor = Sprite2D.new()
+	_surv_floor.name = "SurvivalFloor"
+	_surv_floor.texture = tex
+	_surv_floor.centered = false
+	_surv_floor.region_enabled = true
+	_surv_floor.region_rect = Rect2(0, 0, SURV_TILE.x * 3.0, SURV_TILE.y * 3.0)
+	_surv_floor.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
+	_surv_floor.z_index = -100
+	_surv_floor.y_sort_enabled = false
+	add_child(_surv_floor)
+	move_child(_surv_floor, 0)
+	_update_survival_camera()
+
+func _update_survival_camera() -> void:
+	if not is_survival() or _player_node == null:
+		return
+	var cam: Camera2D = get_node("Camera2D")
+	cam.position = _player_node.global_position + Vector2(SURV_CAM_SHIFT, 0.0)
+	var bl := get_node_or_null("BallLauncher")
+	if bl:
+		bl.global_position = cam.position + Vector2(1539.0 - 960.0, 317.0 - 540.0)
+	if _surv_floor:
+		var o := cam.position - Vector2(960.0, 540.0)
+		_surv_floor.position = Vector2(floorf(o.x / SURV_TILE.x) * SURV_TILE.x, floorf(o.y / SURV_TILE.y) * SURV_TILE.y)
+
 func _screen_shake() -> void:
 	var camera = get_node("Camera2D")
 	var original_pos = camera.offset
@@ -1356,6 +1417,8 @@ func _zap_and_kill(s: Node2D, delay: float) -> void:
 		ztw.tween_property(zap, "modulate:a", 1.0, 0.01)
 
 func _spawn_hasmen_entrance() -> void:
+	if is_survival():
+		return
 	if _hasmen_npc != null:
 		return
 	var npc = load("res://hasmen_npc.gd").new()
@@ -1469,6 +1532,7 @@ func _ready() -> void:
 	await _preload_all_assets()
 	if not GameData.DEMO_MODE:
 		GameData.record_boss_run(GameData.selected_character, GameData.selected_boss)
+	_setup_survival()
 	y_sort_enabled = true   # aynı z_index'teki düşmanlar y konumuna göre sıralanır (alttaki öne çizilir)
 	GameData.rescued_total = 0
 	_player_node = get_node("Player")
@@ -4703,12 +4767,17 @@ func _spawn_siege_rain_impact(pos: Vector2, dmg: int, radius: float) -> void:
 # Alan/nokta hedefli Calamity'lerin hedefini Avlu dikdörtgenine kilitler — mouse Avlu
 # dışına (cadde/tribün) çıksa bile hem nişan önizlemesi hem gerçek etki Avlu içinde kalır.
 func _clamp_to_yard(pos: Vector2) -> Vector2:
+	if is_survival():
+		var r := play_bounds()
+		return Vector2(clampf(pos.x, r.position.x, r.end.x), clampf(pos.y, r.position.y, r.end.y))
 	return Vector2(clampf(pos.x, 385.0, 1920.0), clampf(pos.y, 255.0, 1080.0))
 
 func _yard_subjects() -> Array:
 	return get_tree().get_nodes_in_group("subjects").filter(func(s):
 		if not is_instance_valid(s) or s.get("is_dead"): return false
 		var sp: Vector2 = s.global_position
+		if is_survival():
+			return play_bounds().grow(40.0).has_point(sp)
 		return sp.x >= 385.0 and sp.x <= 1920.0 and sp.y >= 255.0 and sp.y <= 1080.0
 	)
 
@@ -5479,8 +5548,9 @@ func _calc_traj(start: Vector2, dir: Vector2, max_len: float, bounces: int) -> A
 	var pts := [start]
 	var pos  := start
 	var d    := dir.normalized()
-	const XMIN := 409.0; const XMAX := 1580.0
-	const YMIN := 260.0; const YMAX := 1040.0
+	var _pbr := play_bounds()
+	var XMIN := _pbr.position.x; var XMAX := _pbr.end.x
+	var YMIN := _pbr.position.y; var YMAX := _pbr.end.y
 	var remaining := max_len
 	for _b in bounces:
 		var t_vals: Array[float] = []
@@ -5518,6 +5588,7 @@ func _draw_dashed_line(from: Vector2, to: Vector2, color: Color, width: float) -
 		p += dash + gap
 
 func _process(delta: float) -> void:
+	_update_survival_camera()
 	_update_core_panel()   # her frame güncelle — deferred add_child'ı yakala
 	_update_low_hp_vignette()
 	_update_calamity_timer_label()

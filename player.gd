@@ -663,20 +663,22 @@ func _physics_process(delta: float) -> void:
 				)
 
 	# Wall boundaries
-	global_position.x = clamp(global_position.x, 370, 1580)
-	global_position.y = clamp(global_position.y, 330, 1035)
+	if GameData.game_mode != "survival":
+		global_position.x = clamp(global_position.x, 370, 1580)
+		global_position.y = clamp(global_position.y, 330, 1035)
 
 	# Chain constraint check
 
 	# Nişan silah ucundan hesaplanır (core'lar oradan çıkıyor; çizgiyle birebir aynı yön)
 	aim_direction = (get_global_mouse_position() - (global_position + Vector2(20, -24))).normalized()
 
-	var dist_to_anchor = global_position.distance_to(chain_anchor)
-	if dist_to_anchor > chain_length:
-		var dir_to_anchor = (chain_anchor - global_position).normalized()
-		global_position = chain_anchor - dir_to_anchor * chain_length
+	if GameData.game_mode != "survival":
+		var dist_to_anchor = global_position.distance_to(chain_anchor)
+		if dist_to_anchor > chain_length:
+			var dir_to_anchor = (chain_anchor - global_position).normalized()
+			global_position = chain_anchor - dir_to_anchor * chain_length
 
-	_update_pranga(delta)
+		_update_pranga(delta)
 
 	# ── Momentum üretimi: Momentum Engine yürürken her 4s'de stack üretir ──────
 	if has_momentum_engine:
@@ -1117,7 +1119,7 @@ func _react_flash_physical() -> void:
 func _draw() -> void:
 	# (Karakter gölgesi artık blob_shadow.gd — _ready'de takılıyor)
 	# ── Zincir elektrik efekti ───────────────────────────────────────────────
-	if _chain_positions.size() >= 2:
+	if _chain_positions.size() >= 2 and GameData.game_mode != "survival":
 		var t := Time.get_ticks_msec() * 0.001
 		for i in range(_chain_positions.size() - 1):
 			var a := to_local(_chain_positions[i])
