@@ -1202,6 +1202,8 @@ func _start_returning() -> void:
 		var _gfx := get_tree().get_first_node_in_group("game")
 		if _gfx and _gfx.get("player_armor"):
 			_base_return += _gfx.player_armor * _rp.shield_bash_mult
+	if GameData.game_mode == "survival":
+		_base_return = maxf(_base_return, 680.0)   # Survival: dönerken yavaşlamaz (ramp tavanı 680)
 	speed         = _base_return
 	scale         = Vector2(1.0, 1.0)
 	z_index       = 2

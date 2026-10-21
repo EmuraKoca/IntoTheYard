@@ -4272,3 +4272,6 @@ Kayan kamera / döşeli zemin / kameraya bağlı core sekmesi çalışıyor. Sur
 
 ## SURVIVAL MODU — Aşama 3: dört yandan doğuş + tür açılımı + zamanla artış (2026-10-22, test edildi)
 `game_scene.gd`: `_spawn_subject_survival()` (`_spawn_subject` Survival'da buna yönlenir), `_survival_spawn_pos()` (görünen pencerenin 110px dışında rastgele kenar). Tür açılımı: 7 tür sırayla (`SURV_TYPES`, ağırlık `SURV_WEIGHTS`), ilk 2 baştan, her 2 `level`'da +1 (`2 + (level-1)/2`). Doğuş sayısı `1 + elapsed/180` (maks 6), düşman canı `1 + elapsed/900` çarpanı. Boss tetikleyici (`BOSS_SPAWN_TIME`) Survival'da kapalı (Aşama 4). `bullet.gd`: Survival'da kameradan 1400px uzakta silinir (sabit koordinat sınırı atlanır). Ayar: bu sabitler. Sıradaki: Aşama 4 boss'lar (serbest dolaşma), Aşama 5 skor/rekor/ölüm ekranı.
+
+## Survival kontrolleri + küçük düzeltmeler (2026-10-22, test edildi)
+`player.gd::_unhandled_input`: Survival'da **Space = dash**, **sağ tık = uçan core'ları geri çağır** (`_recall_cores`, sadece `state=="flying"` ve Connected olmayanlar); Story kontrolleri aynı (sağ tık dash). `ball.gd::_start_returning`: Survival'da dönüş hızı baştan 680 (yavaşlamaz). **Görünmez duvar**: `UIWall` `_ready` içinde `_setup_survival`'dan SONRA oluşturuluyordu → Survival'da hiç eklenmiyor. LED tabela (`_setup_neon_sign`) Survival'da kapalı.

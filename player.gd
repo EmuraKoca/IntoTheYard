@@ -561,10 +561,24 @@ func _unhandled_input(event: InputEvent) -> void:
 			return  # auto mode'da tık devre dışı
 		_fire_all_balls()
 
+	if GameData.game_mode == "survival":
+		# Survival: Space → dash, Sağ tık → fırlatılan core'ları geri çağır
+		if event is InputEventKey and event.keycode == KEY_SPACE and event.pressed and not event.echo:
+			if dash_charges > 0:
+				_dash()
+		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+			_recall_cores()
+		return
+
 	# Sağ tık → dash
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
 		if dash_charges > 0:
 			_dash()
+
+func _recall_cores() -> void:
+	for b in get_tree().get_nodes_in_group("player_balls"):
+		if is_instance_valid(b) and b.get("state") == "flying" and not b.get("is_inner_core"):
+			b._start_returning()
 
 func _dash() -> void:
 	var dash_dir = Vector2.ZERO

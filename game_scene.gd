@@ -1560,7 +1560,10 @@ func _ready() -> void:
 	wall_shape.shape = rect
 	wall.add_child(wall_shape)
 	wall.position = Vector2(360.0, 540.0)
-	add_child(wall)
+	if not is_survival():
+		add_child(wall)
+	else:
+		wall.free()
 
 	# Karakter bazlı başlangıç değerleri
 	var char_type: String = get_node("Player").character_type
@@ -2800,6 +2803,8 @@ func _discard_ball(ball_node, canvas: CanvasLayer) -> void:
 	)
 
 func _setup_neon_sign() -> void:
+	if is_survival():
+		return
 	var sign: Node2D = load("res://neon_sign.gd").new()
 	# Oyun alanı ortası, üst duvara monte: x=1240, y=248 (duvarın hemen altı)
 	# Tribün sağ duvarına monte, cadde şeridinde dikey tabela
