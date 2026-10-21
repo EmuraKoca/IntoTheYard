@@ -112,6 +112,10 @@ const _TR := {
 	"go_header":       "// DENEY OTURUMU SONA ERDİ //",
 	"go_data":         "TOPLANAN VERİ",
 	"go_time":         "OTURUM SÜRESİ",
+	"go_record":       "REKOR",
+	"go_new_record":   "YENİ REKOR!",
+	"cs_survival_record": "
+REKOR  Süre %s  /  Öldürme %d",
 	"go_threats":      "NÖTR. EDİLEN TEHDİTLER",
 	"go_level":        "DENEY SEVİYESİ",
 	"go_units":        " birim",
@@ -275,6 +279,10 @@ const _EN := {
 	"go_header":       "// EXPERIMENT SESSION CONCLUDED //",
 	"go_data":         "DATA HARVESTED",
 	"go_time":         "SESSION TIME",
+	"go_record":       "RECORD",
+	"go_new_record":   "NEW RECORD!",
+	"cs_survival_record": "
+RECORD  Time %s  /  Kills %d",
 	"go_threats":      "THREATS NEUTRALIZED",
 	"go_level":        "EXPERIMENT LEVEL",
 	"go_units":        " units",

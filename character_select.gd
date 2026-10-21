@@ -303,6 +303,10 @@ func _update_info() -> void:
 		else:
 			level_line = Lang.t("cs_level_line") % [lv, xp_cur, xp_need]
 		lbl_desc.text = level_line + unlock_str
+		if GameData.game_mode == "survival":
+			var rec: Dictionary = GameData.get_survival_record(char_id)
+			var rt: int = int(rec["time"])
+			lbl_desc.text += Lang.t("cs_survival_record") % ["%02d:%02d" % [rt / 60, rt % 60], int(rec["kills"])]
 
 	if info.has_node("LabelTalent"):
 		info.get_node("LabelTalent").visible = false

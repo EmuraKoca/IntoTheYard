@@ -41,6 +41,21 @@ const BOSSES: Array = [
 # Karakter + boss başına ilerleme: "char|boss" -> {cleared (en yüksek bitirilen seviye 0-3), runs, score, time}
 var boss_progress: Dictionary = {}
 
+# Sonsuz Avlu (Survival) rekorları: karakter başına en iyi süre (sn) ve öldürme
+var survival_records: Dictionary = {}
+func get_survival_record(char_id: String) -> Dictionary:
+	var d: Variant = survival_records.get(char_id, {})
+	return {"time": float(d.get("time", 0.0)) if d is Dictionary else 0.0, "kills": int(d.get("kills", 0)) if d is Dictionary else 0}
+
+# Run sonunda çağrılır; hangi rekorun kırıldığını döndürür
+func record_survival_run(char_id: String, time_sec: float, kills: int) -> Dictionary:
+	var prev := get_survival_record(char_id)
+	var res := {"new_time": time_sec > float(prev["time"]), "new_kills": kills > int(prev["kills"]),
+		"best_time": maxf(time_sec, float(prev["time"])), "best_kills": maxi(kills, int(prev["kills"]))}
+	survival_records[char_id] = {"time": res["best_time"], "kills": res["best_kills"]}
+	save_data()
+	return res
+
 func _bp(char_id: String, boss: int) -> Dictionary:
 	var k := "%s|%d" % [char_id, boss]
 	if not boss_progress.has(k):
@@ -424,6 +439,8 @@ func save_data() -> void:
 	cfg.set_value("progress", "char_xp_cyclone",     char_xp.get("cyclone", 0))
 	for k in boss_progress:
 		cfg.set_value("bosses", k, boss_progress[k])
+	for k in survival_records:
+		cfg.set_value("survival", k, survival_records[k])
 	cfg.set_value("chips", "total", chips)
 	cfg.set_value("chips", "completed_milestones", completed_milestones)
 	cfg.set_value("chips", "claimed_milestones",   claimed_milestones)
@@ -468,6 +485,11 @@ func load_data() -> void:
 			var v: Variant = cfg.get_value("bosses", k, {})
 			if v is Dictionary:
 				boss_progress[k] = v
+	if cfg.has_section("survival"):
+		for k in cfg.get_section_keys("survival"):
+			var sv: Variant = cfg.get_value("survival", k, {})
+			if sv is Dictionary:
+				survival_records[k] = sv
 	_unlock_from_boss_progress()
 	chips = cfg.get_value("chips", "total", 0)
 	var ms: Variant = cfg.get_value("chips", "completed_milestones", [])

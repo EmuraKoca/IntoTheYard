@@ -3104,11 +3104,34 @@ func show_game_over(death_dur: float = 0.0) -> void:
 		[Lang.t("go_threats"), str(total_subjects_killed),                         Color(0.0, 0.9, 1.0)],
 		[Lang.t("go_level"),   str(level),                                         Color(0.0, 0.9, 1.0)],
 	]
+	var _row_gap := 72
+	if is_survival():
+		# Sonsuz Avlu: sade — sadece süre ve öldürme, altlarında rekor
+		var rec := GameData.record_survival_run(GameData.selected_character, elapsed_time, total_subjects_killed)
+		var bt := int(rec["best_time"])
+		rows = [
+			[Lang.t("go_time"),    "%02d:%02d" % [minutes, seconds], Color(0.0, 0.9, 1.0)],
+			[Lang.t("go_threats"), str(total_subjects_killed),       Color(0.0, 0.9, 1.0)],
+		]
+		_row_gap = 130
+		var rec_txt := [
+			(Lang.t("go_new_record") if rec["new_time"] else Lang.t("go_record") + "  %02d:%02d" % [bt / 60, bt % 60]),
+			(Lang.t("go_new_record") if rec["new_kills"] else Lang.t("go_record") + "  " + str(int(rec["best_kills"]))),
+		]
+		var rec_new := [rec["new_time"], rec["new_kills"]]
+		for ri in 2:
+			var rl := Label.new()
+			rl.text = rec_txt[ri]
+			rl.position = Vector2(110, 240 + ri * _row_gap)
+			rl.add_theme_font_override("font", _font_bold)
+			rl.add_theme_font_size_override("font_size", 19)
+			rl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.1) if rec_new[ri] else Color(0.5, 0.6, 0.7))
+			canvas.add_child(rl)
 	for i in range(rows.size()):
 		var row = rows[i]
 		var key = Label.new()
 		key.text     = row[0]
-		key.position = Vector2(110, 172 + i * 72)
+		key.position = Vector2(110, 172 + i * _row_gap)
 		key.add_theme_font_override("font", _font_regular)
 		key.add_theme_font_size_override("font_size", 19)
 		key.add_theme_color_override("font_color", Color(0.5, 0.6, 0.7))
@@ -3116,7 +3139,7 @@ func show_game_over(death_dur: float = 0.0) -> void:
 
 		var val = Label.new()
 		val.text     = row[1]
-		val.position = Vector2(110, 190 + i * 72)
+		val.position = Vector2(110, 190 + i * _row_gap)
 		val.add_theme_font_override("font", _font_bold)
 		val.add_theme_font_size_override("font_size", 38)
 		val.add_theme_color_override("font_color", row[2])
