@@ -338,7 +338,7 @@ func _start_boss_intro() -> void:
 	add_child(crate)
 	crate.landed.connect(_on_crate_landed)
 	crate.boss_emerged.connect(_on_boss_emerged)
-	crate.play_intro(Vector2(995, 570))
+	crate.play_intro(_surv_boss_anchor() if is_survival() else Vector2(995, 570))
 
 # ── Sandık yere çarpınca toz halkası: genişleyen halka değdiği düşmanları öldürür ─────────────
 # (klasik ölüm animasyonuyla, XP/skor yok). Halkanın etki alanı her karedeki gerçek sprite
@@ -431,6 +431,7 @@ func _on_boss_emerged() -> void:
 func _spawn_boss_at(spawn_pos: Vector2) -> void:
 	var b = cyber_404_scene.instantiate()
 	b.position = spawn_pos
+	b.free_roam = is_survival()
 	add_child(b)
 	# Pozisyon VE büyüme (scale) tween'leri kaldırıldı (kullanıcı: "zıplıyor gibi yapıyor,
 	# olduğu yerde kalsın, hiçbir hareket yapmasın" + "küçükten büyüğe doğru efekti
@@ -1353,17 +1354,19 @@ func _spawn_nyx() -> void:
 	var nyx = load("res://nyx_09.gd").new()
 	nyx.name   = "Nyx09"
 	_nyx_node  = nyx
+	nyx.free_roam = is_survival()
 	add_child(nyx)
 	nyx.landed.connect(_on_nyx_landed)
-	nyx.play_entry(Vector2(995, 380))
+	nyx.play_entry(_surv_boss_anchor() if is_survival() else Vector2(995, 380))
 
 func _spawn_smiler() -> void:
 	var smiler = load("res://s_miler_79.gd").new()
 	smiler.name = "SMiler79"
 	_smiler_node = smiler
+	smiler.free_roam = is_survival()
 	add_child(smiler)
 	smiler.landed.connect(_on_smiler_landed)
-	smiler.play_entry(Vector2(995, 500))
+	smiler.play_entry(_surv_boss_anchor() if is_survival() else Vector2(995, 500))
 
 func _on_smiler_landed() -> void:
 	# Sahayı temizle — normal düşmanları siler
@@ -5487,6 +5490,39 @@ func _make_gravity_gradient() -> Gradient:
 func _enemy_gate(demo_time_sec: float) -> bool:
 	return elapsed_time >= demo_time_sec
 
+# Survival boss'ları: tüm düşman türleri açılınca (level 11) sırayla gelir, her yöne yürür
+const SURV_BOSS_LEVELS := [3, 5, 7]   # sırayla S-Miler, Cyber-404, Nyx; sonrası her 2 level'da bir
+const SURV_BOSS_GAP := 10.0     # bir boss ölünce sonrakine kadar süre (sn)
+var _surv_boss_n: int = 0
+var _surv_next_boss_t: float = 0.0
+
+func _surv_boss_alive() -> bool:
+	return (is_instance_valid(_smiler_node) and not _smiler_node.is_dead) 		or (is_instance_valid(_cyber404_node) and not _cyber404_node.is_dead) 		or (is_instance_valid(_nyx_node) and not _nyx_node.is_dead) 		or _crate_node != null
+
+# Boss'un çıkış noktası: görünen oyun alanının merkezi
+func _surv_boss_anchor() -> Vector2:
+	return get_node("Camera2D").position - Vector2(SURV_CAM_SHIFT, 0.0)
+
+func _survival_boss_tick() -> void:
+	var need_level: int = SURV_BOSS_LEVELS[_surv_boss_n] if _surv_boss_n < SURV_BOSS_LEVELS.size() else 7 + 2 * (_surv_boss_n - 2)
+	if level < need_level or elapsed_time < _surv_next_boss_t or _surv_boss_alive():
+		return
+	var idx := _surv_boss_n % 3
+	_surv_boss_n += 1
+	_smiler_spawned = false
+	_cyber404_spawned = false
+	_nyx_spawned = false
+	match idx:
+		0:
+			_smiler_spawned = true
+			_spawn_smiler()
+		1:
+			_cyber404_spawned = true
+			_start_boss_intro()
+		2:
+			_nyx_spawned = true
+			_spawn_nyx()
+
 const SURV_TYPES := ["subject", "frantic", "armed", "heavy", "cyber_shooter", "cyber_rifle", "cyber_shotgun"]
 const SURV_WEIGHTS := [5, 3, 2, 2, 1, 1, 1]
 
@@ -5713,25 +5749,40 @@ func _process(delta: float) -> void:
 		if not is_instance_valid(_smiler_node) or _smiler_node.is_dead:
 			var _dead_boss = _smiler_node
 			_smiler_node = null
-			GameData.unlock_character("leila")
-			GameData.add_xp(GameData.selected_character, int(30.0 * GameData.diff("reward")))
-			_boss_victory(_dead_boss)
+			if is_survival():
+				GameData.add_xp(GameData.selected_character, int(30.0 * GameData.diff("reward")))
+				_surv_next_boss_t = elapsed_time + SURV_BOSS_GAP
+				spawn_interval = 2.0
+			else:
+				GameData.unlock_character("leila")
+				GameData.add_xp(GameData.selected_character, int(30.0 * GameData.diff("reward")))
+				_boss_victory(_dead_boss)
 	if _cyber404_node != null:
 		if not is_instance_valid(_cyber404_node) or _cyber404_node.is_dead:
 			var _dead_boss = _cyber404_node
 			_cyber404_node = null
-			GameData.unlock_character("cyclone")
-			GameData.add_xp(GameData.selected_character, int(30.0 * GameData.diff("reward")))
-			_boss_victory(_dead_boss)
+			if is_survival():
+				GameData.add_xp(GameData.selected_character, int(30.0 * GameData.diff("reward")))
+				_surv_next_boss_t = elapsed_time + SURV_BOSS_GAP
+				spawn_interval = 2.0
+			else:
+				GameData.unlock_character("cyclone")
+				GameData.add_xp(GameData.selected_character, int(30.0 * GameData.diff("reward")))
+				_boss_victory(_dead_boss)
 	if _nyx_node != null:
 		if not is_instance_valid(_nyx_node) or _nyx_node.is_dead:
 			var _dead_boss = _nyx_node
 			_nyx_node = null
-			GameData.add_xp(GameData.selected_character, int(30.0 * GameData.diff("reward")))
-			_boss_victory(_dead_boss)
+			if is_survival():
+				GameData.add_xp(GameData.selected_character, int(30.0 * GameData.diff("reward")))
+				_surv_next_boss_t = elapsed_time + SURV_BOSS_GAP
+				spawn_interval = 2.0
+			else:
+				GameData.add_xp(GameData.selected_character, int(30.0 * GameData.diff("reward")))
+				_boss_victory(_dead_boss)
 
 	spawn_timer += delta
-	if spawn_timer >= spawn_interval * GameData.diff("spawn"):
+	if spawn_timer >= spawn_interval * GameData.diff("spawn") * (0.6 if is_survival() else 1.0):
 		spawn_timer = 0.0
 		var nyx_alive: bool     = is_instance_valid(_nyx_node)      and not _nyx_node.is_dead
 		var smiler_alive: bool  = is_instance_valid(_smiler_node)  and not _smiler_node.is_dead
@@ -5742,7 +5793,7 @@ func _process(delta: float) -> void:
 				_spawn_subject()
 		elif is_survival():
 			# Uzun yayılımlı artış: 3 dakikada bir +1 düşman (en fazla 6)
-			for _si in mini(1 + int(elapsed_time / 180.0), 6):
+			for _si in mini(2 + int(elapsed_time / 90.0), 8):
 				_spawn_subject()
 		else:
 			# Boss yokken daha yoğun spawn
@@ -5788,7 +5839,9 @@ func _process(delta: float) -> void:
 		$UI/LabelTime.text = "⏱  %02d:%02d" % [minutes, seconds]
 		_check_survival_milestones(minutes)
 	# Boss spawn — 10. dakikada bu bölümün boss'u gelir
-	if not is_survival() and not _boss_spawned and elapsed_time >= BOSS_SPAWN_TIME:
+	if is_survival():
+		_survival_boss_tick()
+	elif not _boss_spawned and elapsed_time >= BOSS_SPAWN_TIME:
 		_boss_spawned = true
 		_boss_check_index += 1
 		_spawn_section_boss()
