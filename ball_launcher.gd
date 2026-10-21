@@ -137,7 +137,7 @@ func _get_character_start_type() -> String:
 func queue_upgrade_ball(ball_type: String) -> void:
 	_pending_upgrades.append(ball_type)
 	if _pending_upgrades.size() == 1:
-		_upgrade_timer = 2.0   # ilk upgrade bekleme
+		_upgrade_timer = 0.15 if GameData.game_mode == "survival" else 2.0   # ilk upgrade bekleme
 
 func _update_preview_sprite() -> void:
 	var next_type: String = game.next_ball_upgrade if game else ""
@@ -187,10 +187,11 @@ func _process(delta: float) -> void:
 		_upgrade_timer -= delta
 		if _upgrade_timer <= 0.0:
 			var utype: String = _pending_upgrades.pop_front()
-			_launch_typed_ball(utype)
+			var _surv := GameData.game_mode == "survival"
+			_launch_typed_ball(utype, _surv)
 			_last_launch_type = utype
 			if not _pending_upgrades.is_empty():
-				_upgrade_timer = 2.0
+				_upgrade_timer = 0.3 if _surv else 2.0
 
 	# ── Charge window: last 1 second (artık Timer yerine upgrade zaman) ───────
 	var tl: float = _upgrade_timer if not _pending_upgrades.is_empty() else 0.0
@@ -231,7 +232,7 @@ func _process(delta: float) -> void:
 		queue_redraw()
 
 # ─────────────────────────────────────────────────────────────────────────────
-func _launch_typed_ball(ball_type: String) -> void:
+func _launch_typed_ball(ball_type: String, to_weapon: bool = false) -> void:
 	if player == null: return
 	var player_node = get_parent().get_node("Player")
 	var _current_balls := get_tree().get_nodes_in_group("player_balls")
@@ -420,6 +421,17 @@ func _launch_typed_ball(ball_type: String) -> void:
 			ball.ball_type = "spike_core"
 		"leech_nova_core":
 			ball.ball_type = "leech_nova_core"
+
+	if to_weapon:
+		# Survival: yeni core dışarıdan uçarak gelmez, doğrudan silaha (şarjöre) yüklenir
+		ball.global_position = _get_muzzle_global()
+		ball.add_to_group("player_balls")
+		get_parent().add_child(ball)
+		player_node.add_to_orbit(ball)
+		_pulse_weapon()
+		if game:
+			game.update_ui()
+		return
 
 	var direction  = (player.global_position - global_position).normalized()
 	var spawn_pos  = _get_muzzle_global()
@@ -747,6 +759,22 @@ func _get_active_weapon_node() -> Node2D:
 
 # Silahın o anki dünya pozisyonu — Calamity VFX'lerinin (örn. Momentum Burst'ün
 # Yard Engine çizgisi) hedef alması için kullanılıyor.
+# Core silaha yüklenince silah kısa süre büyüyüp küçülür
+var _weapon_pulse_tween: Tween = null
+var _weapon_base_scale: Vector2 = Vector2.ZERO
+func _pulse_weapon() -> void:
+	var w := _get_active_weapon_node()
+	if w == null:
+		return
+	if _weapon_base_scale == Vector2.ZERO:
+		_weapon_base_scale = w.scale
+	if _weapon_pulse_tween and _weapon_pulse_tween.is_valid():
+		_weapon_pulse_tween.kill()
+	w.scale = _weapon_base_scale
+	_weapon_pulse_tween = create_tween()
+	_weapon_pulse_tween.tween_property(w, "scale", _weapon_base_scale * 1.3, 0.1).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_weapon_pulse_tween.tween_property(w, "scale", _weapon_base_scale, 0.18).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+
 func get_weapon_position() -> Vector2:
 	var w := _get_active_weapon_node()
 	return w.global_position if w else global_position

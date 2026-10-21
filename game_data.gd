@@ -77,7 +77,20 @@ func record_boss_clear(char_id: String, boss: int, tier: int, score: int, time_s
 	d["score"] = maxi(int(d["score"]), score)
 	if float(d["time"]) <= 0.0 or time_sec < float(d["time"]):
 		d["time"] = time_sec
+	_unlock_from_boss_progress()
 	save_data()
+
+# S-Miler'i (boss 0) herhangi bir karakterle yenmek Leila'yı, Cyber-404'ü (boss 1) yenmek Cyclone'u açar.
+# Kayıtlı boss ilerlemesinden türetilir: yeni oyun/yarış durumu yüzünden açılış kaybolmasın.
+func _unlock_from_boss_progress() -> void:
+	for k in boss_progress:
+		var v: Variant = boss_progress[k]
+		if not (v is Dictionary) or int(v.get("cleared", 0)) <= 0:
+			continue
+		if str(k).ends_with("|0") and "leila" not in unlocked_characters:
+			unlocked_characters.append("leila")
+		if str(k).ends_with("|1") and "cyclone" not in unlocked_characters:
+			unlocked_characters.append("cyclone")
 
 var unlocked_characters: Array[String] = ["vector", "cyclone"]
 
@@ -455,6 +468,7 @@ func load_data() -> void:
 			var v: Variant = cfg.get_value("bosses", k, {})
 			if v is Dictionary:
 				boss_progress[k] = v
+	_unlock_from_boss_progress()
 	chips = cfg.get_value("chips", "total", 0)
 	var ms: Variant = cfg.get_value("chips", "completed_milestones", [])
 	if ms is Array:

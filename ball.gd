@@ -610,8 +610,11 @@ func _physics_process(delta: float) -> void:
 	if global_position.y >= _pb.end.y:
 		global_position.y = _pb.end.y - 2.0
 		move_direction.y = -abs(move_direction.y)
-		_start_returning()
-		return
+		if GameData.game_mode == "survival":
+			_bounced = true   # Survival: alt duvar da diğerleri gibi sekme yeri (geri dönüş yok)
+		else:
+			_start_returning()
+			return
 
 	if _bounced:
 		_play_hit_sfx()

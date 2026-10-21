@@ -455,6 +455,27 @@ const SURV_PANEL_X := 1630.0   # sağ UI paneli bu x'ten başlar
 const SURV_CAM_SHIFT := 145.0  # oyuncu görünür alanın (0..1630) ortasında dursun
 var _surv_floor: Sprite2D = null
 
+# Alan etkili Calamity/efektlerin sahası: Story'de Avlu, Survival'da kameranın görünen penceresi
+func _yard_rect() -> Rect2:
+	if is_survival():
+		var c: Vector2 = get_node("Camera2D").position
+		return Rect2(c.x - 960.0, c.y - 540.0, SURV_PANEL_X, 1080.0)
+	return Rect2(385.0, 255.0, 1535.0, 825.0)
+
+func _yard_center() -> Vector2:
+	if is_survival():
+		return _yard_rect().get_center()
+	return Vector2(1152.0, 667.0)
+
+func _in_yard(pos: Vector2) -> bool:
+	if is_survival():
+		return _yard_rect().has_point(pos)
+	return pos.x >= 385.0
+
+func _yard_poly() -> PackedVector2Array:
+	var r := _yard_rect()
+	return PackedVector2Array([r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)])
+
 func is_survival() -> bool:
 	return GameData.game_mode == "survival"
 
@@ -655,8 +676,10 @@ func _stop_boss_music() -> void:
 		tw.tween_property(bm, "volume_db", -40.0, MUSIC_FADE)
 		tw.tween_callback(bm.queue_free)
 	var gm := get_node_or_null("GameplayMusic")
-	if gm and gm.playing:
+	if gm:
 		gm.stream_paused = false
+		if not gm.playing:
+			gm.play()
 		create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS).tween_property(gm, "volume_db", MUSIC_DB, MUSIC_FADE)
 
 # Boss can barının altında durum etkisi kutusu (ikon + saat yönü süre göstergesi + hover açıklaması).
@@ -1554,6 +1577,7 @@ func _ready() -> void:
 	music.process_mode  = Node.PROCESS_MODE_ALWAYS
 	music.get_stream().set("loop", true)
 	add_child(music)
+	music.play()   # autoplay'e güvenme: ağaca girer girmez kesin başlasın
 	# UI sınırında görünmez duvar — düşmanların UI alanına girmesini engeller
 	var wall := StaticBody2D.new()
 	wall.name = "UIWall"
@@ -3651,15 +3675,11 @@ func show_upgrade_menu() -> void:
 		desc_panel.add_child(desc_label)
 
 		# Confirm ve Skip ortada
-		var confirm_btn := _make_neon_button(Lang.t("upgrade_confirm"), "confirm", false, Vector2(665, 820))
+		# Onayla butonu ortada. "Geç" (skip) butonu kaldırıldı — hızlı oynarken yanlışlıkla basılıyordu.
+		var confirm_btn := _make_neon_button(Lang.t("upgrade_confirm"), "confirm", false, Vector2(830, 820))
 		confirm_btn.size = Vector2(300, 70)
 		confirm_btn.pressed.connect(_on_confirm.bind(canvas))
 		canvas.add_child(confirm_btn)
-
-		var skip_btn := _make_neon_button(Lang.t("upgrade_skip"), "skip", true, Vector2(995, 820))
-		skip_btn.size = Vector2(300, 70)
-		skip_btn.pressed.connect(_on_skip.bind(canvas))
-		canvas.add_child(skip_btn)
 		
 		card_sprite.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		var click_area := Button.new()
@@ -3788,12 +3808,18 @@ func _vfx_freezing_cold() -> void:
 	# Her seferinde rastgele bir zigzag rota — ama sadece tek bir bölgede takılıp
 	# kalmasın diye Yard'ın genişliği 3 dilime bölünüp her dilimden bir nokta
 	# alınıyor (sırası karışık), gerçekten sahanın her yerinde gezinmesi garanti.
-	var _x_bands: Array = [Vector2(450.0, 900.0), Vector2(900.0, 1400.0), Vector2(1400.0, 1850.0)]
+	var _yr := _yard_rect()
+	var _bx0: float = _yr.position.x + 65.0 if not is_survival() else _yr.position.x + 40.0
+	var _bx1: float = (1850.0 if not is_survival() else _yr.end.x - 40.0)
+	var _bw: float = (_bx1 - _bx0) / 3.0
+	var _y0: float = 300.0 if not is_survival() else _yr.position.y + 60.0
+	var _y1: float = 1050.0 if not is_survival() else _yr.end.y - 30.0
+	var _x_bands: Array = [Vector2(_bx0, _bx0 + _bw), Vector2(_bx0 + _bw, _bx0 + 2.0 * _bw), Vector2(_bx0 + 2.0 * _bw, _bx1)]
 	_x_bands.shuffle()
 	var waypoints: Array[Vector2] = [spawn_pos]
 	for _band in _x_bands:
-		waypoints.append(Vector2(randf_range(_band.x, _band.y), randf_range(300.0, 1050.0)))
-	waypoints.append(Vector2(randf_range(450.0, 1850.0), -300.0))  # North'tan çıkış
+		waypoints.append(Vector2(randf_range(_band.x, _band.y), randf_range(_y0, _y1)))
+	waypoints.append(Vector2(randf_range(_bx0, _bx1), (-300.0 if not is_survival() else _yr.position.y - 300.0)))  # North'tan çıkış
 	var travel_speed := 450.0  # px/s — kullanıcı isteğiyle hızlandırıldı
 
 	var storm := AnimatedSprite2D.new()
@@ -3887,7 +3913,7 @@ func _activate_monsoon() -> void:
 	# ekranda sağa kaymış görünüyordu. Monsoon'un büyük halka efekti bunu çok belirgin
 	# gösterdiği için SADECE bu kartta gerçekten görünen alanın (x:385-1630) merkezi
 	# kullanılıyor — diğer Yard Engine kartları (Data Storm, Backdoor vb.) etkilenmiyor.
-	var visible_center := Vector2(1007.5, 667.0)
+	var visible_center := _yard_center() if is_survival() else Vector2(1007.5, 667.0)
 	var _run_ripple := func():
 		Sfx.play_path("res://assets/sfx/calamitys/leila/monsoon.ogg")
 		for subject in _yard_subjects():
@@ -3916,10 +3942,7 @@ func _play_monsoon_vfx(pos: Vector2 = Vector2(1152.0, 667.0)) -> void:
 	add_child(clip)
 	var mask := Polygon2D.new()
 	mask.color = Color(0, 0, 0, 0)
-	mask.polygon = PackedVector2Array([
-		Vector2(385.0, 255.0), Vector2(1920.0, 255.0),
-		Vector2(1920.0, 1080.0), Vector2(385.0, 1080.0)
-	])
+	mask.polygon = _yard_poly()
 	clip.add_child(mask)
 	clip.clip_children = CanvasItem.CLIP_CHILDREN_ONLY
 
@@ -4007,7 +4030,7 @@ func _activate_thunderstorm() -> void:
 		if _wave == 0:
 			continue
 		var subjects: Array = get_tree().get_nodes_in_group("subjects").filter(
-			func(s): return is_instance_valid(s) and s.global_position.x >= 385.0
+			func(s): return is_instance_valid(s) and _in_yard(s.global_position)
 		)
 		subjects.shuffle()
 		var count := mini(2, subjects.size())
@@ -4025,7 +4048,7 @@ func _activate_thunderstorm() -> void:
 func _activate_emp() -> void:
 	Sfx.play_path("res://assets/sfx/calamitys/leila/empPulse.ogg")
 	for subject in get_tree().get_nodes_in_group("subjects"):
-		if is_instance_valid(subject) and subject.global_position.x >= 385.0 and subject.get("is_electrified") and subject.is_electrified:
+		if is_instance_valid(subject) and _in_yard(subject.global_position) and subject.get("is_electrified") and subject.is_electrified:
 			subject.take_damage(15)
 			if subject.has_method("_react_flash"):
 				subject._react_flash(Color(0.4, 0.7, 1.0, 1.0))
@@ -4099,7 +4122,7 @@ func _activate_backdoor() -> void:
 # filter_fn geçerliyse sadece true dönen düşmanlar etkilenir; to_engine=true ise çizgiler
 # düşmandan cihaza doğru gider (System Crash).
 func _vfx_yard_engine(apply_fn: Callable, bolt_color: Color, fallback_flash: Color, filter_fn: Callable = Callable(), to_engine: bool = false) -> void:
-	var yard_center := Vector2(1152, 667)
+	var yard_center := _yard_center()
 	if not ResourceLoader.exists("res://assets/VFX/theYardEngine/starting/frame_000.png"):
 		for subject in _yard_subjects():
 			if filter_fn.is_valid() and not filter_fn.call(subject): continue
@@ -4177,12 +4200,12 @@ func _vfx_yard_engine(apply_fn: Callable, bolt_color: Color, fallback_flash: Col
 # eden bir şey olabilir (örn. Momentum Burst'te oyuncunun silahı) — pozisyon çizgi
 # ateşlenirken YENİDEN okunuyor, spawn anında değil. Sprite yoksa fallback_fn çağrılıp
 # (kendi ekran flaşı + asıl etkiyi tetiklemesi gerekir) aynen devam ediyor, crash yok.
-func _vfx_yard_engine_to_point(get_target_pos: Callable, bolt_color: Color, on_arrival: Callable, fallback_fn: Callable, engine_pos: Vector2 = Vector2(1152.0, 667.0)) -> void:
+func _vfx_yard_engine_to_point(get_target_pos: Callable, bolt_color: Color, on_arrival: Callable, fallback_fn: Callable, engine_pos: Vector2 = Vector2.INF) -> void:
 	if not ResourceLoader.exists("res://assets/VFX/theYardEngine/starting/frame_000.png"):
 		fallback_fn.call()
 		return
 
-	var yard_center := engine_pos
+	var yard_center := engine_pos if engine_pos != Vector2.INF else _yard_center()
 	var engine := AnimatedSprite2D.new()
 	engine.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	engine.z_index = 6
@@ -4333,7 +4356,7 @@ func _activate_shockwave() -> void:
 	Sfx.play_path("res://assets/sfx/calamitys/vector/shockwave.ogg")
 	var dmg: int = max(1, player_armor / 2)
 	for subject in get_tree().get_nodes_in_group("subjects"):
-		if is_instance_valid(subject) and subject.global_position.x >= 385.0:
+		if is_instance_valid(subject) and _in_yard(subject.global_position):
 			subject.take_damage(dmg, false)
 	_react_flash_screen(Color(0.6, 0.6, 1.0, 0.5))
 	_vfx_shockwave()
@@ -4350,10 +4373,7 @@ func _vfx_shockwave(at: Vector2 = Vector2.INF, final_scale: float = 7.0, dur: fl
 	add_child(clip)
 	var mask := Polygon2D.new()
 	mask.color = Color(0, 0, 0, 0)
-	mask.polygon = PackedVector2Array([
-		Vector2(385.0, 255.0), Vector2(1920.0, 255.0),
-		Vector2(1920.0, 1080.0), Vector2(385.0, 1080.0)
-	])
+	mask.polygon = _yard_poly()
 	clip.add_child(mask)
 	clip.clip_children = CanvasItem.CLIP_CHILDREN_ONLY
 
@@ -4481,7 +4501,7 @@ func _fire_rampart_core(player: Node2D, target_pos: Vector2) -> void:
 		core.queue_free()
 	var dmg: int = player_armor_cap
 	for s in get_tree().get_nodes_in_group("subjects"):
-		if is_instance_valid(s) and s.global_position.x >= 385.0 and s.global_position.distance_to(target_pos) <= 130.0:
+		if is_instance_valid(s) and _in_yard(s.global_position) and s.global_position.distance_to(target_pos) <= 130.0:
 			s.take_damage(dmg, false)
 	_vfx_rampart_impact(target_pos)
 
@@ -4920,8 +4940,9 @@ func _activate_wildfire() -> void:
 func _react_flash_screen(color: Color) -> void:
 	var flash := ColorRect.new()
 	flash.color = color
-	flash.position = Vector2(385, 255)
-	flash.size = Vector2(1920 - 385, 1080 - 255)
+	var _yr := _yard_rect()
+	flash.position = _yr.position
+	flash.size = _yr.size
 	flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	flash.z_index = 10
 	add_child(flash)

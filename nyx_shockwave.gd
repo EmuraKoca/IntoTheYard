@@ -92,7 +92,12 @@ func _physics_process(delta: float) -> void:
 		dir = dir.rotated(clampf(diff, -TURN_RATE * delta, TURN_RATE * delta))
 	global_position += dir * SPEED * delta
 	_apply_size()
-	if not BOUNDS.has_point(global_position):
+	var _b := BOUNDS
+	if GameData.game_mode == "survival":
+		var _g := get_tree().get_first_node_in_group("game")
+		if _g and _g.has_method("play_bounds"):
+			_b = _g.play_bounds().grow(250.0)
+	if not _b.has_point(global_position):
 		_explode()
 		return
 	if is_instance_valid(pl) and not pl.is_dashing and pl.global_position.distance_to(global_position) < _radius():

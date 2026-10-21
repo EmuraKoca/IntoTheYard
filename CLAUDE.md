@@ -80,3 +80,10 @@ Sınırsız mod; oyuncu ölünce biter. `GameData.game_mode == "survival"`, `gam
 
 ## Kısa tarihçe (ayrıntı arşivde)
 Temmuz: VFX/Calamity/Chip/Black Market/meta ilerleme. Ağustos-Eylül: Vector/Leila/Cyclone kart-kart review (tüm kartlar), Momentum yeniden tasarımı, Silver font, SFX sistemi, Calamity sesleri/VFX. Ekim: yeni düşman sprite'ları (creature stili), 3 boss'un tam sprite/ses/saldırı seti, demo (GameDev.ist başvurusu), zorluk + boss seçimi, yükleme ekranı, Survival modu (aşama 1-4).
+
+## Son tur (2026-10-22): menü adları, Survival düzeltmeleri, açılış
+- **Mod adları**: Story → **PROTOKOL / PROTOCOL**, Survival → **SONSUZ AVLU / ENDLESS YARD** (`lang.gd mm_story/mm_survival`); Protokol penceresi düz **YENİ OYUN / KAYDI YÜKLE** (mm_new_game/mm_load_game). Sonsuz Avlu ayrı kayıt gelince aynı pencere ona da bağlanacak (şimdilik doğrudan karakter seçimi).
+- **Leila/Cyclone açılışı**: `GameData._unlock_from_boss_progress()` — boss 0 (S-Miler) herhangi bir karakterle yenildiyse Leila, boss 1 (Cyber-404) yenildiyse Cyclone açık (load_data + record_boss_clear'da). Yeni Oyun boss_progress'i sıfırlamıyor (bilinen, karar bekliyor).
+- **Survival alan sınırı**: `game_scene._yard_rect()/_yard_center()/_in_yard()/_yard_poly()` — alan Calamity'leri, flaş, Yard Engine, Monsoon, Freezing Cold rotası artık görünen pencereye göre (Story'de eski Avlu). `nyx_shockwave.gd` sınırı Survival'da `play_bounds().grow(250)`.
+- **Survival core'lar**: alt duvar sekme yeri (geri dönüş yok); upgrade core'u dışarıdan uçmaz, doğrudan silaha yüklenir (`ball_launcher._launch_typed_ball(type, to_weapon)`, 0.15/0.3sn), silah %30 büyüyüp küçülür (`_pulse_weapon`).
+- **Upgrade ekranı**: "Geç/Skip" butonu KALDIRILDI (yanlışlıkla basılıyordu), Onayla ortada. Oyun müziği `play()` ile açıkça başlatılıyor (sebebi kesin bulunamadı; sürerse Output hatasına bak).
