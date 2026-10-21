@@ -51,6 +51,11 @@ func _draw() -> void:
 func _physics_process(delta: float) -> void:
 	global_position += direction * speed * delta
 
+	if GameData.game_mode == "survival":
+		var cam := get_viewport().get_camera_2d()
+		if cam and global_position.distance_to(cam.get_screen_center_position()) > 1400.0:
+			queue_free()
+		return
 	if global_position.x <= 330:  queue_free()
 	if global_position.x >= 1640: queue_free()
 	if global_position.y <= -60:  queue_free()

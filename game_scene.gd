@@ -5482,7 +5482,47 @@ func _make_gravity_gradient() -> Gradient:
 func _enemy_gate(demo_time_sec: float) -> bool:
 	return elapsed_time >= demo_time_sec
 
+const SURV_TYPES := ["subject", "frantic", "armed", "heavy", "cyber_shooter", "cyber_rifle", "cyber_shotgun"]
+const SURV_WEIGHTS := [5, 3, 2, 2, 1, 1, 1]
+
+# Survival: kameranın görünen penceresinin dışından, dört kenardan rastgele biri
+func _survival_spawn_pos() -> Vector2:
+	var r := play_bounds().grow(110.0)
+	match randi() % 4:
+		0: return Vector2(randf_range(r.position.x, r.end.x), r.position.y)
+		1: return Vector2(randf_range(r.position.x, r.end.x), r.end.y)
+		2: return Vector2(r.position.x, randf_range(r.position.y, r.end.y))
+		_: return Vector2(r.end.x, randf_range(r.position.y, r.end.y))
+
+func _spawn_subject_survival() -> void:
+	# İlk 2 tür baştan, her 2 level'da yeni tür
+	var unlocked := clampi(2 + (level - 1) / 2, 2, SURV_TYPES.size())
+	var pool: Array = []
+	for i in unlocked:
+		for _k in SURV_WEIGHTS[i]:
+			pool.append(SURV_TYPES[i])
+	var subject
+	match pool[randi() % pool.size()]:
+		"frantic":       subject = frantic_subject_scene.instantiate()
+		"armed":         subject = armored_subject_scene.instantiate()
+		"heavy":         subject = heavy_subject_scene.instantiate()
+		"cyber_shooter": subject = cyber_shooter_scene.instantiate()
+		"cyber_rifle":   subject = cyber_rifle_scene.instantiate()
+		"cyber_shotgun": subject = cyber_shotgun_scene.instantiate()
+		_:               subject = subject_scene.instantiate()
+	subject.position = _survival_spawn_pos()
+	add_child(subject)
+	# Zamanla güçlenme (uzun yayılım: 15 dk'da +%100)
+	var m: float = 1.0 + float(elapsed_time) / 900.0
+	if subject.get("health") != null:
+		subject.health = int(ceil(subject.health * m))
+		if subject.get("max_health") != null:
+			subject.max_health = subject.health
+
 func _spawn_subject() -> void:
+	if is_survival():
+		_spawn_subject_survival()
+		return
 	# Level bazlı ağırlıklı havuz — yeni tipler kademeli olarak eklenir
 	var pool: Array = []
 
@@ -5695,6 +5735,10 @@ func _process(delta: float) -> void:
 			# Boss modunda: 3 düşman, aralık sabit
 			for _si in 3:
 				_spawn_subject()
+		elif is_survival():
+			# Uzun yayılımlı artış: 3 dakikada bir +1 düşman (en fazla 6)
+			for _si in mini(1 + int(elapsed_time / 180.0), 6):
+				_spawn_subject()
 		else:
 			# Boss yokken daha yoğun spawn
 			_spawn_subject()
@@ -5739,7 +5783,7 @@ func _process(delta: float) -> void:
 		$UI/LabelTime.text = "⏱  %02d:%02d" % [minutes, seconds]
 		_check_survival_milestones(minutes)
 	# Boss spawn — 10. dakikada bu bölümün boss'u gelir
-	if not _boss_spawned and elapsed_time >= BOSS_SPAWN_TIME:
+	if not is_survival() and not _boss_spawned and elapsed_time >= BOSS_SPAWN_TIME:
 		_boss_spawned = true
 		_boss_check_index += 1
 		_spawn_section_boss()
