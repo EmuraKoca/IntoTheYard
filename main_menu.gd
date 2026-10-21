@@ -193,7 +193,12 @@ func _start_new_game() -> void:
 	GameData.unlocked_characters = ["vector"]
 	GameData.char_xp = {"vector": 0, "leila": 0, "cyclone": 0}
 	GameData.show_intro = true
-	get_tree().change_scene_to_file("res://character_select.tscn")
+	GameData.game_mode = "story"
+	# Tam sürümde önce mod seçimi (Story / Survival); demo sadece Story
+	if GameData.DEMO_MODE:
+		get_tree().change_scene_to_file("res://character_select.tscn")
+	else:
+		get_tree().change_scene_to_file("res://mode_select.tscn")
 
 func _show_confirm_dialog() -> void:
 	var canvas := CanvasLayer.new()
@@ -307,6 +312,7 @@ func _show_confirm_dialog() -> void:
 
 func _on_load_game() -> void:
 	GameData.load_data()
+	GameData.game_mode = "story"
 	get_tree().change_scene_to_file("res://character_select.tscn")
 
 func _on_credits() -> void:

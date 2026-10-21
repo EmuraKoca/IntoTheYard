@@ -376,6 +376,11 @@ func _on_confirm() -> void:
 		GameData.show_intro = false
 		next_scene = "res://intro_scene.tscn"
 	GameData.pending_scene = next_scene
+	if GameData.game_mode == "survival" and not GameData.DEMO_MODE:
+		# Survival: boss/zorluk ekranı yok, doğrudan oyun (şimdilik Story sahnesi — Aşama 2'de ayrışacak)
+		GameData.enemy_style = "creature"
+		get_tree().change_scene_to_file(next_scene)
+		return
 	if GameData.DEMO_MODE:
 		# Demo: karakterden sonra düşman türü seçimi, ardından next_scene
 		get_tree().change_scene_to_file("res://enemy_select.tscn")

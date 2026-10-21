@@ -15,6 +15,7 @@ var selected_character := "vector"
 # ── Zorluk + Boss seçimi (boss_select ekranından seçilir) ─────────────────────
 # Seviye 1 = Kolay, Seviye 2 = Normal (oyunun mevcut dengesi), Seviye 3 = Zor.
 var difficulty: String = "easy"
+var game_mode: String = "story"   # "story" | "survival" (mode_select.gd)
 var selected_boss: int = 0   # 0 S-Miler, 1 Cyber-404, 2 Nyx
 const DIFFICULTY_KEYS: Array = ["easy", "normal", "hard"]
 const DIFFICULTY_TABLE: Dictionary = {
