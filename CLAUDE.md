@@ -90,3 +90,7 @@ Temmuz: VFX/Calamity/Chip/Black Market/meta ilerleme. Ağustos-Eylül: Vector/Le
 
 ## SURVIVAL Aşama 5: rekorlar + ölüm ekranı (2026-10-22, oyunda DENENMEDİ — kullanıcı yarın test edecek)
 `GameData.survival_records` (karakter başına `{time, kills}`, kayıt bölümü `[survival]`), `get_survival_record()` / `record_survival_run()` (run sonunda hangi rekor kırıldı döner). `game_scene.show_game_over` Survival'da sade: sadece SÜRE + ÖLDÜRME, altlarında rekor / "YENİ REKOR!" (sarı); rekor ölüm anında kaydedilir (menüye çıkılan run sayılmaz). `character_select._update_info`: Survival'da sol bilgi alanına `REKOR Süre mm:ss / Öldürme N` satırı (`cs_survival_record`). XP/chip sayaçları (`add_xp`, `record_kill`) modtan bağımsız zaten çalışıyor.
+
+## Survival: Calamity hedefleme + Yard Engine konumu (2026-10-23, test edildi)
+- **Hedef DÜNYA koordinatında**: `get_viewport().get_mouse_position()` ekran koordinatıdır; Survival'da kamera kaydığı için Calamity hedefi/nişan çemberi yanlış yerdeydi. Artık `get_global_mouse_position()` (dünya) kullanılıyor, UI'daki nişan çemberi `get_canvas_transform() * dünya_pos` ile ekrana çevriliyor. UI hücre hit-testi ekran koordinatında kalır. **Kural: kamera hareketli modda ekran↔dünya karıştırma.**
+- **Yard Engine** Survival'da görünen alanın sağ-alt tarafında (`_engine_pos()`, %78/%70) belirir; Monsoon dalgası alan ortasından yayılır, makine sağ-altta (ışın makineden merkeze gider). Story'de eski konum.

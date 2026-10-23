@@ -467,6 +467,14 @@ func _yard_center() -> Vector2:
 		return _yard_rect().get_center()
 	return Vector2(1152.0, 667.0)
 
+# The Yard Engine'in belireceği yer. Story: Avlu merkezi. Survival: görünen alanın sağ-alt tarafı
+# (köşeye yapışmaz, oyuncu yürürken hemen kadrajdan çıkmaz; oyuncunun üstünde belirmez).
+func _engine_pos() -> Vector2:
+	if is_survival():
+		var r := _yard_rect()
+		return r.position + Vector2(r.size.x * 0.78, r.size.y * 0.70)
+	return Vector2(1152.0, 667.0)
+
 func _in_yard(pos: Vector2) -> bool:
 	if is_survival():
 		return _yard_rect().has_point(pos)
@@ -2559,7 +2567,7 @@ func _on_calamity_cell_clicked(index: int) -> void:
 		update_ui()
 	else:
 		calamity_index = index
-		_consume_calamity(index, get_viewport().get_mouse_position())
+		_consume_calamity(index, get_global_mouse_position())
 
 func _dispatch_calamity_effect(calamity: String, mouse_pos: Vector2) -> void:
 	if calamity == "⚡":
@@ -3948,7 +3956,7 @@ func _activate_monsoon() -> void:
 		Color(0.1, 0.55, 1.0, 1.0),
 		_run_ripple,
 		_run_ripple,
-		visible_center
+		_engine_pos() if is_survival() else visible_center
 	)
 
 func _play_monsoon_vfx(pos: Vector2 = Vector2(1152.0, 667.0)) -> void:
@@ -4145,7 +4153,7 @@ func _activate_backdoor() -> void:
 # filter_fn geçerliyse sadece true dönen düşmanlar etkilenir; to_engine=true ise çizgiler
 # düşmandan cihaza doğru gider (System Crash).
 func _vfx_yard_engine(apply_fn: Callable, bolt_color: Color, fallback_flash: Color, filter_fn: Callable = Callable(), to_engine: bool = false) -> void:
-	var yard_center := _yard_center()
+	var yard_center := _engine_pos()
 	if not ResourceLoader.exists("res://assets/VFX/theYardEngine/starting/frame_000.png"):
 		for subject in _yard_subjects():
 			if filter_fn.is_valid() and not filter_fn.call(subject): continue
@@ -4228,7 +4236,7 @@ func _vfx_yard_engine_to_point(get_target_pos: Callable, bolt_color: Color, on_a
 		fallback_fn.call()
 		return
 
-	var yard_center := engine_pos if engine_pos != Vector2.INF else _yard_center()
+	var yard_center := engine_pos if engine_pos != Vector2.INF else _engine_pos()
 	var engine := AnimatedSprite2D.new()
 	engine.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	engine.z_index = 6
@@ -4992,7 +5000,7 @@ func _input(event: InputEvent) -> void:
 			if not _over_cell:
 				_confirm = true
 		if _confirm:
-			_consume_calamity(calamity_index, mouse_pos)
+			_consume_calamity(calamity_index, get_global_mouse_position())   # DÜNYA konumu (Survival'da kamera kayar)
 
 	# Tab → Tactical Mode aç/kapat
 	if event is InputEventKey and event.keycode == KEY_TAB and event.pressed and not event.echo:
@@ -5845,9 +5853,11 @@ func _process(delta: float) -> void:
 			_spawn_subject()
 	
 	if calamity_aiming and not calamity_slots.is_empty():
-		var mouse_pos = _clamp_to_yard(get_viewport().get_mouse_position())
+		# Hedef DÜNYA koordinatında hesaplanır (Survival'da kamera kayar); UI katmanındaki
+		# nişan sprite'ı için ekran koordinatına çevrilir. Story'de kamera sabit → ikisi aynı.
+		var mouse_pos = _clamp_to_yard(get_global_mouse_position())
 		$UI/CalamityCircle.visible = true
-		$UI/CalamityCircle.position = mouse_pos
+		$UI/CalamityCircle.position = get_canvas_transform() * mouse_pos
 		var calamity = calamity_slots[calamity_index]
 		# Nişan sprite'ı gerçek etki alanı çapına (radius×2) göre ölçekleniyor —
 		# sprite'ın ham piksel boyutu küçük olabilir (örn. 16×16), o yüzden hedef
